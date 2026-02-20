@@ -1,4 +1,15 @@
+
 import Mathlib
+
+/-
+This file is intended to live inside a larger Mathlib-based project.
+Many projects in this area run with `autoImplicit = false`; we adopt that convention here
+to avoid accidental implicit parameters.
+-/
+
+set_option autoImplicit false
+set_option linter.unusedVariables false
+set_option linter.unusedSectionVars false
 
 /-!
 # Quench (ICML) — DKPS + Nearest-Neighbor Query-Efficiency
@@ -72,19 +83,36 @@ In Lean, we model this equivalently as: for each query `q : Q`, the model return
 distribution on responses.
 -/
 
-variable {Q : Type u} [DecidableEq Q]
-variable {X : Type v} [MeasurableSpace X]
+/-!
+We avoid depending on a particular bundled `ProbMeasure` structure name in Mathlib.
+Instead we use the standard `Measure` together with the predicate/typeclass
+`IsProbabilityMeasure`.
 
-/-- A black-box model: each query yields a distribution over responses.
+This matches the paper’s intent: *a model returns a probability distribution on responses*.
+-/
+
+/-- A probability distribution on `X` (bundled as a measure with total mass `1`). -/
+abbrev ProbMeasure (X : Type v) [MeasurableSpace X] : Type v :=
+  { μ : MeasureTheory.Measure X // MeasureTheory.IsProbabilityMeasure μ }
+
+/-- A black-box model: each query yields a probability distribution over responses.
 
 Paper: “a model is a random mapping from `Q` to `X` with distribution `F`.” -/
 abbrev Model (Q : Type u) (X : Type v) [MeasurableSpace X] : Type (max u v) :=
-  Q → MeasureTheory.ProbMeasure X
+  Q → ProbMeasure X
 
-/-- Paper: benchmark query set `Q* = {q₁,…,q_M}`. -/
+-- From here on we work with a fixed query set `Q` and response space `X`.
+variable {Q : Type u} [DecidableEq Q]
+variable {X : Type v} [MeasurableSpace X]
+
+-- We keep the measurable structure on the model space abstract.
+-- This is needed only to speak about a probability distribution `P_f` on models.
+variable [MeasurableSpace (Model Q X)]
+
+/- Paper: benchmark query set `Q* = {q₁,…,q_M}`. -/
 variable (Qstar : Finset Q)
 
-/-- Paper: score function `y : 𝓕 × 2^{Q*} → [0,1]`. -/
+/- Paper: score function `y : 𝓕 × 2^{Q*} → [0,1]`. -/
 variable (score : Model Q X → Finset Q → UnitInterval)
 
 /-- Paper notation `y(f,Q*)` (the “full benchmark” score). -/
@@ -200,10 +228,13 @@ namespace QueryEfficiency
 
 variable {Q : Type u} [DecidableEq Q]
 variable {X : Type v} [MeasurableSpace X]
+-- We treat the measurable structure on the model space `Model Q X` as an explicit assumption.
+-- The paper works with a probability distribution `P_f` on the (typically huge) model space `𝓕`.
+variable [MeasurableSpace (Model Q X)]
 
 /-- Population risk `E_f[ ℓ(h(f), y(f)) ]` under a model distribution `P_f`. -/
 noncomputable def Risk
-    (Pf : Measure (Model Q X)) [MeasureTheory.IsProbabilityMeasure Pf]
+    (Pf : MeasureTheory.Measure (Model Q X)) [MeasureTheory.IsProbabilityMeasure Pf]
     (ℓ : ℝ → ℝ → ℝ)
     (y h : Model Q X → ℝ) : ℝ :=
   ∫ f, ℓ (h f) (y f) ∂ Pf
@@ -213,7 +244,7 @@ def sqLoss (a b : ℝ) : ℝ := (a - b) ^ (2 : ℕ)
 
 /-- Mean squared error `E_f[(ŷ(f) - y(f))²]` under `P_f`. -/
 noncomputable def MSE
-    (Pf : Measure (Model Q X)) [MeasureTheory.IsProbabilityMeasure Pf]
+    (Pf : MeasureTheory.Measure (Model Q X)) [MeasureTheory.IsProbabilityMeasure Pf]
     (y yHat : Model Q X → ℝ) : ℝ :=
   Risk (Q := Q) (X := X) Pf sqLoss y yHat
 
@@ -224,7 +255,7 @@ relative to `(h'ₙ)` if there exists `N` such that Eq. (2) holds for all `n > N
 We include the side condition `Qsub ⊆ Qstar` explicitly (paper always has `Qsub ⊆ Q*`). -/
 def QQueryEfficient
     (Qstar : Finset Q) (Qsub : Finset Q) (hQsub : Qsub ⊆ Qstar)
-    (Pf : Measure (Model Q X)) [MeasureTheory.IsProbabilityMeasure Pf]
+    (Pf : MeasureTheory.Measure (Model Q X)) [MeasureTheory.IsProbabilityMeasure Pf]
     (ℓ : ℝ → ℝ → ℝ)
     (y : Model Q X → ℝ)
     (h h' : ℕ → Model Q X → ℝ) : Prop :=
@@ -238,7 +269,7 @@ For each `Qsub ⊆ Q*` with `|Qsub| = m`, there exists a (possibly `Qsub`-depend
 such that Eq. (2) holds for all `n > N_Qsub`. -/
 def mQueryEfficient
     (Qstar : Finset Q) (m : ℕ)
-    (Pf : Measure (Model Q X)) [MeasureTheory.IsProbabilityMeasure Pf]
+    (Pf : MeasureTheory.Measure (Model Q X)) [MeasureTheory.IsProbabilityMeasure Pf]
     (ℓ : ℝ → ℝ → ℝ)
     (y : Model Q X → ℝ)
     (h h' : Finset Q → ℕ → Model Q X → ℝ) : Prop :=
@@ -254,7 +285,7 @@ We follow the paper’s quantifier structure: for all `m < |Q*|`, the sequence i
 add a uniformity requirement over `Qsub` here.) -/
 def QueryEfficient
     (Qstar : Finset Q)
-    (Pf : Measure (Model Q X)) [MeasureTheory.IsProbabilityMeasure Pf]
+    (Pf : MeasureTheory.Measure (Model Q X)) [MeasureTheory.IsProbabilityMeasure Pf]
     (ℓ : ℝ → ℝ → ℝ)
     (y : Model Q X → ℝ)
     (h h' : Finset Q → ℕ → Model Q X → ℝ) : Prop :=
@@ -295,7 +326,8 @@ lemma exists_argmin {n : ℕ} (hn : 0 < n) (f : Fin n → ℝ) : ∃ i, IsArgmin
   classical
   -- Same proof pattern as in your earlier working file:
   -- minimize over the finite set `Finset.univ : Finset (Fin n)`.
-  haveI : Nonempty (Fin n) := Fin.pos_iff_nonempty.mp hn
+  -- `Fin n` is nonempty as soon as `0 < n` (witness `0`).
+  haveI : Nonempty (Fin n) := ⟨⟨0, hn⟩⟩
   have h_nonempty : (Finset.univ : Finset (Fin n)).Nonempty := Finset.univ_nonempty
   obtain ⟨i, _, hi⟩ := Finset.exists_min_image (Finset.univ : Finset (Fin n)) f h_nonempty
   refine ⟨i, ?_⟩
@@ -321,7 +353,7 @@ Set of all nearest neighbors (all minimizers, i.e. all indices achieving `δ*`).
 Paper corresponds to `{ i : {1,…,n} | ‖ψ̂_i - ψ̂‖ = δ* }`. -/
 noncomputable def nnTieSet {n : ℕ} (hn : 0 < n)
     (ψHat_ref : Fin n → Vec d) (ψHat_target : Vec d) : Finset (Fin n) :=
-  let δ := deltaStar (d := d) (n := n) hn ψHat_ref ψHat_target
+  let δ := deltaStar (d := d) (n := n) hn ψHat_ref ψHat_target;
   Finset.univ.filter (fun i => ‖ψHat_ref i - ψHat_target‖ = δ)
 
 /-- The tie set is nonempty (it contains `nnIndex`). -/
@@ -369,8 +401,8 @@ This is exactly the paper formula:
 noncomputable def yHatNN {n : ℕ} (hn : 0 < n)
     (ψHat_ref : Fin n → Vec d) (ψHat_target : Vec d)
     (y_ref : Fin n → ℝ) : ℝ :=
-  let S := nnTieSet (d := d) (n := n) hn ψHat_ref ψHat_target
-  (∑ i in S, y_ref i) / (S.card : ℝ)
+  let S : Finset (Fin n) := nnTieSet (d := d) (n := n) hn ψHat_ref ψHat_target;
+  (S.sum y_ref) / (S.card : ℝ)
 
 end NearestNeighbor
 
@@ -406,12 +438,14 @@ section Assumptions_And_Theorems
 variable {Q : Type u} [DecidableEq Q]
 variable {X : Type v} [MeasurableSpace X]
 variable {d : ℕ}
+variable [MeasurableSpace (Model Q X)]
+
 
 /-- Assumption 1 (paper): Lipschitzness of the full-benchmark score w.r.t. the true perspective map. -/
 def LipschitzScore (γ : ℝ) (ψ : Model Q X → Vec d) (y : Model Q X → ℝ) : Prop :=
   ∀ f f' : Model Q X, |y f - y f'| ≤ γ * ‖ψ f - ψ f'‖
 
-/--
+/-
 Assumption 2 (paper): positive mass in every ball.
 
 This is the “equivalently” statement in the paper:
@@ -428,7 +462,7 @@ for any target model `f` and radius `δ>0`, there exists `ε>0` with `P_f(B_δ(f
 In Lean we encode this using `Metric.ball` and an abstract metric on the model space.
 -/
 def ModelSupportNontrivial
-    (Pf : Measure (Model Q X)) [MeasureTheory.IsProbabilityMeasure Pf]
+    (Pf : MeasureTheory.Measure (Model Q X)) [MeasureTheory.IsProbabilityMeasure Pf]
     [PseudoMetricSpace (Model Q X)] : Prop :=
   ∀ (f : Model Q X) (δ : ℝ), 0 < δ →
     ∃ ε : ENNReal, 0 < ε ∧ Pf (Metric.ball f δ) ≥ ε
@@ -440,7 +474,7 @@ We reuse the (convenient) encoding from your existing files: `HighProbAtTop`.
 -/
 
 def HighProbAtTop {Ω : Type} [MeasurableSpace Ω]
-    (μ : ℕ → Measure Ω) (hμ : ∀ n, MeasureTheory.IsProbabilityMeasure (μ n))
+    (μ : ℕ → MeasureTheory.Measure Ω) (hμ : ∀ n, MeasureTheory.IsProbabilityMeasure (μ n))
     (E : ℕ → Set Ω) : Prop :=
   ∀ δ : ENNReal, 0 < δ → ∃ N : ℕ, ∀ n > N, (μ n) (E n) ≥ 1 - δ
 
@@ -480,27 +514,43 @@ lemma step2_triangle_inequality
     (h_conc_ref : ∀ i, ‖ψHat i - ψ i‖ ≤ c)
     (h_conc_target : ‖ψHat_target - ψ_target‖ ≤ c) :
     ‖ψ i_star - ψ_target‖ ≤ 2 * c + ‖ψHat i_star - ψHat_target‖ := by
-  -- This is a direct norm triangle inequality manipulation (already working in your earlier file).
-  have h1 : ‖ψ i_star - ψ_target‖ ≤ ‖ψ i_star - ψHat i_star‖ + ‖ψHat i_star - ψHat_target‖ + ‖ψHat_target - ψ_target‖ := by
-    -- `ψ i_star - ψ_target = (ψ i_star - ψHat i_star) + (ψHat i_star - ψHat_target) + (ψHat_target - ψ_target)`
-    -- then apply triangle inequality twice.
-    have : ψ i_star - ψ_target =
-        (ψ i_star - ψHat i_star) + (ψHat i_star - ψHat_target) + (ψHat_target - ψ_target) := by
-      abel_nf
-    -- use `this` to rewrite and apply inequalities
-    calc
-      ‖ψ i_star - ψ_target‖ = ‖(ψ i_star - ψHat i_star) + (ψHat i_star - ψHat_target) + (ψHat_target - ψ_target)‖ := by
-        simpa [this]
-      _ ≤ ‖(ψ i_star - ψHat i_star) + (ψHat i_star - ψHat_target)‖ + ‖ψHat_target - ψ_target‖ := by
-        simpa [add_assoc] using norm_add_le ((ψ i_star - ψHat i_star) + (ψHat i_star - ψHat_target)) (ψHat_target - ψ_target)
-      _ ≤ (‖ψ i_star - ψHat i_star‖ + ‖ψHat i_star - ψHat_target‖) + ‖ψHat_target - ψ_target‖ := by
-        gcongr
-        simpa using norm_add_le (ψ i_star - ψHat i_star) (ψHat i_star - ψHat_target)
-  -- now substitute the concentration bounds
-  have h_conc_i : ‖ψ i_star - ψHat i_star‖ ≤ c := by
-    -- `‖ψ - ψHat‖ = ‖ψHat - ψ‖`
-    simpa [norm_sub_rev] using h_conc_ref i_star
-  linarith [h1, h_conc_i, h_conc_target]
+  have h_ref : ‖ψ i_star - ψHat i_star‖ ≤ c := by
+    simpa [norm_sub_rev] using (h_conc_ref i_star)
+
+  have h_tri1 :
+      ‖ψ i_star - ψ_target‖ ≤ ‖ψ i_star - ψHat i_star‖ + ‖ψHat i_star - ψ_target‖ := by
+    simpa using (norm_sub_le_triangle (ψ i_star) (ψHat i_star) ψ_target)
+
+  have h_tri2 :
+      ‖ψHat i_star - ψ_target‖ ≤ ‖ψHat i_star - ψHat_target‖ + ‖ψHat_target - ψ_target‖ := by
+    simpa using (norm_sub_le_triangle (ψHat i_star) ψHat_target ψ_target)
+
+  have h_main :
+      ‖ψ i_star - ψ_target‖ ≤ c + (‖ψHat i_star - ψHat_target‖ + ‖ψHat_target - ψ_target‖) := by
+    have h_tri1' :
+        ‖ψ i_star - ψ_target‖ ≤ ‖ψ i_star - ψHat i_star‖ +
+          (‖ψHat i_star - ψHat_target‖ + ‖ψHat_target - ψ_target‖) :=
+      le_trans h_tri1 (add_le_add_left h_tri2 ‖ψ i_star - ψHat i_star‖)
+    have :
+        ‖ψ i_star - ψHat i_star‖ +
+            (‖ψHat i_star - ψHat_target‖ + ‖ψHat_target - ψ_target‖)
+          ≤ c + (‖ψHat i_star - ψHat_target‖ + ‖ψHat_target - ψ_target‖) := by
+      exact add_le_add_right h_ref _
+    exact le_trans h_tri1' (by
+      simpa [add_assoc, add_left_comm, add_comm] using this)
+
+  have h_target_le : ‖ψHat_target - ψ_target‖ ≤ c := h_conc_target
+  have h_inside :
+      ‖ψHat i_star - ψHat_target‖ + ‖ψHat_target - ψ_target‖ ≤
+        ‖ψHat i_star - ψHat_target‖ + c :=
+    add_le_add_left h_target_le _
+
+  calc
+    ‖ψ i_star - ψ_target‖
+        ≤ c + (‖ψHat i_star - ψHat_target‖ + ‖ψHat_target - ψ_target‖) := h_main
+    _ ≤ c + (‖ψHat i_star - ψHat_target‖ + c) := by
+          exact add_le_add_left h_inside c
+    _ = 2 * c + ‖ψHat i_star - ψHat_target‖ := by ring
 
 /--
 Step 3 (paper): if `i*` is an argmin in ψ̂-space, then its ψ̂-distance is bounded by any reference.
@@ -534,35 +584,49 @@ lemma step4_support_bound
     ‖ψ i_star - ψ_target‖ ≤ ρ + 4 * c := by
   classical
   rcases h_supp with ⟨j_star, hj_star⟩
-  -- start from Step 2:
-  have h_step2 :=
-    step2_triangle_inequality (Q := Q) (X := X) (d := d)
-      (n := n) ψ ψHat ψ_target ψHat_target i_star c h_conc_ref h_conc_target
-  -- use argmin property to bound `‖ψHat i* - ψHat_target‖` by the distance to `j_star`:
+
+  have h_step2 :
+      ‖ψ i_star - ψ_target‖ ≤ 2 * c + ‖ψHat i_star - ψHat_target‖ :=
+    step2_triangle_inequality (d := d) (n := n)
+      ψ ψHat ψ_target ψHat_target i_star c h_conc_ref h_conc_target
+
   have h_arg : ‖ψHat i_star - ψHat_target‖ ≤ ‖ψHat j_star - ψHat_target‖ :=
     h_i_star j_star
-  -- triangle inequality for the `j_star` distance:
-  have h_triangle_j :
-      ‖ψHat j_star - ψHat_target‖ ≤ ‖ψHat j_star - ψ j_star‖ + ‖ψ j_star - ψ_target‖ + ‖ψHat_target - ψ_target‖ := by
-    -- same pattern as Step 2
-    have : ψHat j_star - ψHat_target =
-        (ψHat j_star - ψ j_star) + (ψ j_star - ψ_target) + (ψ_target - ψHat_target) := by
-      abel_nf
-    -- prefer a direct triangle bound:
-    calc
-      ‖ψHat j_star - ψHat_target‖
-          ≤ ‖ψHat j_star - ψ j_star‖ + ‖ψ j_star - ψHat_target‖ := by
-            simpa using norm_add_le (ψHat j_star - ψ j_star) (ψ j_star - ψHat_target)
-      _ ≤ ‖ψHat j_star - ψ j_star‖ + (‖ψ j_star - ψ_target‖ + ‖ψHat_target - ψ_target‖) := by
-            gcongr
-            -- `‖ψ j_star - ψHat_target‖ ≤ ‖ψ j_star - ψ_target‖ + ‖ψHat_target - ψ_target‖`
-            -- (rewriting `ψ j_star - ψHat_target` as `(ψ j_star - ψ_target) + (ψ_target - ψHat_target)`)
-            convert norm_sub_le (ψ j_star - ψ_target) (ψHat_target - ψ_target) using 1 <;> abel_nf
-      _ = ‖ψHat j_star - ψ j_star‖ + ‖ψ j_star - ψ_target‖ + ‖ψHat_target - ψ_target‖ := by ring
-  -- substitute concentration and support bounds
+
   have h_conc_j : ‖ψHat j_star - ψ j_star‖ ≤ c := h_conc_ref j_star
-  -- combine everything
-  linarith [h_step2, h_arg, h_triangle_j, h_conc_j, hj_star, h_conc_target]
+
+  have h_jtri1 :
+      ‖ψHat j_star - ψHat_target‖ ≤ ‖ψHat j_star - ψ j_star‖ + ‖ψ j_star - ψHat_target‖ := by
+    simpa using (norm_sub_le_triangle (ψHat j_star) (ψ j_star) ψHat_target)
+
+  have h_jtri2 :
+      ‖ψ j_star - ψHat_target‖ ≤ ‖ψ j_star - ψ_target‖ + ‖ψHat_target - ψ_target‖ := by
+    have h' :
+        ‖ψ j_star - ψHat_target‖ ≤ ‖ψ j_star - ψ_target‖ + ‖ψ_target - ψHat_target‖ := by
+      simpa using (norm_sub_le_triangle (ψ j_star) ψ_target ψHat_target)
+    have hEq : ‖ψ_target - ψHat_target‖ = ‖ψHat_target - ψ_target‖ := by
+      simpa using (norm_sub_rev ψHat_target ψ_target).symm
+    simpa [hEq] using h'
+
+  have h_jtri2' : ‖ψ j_star - ψHat_target‖ ≤ ρ + c := by
+    exact le_trans h_jtri2 (add_le_add hj_star h_conc_target)
+
+  have h_j_raw : ‖ψHat j_star - ψHat_target‖ ≤ c + (ρ + c) := by
+    have := le_trans h_jtri1 (add_le_add h_conc_j h_jtri2')
+    simpa [add_assoc, add_left_comm, add_comm] using this
+
+  have h_j : ‖ψHat j_star - ψHat_target‖ ≤ ρ + 2 * c := by
+    have hEq : c + (ρ + c) = ρ + 2 * c := by ring
+    simpa [hEq] using h_j_raw
+
+  have h_distHat : ‖ψHat i_star - ψHat_target‖ ≤ ρ + 2 * c :=
+    le_trans h_arg h_j
+
+  calc
+    ‖ψ i_star - ψ_target‖
+        ≤ 2 * c + ‖ψHat i_star - ψHat_target‖ := h_step2
+    _ ≤ 2 * c + (ρ + 2 * c) := add_le_add_left h_distHat (2 * c)
+    _ = ρ + 4 * c := by ring
 
 /--
 Step 5 (paper): pointwise score error bound for an argmin index `i*`:
@@ -591,10 +655,12 @@ lemma step5_pointwise_error
     |y_ref i_star - y_target|
         ≤ γ * ‖ψ i_star - ψ_target‖ := h_lip i_star
     _ ≤ γ * (ρ + 4 * c) := by
-        gcongr
-        exact step4_support_bound (Q := Q) (X := X) (d := d)
-          (n := n) ψ ψHat ψ_target ψHat_target i_star h_i_star c ρ
+      -- Multiply the Step 4 bound by `γ ≥ 0`.
+      have h_bound : ‖ψ i_star - ψ_target‖ ≤ ρ + 4 * c :=
+        step4_support_bound (d := d) (n := n)
+          ψ ψHat ψ_target ψHat_target i_star h_i_star c ρ
           h_conc_ref h_conc_target h_supp
+      exact mul_le_mul_of_nonneg_left h_bound h_gamma_nonneg
 
 /-!
 ### From pointwise error to the paper’s `ŷ_NN` (tie-average)
@@ -645,14 +711,16 @@ eventually `MSE(hNN) ≤ MSE(baseline)`.  For squared loss, this is exactly Eq. 
 section Theorem2
 
 variable {Ω : Type} [MeasurableSpace Ω]
+variable [MeasurableSpace (Model Q X)]
+
 
 open QueryEfficiency
 open NearestNeighbor
 
 /-- Theorem 2, Part 1 (paper): accuracy of `ŷ_NN` (high-probability small MSE). -/
 theorem Theorem2_part1
-  (Pf : Measure (Model Q X)) [MeasureTheory.IsProbabilityMeasure Pf]
-  (μ : ℕ → Measure Ω) (hμ : ∀ n, MeasureTheory.IsProbabilityMeasure (μ n))
+  (Pf : MeasureTheory.Measure (Model Q X)) [MeasureTheory.IsProbabilityMeasure Pf]
+  (μ : ℕ → MeasureTheory.Measure Ω) (hμ : ∀ n, MeasureTheory.IsProbabilityMeasure (μ n))
   (ψ : Model Q X → Vec d)
   (ψHat : ℕ → Ω → Model Q X → Vec d)
   (f_ref : ∀ n, Ω → Fin n → Model Q X)
@@ -661,7 +729,7 @@ theorem Theorem2_part1
   (γ : ℝ)
   (h_lip : LipschitzScore (Q := Q) (X := X) (d := d) γ ψ (fun f => (score f Qstar : ℝ)))
   (h_gamma_pos : 0 < γ)
-  (c : ℕ → ℝ) (h_c_tendsto : Filter.Tendsto c Filter.atTop (Filter.nhds 0))
+  (c : ℕ → ℝ) (h_c_tendsto : Filter.Tendsto c Filter.atTop (nhds (0 : ℝ)))
   (h_c_nonneg : ∀ n, 0 ≤ c n)
   /- Theorem 1 (paper citation): concentration of DKPS estimates -/
   (h_conc : HighProbAtTop (μ := μ) (hμ := hμ) (fun n => {ω | ∀ f, ‖ψHat n ω f - ψ f‖ ≤ c n}))
@@ -702,8 +770,8 @@ theorem Theorem2_part1
 
 /-- Theorem 2, Part 2 (paper): query-efficiency relative to a baseline with positive MSE. -/
 theorem Theorem2_part2
-  (Pf : Measure (Model Q X)) [MeasureTheory.IsProbabilityMeasure Pf]
-  (μ : ℕ → Measure Ω) (hμ : ∀ n, MeasureTheory.IsProbabilityMeasure (μ n))
+  (Pf : MeasureTheory.Measure (Model Q X)) [MeasureTheory.IsProbabilityMeasure Pf]
+  (μ : ℕ → MeasureTheory.Measure Ω) (hμ : ∀ n, MeasureTheory.IsProbabilityMeasure (μ n))
   (ψ : Model Q X → Vec d)
   (ψHat : ℕ → Ω → Model Q X → Vec d)
   (f_ref : ∀ n, Ω → Fin n → Model Q X)
@@ -712,7 +780,7 @@ theorem Theorem2_part2
   (γ : ℝ)
   (h_lip : LipschitzScore (Q := Q) (X := X) (d := d) γ ψ (fun f => (score f Qstar : ℝ)))
   (h_gamma_pos : 0 < γ)
-  (c : ℕ → ℝ) (h_c_tendsto : Filter.Tendsto c Filter.atTop (Filter.nhds 0))
+  (c : ℕ → ℝ) (h_c_tendsto : Filter.Tendsto c Filter.atTop (nhds (0 : ℝ)))
   (h_c_nonneg : ∀ n, 0 ≤ c n)
   (h_conc : HighProbAtTop (μ := μ) (hμ := hμ) (fun n => {ω | ∀ f, ‖ψHat n ω f - ψ f‖ ≤ c n}))
   (h_conc_meas : ∀ n, MeasurableSet {ω | ∀ f, ‖ψHat n ω f - ψ f‖ ≤ c n})
@@ -767,7 +835,12 @@ theorem Theorem2_part2
     intro ω hω
     have hQlower : c_base ≤ QueryEfficiency.MSE (Q := Q) (X := X) Pf (fun f => (score f Qstar : ℝ)) (fun f => hQ n ω f) :=
       hN0 n hn0 ω
-    linarith
+    have hc_half : (c_base / 2) ≤ c_base := by linarith [hc_base_pos.le]
+    have hNN_le_cbase :
+        QueryEfficiency.MSE (Q := Q) (X := X) Pf (fun f => (score f Qstar : ℝ)) (fun f => hNN n ω f) ≤ c_base :=
+      le_trans hω hc_half
+    exact le_trans hNN_le_cbase hQlower
+
   -- Use monotonicity of measure: if `A ⊆ B` then `μ(A) ≤ μ(B)`.
   have hA : (1 - δ) ≤ (μ n) {ω : Ω |
         QueryEfficiency.MSE (Q := Q) (X := X) Pf (fun f => (score f Qstar : ℝ)) (fun f => hNN n ω f) ≤ c_base / 2} := by

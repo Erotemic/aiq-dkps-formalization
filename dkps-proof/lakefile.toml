@@ -1,4 +1,4 @@
-name = "DKPS Quench ICML 2026"
+name = "dkps_quench_icml_2026"
 version = "0.1.0"
 keywords = ["math"]
 defaultTargets = ["DKPS_Quench_ICML_2026"]
@@ -13,4 +13,3 @@ scope = "leanprover-community"
 
 [[lean_lib]]
 name = "DKPS_Quench_ICML_2026"
-

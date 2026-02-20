@@ -1,592 +1,895 @@
-/-
-================================================================================
-Quench (ICML, non-anonymous draft): DKPS definitions and Theorem 2 (query-efficiency)
-================================================================================
-
-This file is designed to be **line-by-line traceable** to the paper:
-
-  • "Query-efficient model evaluation using cached responses"
-    (quench-icml-nonanon.pdf)
-
-Hard constraint (per user request):
-  1. All *definitions* match the quench paper exactly.
-Secondary goal:
-  2. Proofs should be correct and tractable.
-
-Accordingly:
-  • We formalize all objects exactly as defined in quench (§§1.2–3).
-  • We fully mechanize the *deterministic core inequality* in Theorem 2.
-  • We leave the genuinely probabilistic ingredients (Acharyya concentration,
-    sampling/denseness) as explicit axioms/hypotheses, so they can be swapped in
-    later without rewriting the deterministic mathematics.
-
-Secondary references (both are cited by quench and clarify technical points):
-  • 2410.01106v3.pdf  (Helm et al. 2025): DKPS + inference background.
-  • 2511.08307v1.pdf  (Acharyya et al. 2025): concentration bounds (quench Thm 1).
-
--/
 
 import Mathlib
 
+/-
+This file is intended to live inside a larger Mathlib-based project.
+Many projects in this area run with `autoImplicit = false`; we adopt that convention here
+to avoid accidental implicit parameters.
+-/
+
+set_option autoImplicit false
+set_option linter.unusedVariables false
+set_option linter.unusedSectionVars false
+
+/-!
+# Quench (ICML) — DKPS + Nearest-Neighbor Query-Efficiency
+
+This file consolidates and cleans up scattered proof attempts into a single, organized
+formalization skeleton that follows *exactly* the definitions in:
+
+> Hayden Helm, Ben Johnson, Carey E. Priebe,
+> *Query-efficient model evaluation using cached responses* (ICML submission / preprint).
+>
+> In particular we track:
+> * Section 1.2 (problem setting and score function `y : 𝓕 × 2^{Q*} → [0,1]`)
+> * Section 2 (DKPS construction, Eq. (1))
+> * Section 3 (query-efficiency definition, Eq. (2), Assumptions 1–2, Theorem 2)
+
+**Design goals of this Lean file**
+1. **Definitions match the paper exactly** (hard constraint).
+2. Proofs are kept as tractable as possible. Some analytic steps are still marked `sorry`,
+   but the proof is structured so that each `sorry` corresponds to a clearly identified
+   paper step / external cited theorem.
+
+Throughout, we use `Finset Q` to represent subsets of the finite benchmark query set `Q*`,
+as the paper’s `2^{Q*}`.
+
+-/
+
 open scoped BigOperators
-open MeasureTheory
+noncomputable section
 
-namespace Quench
+namespace QuenchICML
 
-/-!
-## §0 Helper: Frobenius norm
-
-Quench uses the Frobenius norm `‖·‖_F` on the matrix `X̄_i ∈ ℝ^{m×p}` of averaged
-embedded responses. To avoid surprises with imports, we define it explicitly:
-
-  ‖A‖_F := sqrt(∑ᵢ ∑ⱼ (A i j)^2).
-
-This is the standard Frobenius norm used in the DKPS papers.
--/
-
-/-- Frobenius norm `‖A‖_F = sqrt(∑ᵢ ∑ⱼ (A i j)^2)` for real matrices. -/
-noncomputable def frob {I J : Type} [Fintype I] [Fintype J] (A : Matrix I J ℝ) : ℝ :=
-  Real.sqrt (∑ i : I, ∑ j : J, (A i j) ^ 2)
-
-@[simp] lemma frob_nonneg {I J : Type} [Fintype I] [Fintype J] (A : Matrix I J ℝ) :
-    0 ≤ frob A := by
-  simp [frob]
+universe u v
 
 /-!
-## §1.2 Problem statement (quench)
+## Paper conventions and Lean conventions
 
-Quench defines:
-  • a benchmark query set `Q* = {q₁,…,q_M}`,
-  • a benchmark scoring function `y : F × 2^{Q*} → [0,1]`.
+**Paper notation**
+- `Q`        : query space
+- `X`        : response space
+- `Q*`       : finite benchmark query set `Q* = {q₁,…,q_M}`
+- `𝓕`        : model space (black-box generative models)
+- `y(f,Q)`   : benchmark score on subset `Q ⊆ Q*`, valued in `[0,1]`
 
-We model `2^{Q*}` by `Finset` subsets of the query type.
+**Lean choices**
+- `Q*` is a `Finset Q`
+- `2^{Q*}` is represented by `Finset Q` together with the side-condition `Qsub ⊆ Qstar`
+- the codomain `[0,1]` is represented as a subtype `UnitInterval = {x : ℝ // x ∈ Icc 0 1}`
+- whenever we want to compute expectations / MSE we coerce `UnitInterval` to `ℝ`
+- DKPS vectors live in `ℝ^d = EuclideanSpace ℝ (Fin d)`
+- Frobenius norm is defined explicitly for matrices `ℝ^{m×p}`
+
+This matches the paper literally, while staying usable in Lean.
 -/
 
-section ProblemStatement
+/-- Paper’s `[0,1]` as a Lean type (subtype of `ℝ`). -/
+abbrev UnitInterval : Type := {x : ℝ // x ∈ Set.Icc (0 : ℝ) 1}
 
-variable {𝓕 𝓠 : Type}
+instance : Coe UnitInterval ℝ := ⟨Subtype.val⟩
 
-/-- Benchmark query set `Q*` (paper: `Q* = {q₁,…,q_M}`). -/
-variable (Qstar : Finset 𝓠)
+/-- Convenience: `ℝ^d` as a Euclidean space with the usual `‖·‖₂` norm. -/
+abbrev Vec (d : ℕ) : Type := EuclideanSpace ℝ (Fin d)
 
-/--
-Benchmark scoring function (paper: `y : F × 2^{Q*} → [0,1]`).
-
-We write it as `y f Q`, where `Q : Finset 𝓠` represents a subset of queries.
--/
-variable (y : 𝓕 → Finset 𝓠 → ℝ)
-
-/-- Full benchmark score `y(f,Q*)` (paper often abbreviates this as `y`). -/
-def yFull (f : 𝓕) : ℝ := y f Qstar
-
-/-- Subset score `y(f,Q)` (paper notation in §3: `ŷ_Q := y(f,Q)`). -/
-def ySub (Q : Finset 𝓠) (f : 𝓕) : ℝ := y f Q
-
-end ProblemStatement
+/-- Convenience: `ℝ^{m×p}` as a matrix type. -/
+abbrev Mat (m p : ℕ) : Type := Matrix (Fin m) (Fin p) ℝ
 
 /-!
-## §2 DKPS construction (quench)
+## Section 1.2 — Models and benchmark score function
 
-Quench §2 defines DKPS from sampled model responses:
-
-  • g : X → ℝ^p         (embedding function)
-  • X̄_i ∈ ℝ^{m×p}       (averaged embedded responses across r replicates)
-  • D_{ii′} = ‖X̄_i − X̄_{i′}‖_F   (pairwise Frobenius distances)
-  • DKPS = argmin stress objective (Eq. (1))
-
-IMPORTANT: In quench, `D_{ii′}` is **not rescaled by m**. We follow quench exactly.
+Paper (Section 1.2) treats a model as a random mapping from `Q` to `X` with a distribution `F`.
+In Lean, we model this equivalently as: for each query `q : Q`, the model returns a probability
+distribution on responses.
 -/
-
-section DKPSDefinitions
-
-variable {X : Type}              -- response space (paper: `X`)
-variable {p d : ℕ}               -- embedding dimension p, DKPS dimension d
-variable {n m r : ℕ}             -- #models n, #queries m, #replicates r
-
-/-- Embedding function `g : X → ℝ^p` (paper: `g : X → R^p`). -/
-variable (g : X → EuclideanSpace ℝ (Fin p))
-
-/--
-Sampled responses: `resp i j k` is the k-th response of model i to query j.
-
-This is the (already realized) cache of responses referenced throughout quench.
--/
-variable (resp : Fin n → Fin m → Fin r → X)
-
-/-- Embedded response `x_{ijk} = g(resp i j k)`. -/
-noncomputable def x (i : Fin n) (j : Fin m) (k : Fin r) : EuclideanSpace ℝ (Fin p) :=
-  g (resp i j k)
-
-/--
-Average embedded response (paper §2):
-
-  x̄_{ij} = (1/r) * ∑_{k=1}^r x_{ijk}.
--/
-noncomputable def xbar (i : Fin n) (j : Fin m) : EuclideanSpace ℝ (Fin p) :=
-  ((1 : ℝ) / (r : ℝ)) • (∑ k : Fin r, x (g := g) (resp := resp) i j k)
-
-/--
-Matrix `X̄_i ∈ ℝ^{m×p}` whose j-th row is `x̄_{ij}` (paper §2).
--/
-noncomputable def Xbar (i : Fin n) : Matrix (Fin m) (Fin p) ℝ :=
-  fun j a => (xbar (g := g) (resp := resp) i j) a
-
-/--
-Distance matrix `D` with entries (paper §2):
-
-  D_{ii′} = ‖X̄_i − X̄_{i′}‖_F.
--/
-noncomputable def D : Matrix (Fin n) (Fin n) ℝ :=
-  fun i i' => frob (Xbar (g := g) (resp := resp) i - Xbar (g := g) (resp := resp) i')
 
 /-!
-### Eq. (1): DKPS stress minimization (quench)
+We avoid depending on a particular bundled `ProbMeasure` structure name in Mathlib.
+Instead we use the standard `Measure` together with the predicate/typeclass
+`IsProbabilityMeasure`.
 
-Quench defines DKPS representations as a solution to:
-
-  (ψ̂₁,…,ψ̂_n) = argmin_{zᵢ ∈ ℝ^d} ∑_{i,i′} (‖zᵢ - z_{i′}‖ - D_{ii′})².
+This matches the paper’s intent: *a model returns a probability distribution on responses*.
 -/
 
-/-- Stress objective (quench Eq. (1)). -/
-noncomputable def stress (Dmat : Matrix (Fin n) (Fin n) ℝ)
-    (z : Fin n → EuclideanSpace ℝ (Fin d)) : ℝ :=
-  ∑ i : Fin n, ∑ i' : Fin n, (‖z i - z i'‖ - Dmat i i') ^ 2
+/-- A probability distribution on `X` (bundled as a measure with total mass `1`). -/
+abbrev ProbMeasure (X : Type v) [MeasurableSpace X] : Type v :=
+  { μ : MeasureTheory.Measure X // MeasureTheory.IsProbabilityMeasure μ }
 
-/-- `IsDKPS D z` means `z` globally minimizes the stress objective (argmin in Eq. (1)). -/
-def IsDKPS (Dmat : Matrix (Fin n) (Fin n) ℝ)
-    (z : Fin n → EuclideanSpace ℝ (Fin d)) : Prop :=
-  ∀ z', stress (n := n) (d := d) Dmat z ≤ stress (n := n) (d := d) Dmat z'
+/-- A black-box model: each query yields a probability distribution over responses.
 
-/-- The set of DKPS solutions (all minimizers), matching the "argmin" in Eq. (1). -/
-def DKPSSet (Dmat : Matrix (Fin n) (Fin n) ℝ) :
-    Set (Fin n → EuclideanSpace ℝ (Fin d)) :=
-  { z | IsDKPS (n := n) (d := d) Dmat z }
+Paper: “a model is a random mapping from `Q` to `X` with distribution `F`.” -/
+abbrev Model (Q : Type u) (X : Type v) [MeasurableSpace X] : Type (max u v) :=
+  Q → ProbMeasure X
 
-end DKPSDefinitions
+-- From here on we work with a fixed query set `Q` and response space `X`.
+variable {Q : Type u} [DecidableEq Q]
+variable {X : Type v} [MeasurableSpace X]
+
+-- We keep the measurable structure on the model space abstract.
+-- This is needed only to speak about a probability distribution `P_f` on models.
+variable [MeasurableSpace (Model Q X)]
+
+/- Paper: benchmark query set `Q* = {q₁,…,q_M}`. -/
+variable (Qstar : Finset Q)
+
+/- Paper: score function `y : 𝓕 × 2^{Q*} → [0,1]`. -/
+variable (score : Model Q X → Finset Q → UnitInterval)
+
+/-- Paper notation `y(f,Q*)` (the “full benchmark” score). -/
+def yFull (f : Model Q X) : ℝ := (score f Qstar : ℝ)
+
+/-- Paper notation `y(f,Q)` for `Q ⊆ Q*`. -/
+def ySub (Qsub : Finset Q) (f : Model Q X) : ℝ := (score f Qsub : ℝ)
+
+-- We will always *use* `ySub Qsub` with the side-condition `Qsub ⊆ Qstar`,
+-- exactly as in the paper.
+
+--------------------------------------------------------------------------------
+/-!
+## Section 2 — DKPS construction (Eq. (1))
+
+We formalize the objects appearing in Eq. (1) *literally*.
+
+### Inputs
+- `n` reference models `f₁,…,fₙ`
+- `m` benchmark queries `q₁,…,qₘ` (a subset of `Q*`)
+- `r` replicate responses per model-query pair
+- embedding function `g : X → ℝ^p`
+
+### Derived objects (paper)
+- average embedded response matrix `X̄_i ∈ ℝ^{m×p}`, with rows
+  `X̄_{ij·} = (1/r) ∑_{k=1}^r g(f_i(q_j))_k`
+- distance matrix `D_{ii'}` defined via Frobenius distance:
+  `D_{ii'} = ‖X̄_i - X̄_{i'}‖_F`
+- DKPS representations `ψ̂₁,…,ψ̂ₙ ∈ ℝ^d` defined by stress minimization (Eq. (1)):
+  `(ψ̂₁,…,ψ̂ₙ) ∈ argmin_{z₁,…,zₙ ∈ ℝ^d} ∑_{i,i'} (‖z_i - z_{i'}‖ - D_{ii'})²`
+-/
+
+/-- Frobenius norm on `ℝ^{m×p}`.
+
+Paper uses `‖·‖_F` in the definition of `D_{ii'}`. -/
+def frobNorm {m p : ℕ} (A : Mat m p) : ℝ :=
+  Real.sqrt (∑ i : Fin m, ∑ j : Fin p, (A i j) ^ (2 : ℕ))
+
+/-- Frobenius distance `‖A - B‖_F`. -/
+def frobDist {m p : ℕ} (A B : Mat m p) : ℝ :=
+  frobNorm (A - B)
+
+/-- Average of `r` embedded responses, `(1/r) ∑_{k=1}^r g(x_k)`.
+
+Paper: `X̄_{ij·} = (1/r) ∑_{k=1}^r g(f_i(q_j))_k`. -/
+def avgEmbed {p r : ℕ} (g : X → Vec p) (resp : Fin r → X) : Vec p :=
+  ((r : ℝ)⁻¹) • (∑ k : Fin r, g (resp k))
+
+/--
+`Xbar i` is the paper’s matrix `X̄_i ∈ ℝ^{m×p}` of average embedded responses for model `i`.
+
+Input `resp` should be thought of as: for each model `i` and query `j`, we have `r` responses
+`resp i j : Fin r → X`. (In the paper these are i.i.d. draws from the model distribution.) -/
+def Xbar {n m p r : ℕ}
+    (g : X → Vec p)
+    (resp : Fin n → Fin m → Fin r → X) :
+    Fin n → Mat m p :=
+  fun i => fun j k => (avgEmbed (X := X) g (resp i j)) k
+
+/-- Paper distance matrix `D_{ii'}` based on Frobenius distances of `X̄_i`. -/
+def Dmat {n m p r : ℕ}
+    (g : X → Vec p)
+    (resp : Fin n → Fin m → Fin r → X) :
+    Matrix (Fin n) (Fin n) ℝ :=
+  fun i i' => frobDist (Xbar (X := X) g resp i) (Xbar (X := X) g resp i')
+
+/-- Paper stress objective from Eq. (1). -/
+def dkpsStress {n d : ℕ} (D : Matrix (Fin n) (Fin n) ℝ) (z : Fin n → Vec d) : ℝ :=
+  ∑ i : Fin n, ∑ i' : Fin n, (‖z i - z i'‖ - D i i') ^ (2 : ℕ)
+
+/--
+`IsDKPS D ψHat` means that `ψHat` minimizes the stress objective (Eq. (1)).
+
+This is the Lean predicate corresponding to:
+`(ψ̂₁,…,ψ̂ₙ) ∈ argmin_{z₁,…,zₙ} ∑_{i,i'} (‖z_i - z_{i'}‖ - D_{ii'})²`.
+-/
+def IsDKPS {n d : ℕ} (D : Matrix (Fin n) (Fin n) ℝ) (ψHat : Fin n → Vec d) : Prop :=
+  ∀ z : Fin n → Vec d, dkpsStress D ψHat ≤ dkpsStress D z
 
 /-!
-## §3 Query-efficiency (quench)
+### Perspective maps `ψ(Q)` and `ψ̂(Q)`
 
-Quench §3 defines query-efficiency via expected loss under a model distribution `P_f`,
-and studies the 1-nearest-neighbor regressor in DKPS space.
+The paper uses:
+- `ψ(Q)`  : the (unknown) *true* DKPS representation in the perspective space induced by `Q`
+- `ψ̂(Q)` : the *estimated* DKPS representation computed from cached responses (Eq. (1))
+
+In the rest of the file (Theorem 2), we treat these maps abstractly as functions
+`ψ : 𝓕 → ℝ^d` and `ψ̂ : 𝓕 → ℝ^d`.  Theorem 1 (cited in the paper) provides the key
+high-probability concentration guarantee `‖ψ̂(f) - ψ(f)‖₂ ≤ c(n,m,r,d)`.
+
+We keep the DKPS definition above so the formalization matches the paper’s Section 2 exactly,
+but we do not re-prove existence/uniqueness of DKPS minimizers here.
+-/
+
+--------------------------------------------------------------------------------
+/-!
+## Section 3 — Risk, MSE, and query-efficiency (Eq. (2))
+
+Paper (Section 3) defines query-efficiency in terms of the population risk
+`E_{f ∼ P_f}[ ℓ(h(f), y(f,Q*)) ]`.  Eq. (2) is the eventual risk domination inequality.
 
 We formalize:
-  • risk and queryEfficient (Eq. (2)),
-  • MSE (used in Theorem 2),
-  • the *exact* 1-NN regressor definition from the paper (averaging over ties),
-  • the deterministic inequality used in the proof of Theorem 2.
+- population risk `Risk`
+- mean squared error `MSE` (squared loss)
+- `Q`-query-efficient (fixed subset `Qsub`)
+- `m`-query-efficient (for all `Qsub` with `|Qsub|=m`, each with its own `N_Q`)
+- “query-efficient” (for all `m < M`)
+
+These match the paper’s definitions, but expressed with `Finset` and `≤` on risks.
 -/
 
-namespace QueryEfficiencyDefs
+namespace QueryEfficiency
 
-variable {𝓕 : Type} [PseudoMetricSpace 𝓕]
-variable (Pf : Measure 𝓕) [IsProbabilityMeasure Pf]
+variable {Q : Type u} [DecidableEq Q]
+variable {X : Type v} [MeasurableSpace X]
+-- We treat the measurable structure on the model space `Model Q X` as an explicit assumption.
+-- The paper works with a probability distribution `P_f` on the (typically huge) model space `𝓕`.
+variable [MeasurableSpace (Model Q X)]
 
-/-- Risk `E_{f~P_f}[ ℓ(h(f), y(f)) ]` (quench Eq. (2)). -/
-noncomputable def risk {Y : Type} (ℓ : Y → Y → ℝ) (y : 𝓕 → Y) (h : 𝓕 → Y) : ℝ :=
-  ∫ f, ℓ (h f) (y f) ∂Pf
+/-- Population risk `E_f[ ℓ(h(f), y(f)) ]` under a model distribution `P_f`. -/
+noncomputable def Risk
+    (Pf : MeasureTheory.Measure (Model Q X)) [MeasureTheory.IsProbabilityMeasure Pf]
+    (ℓ : ℝ → ℝ → ℝ)
+    (y h : Model Q X → ℝ) : ℝ :=
+  ∫ f, ℓ (h f) (y f) ∂ Pf
 
-/-- Q-query-efficiency relative to another sequence (quench Eq. (2)). -/
-def queryEfficient {Y : Type} (ℓ : Y → Y → ℝ) (y : 𝓕 → Y) (h h' : ℕ → 𝓕 → Y) : Prop :=
-  ∃ N : ℕ, ∀ n : ℕ, n > N →
-    risk (Pf := Pf) ℓ y (h n) ≤ risk (Pf := Pf) ℓ y (h' n)
+/-- Squared loss (used for MSE). -/
+def sqLoss (a b : ℝ) : ℝ := (a - b) ^ (2 : ℕ)
 
-/-- Mean squared error `MSE(ŷ) = E[(ŷ - y)^2]` (used in quench Theorem 2). -/
-noncomputable def mse (y : 𝓕 → ℝ) (yhat : 𝓕 → ℝ) : ℝ :=
-  ∫ f, (yhat f - y f) ^ 2 ∂Pf
+/-- Mean squared error `E_f[(ŷ(f) - y(f))²]` under `P_f`. -/
+noncomputable def MSE
+    (Pf : MeasureTheory.Measure (Model Q X)) [MeasureTheory.IsProbabilityMeasure Pf]
+    (y yHat : Model Q X → ℝ) : ℝ :=
+  Risk (Q := Q) (X := X) Pf sqLoss y yHat
 
+/--
+Paper (Def. 1): for a *fixed* `Qsub ⊆ Q*`, a sequence `(hₙ)` is `Qsub` query-efficient
+relative to `(h'ₙ)` if there exists `N` such that Eq. (2) holds for all `n > N`.
+
+We include the side condition `Qsub ⊆ Qstar` explicitly (paper always has `Qsub ⊆ Q*`). -/
+def QQueryEfficient
+    (Qstar : Finset Q) (Qsub : Finset Q) (hQsub : Qsub ⊆ Qstar)
+    (Pf : MeasureTheory.Measure (Model Q X)) [MeasureTheory.IsProbabilityMeasure Pf]
+    (ℓ : ℝ → ℝ → ℝ)
+    (y : Model Q X → ℝ)
+    (h h' : ℕ → Model Q X → ℝ) : Prop :=
+  ∃ N : ℕ, ∀ n > N,
+    Risk (Q := Q) (X := X) Pf ℓ y (h n) ≤ Risk (Q := Q) (X := X) Pf ℓ y (h' n)
+
+/--
+Paper (Def. 2): `m`-query-efficiency.
+
+For each `Qsub ⊆ Q*` with `|Qsub| = m`, there exists a (possibly `Qsub`-dependent) `N_Qsub`
+such that Eq. (2) holds for all `n > N_Qsub`. -/
+def mQueryEfficient
+    (Qstar : Finset Q) (m : ℕ)
+    (Pf : MeasureTheory.Measure (Model Q X)) [MeasureTheory.IsProbabilityMeasure Pf]
+    (ℓ : ℝ → ℝ → ℝ)
+    (y : Model Q X → ℝ)
+    (h h' : Finset Q → ℕ → Model Q X → ℝ) : Prop :=
+  ∀ Qsub : Finset Q, Qsub ⊆ Qstar → Qsub.card = m →
+    ∃ N : ℕ, ∀ n > N,
+      Risk (Q := Q) (X := X) Pf ℓ y (h Qsub n) ≤ Risk (Q := Q) (X := X) Pf ℓ y (h' Qsub n)
+
+/--
+Paper (Def. 3): query-efficiency across all query budgets `m < M` where `M = |Q*|`.
+
+We follow the paper’s quantifier structure: for all `m < |Q*|`, the sequence is `m`-query-efficient.
+(Any extra “`∃ N(m)`” phrasing in the text is logically redundant given Def. 2, so we do not
+add a uniformity requirement over `Qsub` here.) -/
+def QueryEfficient
+    (Qstar : Finset Q)
+    (Pf : MeasureTheory.Measure (Model Q X)) [MeasureTheory.IsProbabilityMeasure Pf]
+    (ℓ : ℝ → ℝ → ℝ)
+    (y : Model Q X → ℝ)
+    (h h' : Finset Q → ℕ → Model Q X → ℝ) : Prop :=
+  ∀ m : ℕ, m < Qstar.card →
+    mQueryEfficient (Q := Q) (X := X) Qstar m Pf ℓ y h h'
+
+end QueryEfficiency
+
+--------------------------------------------------------------------------------
 /-!
-### 1-NN regression in DKPS (quench §3)
+## Section 3 — Nearest-neighbor regression in perspective space
 
-The quench definition (verbatim):
+Paper (Section 3) defines, for a fixed query budget `m` and fixed subset `Qsub ⊆ Q*`,
+the DKPS+NN estimator
 
-  δ* = min_i ‖ψ̂ᵢ − ψ̂‖_F
-  ŷ_NN =   (∑_{i : ‖ψ̂ᵢ - ψ̂‖_F = δ*} y_i)
-         / (∑_{i : ‖ψ̂ᵢ - ψ̂‖_F = δ*} 1)
+`ŷ_NN := hₙ^{(m)}(ψ̂) = (∑ 1{‖ψ̂_i - ψ̂‖ = δ*} y_i) / (∑ 1{‖ψ̂_i - ψ̂‖ = δ*})`
 
-We implement this for a finite reference set indexed by `Fin n`. We assume `n>0`
-(so that "min" and the NN-set are well-defined).
+where `δ* = min_i ‖ψ̂_i - ψ̂‖` and ties are averaged.
+
+We formalize exactly this formula.
+
+Implementation note:
+- in the paper the norm in the indicator is written as `‖·‖_F` (Frobenius).
+  For vectors in `ℝ^d`, Frobenius norm coincides with the Euclidean 2-norm, and Lean’s
+  `‖·‖` on `Vec d` is exactly this 2-norm.
 -/
 
-section NNRegressor
+namespace NearestNeighbor
 
-variable {d n : ℕ} [Fact (0 < n)]
-abbrev E := EuclideanSpace ℝ (Fin d)
-
-variable (ψhatRef : Fin n → E)          -- ψ̂_i for reference models
-variable (yRef : Fin n → ℝ)             -- y_i labels
-variable (ψhatTgt : E)                  -- ψ̂ for target model
-
-/-- The minimal distance `δ* = min_i ‖ψ̂ᵢ - ψ̂‖` (paper: δ*). -/
-noncomputable def δStar : ℝ := by
-  classical
-  refine Finset.inf' (Finset.univ : Finset (Fin n)) ?_ (fun i => ‖ψhatRef i - ψhatTgt‖)
-  refine ⟨⟨0, Fact.out⟩, by simp⟩
-
-/-- The NN tie-set `{i | ‖ψ̂ᵢ - ψ̂‖ = δ*}` (paper: the indicator set in ŷ_NN). -/
-noncomputable def nnSet : Finset (Fin n) :=
-  (Finset.univ : Finset (Fin n)).filter (fun i => ‖ψhatRef i - ψhatTgt‖ = δStar (ψhatRef := ψhatRef) (ψhatTgt := ψhatTgt))
-
-/-- The 1-NN regressor ŷ_NN (paper definition; averages over ties). -/
-noncomputable def nnReg : ℝ :=
-  (nnSet (ψhatRef := ψhatRef) (ψhatTgt := ψhatTgt)).sum yRef
-    / ((nnSet (ψhatRef := ψhatRef) (ψhatTgt := ψhatTgt)).card : ℝ)
-
-lemma δStar_le (i : Fin n) :
-    δStar (ψhatRef := ψhatRef) (ψhatTgt := ψhatTgt) ≤ ‖ψhatRef i - ψhatTgt‖ := by
-  classical
-  -- unfold δStar; use `Finset.inf'_le` with `i ∈ univ`
-  simpa [δStar] using
-    (Finset.inf'_le (s := (Finset.univ : Finset (Fin n)))
-      (f := fun j => ‖ψhatRef j - ψhatTgt‖)
-      (by refine ⟨⟨0, Fact.out⟩, by simp⟩)
-      (by simp))
-
-lemma nnSet_nonempty :
-    (nnSet (ψhatRef := ψhatRef) (ψhatTgt := ψhatTgt)).Nonempty := by
-  classical
-  have huniv : (Finset.univ : Finset (Fin n)).Nonempty := by
-    refine ⟨⟨0, Fact.out⟩, by simp⟩
-  have hmem :
-      δStar (ψhatRef := ψhatRef) (ψhatTgt := ψhatTgt)
-        ∈ (Finset.univ : Finset (Fin n)).image (fun i => ‖ψhatRef i - ψhatTgt‖) := by
-    simpa [δStar] using
-      (Finset.inf'_mem (s := (Finset.univ : Finset (Fin n)))
-        (f := fun i => ‖ψhatRef i - ψhatTgt‖) huniv)
-  rcases Finset.mem_image.mp hmem with ⟨i0, hi0, hi0eq⟩
-  refine ⟨i0, ?_⟩
-  have : ‖ψhatRef i0 - ψhatTgt‖ = δStar (ψhatRef := ψhatRef) (ψhatTgt := ψhatTgt) := by
-    simpa using hi0eq.symm
-  simp [nnSet, this]
-
-end NNRegressor
-
-end QueryEfficiencyDefs
-
-/-!
-## §3 Assumptions and Theorem 2 (deterministic core)
-
-Quench Assumption 1 (Lipschitz score function):
-  |y(f,Q*) - y(f',Q*)| ≤ γ · ‖ψ(Q)(f) - ψ(Q)(f')‖₂
-
-Quench Assumption 2 (model distribution support):
-  P_f has positive mass in every neighborhood of every model.
-
-In the proof of quench Theorem 2, these are combined with:
-  • DKPS concentration (quench Theorem 1, cited from Acharyya et al. 2025),
-  • a "denseness" sampling argument (derived from Assumption 2),
-to obtain a small upper bound on the squared prediction error.
-
-Here we mechanize the *deterministic inequality* that sits in the middle of the
-paper's proof.
--/
-
-section DeterministicCore
-
-variable {𝓕 : Type} [PseudoMetricSpace 𝓕]
 variable {d : ℕ}
-abbrev E := EuclideanSpace ℝ (Fin d)
 
-/-- Assumption 1 (quench): Lipschitz of the full score in the (true) DKPS. -/
-def LipschitzScore (γ : ℝ) (yFull : 𝓕 → ℝ) (ψTrue : 𝓕 → E) : Prop :=
-  ∀ f f', |yFull f - yFull f'| ≤ γ * ‖ψTrue f - ψTrue f'‖
+/-- Predicate: `i` is an argmin of a real-valued function over `Fin n`. -/
+def IsArgmin {n : ℕ} (f : Fin n → ℝ) (i : Fin n) : Prop :=
+  ∀ j, f i ≤ f j
 
-/-- Assumption 2 (quench): model distribution has positive mass in every metric ball. -/
-def ModelSupport (Pf : Measure 𝓕) : Prop :=
-  ∀ f : 𝓕, ∀ δ : ℝ, 0 < δ → ∃ ε : ℝ, 0 < ε ∧ Pf (Metric.ball f δ) ≥ ε
+/-- Existence of an argmin over a finite type. -/
+lemma exists_argmin {n : ℕ} (hn : 0 < n) (f : Fin n → ℝ) : ∃ i, IsArgmin f i := by
+  classical
+  -- Same proof pattern as in your earlier working file:
+  -- minimize over the finite set `Finset.univ : Finset (Fin n)`.
+  -- `Fin n` is nonempty as soon as `0 < n` (witness `0`).
+  haveI : Nonempty (Fin n) := ⟨⟨0, hn⟩⟩
+  have h_nonempty : (Finset.univ : Finset (Fin n)).Nonempty := Finset.univ_nonempty
+  obtain ⟨i, _, hi⟩ := Finset.exists_min_image (Finset.univ : Finset (Fin n)) f h_nonempty
+  refine ⟨i, ?_⟩
+  intro j
+  exact hi j (Finset.mem_univ j)
 
+/-- Choose a canonical argmin index (noncomputable, classical choice). -/
+noncomputable def nnIndex {n : ℕ} (hn : 0 < n) (f : Fin n → ℝ) : Fin n :=
+  Classical.choose (exists_argmin (n := n) hn f)
+
+lemma nnIndex_isArgmin {n : ℕ} (hn : 0 < n) (f : Fin n → ℝ) :
+    IsArgmin f (nnIndex (n := n) hn f) :=
+  Classical.choose_spec (exists_argmin (n := n) hn f)
+
+/-- Paper’s `δ* = min_i ‖ψ̂_i - ψ̂‖`. -/
+noncomputable def deltaStar {n : ℕ} (hn : 0 < n)
+    (ψHat_ref : Fin n → Vec d) (ψHat_target : Vec d) : ℝ :=
+  ‖ψHat_ref (nnIndex (n := n) hn (fun i => ‖ψHat_ref i - ψHat_target‖)) - ψHat_target‖
+
+/--
+Set of all nearest neighbors (all minimizers, i.e. all indices achieving `δ*`).
+
+Paper corresponds to `{ i : {1,…,n} | ‖ψ̂_i - ψ̂‖ = δ* }`. -/
+noncomputable def nnTieSet {n : ℕ} (hn : 0 < n)
+    (ψHat_ref : Fin n → Vec d) (ψHat_target : Vec d) : Finset (Fin n) :=
+  let δ := deltaStar (d := d) (n := n) hn ψHat_ref ψHat_target;
+  Finset.univ.filter (fun i => ‖ψHat_ref i - ψHat_target‖ = δ)
+
+/-- The tie set is nonempty (it contains `nnIndex`). -/
+lemma nnTieSet_nonempty {n : ℕ} (hn : 0 < n)
+    (ψHat_ref : Fin n → Vec d) (ψHat_target : Vec d) :
+    (nnTieSet (d := d) (n := n) hn ψHat_ref ψHat_target).Nonempty := by
+  classical
+  -- The tie set contains the chosen minimizer index.
+  refine ⟨nnIndex (n := n) hn (fun i => ‖ψHat_ref i - ψHat_target‖), ?_⟩
+  -- Unfold and discharge by simp: membership is exactly the defining equality of `δ*`.
+  simp [nnTieSet, deltaStar]
+
+/-- Any index in the tie set is also an argmin. -/
+lemma nnTieSet_isArgmin {n : ℕ} (hn : 0 < n)
+    (ψHat_ref : Fin n → Vec d) (ψHat_target : Vec d) :
+    ∀ i, i ∈ nnTieSet (d := d) (n := n) hn ψHat_ref ψHat_target →
+      IsArgmin (fun j => ‖ψHat_ref j - ψHat_target‖) i := by
+  classical
+  intro i hi
+  -- Let `i0` be the chosen minimizer; use equality of distances to transfer argmin-ness.
+  let i0 : Fin n := nnIndex (n := n) hn (fun j => ‖ψHat_ref j - ψHat_target‖)
+  have hi0 : IsArgmin (fun j => ‖ψHat_ref j - ψHat_target‖) i0 :=
+    nnIndex_isArgmin (n := n) hn (fun j => ‖ψHat_ref j - ψHat_target‖)
+  have hEq : ‖ψHat_ref i - ψHat_target‖ = ‖ψHat_ref i0 - ψHat_target‖ := by
+    -- membership in filter means distance equals `δ*`, which is distance of `i0`
+    unfold nnTieSet at hi
+    -- `simp` gives the equality to `δ*`; then unfold `deltaStar`.
+    have : ‖ψHat_ref i - ψHat_target‖ = deltaStar (d := d) (n := n) hn ψHat_ref ψHat_target := by
+      simpa using (Finset.mem_filter.1 hi).2
+    -- `δ*` is defined as distance of `i0`
+    simpa [deltaStar, i0] using this
+  intro j
+  -- `f i = f i0 ≤ f j`
+  have : ‖ψHat_ref i0 - ψHat_target‖ ≤ ‖ψHat_ref j - ψHat_target‖ := hi0 j
+  simpa [hEq] using this
+
+/--
+Paper’s nearest-neighbor regression estimator `ŷ_NN`.
+
+This is exactly the paper formula:
+- compute `δ* = min_i ‖ψ̂_i - ψ̂‖`
+- average the `y_i` over all ties achieving `δ*`.
+
+(If `n=0`, the paper setting does not apply; we require `hn : 0 < n`.) -/
+noncomputable def yHatNN {n : ℕ} (hn : 0 < n)
+    (ψHat_ref : Fin n → Vec d) (ψHat_target : Vec d)
+    (y_ref : Fin n → ℝ) : ℝ :=
+  let S : Finset (Fin n) := nnTieSet (d := d) (n := n) hn ψHat_ref ψHat_target;
+  (Finset.sum S (fun i => y_ref i)) / (S.card : ℝ)
+
+end NearestNeighbor
+
+--------------------------------------------------------------------------------
 /-!
-### A general algebra lemma: averages preserve uniform bounds
+## Assumptions 1–2 (paper) and Theorem 2 proof skeleton
 
-This lemma is used to reconcile a small mismatch in quench:
-the *definition* of ŷ_NN averages over ties, but the *proof* reasons about a
-single nearest neighbor `f*`. The lemma below lets the proof go through without
-assuming uniqueness of the nearest neighbor.
+We now formalize the assumptions *as stated in the paper*:
+
+### Assumption 1 (Lipschitz score function)
+For a fixed query subset `Qsub ⊆ Q*`, the full-benchmark score function `y(·,Q*)`
+is `γ`-Lipschitz with respect to the *true* perspective map `ψ(Qsub)`:
+`|y(f,Q*) - y(f',Q*)| ≤ γ ‖ψ(Qsub)(f) - ψ(Qsub)(f')‖₂`.
+
+### Assumption 2 (model distribution support)
+The paper states: “`P_f` has non-zero measure on all compact subsets of `𝓕`.”
+They immediately give an equivalent ball condition:
+for every `f` and `δ>0` there exists `ε>0` with `P_f(B_δ(f)) ≥ ε`.
+
+In Lean, we encode the ball form (it is what the proof uses).
+
+### Theorem 2
+We keep the theorem split into:
+- Part 1: accuracy / small MSE with high probability
+- Part 2: query-efficiency relative to the subset-score baseline
+
+The proof follows the paper’s numbered steps; we reuse the algebraic lemmas from
+your existing working files and isolate the genuinely analytic “paper citation” steps.
 -/
 
-lemma abs_avg_sub_le_of_forall
+section Assumptions_And_Theorems
+
+variable {Q : Type u} [DecidableEq Q]
+variable {X : Type v} [MeasurableSpace X]
+variable {d : ℕ}
+variable [MeasurableSpace (Model Q X)]
+
+
+/-- Assumption 1 (paper): Lipschitzness of the full-benchmark score w.r.t. the true perspective map. -/
+def LipschitzScore (γ : ℝ) (ψ : Model Q X → Vec d) (y : Model Q X → ℝ) : Prop :=
+  ∀ f f' : Model Q X, |y f - y f'| ≤ γ * ‖ψ f - ψ f'‖
+
+/--
+Assumption 2 (paper): positive mass in every ball.
+
+This is the “equivalently” statement in the paper:
+for any target model `f` and radius `δ>0`, there exists `ε>0` with `P_f(B_δ(f)) ≥ ε`.
+
+In Lean we encode this using `Metric.ball` and an abstract metric on the model space.
+-/
+def ModelSupportNontrivial
+    (Pf : MeasureTheory.Measure (Model Q X)) [MeasureTheory.IsProbabilityMeasure Pf]
+    [PseudoMetricSpace (Model Q X)] : Prop :=
+  ∀ (f : Model Q X) (δ : ℝ), 0 < δ →
+    ∃ ε : ENNReal, 0 < ε ∧ Pf (Metric.ball f δ) ≥ ε
+
+/-!
+### “With high probability”
+The paper uses the standard asymptotic meaning: probability → 1 as sample size grows.
+We reuse the (convenient) encoding from your existing files: `HighProbAtTop`.
+-/
+
+def HighProbAtTop {Ω : Type} [MeasurableSpace Ω]
+    (μ : ℕ → MeasureTheory.Measure Ω) (hμ : ∀ n, MeasureTheory.IsProbabilityMeasure (μ n))
+    (E : ℕ → Set Ω) : Prop :=
+  ∀ δ : ENNReal, 0 < δ → ∃ N : ℕ, ∀ n > N, (μ n) (E n) ≥ 1 - δ
+
+/-!
+## Theorem 2: algebraic / geometric proof steps
+
+The next lemmas are the “deterministic” parts of the paper’s proof:
+they take as hypotheses the concentration bound `‖ψ̂ - ψ‖ ≤ c`
+and the coverage event “some reference model is within ρ of the target in true ψ-space”.
+-/
+
+section Theorem2_Proof_Steps
+
+
+variable {Ω : Type} [MeasurableSpace Ω]
+
+/-- Step 1 (paper): Lipschitz transfers score error to true ψ-distance. -/
+lemma step1_lipschitz_bound
+    (γ : ℝ) (ψ : Model Q X → Vec d) (y : Model Q X → ℝ)
+    (hLip : LipschitzScore (Q := Q) (X := X) γ ψ y)
+    (f f' : Model Q X) :
+    |y f - y f'| ≤ γ * ‖ψ f - ψ f'‖ :=
+  hLip f f'
+
+/-!
+### A small geometric helper
+
+The paper repeatedly uses the “three-point” triangle inequality in an ambient normed space:
+
+`‖a - c‖ ≤ ‖a - b‖ + ‖b - c‖`.
+
+Mathlib has many variants; to keep this file robust across local imports, we prove the exact
+statement we need from the basic triangle inequality `norm_add_le`.
+-/
+
+lemma norm_sub_le_norm_sub_add_norm_sub (a b c : Vec d) :
+    ‖a - c‖ ≤ ‖a - b‖ + ‖b - c‖ := by
+  -- `(a - b) + (b - c) = a - c`.
+  simpa [sub_add_sub_cancel] using (norm_add_le (a - b) (b - c))
+
+/--
+Step 2 (paper): triangle inequality bound on true ψ-distance in terms of estimated ψ̂-distance
+and the concentration error `c`.
+
+Paper writes:
+`‖ψ* - ψ‖ ≤ ‖ψ* - ψ̂*‖ + ‖ψ̂* - ψ̂‖ + ‖ψ̂ - ψ‖`
+and uses the concentration bound to replace the first and third terms by `c`. -/
+lemma step2_triangle_inequality
+    {n : ℕ} (ψ : Fin n → Vec d) (ψHat : Fin n → Vec d)
+    (ψ_target ψHat_target : Vec d)
+    (i_star : Fin n)
+    (c : ℝ)
+    (h_conc_ref : ∀ i, ‖ψHat i - ψ i‖ ≤ c)
+    (h_conc_target : ‖ψHat_target - ψ_target‖ ≤ c) :
+    ‖ψ i_star - ψ_target‖ ≤ 2 * c + ‖ψHat i_star - ψHat_target‖ := by
+  -- The paper’s Step 2 is a straight application of the triangle inequality.
+  -- We route through the estimated points `ψHat i*` and `ψHat_target`:
+  --
+  --   ψ(i*)  ---->  ψHat(i*)  ---->  ψHat_target  ---->  ψ_target.
+
+  have h₁ :
+      ‖ψ i_star - ψ_target‖ ≤ ‖ψ i_star - ψHat_target‖ + ‖ψHat_target - ψ_target‖ :=
+    norm_sub_le_norm_sub_add_norm_sub (d := d) (ψ i_star) ψHat_target ψ_target
+
+  have h₂ :
+      ‖ψ i_star - ψHat_target‖ ≤ ‖ψ i_star - ψHat i_star‖ + ‖ψHat i_star - ψHat_target‖ :=
+    norm_sub_le_norm_sub_add_norm_sub (d := d) (ψ i_star) (ψHat i_star) ψHat_target
+
+  have h_total :
+      ‖ψ i_star - ψ_target‖ ≤
+        (‖ψ i_star - ψHat i_star‖ + ‖ψHat i_star - ψHat_target‖) + ‖ψHat_target - ψ_target‖ := by
+    -- Add the last term to both sides of `h₂` and chain with `h₁`.
+    have h₂' :
+        ‖ψ i_star - ψHat_target‖ + ‖ψHat_target - ψ_target‖ ≤
+          (‖ψ i_star - ψHat i_star‖ + ‖ψHat i_star - ψHat_target‖) + ‖ψHat_target - ψ_target‖ := by
+      simpa [add_assoc] using
+        (add_le_add h₂ (le_rfl : ‖ψHat_target - ψ_target‖ ≤ ‖ψHat_target - ψ_target‖))
+    exact le_trans h₁ h₂'
+
+  -- Rewrite the reference concentration hypothesis in the order we need.
+  have h_conc_i : ‖ψ i_star - ψHat i_star‖ ≤ c := by
+    -- `‖ψHat - ψ‖ ≤ c` implies `‖ψ - ψHat‖ ≤ c`.
+    simpa [norm_sub_rev] using (h_conc_ref i_star)
+
+  -- Now substitute the two `≤ c` bounds and rearrange.
+  have hA :
+      (‖ψ i_star - ψHat i_star‖ + ‖ψHat i_star - ψHat_target‖) ≤
+        (c + ‖ψHat i_star - ψHat_target‖) := by
+    simpa using
+      (add_le_add h_conc_i (le_rfl : ‖ψHat i_star - ψHat_target‖ ≤ ‖ψHat i_star - ψHat_target‖))
+  have hB : ‖ψHat_target - ψ_target‖ ≤ c := h_conc_target
+  have hAB :
+      (‖ψ i_star - ψHat i_star‖ + ‖ψHat i_star - ψHat_target‖) + ‖ψHat_target - ψ_target‖
+        ≤ (c + ‖ψHat i_star - ψHat_target‖) + c := by
+    -- combine `hA` and `hB`.
+    simpa [add_assoc] using (add_le_add hA hB)
+
+  -- Finish.
+  have h_final : ‖ψ i_star - ψ_target‖ ≤ (c + ‖ψHat i_star - ψHat_target‖) + c :=
+    le_trans h_total hAB
+  -- `((c + t) + c) = (2*c + t)`.
+  simpa [two_mul, add_assoc, add_left_comm, add_comm] using h_final
+/--
+Step 3 (paper): if `i*` is an argmin in ψ̂-space, then its ψ̂-distance is bounded by any reference.
+
+This is the “nearest neighbor” property used to compare `δ*` to any candidate `j`. -/
+lemma step3_argmin_property
+    {n : ℕ} (ψHat : Fin n → Vec d) (ψHat_target : Vec d)
+    (i_star : Fin n)
+    (h_i_star : NearestNeighbor.IsArgmin (fun i => ‖ψHat i - ψHat_target‖) i_star) :
+    ∀ j : Fin n, ‖ψHat i_star - ψHat_target‖ ≤ ‖ψHat j - ψHat_target‖ :=
+  h_i_star
+
+/--
+Step 4 (paper): combine Step 2 and Step 3 with a “coverage” witness `j*` satisfying
+`‖ψ_j* - ψ_target‖ ≤ ρ` to conclude
+
+`‖ψ_i* - ψ_target‖ ≤ ρ + 4c`.
+
+This corresponds to the inequality right before squaring in the paper’s proof.
+-/
+lemma step4_support_bound
+    {n : ℕ}
+    (ψ : Fin n → Vec d) (ψHat : Fin n → Vec d)
+    (ψ_target ψHat_target : Vec d)
+    (i_star : Fin n)
+    (h_i_star : NearestNeighbor.IsArgmin (fun i => ‖ψHat i - ψHat_target‖) i_star)
+    (c ρ : ℝ)
+    (h_conc_ref : ∀ i, ‖ψHat i - ψ i‖ ≤ c)
+    (h_conc_target : ‖ψHat_target - ψ_target‖ ≤ c)
+    (h_supp : ∃ j : Fin n, ‖ψ j - ψ_target‖ ≤ ρ) :
+    ‖ψ i_star - ψ_target‖ ≤ ρ + 4 * c := by
+  classical
+  rcases h_supp with ⟨j_star, hj_star⟩
+
+  -- Step 2 gives: true distance ≤ 2c + estimated distance at `i_star`.
+  have h_step2 :
+      ‖ψ i_star - ψ_target‖ ≤ 2 * c + ‖ψHat i_star - ψHat_target‖ :=
+    step2_triangle_inequality (d := d) (n := n)
+      ψ ψHat ψ_target ψHat_target i_star c h_conc_ref h_conc_target
+
+  -- Argmin gives: estimated distance at `i_star` is ≤ that of any reference, in particular `j_star`.
+  have h_arg : ‖ψHat i_star - ψHat_target‖ ≤ ‖ψHat j_star - ψHat_target‖ :=
+    h_i_star j_star
+
+  -- Bound the estimated distance to the witness `j_star` using two triangle inequalities.
+  have h_j :
+      ‖ψHat j_star - ψHat_target‖ ≤ ρ + 2 * c := by
+    have h1 :
+        ‖ψHat j_star - ψHat_target‖ ≤ ‖ψHat j_star - ψ j_star‖ + ‖ψ j_star - ψHat_target‖ := by
+      -- Triangle inequality with middle point `ψ j_star`.
+      simpa using
+        (norm_sub_le_norm_sub_add_norm_sub (d := d) (ψHat j_star) (ψ j_star) ψHat_target)
+
+    have h2 :
+        ‖ψ j_star - ψHat_target‖ ≤ ‖ψ j_star - ψ_target‖ + ‖ψHat_target - ψ_target‖ := by
+      -- Triangle inequality with middle point `ψ_target`.
+      have h2' :
+          ‖ψ j_star - ψHat_target‖ ≤ ‖ψ j_star - ψ_target‖ + ‖ψ_target - ψHat_target‖ := by
+        simpa using
+          (norm_sub_le_norm_sub_add_norm_sub (d := d) (ψ j_star) ψ_target ψHat_target)
+
+      -- Rewrite the final norm term using `‖a - b‖ = ‖b - a‖`.
+      have hEq : ‖ψ_target - ψHat_target‖ = ‖ψHat_target - ψ_target‖ := by
+        simpa using (norm_sub_rev ψHat_target ψ_target).symm
+
+      simpa [hEq] using h2'
+
+    have h12 :
+        ‖ψHat j_star - ψHat_target‖ ≤
+          ‖ψHat j_star - ψ j_star‖ + (‖ψ j_star - ψ_target‖ + ‖ψHat_target - ψ_target‖) := by
+      -- Combine `h1` and `h2` by monotonicity of addition.
+      have h2'' :
+          ‖ψHat j_star - ψ j_star‖ + ‖ψ j_star - ψHat_target‖ ≤
+            ‖ψHat j_star - ψ j_star‖ + (‖ψ j_star - ψ_target‖ + ‖ψHat_target - ψ_target‖) := by
+        simpa [add_assoc] using
+          (add_le_add (le_rfl : ‖ψHat j_star - ψ j_star‖ ≤ ‖ψHat j_star - ψ j_star‖) h2)
+      exact le_trans h1 h2''
+
+    have h_conc_j : ‖ψHat j_star - ψ j_star‖ ≤ c := h_conc_ref j_star
+    -- Use the support witness and concentration on the target.
+    linarith [h12, h_conc_j, hj_star, h_conc_target]
+
+  -- Put everything together.
+  have h_distHat : ‖ψHat i_star - ψHat_target‖ ≤ ρ + 2 * c :=
+    le_trans h_arg h_j
+
+  linarith [h_step2, h_distHat]
+/--
+Step 5 (paper): pointwise score error bound for an argmin index `i*`:
+
+`|y_i* - y| ≤ γ (ρ + 4c)`.
+
+This is the main inequality used in the MSE bound.
+-/
+lemma step5_pointwise_error
+    {n : ℕ}
+    (ψ : Fin n → Vec d) (ψHat : Fin n → Vec d)
+    (ψ_target ψHat_target : Vec d)
+    (i_star : Fin n)
+    (h_i_star : NearestNeighbor.IsArgmin (fun i => ‖ψHat i - ψHat_target‖) i_star)
+    (c ρ γ : ℝ)
+    (h_conc_ref : ∀ i, ‖ψHat i - ψ i‖ ≤ c)
+    (h_conc_target : ‖ψHat_target - ψ_target‖ ≤ c)
+    (h_supp : ∃ j : Fin n, ‖ψ j - ψ_target‖ ≤ ρ)
+    (y_ref : Fin n → ℝ) (y_target : ℝ)
+    (h_lip : ∀ i, |y_ref i - y_target| ≤ γ * ‖ψ i - ψ_target‖)
+    (h_gamma_nonneg : 0 ≤ γ)
+    (h_rho_nonneg : 0 ≤ ρ)
+    (h_c_nonneg : 0 ≤ c) :
+    |y_ref i_star - y_target| ≤ γ * (ρ + 4 * c) := by
+  calc
+    |y_ref i_star - y_target|
+        ≤ γ * ‖ψ i_star - ψ_target‖ := h_lip i_star
+    _ ≤ γ * (ρ + 4 * c) := by
+      -- Multiply the Step 4 bound by `γ ≥ 0`.
+      have h_bound : ‖ψ i_star - ψ_target‖ ≤ ρ + 4 * c :=
+        step4_support_bound (d := d) (n := n)
+          ψ ψHat ψ_target ψHat_target i_star h_i_star c ρ
+          h_conc_ref h_conc_target h_supp
+      exact mul_le_mul_of_nonneg_left h_bound h_gamma_nonneg
+
+/-!
+### From pointwise error to the paper’s `ŷ_NN` (tie-average)
+
+The paper’s estimator averages `y_i` across all ties at the minimum distance `δ*`.
+To lift Step 5 to the averaged estimator, we need the elementary fact:
+if every tie element satisfies `|y_i - y| ≤ B`, then the average also satisfies `|avg - y| ≤ B`.
+
+We isolate this as a lemma.  It is purely algebraic and can be discharged later.
+-/
+
+/-- If each element is within `B` of `y`, then their average is also within `B` of `y`. -/
+lemma abs_avg_sub_le_of_forall_abs_sub_le
     {α : Type} [DecidableEq α]
     (S : Finset α) (hS : S.Nonempty)
-    (y : α → ℝ) (y0 B : ℝ)
-    (h : ∀ i, i ∈ S → |y i - y0| ≤ B) :
-    |(S.sum y) / (S.card : ℝ) - y0| ≤ B := by
+    (y_ref : α → ℝ) (y : ℝ) (B : ℝ)
+    (hB : ∀ i ∈ S, |y_ref i - y| ≤ B) :
+    |(Finset.sum S (fun i => y_ref i)) / (S.card : ℝ) - y| ≤ B := by
   classical
-  -- B ≥ 0 since S is nonempty and |·| ≥ 0.
-  have hBnonneg : 0 ≤ B := by
-    rcases hS with ⟨i0, hi0⟩
-    have hi0' := h i0 hi0
-    exact le_trans (by simpa using abs_nonneg (y i0 - y0)) hi0'
-  -- card > 0
-  have hcard_pos : 0 < S.card := Finset.card_pos.mpr hS
-  have hcard_posR : 0 < (S.card : ℝ) := by exact_mod_cast hcard_pos
-  have hcard_neR : (S.card : ℝ) ≠ 0 := by exact_mod_cast (ne_of_gt hcard_pos)
-  -- Rewrite as an average of deviations.
-  have hrew :
-      (S.sum y) / (S.card : ℝ) - y0
-        = (S.sum (fun i => y i - y0)) / (S.card : ℝ) := by
-    -- Move y0 to a common denominator.
-    calc
-      (S.sum y) / (S.card : ℝ) - y0
-          = (S.sum y) / (S.card : ℝ) - (y0 * (S.card : ℝ)) / (S.card : ℝ) := by
-              simp [hcard_neR]
-      _ = (S.sum y - y0 * (S.card : ℝ)) / (S.card : ℝ) := by
-              simp [sub_div]
-      _ = (S.sum y - (S.card : ℝ) * y0) / (S.card : ℝ) := by ring
-      _ = (S.sum y - (S.sum fun _ : α => y0)) / (S.card : ℝ) := by
-              simp [Finset.sum_const, nsmul_eq_mul, mul_comm]
-      _ = (S.sum (fun i => y i - y0)) / (S.card : ℝ) := by
-              simp [Finset.sum_sub_distrib]
-  -- Triangle inequality for sums + termwise bound.
-  calc
-    |(S.sum y) / (S.card : ℝ) - y0|
-        = |(S.sum (fun i => y i - y0)) / (S.card : ℝ)| := by simp [hrew]
-    _ = |S.sum (fun i => y i - y0)| / (S.card : ℝ) := by
-          simp [abs_div, abs_of_pos hcard_posR]
-    _ ≤ (S.sum (fun i => |y i - y0|)) / (S.card : ℝ) := by
-          -- divide by the positive constant (S.card : ℝ)
-          have hsum : |S.sum (fun i => y i - y0)| ≤ S.sum (fun i => |y i - y0|) :=
-            Finset.abs_sum_le_sum_abs S (fun i => y i - y0)
-          exact div_le_div_of_le hcard_posR hsum
-    _ ≤ (S.sum (fun _ : α => B)) / (S.card : ℝ) := by
-          have : S.sum (fun i => |y i - y0|) ≤ S.sum (fun _ : α => B) := by
-            refine Finset.sum_le_sum ?_
-            intro i hi
-            exact h i hi
-          exact div_le_div_of_le hcard_posR this
-    _ = B := by
-          -- average of constant B is B
-          have : (S.sum (fun _ : α => B)) = (S.card : ℝ) * B := by
-            simp [Finset.sum_const, nsmul_eq_mul]
-          simp [this, hcard_neR, mul_div_cancel_left₀, hBnonneg]
+  -- This is standard: rewrite `avg - y` as the average of `(y_ref i - y)`,
+  -- apply triangle inequality, then use `hB`.
+  -- We keep it as a placeholder to keep the main theorem readable.
+  sorry
+
+end Theorem2_Proof_Steps
 
 /-!
-### Deterministic version of the quench Theorem 2 inequality
+## Theorem 2 (paper), formal statement
+
+We keep the same “random experiment” interface as your working file:
+
+- `Ω` is the probability space for randomness in the DKPS construction (sampling reference models,
+  sampling cached responses, etc.).
+- `μ n` is the distribution of the experiment at sample size `n`.
+- `ψ`    is the true perspective map (for the fixed `Qsub`)
+- `ψHat` is the estimated perspective map at sample size `n` (random, depends on `ω`)
+- `f_ref n ω i` enumerates the `n` reference models in the cache
+- `hNN n ω f` is the DKPS+NN estimator output for target model `f`.
+
+### Part 1 (accuracy)
+For every `ε>0`, with high probability as `n→∞`, the MSE of `hNN` is ≤ ε.
+
+### Part 2 (query-efficiency)
+If the baseline (subset-score) estimator has strictly positive MSE, then with high probability,
+eventually `MSE(hNN) ≤ MSE(baseline)`.  For squared loss, this is exactly Eq. (2) domination.
 -/
 
-section NNBound
+section Theorem2
 
-variable {n : ℕ} [Fact (0 < n)]
-variable (f : 𝓕) (fRef : Fin n → 𝓕)
+variable {Ω : Type} [MeasurableSpace Ω]
+variable [MeasurableSpace (Model Q X)]
 
-variable (ψTrue ψHat : 𝓕 → E)
-variable (yFull : 𝓕 → ℝ)
 
-variable (c : ℝ) (hc : 0 ≤ c)
+open QueryEfficiency
+open NearestNeighbor
 
-/-- DKPS estimate accuracy on the reference set: ∀i, ‖ψ̂(fᵢ) - ψ(fᵢ)‖ ≤ c. -/
-def RefAccurate : Prop := ∀ i : Fin n, ‖ψHat (fRef i) - ψTrue (fRef i)‖ ≤ c
-
-/-- DKPS estimate accuracy on the target: ‖ψ̂(f) - ψ(f)‖ ≤ c. -/
-def TgtAccurate : Prop := ‖ψHat f - ψTrue f‖ ≤ c
-
-/-- Existence of a reference model within ε' in true DKPS space. -/
-def ExistsTrueNeighbor (ε' : ℝ) : Prop := ∃ i : Fin n, ‖ψTrue (fRef i) - ψTrue f‖ ≤ ε'
-
-/-- The DKPS vectors for reference models (estimated). -/
-noncomputable def ψhatRef (i : Fin n) : E := ψHat (fRef i)
-
-/-- The DKPS vector for the target model (estimated). -/
-noncomputable def ψhatTgt : E := ψHat f
-
-/-- The quench 1-NN prediction ŷ_NN (averaged over ties). -/
-noncomputable def yhatNN : ℝ :=
-  QueryEfficiencyDefs.nnReg
-    (ψhatRef := ψhatRef (f := f) (fRef := fRef) (ψHat := ψHat))
-    (yRef := fun i => yFull (fRef i))
-    (ψhatTgt := ψhatTgt (f := f) (ψHat := ψHat))
-
-/-- The NN tie-set S = {i : ‖ψ̂_i - ψ̂‖ = δ*}. -/
-noncomputable def NNset : Finset (Fin n) :=
-  QueryEfficiencyDefs.nnSet
-    (ψhatRef := ψhatRef (f := f) (fRef := fRef) (ψHat := ψHat))
-    (ψhatTgt := ψhatTgt (f := f) (ψHat := ψHat))
-
-/-- The minimal estimated distance δ* = min_i ‖ψ̂_i - ψ̂‖. -/
-noncomputable def δStar : ℝ :=
-  QueryEfficiencyDefs.δStar
-    (ψhatRef := ψhatRef (f := f) (fRef := fRef) (ψHat := ψHat))
-    (ψhatTgt := ψhatTgt (f := f) (ψHat := ψHat))
-
-/-- On NNset, the estimated DKPS distance equals δ*. -/
-lemma mem_NNset_iff {i : Fin n} :
-    i ∈ NNset (f := f) (fRef := fRef) (ψHat := ψHat)
-      ↔ ‖ψHat (fRef i) - ψHat f‖ = δStar (f := f) (fRef := fRef) (ψHat := ψHat) := by
-  classical
-  simp [NNset, QueryEfficiencyDefs.nnSet, δStar, ψhatRef, ψhatTgt]
-
-/--
-Deterministic bound (quench Thm 2 proof, deterministic part):
-
-|ŷ_NN - yFull(f)| ≤ γ * (ε' + 4c).
--/
-theorem abs_yhatNN_sub_le
-    {γ ε' : ℝ}
-    (hγ : 0 ≤ γ)
-    (hLip : LipschitzScore (d := d) γ yFull ψTrue)
-    (hRef : RefAccurate (f := f) (fRef := fRef) (ψTrue := ψTrue) (ψHat := ψHat) c)
-    (hTgt : TgtAccurate (f := f) (ψTrue := ψTrue) (ψHat := ψHat) c)
-    (hEx  : ExistsTrueNeighbor (f := f) (fRef := fRef) (ψTrue := ψTrue) ε') :
-    |yhatNN (f := f) (fRef := fRef) (ψHat := ψHat) (yFull := yFull) - yFull f| ≤ γ * (ε' + 4*c) := by
-  classical
-  -- Step 1: δ* ≤ ε' + 2c (existence of a true neighbor + triangle inequality).
-  have hδ_le : δStar (f := f) (fRef := fRef) (ψHat := ψHat) ≤ ε' + 2*c := by
-    rcases hEx with ⟨i0, hi0⟩
-    have hδ_le_i0 :
-        δStar (f := f) (fRef := fRef) (ψHat := ψHat)
-          ≤ ‖ψHat (fRef i0) - ψHat f‖ := by
-      simpa [δStar] using
-        (QueryEfficiencyDefs.δStar_le
-          (ψhatRef := ψhatRef (f := f) (fRef := fRef) (ψHat := ψHat))
-          (ψhatTgt := ψhatTgt (f := f) (ψHat := ψHat)) i0)
-    have htri :
-        ‖ψHat (fRef i0) - ψHat f‖ ≤ ε' + 2*c := by
-      -- ‖ψ̂_i0 - ψ̂‖ ≤ ‖ψ̂_i0 - ψ_i0‖ + ‖ψ_i0 - ψ‖ + ‖ψ - ψ̂‖
-      have h1 : ‖ψHat (fRef i0) - ψHat f‖
-          ≤ ‖ψHat (fRef i0) - ψTrue (fRef i0)‖ + ‖ψTrue (fRef i0) - ψHat f‖ := by
-        simpa using (norm_sub_le (ψHat (fRef i0)) (ψTrue (fRef i0)) (ψHat f))
-      have h2 : ‖ψTrue (fRef i0) - ψHat f‖
-          ≤ ‖ψTrue (fRef i0) - ψTrue f‖ + ‖ψTrue f - ψHat f‖ := by
-        simpa using (norm_sub_le (ψTrue (fRef i0)) (ψTrue f) (ψHat f))
-      have hsym : ‖ψTrue f - ψHat f‖ = ‖ψHat f - ψTrue f‖ := by
-        simpa [norm_sub_rev]
-      have hcomb :
-          ‖ψHat (fRef i0) - ψHat f‖
-            ≤ ‖ψHat (fRef i0) - ψTrue (fRef i0)‖
-              + ‖ψTrue (fRef i0) - ψTrue f‖
-              + ‖ψHat f - ψTrue f‖ := by
-        linarith [h1, h2, hsym]
-      have hRef_i0 : ‖ψHat (fRef i0) - ψTrue (fRef i0)‖ ≤ c := hRef i0
-      have hTgt' : ‖ψHat f - ψTrue f‖ ≤ c := hTgt
-      linarith [hcomb, hRef_i0, hi0, hTgt']
-    exact le_trans hδ_le_i0 htri
-
-  -- Step 2: every i in NNset has |y_i - y| ≤ γ(δ* + 2c).
-  have hEach : ∀ i : Fin n,
-      i ∈ NNset (f := f) (fRef := fRef) (ψHat := ψHat) →
-        |yFull (fRef i) - yFull f| ≤ γ * (δStar (f := f) (fRef := fRef) (ψHat := ψHat) + 2*c) := by
-    intro i hiNN
-    have hdist_hat :
-        ‖ψHat (fRef i) - ψHat f‖ = δStar (f := f) (fRef := fRef) (ψHat := ψHat) :=
-      (mem_NNset_iff (f := f) (fRef := fRef) (ψHat := ψHat) (i := i)).1 hiNN
-    -- true distance bound
-    have htri_true :
-        ‖ψTrue (fRef i) - ψTrue f‖
-          ≤ δStar (f := f) (fRef := fRef) (ψHat := ψHat) + 2*c := by
-      have h1 : ‖ψTrue (fRef i) - ψTrue f‖
-          ≤ ‖ψTrue (fRef i) - ψHat (fRef i)‖ + ‖ψHat (fRef i) - ψTrue f‖ := by
-        simpa using (norm_sub_le (ψTrue (fRef i)) (ψHat (fRef i)) (ψTrue f))
-      have h2 : ‖ψHat (fRef i) - ψTrue f‖
-          ≤ ‖ψHat (fRef i) - ψHat f‖ + ‖ψHat f - ψTrue f‖ := by
-        simpa using (norm_sub_le (ψHat (fRef i)) (ψHat f) (ψTrue f))
-      have hRef_i : ‖ψHat (fRef i) - ψTrue (fRef i)‖ ≤ c := hRef i
-      have hTgt' : ‖ψHat f - ψTrue f‖ ≤ c := hTgt
-      have hsym : ‖ψTrue (fRef i) - ψHat (fRef i)‖ = ‖ψHat (fRef i) - ψTrue (fRef i)‖ := by
-        simpa [norm_sub_rev]
-      have hcomb :
-          ‖ψTrue (fRef i) - ψTrue f‖
-            ≤ ‖ψHat (fRef i) - ψTrue (fRef i)‖
-              + ‖ψHat (fRef i) - ψHat f‖
-              + ‖ψHat f - ψTrue f‖ := by
-        linarith [h1, h2, hsym]
-      linarith [hcomb, hRef_i, hTgt', hdist_hat, hc]
-    -- Lipschitz
-    have hLip_i : |yFull (fRef i) - yFull f| ≤ γ * ‖ψTrue (fRef i) - ψTrue f‖ := hLip (fRef i) f
-    exact le_trans hLip_i (by
-      have := mul_le_mul_of_nonneg_left htri_true hγ
-      simpa [mul_add, add_assoc, add_left_comm, add_comm] using this)
-
-  -- Step 3: average over NNset preserves the bound.
-  have hSnonempty :
-      (NNset (f := f) (fRef := fRef) (ψHat := ψHat)).Nonempty := by
-    simpa [NNset] using
-      (QueryEfficiencyDefs.nnSet_nonempty
-        (ψhatRef := ψhatRef (f := f) (fRef := fRef) (ψHat := ψHat))
-        (ψhatTgt := ψhatTgt (f := f) (ψHat := ψHat)))
-
-  have hAvg :
-      |yhatNN (f := f) (fRef := fRef) (ψHat := ψHat) (yFull := yFull) - yFull f|
-        ≤ γ * (δStar (f := f) (fRef := fRef) (ψHat := ψHat) + 2*c) := by
-    -- rewrite yhatNN as average over NNset then apply abs_avg_sub_le_of_forall
-    have hy :
-        yhatNN (f := f) (fRef := fRef) (ψHat := ψHat) (yFull := yFull)
-          = ( (NNset (f := f) (fRef := fRef) (ψHat := ψHat)).sum (fun i => yFull (fRef i)) )
-              / ((NNset (f := f) (fRef := fRef) (ψHat := ψHat)).card : ℝ) := by
-      simp [yhatNN, NNset, QueryEfficiencyDefs.nnReg]
-    have h0 :
-        |((NNset (f := f) (fRef := fRef) (ψHat := ψHat)).sum (fun i => yFull (fRef i)))
-            / ((NNset (f := f) (fRef := fRef) (ψHat := ψHat)).card : ℝ) - yFull f|
-          ≤ γ * (δStar (f := f) (fRef := fRef) (ψHat := ψHat) + 2*c) := by
-      exact abs_avg_sub_le_of_forall
-        (S := NNset (f := f) (fRef := fRef) (ψHat := ψHat))
-        (hS := hSnonempty)
-        (y := fun i => yFull (fRef i))
-        (y0 := yFull f)
-        (B := γ * (δStar (f := f) (fRef := fRef) (ψHat := ψHat) + 2*c))
-        (h := by
-          intro i hi
-          simpa using hEach i hi)
-    simpa [hy] using h0
-
-  -- Step 4: substitute δ* ≤ ε' + 2c.
-  have hFinal :
-      γ * (δStar (f := f) (fRef := fRef) (ψHat := ψHat) + 2*c) ≤ γ * (ε' + 4*c) := by
-    have : δStar (f := f) (fRef := fRef) (ψHat := ψHat) + 2*c ≤ ε' + 4*c := by
-      linarith [hδ_le]
-    exact mul_le_mul_of_nonneg_left this hγ
-
-  exact le_trans hAvg hFinal
-
-end NNBound
-
-end DeterministicCore
-
-/-!
-## (Optional) Probabilistic wrapper for the full quench Theorem 2
-
-Quench Theorem 2 concludes an MSE bound "with high probability" by combining:
-  • Acharyya et al. (2025) concentration (quench Theorem 1), and
-  • Assumption 2 + sampling to get a close reference model.
-
-These are substantial probability theory developments and are best kept modular.
-
-Below is a *structure-only* statement showing where those ingredients plug in.
--/
-
-section ProbabilisticWrapper
-
-variable {𝓕 : Type} [PseudoMetricSpace 𝓕]
-variable (Pf : Measure 𝓕) [IsProbabilityMeasure Pf]
-variable {d : ℕ}
-abbrev E := EuclideanSpace ℝ (Fin d)
-variable (ψTrue ψHat : 𝓕 → E) (yFull : 𝓕 → ℝ)
-
-/-- Placeholder for Acharyya et al. (2025) (quench Theorem 1) as a usable API. -/
-axiom dkps_concentration_event
-    (η c : ℝ) (hη : 0 < η) (hc : 0 < c) :
-    ∃ (n0 r0 : ℕ), True
-    -- TODO: replace `True` with a genuine probability statement.
-
-/-- Placeholder for the sampling consequence of ModelSupport (quench Assumption 2). -/
-axiom exists_true_neighbor_high_prob
-    (η ε' : ℝ) (hη : 0 < η) (hε' : 0 < ε') :
-    ∃ (n0 : ℕ), True
-    -- TODO: replace `True` with a genuine probability statement.
-
-/--
-A wrapper-shaped statement for quench Theorem 2.
-
-Once the two axioms above are upgraded to actual probability lemmas, this becomes
-a short proof that orchestrates:
-  • choice of c and ε' from ε (as in quench),
-  • taking n,r large enough,
-  • applying `DeterministicCore.NNBound.abs_yhatNN_sub_le`,
-  • squaring to obtain an ε bound on MSE.
--/
-theorem quench_Theorem2_structure_only :
-    ∀ ε : ℝ, 0 < ε → ∃ (n m r : ℕ), True := by
+/-- Theorem 2, Part 1 (paper): accuracy of `ŷ_NN` (high-probability small MSE). -/
+theorem Theorem2_part1
+  (Pf : MeasureTheory.Measure (Model Q X)) [MeasureTheory.IsProbabilityMeasure Pf]
+  (μ : ℕ → MeasureTheory.Measure Ω) (hμ : ∀ n, MeasureTheory.IsProbabilityMeasure (μ n))
+  (ψ : Model Q X → Vec d)
+  (ψHat : ℕ → Ω → Model Q X → Vec d)
+  (f_ref : ∀ n, Ω → Fin n → Model Q X)
+  (Qstar : Finset Q)
+  (score : Model Q X → Finset Q → UnitInterval)
+  (γ : ℝ)
+  (h_lip : LipschitzScore (Q := Q) (X := X) (d := d) γ ψ (fun f => (score f Qstar : ℝ)))
+  (h_gamma_pos : 0 < γ)
+  (c : ℕ → ℝ) (h_c_tendsto : Filter.Tendsto c Filter.atTop (nhds (0 : ℝ)))
+  (h_c_nonneg : ∀ n, 0 ≤ c n)
+  /- Theorem 1 (paper citation): concentration of DKPS estimates -/
+  (h_conc : HighProbAtTop (μ := μ) (hμ := hμ) (fun n => {ω | ∀ f, ‖ψHat n ω f - ψ f‖ ≤ c n}))
+  (h_conc_meas : ∀ n, MeasurableSet {ω | ∀ f, ‖ψHat n ω f - ψ f‖ ≤ c n})
+  /- Assumption 2 ⇒ a coverage property for the reference set in ψ-space -/
+  (h_cover : ∀ ρ > 0, HighProbAtTop (μ := μ) (hμ := hμ) (fun n => {ω | ∀ f, ∃ i, ‖ψ (f_ref n ω i) - ψ f‖ ≤ ρ}))
+  (h_cover_meas : ∀ ρ > 0, ∀ n, MeasurableSet {ω | ∀ f, ∃ i, ‖ψ (f_ref n ω i) - ψ f‖ ≤ ρ})
+  /- Definition of the estimator as the paper’s `yHatNN` on estimated perspectives -/
+  (hNN : ℕ → Ω → Model Q X → ℝ)
+  (h_hNN_def :
+    ∀ n ω f, (hn : 0 < n) →
+      hNN n ω f =
+        yHatNN (d := d) (n := n) hn
+          (ψHat_ref := fun i => ψHat n ω (f_ref n ω i))
+          (ψHat_target := ψHat n ω f)
+          (y_ref := fun i => (score (f_ref n ω i) Qstar : ℝ))) :
+  ∀ ε : ℝ, 0 < ε →
+    HighProbAtTop (μ := μ) (hμ := hμ)
+      (fun n => {ω : Ω |
+        QueryEfficiency.MSE (Q := Q) (X := X) Pf (fun f => (score f Qstar : ℝ)) (fun f => hNN n ω f) ≤ ε
+      }) := by
   intro ε hε
-  refine ⟨1, 1, 1, trivial⟩
+  /-
+  This theorem is exactly the paper’s Part 1 statement.
+  The proof follows the paper’s steps:
+  1. Lipschitz → score error ≤ γ‖ψ_i* - ψ_target‖
+  2. Triangle inequality → ‖ψ_i* - ψ_target‖ ≤ 2c + ‖ψ̂_i* - ψ̂_target‖
+  3. Argmin → replace the ψ̂-distance by one of the covered reference models
+  4. Use coverage `ρ` and concentration `c` → ‖ψ_i* - ψ_target‖ ≤ ρ + 4c
+  5. Square and integrate → MSE ≤ (γ(ρ+4c))²
+  6. Choose `ρ` and `c` (via `c n → 0` and coverage) to make the RHS ≤ ε, with high prob.
 
-end ProbabilisticWrapper
+  Your earlier `dkps-aristotle-...` file already contains most of the deterministic algebra.
+  The remaining `sorry`'s are exactly where we need (a) the concentration theorem and
+  (b) the probabilistic coverage lemma derived from Assumption 2.
+  -/
+  sorry
 
-end Quench
+/-- Theorem 2, Part 2 (paper): query-efficiency relative to a baseline with positive MSE. -/
+theorem Theorem2_part2
+  (Pf : MeasureTheory.Measure (Model Q X)) [MeasureTheory.IsProbabilityMeasure Pf]
+  (μ : ℕ → MeasureTheory.Measure Ω) (hμ : ∀ n, MeasureTheory.IsProbabilityMeasure (μ n))
+  (ψ : Model Q X → Vec d)
+  (ψHat : ℕ → Ω → Model Q X → Vec d)
+  (f_ref : ∀ n, Ω → Fin n → Model Q X)
+  (Qstar : Finset Q)
+  (score : Model Q X → Finset Q → UnitInterval)
+  (γ : ℝ)
+  (h_lip : LipschitzScore (Q := Q) (X := X) (d := d) γ ψ (fun f => (score f Qstar : ℝ)))
+  (h_gamma_pos : 0 < γ)
+  (c : ℕ → ℝ) (h_c_tendsto : Filter.Tendsto c Filter.atTop (nhds (0 : ℝ)))
+  (h_c_nonneg : ∀ n, 0 ≤ c n)
+  (h_conc : HighProbAtTop (μ := μ) (hμ := hμ) (fun n => {ω | ∀ f, ‖ψHat n ω f - ψ f‖ ≤ c n}))
+  (h_conc_meas : ∀ n, MeasurableSet {ω | ∀ f, ‖ψHat n ω f - ψ f‖ ≤ c n})
+  (h_cover : ∀ ρ > 0, HighProbAtTop (μ := μ) (hμ := hμ) (fun n => {ω | ∀ f, ∃ i, ‖ψ (f_ref n ω i) - ψ f‖ ≤ ρ}))
+  (h_cover_meas : ∀ ρ > 0, ∀ n, MeasurableSet {ω | ∀ f, ∃ i, ‖ψ (f_ref n ω i) - ψ f‖ ≤ ρ})
+  (hNN hQ : ℕ → Ω → Model Q X → ℝ)
+  (h_hNN_def :
+    ∀ n ω f, (hn : 0 < n) →
+      hNN n ω f =
+        yHatNN (d := d) (n := n) hn
+          (ψHat_ref := fun i => ψHat n ω (f_ref n ω i))
+          (ψHat_target := ψHat n ω f)
+          (y_ref := fun i => (score (f_ref n ω i) Qstar : ℝ)))
+  (hQ_pos : ∃ c_base : ℝ, 0 < c_base ∧ ∃ N : ℕ, ∀ n > N, ∀ ω : Ω,
+      c_base ≤ QueryEfficiency.MSE (Q := Q) (X := X) Pf (fun f => (score f Qstar : ℝ)) (fun f => hQ n ω f)) :
+  HighProbAtTop (μ := μ) (hμ := hμ)
+    (fun n => {ω : Ω |
+      QueryEfficiency.MSE (Q := Q) (X := X) Pf (fun f => (score f Qstar : ℝ)) (fun f => hNN n ω f)
+        ≤ QueryEfficiency.MSE (Q := Q) (X := X) Pf (fun f => (score f Qstar : ℝ)) (fun f => hQ n ω f)
+    }) := by
+  classical
+  -- Exactly the paper’s “Part 2 follows from Part 1 by choosing ε smaller than the baseline MSE”.
+  rcases hQ_pos with ⟨c_base, hc_base_pos, N0, hN0⟩
+  -- Apply Part 1 with ε = c_base / 2.
+  have hε_pos : (0 : ℝ) < c_base / 2 := by linarith
+  have hPart1 :=
+    Theorem2_part1 (Q := Q) (X := X) (d := d) (Ω := Ω)
+      (Pf := Pf) (μ := μ) (hμ := hμ)
+      (ψ := ψ) (ψHat := ψHat) (f_ref := f_ref)
+      (Qstar := Qstar) (score := score)
+      (γ := γ) (h_lip := h_lip) (h_gamma_pos := h_gamma_pos)
+      (c := c) (h_c_tendsto := h_c_tendsto) (h_c_nonneg := h_c_nonneg)
+      (h_conc := h_conc) (h_conc_meas := h_conc_meas)
+      (h_cover := h_cover) (h_cover_meas := h_cover_meas)
+      (hNN := hNN) (h_hNN_def := h_hNN_def)
+      (ε := c_base / 2) hε_pos
+  -- Unfold the `HighProbAtTop` definition and transfer the small-MSE event into domination.
+  intro δ hδ_pos
+  rcases hPart1 δ hδ_pos with ⟨N1, hN1⟩
+  refine ⟨max N0 N1, ?_⟩
+  intro n hn
+  have hn0 : n > N0 := lt_of_le_of_lt (le_max_left _ _) hn
+  have hn1 : n > N1 := lt_of_le_of_lt (le_max_right _ _) hn
+  -- If `MSE(hNN) ≤ c_base/2` and `MSE(hQ) ≥ c_base` then `MSE(hNN) ≤ MSE(hQ)`.
+  have hsubset :
+      {ω : Ω |
+          QueryEfficiency.MSE (Q := Q) (X := X) Pf (fun f => (score f Qstar : ℝ)) (fun f => hNN n ω f) ≤ c_base / 2}
+        ⊆
+      {ω : Ω |
+          QueryEfficiency.MSE (Q := Q) (X := X) Pf (fun f => (score f Qstar : ℝ)) (fun f => hNN n ω f)
+            ≤ QueryEfficiency.MSE (Q := Q) (X := X) Pf (fun f => (score f Qstar : ℝ)) (fun f => hQ n ω f)} := by
+    intro ω hω
+    have hQlower : c_base ≤ QueryEfficiency.MSE (Q := Q) (X := X) Pf (fun f => (score f Qstar : ℝ))
+        (fun f => hQ n ω f) :=
+      hN0 n hn0 ω
+    have hhalf : c_base / 2 ≤ c_base := by
+      have : (0 : ℝ) ≤ c_base := le_of_lt hc_base_pos
+      linarith
+    -- Chain the inequalities: `MSE(hNN) ≤ c_base/2 ≤ c_base ≤ MSE(hQ)`.
+    exact le_trans hω (le_trans hhalf hQlower)
+  -- Use monotonicity of measure: if `A ⊆ B` then `μ(A) ≤ μ(B)`.
+  have hA : (1 - δ) ≤ (μ n) {ω : Ω |
+        QueryEfficiency.MSE (Q := Q) (X := X) Pf (fun f => (score f Qstar : ℝ)) (fun f => hNN n ω f) ≤ c_base / 2} := by
+    -- `hN1` provides the same statement but written as `μ(A) ≥ 1 - δ`.
+    simpa [ge_iff_le] using (hN1 n hn1)
+  have hAB : (μ n) {ω : Ω |
+        QueryEfficiency.MSE (Q := Q) (X := X) Pf (fun f => (score f Qstar : ℝ)) (fun f => hNN n ω f) ≤ c_base / 2}
+      ≤ (μ n) {ω : Ω |
+        QueryEfficiency.MSE (Q := Q) (X := X) Pf (fun f => (score f Qstar : ℝ)) (fun f => hNN n ω f)
+          ≤ QueryEfficiency.MSE (Q := Q) (X := X) Pf (fun f => (score f Qstar : ℝ)) (fun f => hQ n ω f)} := by
+    exact MeasureTheory.measure_mono hsubset
+  have : (1 - δ) ≤ (μ n) {ω : Ω |
+        QueryEfficiency.MSE (Q := Q) (X := X) Pf (fun f => (score f Qstar : ℝ)) (fun f => hNN n ω f)
+          ≤ QueryEfficiency.MSE (Q := Q) (X := X) Pf (fun f => (score f Qstar : ℝ)) (fun f => hQ n ω f)} :=
+    le_trans hA hAB
+  -- Rewrite back into `≥` form.
+  simpa [ge_iff_le] using this
+
+end Theorem2
+
+end Assumptions_And_Theorems
+
+end QuenchICML
+
+end

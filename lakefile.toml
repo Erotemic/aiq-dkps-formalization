@@ -1,7 +1,7 @@
 name = "proofs"
 version = "0.1.0"
 keywords = ["math"]
-defaultTargets = ["DkpsQuench", "DrsbBridge", "Helm2025", "Oneoff"]
+defaultTargets = ["DkpsQuench", "DrsbBridge", "Helm2025", "AcharyyaMDS", "Oneoff"]
 
 # One Lake workspace with a separate library per proof thrust. They share a
 # single Mathlib build (.lake/), avoiding per-project duplication. Each lean_lib
@@ -27,6 +27,9 @@ name = "DrsbBridge"   # DRSB (Schrödinger bridge)
 
 [[lean_lib]]
 name = "Helm2025"     # HELM-2025 statistical inference
+
+[[lean_lib]]
+name = "AcharyyaMDS"  # Acharyya DKPS/MDS embedding-consistency (foundation for Quench & HELM)
 
 [[lean_lib]]
 name = "Oneoff"       # small standalone proofs

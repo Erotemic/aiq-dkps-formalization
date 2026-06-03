@@ -1,0 +1,32 @@
+name = "proofs"
+version = "0.1.0"
+keywords = ["math"]
+defaultTargets = ["DkpsQuench", "DrsbBridge", "Helm2025", "Oneoff"]
+
+# One Lake workspace with a separate library per proof thrust. They share a
+# single Mathlib build (.lake/), avoiding per-project duplication. Each lean_lib
+# is self-contained in its own root directory, so any of them can be lifted out
+# into a standalone project later by giving it its own lakefile.
+#
+# Note: tensor-programs/ is intentionally NOT part of this workspace — it pins a
+# different toolchain (v4.27.0) and is kept as its own project.
+
+[leanOptions]
+pp.unicode.fun = true # pretty-prints `fun a ↦ b`
+autoImplicit = false
+
+[[require]]
+name = "mathlib"
+scope = "leanprover-community"
+
+[[lean_lib]]
+name = "DkpsQuench"   # ICML Quench companion proof (DKPS)
+
+[[lean_lib]]
+name = "DrsbBridge"   # DRSB (Schrödinger bridge)
+
+[[lean_lib]]
+name = "Helm2025"     # HELM-2025 statistical inference
+
+[[lean_lib]]
+name = "Oneoff"       # small standalone proofs

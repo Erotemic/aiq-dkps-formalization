@@ -1,0 +1,202 @@
+\section{Experiments}
+
+We next consider two experiments with more realistic model-level covariates: predicting whether or not a model has had access to sensitive information and predicting model safety.
+For all experiments we fix $ r = 1 $ as suggested by the empirical rates of convergence of the perspectives described in \cite{aranyak}. 
+We use the MDS implementation from Graspologic \citep{JMLR:v20:19-490} throughout.
+We use the profile likelihood of the singular values of $ D $ to determine the dimensionality of the DKPS \citep{zhu2006automatic} and note that this may be larger than two. 
+We show only the first two dimensions for visualization purposes.
+
+\subsection{Has a model seen sensitive information?}
+\label{subsec:safety}
+
+\begin{figure*}[t!]
+\centering
+\includegraphics[width=0.9\linewidth]{figures/sensitive-data-experiment/sensitive-data-horizontal.png}
+\caption{\textbf{Left.} The 2-d data kernel perspective space (DKPS) of 50 fine-tuned models -- 25 with ``sensitive" data in the fine-tuning data mixture (red), 25 with none (black) -- induced by an evaluation set containing 10 prompts relevant to the sensitive data. For models trained on sensitive data, color intensity correlates with amount of sensitive data in the training mixture.
+\textbf{Center.} The 2-d DKPS of the models induced by a set of 10 prompts ``orthogonal" to the difference between models with sensitive data in their fine-tuning data mixture and models with no sensitive data in their fine-tuning data mixture.
+\textbf{Right.} Classification performance as a function of number of labeled models and size of evaluation set for both sensitive and orthogonal evaluation sets.}
+\label{fig:sensitive-data}
+\end{figure*}
+
+Modern language models are trained with trillions of tokens of text \citep{touvron2023llama}.
+For proprietary models such as OpenAI's GPT series or Anthropic's Claude series, the exact sources of the training mixtures are unknown and -- given the models' propensities to produce content that is strikingly similar to copyrighted content \citep{henderson2023foundation} -- its curation and use is ethically questionable \citep{lemley2020fair}.
+Further, the training mixture of some models may include sensitive informative such as personal information, trade secrets, or government-classified information that should never be presented to the end user.
+Developing classifiers to identify models that are either trained on sensitive or copyrighted information or are likely to produce sensitive or copyrighted information is thus paramount to uphold the rights of the stakeholders of the original content. 
+
+To investigate the utility of DKPS for this purpose, we again use a 4-bit version of \texttt{LLaMA-2-7B-Chat} as a base model and train 50 different LoRA adapters with different 
+% here for anonymized 
+subsets of the Yahoo! Answers (YA) dataset \citep{NIPS2015_250cf8b5}.
+The YA dataset consists of data from 10 topics.
+We consider data from the topic ``Politics \& Government" to be ``sensitive" information, data from the topics ``Society \& Culture", ``Science \& Mathematics", ``Health", ``Education \& Reference", ``Computers \& Internet", and ``Sports" to be ``not-sensitive", and data from the remaining topics to be ``orthogonal". 
+We trained each of the 50 adapters with 500 question-answer pairs for 3 epochs with a learning rate of $ 5 \times 10^{-5} $ and a batch size of 8. 
+Each adapter is rank 8, has a scaling factor of 32, targets all attention layers, does not have bias terms, and has a dropout probability of 0.05 when training.
+For 25 of the adapters, the adapter training mixture consisted wholly of randomly selected not-sensitive data.
+For the remaining 25 adapters, the adapter training mixture consisted of $ p_{i} $ randomly selected sensitive data and $ 500 - p_{i} $ randomly selected not-sensitive data. 
+We let $ y_{i} $ be the indicator of whether or not the adapter's training mixture contained any sensitive data.
+
+We study classification of the models in two different DKPS: one induced by a set of randomly selected sensitive queries, one induced by a set of randomly selected orthogonal queries.
+Both DKPS use the open source embedding model \texttt{nomic-embed-v1.5} \citep{nussbaum2024nomicembedtrainingreproducible}.
+A 2-d DKPS induced by $m=10$ randomly selected sensitive queries is shown on the left of Figure \ref{fig:sensitive-data}.
+In this space the models are separated by their label and the models that have seen more sensitive information are generally farther from the class-boundary.
+A 2-d DKPS induced by $m=10$ orthogonal queries is shown in the center of Figure \ref{fig:sensitive-data}.
+Here, by contrast, the models are not easily separable by their label.
+
+The right figure of Figure \ref{fig:sensitive-data} shows the classification performance of Fisher's Linear Discriminant trained on  varying amounts of DKPS representations of models for the two query distributions.
+For a given $ n $ and $ m $, we induce the DKPS with all
+% here for de-anonymized
+% \begin{wrapfigure}{r}{0.5\textwidth} 
+% \begin{center}
+% \includegraphics[width=0.5\textwidth]{figures/sensitive-data-experiment/fld_representations.png}
+%   \end{center}
+%   \caption{\textbf{Top.} The 1-d FLD projection of the models from a DKPS induced by queries from the sensitive topic versus the amount of sensitive data the  adapter had access to during training.
+%   \textbf{Bottom.} The same but for a DKPS induced by queries from orthogonal topics.
+%   }
+%   \label{fig:fld}
+% \end{wrapfigure}
+\begin{figure}[t!]
+\begin{center}
+\includegraphics[width=0.4\textwidth]{figures/sensitive-data-experiment/fld_representations.png}
+  \end{center}
+  \caption{\textbf{Top.} The 1-d FLD projection of the models from a DKPS induced by queries from the sensitive topic versus the amount of sensitive data the  adapter had access to during training.
+  \textbf{Bottom.} The same but for a DKPS induced by queries from orthogonal topics.
+  }
+  \label{fig:fld}
+\end{figure}
+models and a randomly selected query set.
+We report the expected risk of the classifier trained on a random subset of the models for the remaining models. 
+We observe similar phenomena to the ``Was RA Fisher great?" experiment in that both the amount of models and the amount of queries impact performance.
+For a fixed $ m $, the expected risk curves also highlight the observed difference in separability of the models in the two DKPS, with the expected risk with sensitive queries being significantly lower than the expected risk with orthogonal queries.
+Indeed, the expected risk with $ m = 10 $ sensitive queries is similar to the expected risk with $ m = 50 $ orthogonal queries.
+
+Lastly, we highlight the 1-d projection learned by Fisher's linear discriminant for $ m = 10 $ for both DKPS in Figure \ref{fig:fld}.
+As can be seen in the top figure of Figure \ref{fig:fld}, the projection of the models is correlated with the proportion of sensitive data that the model has had
+% put wrap figure here when not anonymous!
+access to when the DKPS is induced with sensitive queries.
+While the linear goodness-of-fit  is not large ($ R^{2} = 0.37 $), the correlation is statistically significant per the hypothesis test using Kendall's rank correlation coefficient ($ \tau = 0.42, p < 0.01 $).
+The projection of the models when the DKPS is induced with orthogonal queries has a line of best fit with a negligible slope and a much smaller Kendall's rank correlation coefficient ($ \tau = 0.08 $).
+The second of which results in a $ p $ value of $ 0.57 $ -- meaning we fail to reject the null that the amount of sensitive information the model has had access to is correlated with the learned 1-d projection.
+
+Throughout this experiment we use the term ``orthogonal" for queries from topics that are not used when fine-tuning the models under study.
+The term is chosen because, na\"ively, queries from these topics should not elicit different responses from models trained on sensitive data and models trained on not-sensitive data.
+In reality, the sensitive data and the not-sensitive data have different underlying token distributions and this difference will cause systematic differences in model responses after fine-tuning even for topics that are irrelevant \textit{a priori}.
+Further, it is likely that the documents in the ``orthogonal" topics share some content commonalities with documents in the sensitive and not-sensitive topics.
+We see this phenomenon in the classification results in the right figure of Figure \ref{fig:sensitive-data} where the linear classifier is able to perform better than chance with enough ``orthogonal" queries.
+
+% \vspace{-0.5cm}
+\subsection{How safe is a model?}
+
+\begin{figure*}[t!]
+\centering
+\includegraphics[width=\linewidth]{figures/model-tree/model-tree-exp.pdf}
+\caption{
+\textbf{Left.} A graph where each node is a model and an edge between two models exists if model $ i $ is fine-tuned from model $ i' $ or if model $ i' $s weights were used in a model-merge that resulted in model $ i $, etc.
+\textbf{Right, top.} The two-dimensional data kernel perspective spaces (DKPS) corresponding to the toxicity and bias prediction tasks. Dot size is proportional to model toxicity or bias. 
+\textbf{Right, bottom.} 
+Relative performance of three regression techniques.
+% Local predictions in DKPS are more effective than both global predictions and local predictions in model relationship space.
+}
+\label{fig:model-tree-inference}
+\end{figure*}
+
+Model safety is one of the main factors when developing a language model in production.
+An unsafe model is prone to propagating harmful stereotypes \citep{sci6010003}, using toxic language \citep{wen2023unveiling}, and misunderstanding the user's intent \citep{ji2023ai} -- all of which can adversely affect the user and their experience.
+Hence, developing techniques 
+\begin{figure}[t!]
+\begin{center}
+\includegraphics[width=0.4\textwidth]{figures/model-tree/time-dkps-hf.png}
+  \end{center}
+\caption{The relative time improvement (larger is better) when using local predictions in DKPS instead of calculating the ground-truth model-level covariate using HuggingFace's API.}
+  \label{fig:time}
+  % \vspace{-35pt}
+\end{figure}
+to understand how unsafe a model is an important aspect of the model-production pipeline. 
+As with predicting if a model has had access to sensitive information above, we investigate using DKPS to predict model safety through the lens of model toxicity and model bias.
+
+We consider a collection of 58 models. Each model in the collection is a base model, a fine-tuned version of a base model, or the result of weight-merging various other models in the collection.
+We view this collection of models as a graph where each model is a node and an undirected edge exists between nodes if one of the models is a fine-tuned version of the other or if one of the models is the result of a model merge including the other.
+The graph representing the collection of models is shown on the left of Figure \ref{fig:model-tree-inference}. 
+% here for de-anonmyized 
+% \begin{wrapfigure}{r}{0.4\textwidth} 
+% \begin{center}
+% \includegraphics[width=0.4\textwidth]{figures/model-tree/time-dkps-hf.png}
+%   \end{center}
+% \caption{The relative time improvement (larger is better) when using local predictions in DKPS instead of calculating the ground-truth model-level covariate using HuggingFace's API.}
+%   \label{fig:time}
+%   % \vspace{-35pt}
+% \end{wrapfigure}
+The list of models under study is provided in Appendix \ref{app:safety}. 
+
+For each model in the collection we consider two covariates: model toxicity and model bias.
+To determine a model's toxicity, we prompt each model with a collection of queries from the Real Toxicity Prompts (RTP) 
+\citep{gehman2020realtoxicityprompts} dataset and subsequently evaluate the toxicity of each response with the neural model \texttt{roberta-hate-speech-dynabench-r4} \citep{vidgen2021lftw}.
+The model-level toxicity is simply the average response toxicity.
+An analogous process is used to define a model's bias with the dataset Bias in Open-ended Language Generation Dataset (BOLD) \citep{bold_2021} and the \texttt{regard} model \citep{sheng2019woman}.
+
+We induce the perspective spaces for the toxicity and bias tasks with randomly sampled prompts from RTP and BOLD, respectively, and the embedding model \texttt{nomic-embed-v1.5}.
+The 2-d DKPS -- induced with $ m=2000 $ queries -- for both tasks is shown in the top right of Figure \ref{fig:model-tree-inference}.
+The size of the dot is correlated with the model's covariate.
+We highlight an example unlabeled model (green) and its corresponding neighbor in DKPS (red) and neighbors in graph-space (blue) in Figure \ref{fig:model-tree-inference}.
+Importantly, the relative position of a model in the respective DKPS is predictive of the model's toxicity and the model's bias.
+% The relative position of the models in the graph appears to have a weaker correlation with the model covariates.
+
+
+We quantify this observation by evaluating regressors for predicting the model-level %here for anonymized
+toxicity and bias 
+of unscored models.
+We consider three different regressors for these tasks.
+The first is a constant equal to the average covariate of the scored models (i.e., the ``global mean").
+The second uses the average covariate of models who share an edge with the unscored model (i.e., ``1-NN (graph)").
+The third uses the covariate of the nearest neighbor in DKPS (i.e., ``1-NN (DKPS)").
+For 1-NN (DKPS) we consider varying amounts of randomly sampled queries from RTP and BOLD to induce the DKPS.
+We use the global mean as a standard and report the relative absolute error of the three methods in the bottom right of Figure \ref{fig:model-tree-inference}.
+The reported performance of the 1-NN (DKPS) regressor is the average of the smaller of $ 200 $  and $ 2000 / m $  random samples of $ m $ queries over all possible leave-one-model-out scenarios.
+Notably, given enough queries local predictions in DKPS outperform local predictions in the graph space and predictions using the global mean.
+
+In addition to reporting the relative performance, we report the time it takes to use the DKPS machinery to predict \texttt{Mistralv1.0}'s \citep{jiang2023mistral} toxicity and bias relative to using the evaluation model through HuggingFace's API \citep{wolf2019huggingface}.
+The time we report for the HuggingFace API is the time it takes to calculate the  ``ground truth" used to calculate the performance of the regressors above and is the total time required for \texttt{Mistralv1.0} to produce responses and for the evaluation model to produce scores for 2000 queries.
+The time we report for 1-NN (DKPS) includes the time it takes for \texttt{Mistralv1.0} to produce $ m $ responses, the time it takes \texttt{nomic-embed-v1.5} to embed the responses, the time it takes to induce the DKPS, and the time it takes to train and use the nearest neighbor regressor.
+It does not include the time it takes to produce and evaluate the responses of the other models in the collection.
+The relative efficiency of DKPS, as seen in Figure \ref{fig:time}, is approximately $ 1 / m $.
+This relationship will hold for all model-level inference tasks where the covariate is proportional to the sum of a function of individual responses. 
+
+\vspace{-0.3cm}
+\section{Discussion}
+\vspace{-0.2cm}
+We have demonstrated -- both theoretically and empirically -- that embedding-based representations of generative models can be used for various model-level inference tasks.
+While the results we presented show the potential of our approach, there are choices throughout the collection-of-models-to-covariate-prediction pipeline that can affect performance and implementation practicality. 
+We outline these choices in the Limitations section.
+
+\section{Limitations}
+
+As mentioned in Section \ref{subsec:non-standard-considerations}, one major decision is the collection of queries $ q_{1},, \hdots, q_{m} $ used to induce the perspective space.
+In particular, the representations of the models that the query set induces may or may not be relevant to a particular inference task.
+We demonstrate this phenomenon in Section \ref{subsec:safety} where the queries from the ``sensitive-only" query distribution can induce representations of similar discriminative ability as queries from the ``orthogonal-only"  query distribution with $ 1/5 $ of the queries. 
+We expect a similar but less dramatic effect within the distributions of ``sensitive-only" queries and anticipate that curating an ``optimal" set of queries for a given $ g $ and for a fixed number of queries will soon be a highly active research area.
+
+Another decision is the distance function used to define $ D $. 
+The MDS of the distance matrix studied herein (Eq. \eqref{euc-dist-matrix}) produces representations of the models that are consistent for objects that capture the true mean discrepancy geometry of the model responses.
+For model-level covariates that cannot naturally be described as a function of the mean discrepancy geometry, we do not expect that information-theoretic optimal performance is possible for any $ n, m, $ and $ r $, even where the queries are from an ``optimal" query distribution. 
+Instead, for representations of the models that can be used generally without information loss, it may be necessary to replace the Frobenius norm of the differences of the average embedded response with a more expressive distance such as one defined directly on the cumulative distributions of responses or with a task-specific distance \citep{helm2020partitionbased}.
+Related theoretical work \citep{10.1214/13-AOS1112} suggests that our results will hold for more expressive distances. 
+We do not expect the na\"ive replacement of the Frobenius norm with a more expressive distance function to be universally better for model-level inference tasks in practice as there are likely computational and query set quality trade-offs to consider.
+As with the active curation of an optimal query set, we expect these trade-offs to be important future research topics.
+
+In the experiments above we have access to $ n $ models and $ n' < n $ corresponding model-level covariates. 
+We induce a DKPS with the entire collection of models and use the $ n' $ labeled models to predict a label for the remaining $ n - n' $ models.
+In practice an unlabeled model may not be available when inducing the DKPS or, if $ n $ is large, it may be too expensive to induce a DKPS whenever a prediction for a new unlabeled model is required.
+Out-of-sample techniques \citep{bengio2003out, trosset2008out} can be used to meet these imposed constraints at the cost of a slight degradation in representation quality and, hence, inference performance.
+
+Implementation of inference in DKPS in practice will require an upfront, one-time cost of generating responses from a subset of models in the collection and scoring their outputs.
+Since this is required to compare the models with respect to the covariates anyway we followed the timing paradigm presented in \citep{perlitz2023efficient} and did not include this cost when comparing the methods in Figure \ref{fig:time}.
+Once the models in the initial subset are scored we expect the relative time efficiency (and implied relative computational efficiency) of inference in DKPS to be worthwhile to practitioners.
+
+We fixed $ r = 1 $ and let $ m $ grow throughout our experiments. 
+For Theorems \ref{thm:rule-convergence} and \ref{thm:consistency} to hold, both $ m $ and $ r $ must grow.
+In practice, the trade-off between getting responses for more queries or getting more responses for the same queries depends on the distributions $ F_{ij} $.
+For example, if $ F_{ij} $ is a point mass then $ r > 1 $ for $ q_{j} $ is unnecessary.
+Conversely, if $ F_{ij} $ is a complicated distribution on $ \mathbb{R}^{p} $ then more responses are necessary to properly estimate it and, hence, to properly capture the difference between average model responses.
+
+Lastly, we note that the data kernel perspective space could be used to extend the statistical Turing test framework presented in \cite{helm2023statisticalturingtestgenerative} by comparing the conditional distributions of populations of humans and populations of machines in low-dimensional Euclidean space.
+
+
+% \subsubsection*{Acknowledgements} We would like to thank Avanti Athreya, Tianyi Chen, Ben Johnson, Michael Trosset, Tim Wang, Zekun Wang, and Weiwei Yang for providing helpful comments throughout the development of this manuscript. 

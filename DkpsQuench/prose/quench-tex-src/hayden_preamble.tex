@@ -1,0 +1,108 @@
+% adapted from nd_preamble.tex
+
+% \usepackage{titlesec}
+% \usepackage{titletoc}
+\usepackage{caption}
+\usepackage{amsthm}
+\usepackage{multirow}
+
+\newtheorem{theorem}{Theorem}
+\newtheorem{assumption}{Assumption}
+
+% \RequirePackage{titlesec}
+% \RequirePackage[font={small},{singlelinecheck=false}]{caption}
+
+%%=================
+%% Define Headings and section task
+%%=================
+% \titleclass{\task}{straight}[\section]
+% \newcounter{task}
+% \renewcommand{\thetask}{\arabic{task}}
+% \titleformat{\task}[hang]
+%     {\normalfont\LARGE\bfseries}{Task \thetask:}{1em}{}
+
+% \titleformat*{\task}{\color{header1}\bfseries}
+
+% \titlecontents{task}
+%               [3.8em] % ie, 1.5em (chapter) + 2.3em
+%               {}
+%               {\contentslabel{2.3em}}
+%               {\hspace*{-2.3em}} {\titlerule*[1pc]{.}\contentspage}
+
+
+% \titlespacing*{\section}{0ex}{1ex}{1ex}
+% \titlespacing*{\subsection}{0ex}{1ex}{1ex}
+% \titlespacing*{\paragraph}{0ex}{1ex}{1ex}
+% \titlespacing*{\subparagraph}{0pt}{1ex}{1ex}
+% \titlespacing*{\task}{0em}{1ex}{1ex}
+
+\newtheorem{Rem}{Remark}%[section]
+\newtheorem{Alg}{Algorithm}%[section]
+\newtheorem{thm}{Theorem}
+\newtheorem{Thm}{Theorem}[section]
+\newtheorem{lem}{Lemma}
+\newtheorem{Lem}{Lemma}%[section]
+\newtheorem{defi}{Definition}
+\newtheorem{quo}{Quote}
+\newtheorem{Def}{Definition}[section]
+\newtheorem{example}{Example}[section]
+\newtheorem{prop}{Proposition}
+\newtheorem{coro}[thm]{Corollary}
+\newtheorem{claim}{Claim}
+\newtheorem{conj}{Conjecture}
+\newtheorem{question}{Question}
+\newtheorem{answer}{Answer}
+\newtheorem{rem}{Remark}%[section]
+\newtheorem{cor}[lem]{Corollary}
+\newtheorem{model}{Model}
+
+\usepackage{subcaption}
+\usepackage{graphicx}
+
+\usepackage{amssymb}
+% \usepackage{mathrsfs}
+\usepackage[mathscr]{euscript}
+
+%%% Bib and citations
+\usepackage{natbib}
+
+%%% mathfonts, equation environments and eqref, ...
+\usepackage{amsfonts,amsmath,amssymb}
+\usepackage{bbm}
+\usepackage{xspace}
+
+%%% For enumitem with special global options
+\usepackage{multicol}
+\usepackage{enumitem}
+% \setlist[enumerate]{wide, labelwidth=!}, noitemsep, labelindent=0pt}
+% \setlist[itemize]{wide, labelwidth=!, labelindent=0pt, noitemsep}
+% \setlist[description]{wide, labelwidth=!, labelindent=0pt, noitemsep}
+
+\newcommand{\iid}{\overset{iid}{\sim}}
+
+\providecommand{\mc}[1]{\mathcal{#1}}
+\providecommand{\mb}[1]{\boldsymbol{#1}}
+\providecommand{\ms}[1]{\mathsf{#1}}
+\providecommand{\mt}[1]{\widetilde{#1}}
+\providecommand{\mbb}[1]{\mathbb{#1}}
+\providecommand{\mv}[1]{\vec{#1}}
+\providecommand{\mh}[1]{\hat{#1}}
+\providecommand{\wh}[1]{\widehat{#1}}
+\providecommand{\mhv}[1]{\mh{\mv{#1}}}
+\providecommand{\mvh}[1]{\mv{\mh{#1}}}
+\providecommand{\mhc}[1]{\hat{\mathcal{#1}}}
+\providecommand{\mbc}[1]{\mb{\mathcal{#1}}}
+\providecommand{\mvc}[1]{\mv{\mathcal{#1}}}
+\providecommand{\mtc}[1]{\widetilde{\mathcal{#1}}}
+\providecommand{\mth}[1]{\mt{\mh{#1}}}
+\providecommand{\mht}[1]{\mh{\mt{#1}}}
+\providecommand{\mhb}[1]{\hat{\boldsymbol{#1}}}
+\providecommand{\whb}[1]{\widehat{\boldsymbol{#1}}}
+\providecommand{\mvb}[1]{\vec{\boldsymbol{#1}}}
+\providecommand{\mtb}[1]{\widetilde{\boldsymbol{#1}}}
+\providecommand{\mbt}[1]{\widetilde{\boldsymbol{#1}}}
+\providecommand{\mvc}[1]{\vec{\mathcal{#1}}}
+
+\newcommand{\argmax}{\operatornamewithlimits{argmax}}
+\newcommand{\argmin}{\operatornamewithlimits{argmin}}
+\newcommand{\arginf}{\operatornamewithlimits{arginf}}

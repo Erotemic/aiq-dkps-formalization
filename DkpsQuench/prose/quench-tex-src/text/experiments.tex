@@ -1,0 +1,253 @@
+\section{Empirical query-efficiency in the DKPS}
+\label{sec:query-efficiency}
+We next provide empirical evidence that DKPS-based prediction methods are query-efficient.
+\subsection{Evaluation set up}
+\label{sec:data-description}
+\paragraph{Benchmarks.} 
+We evaluate DKPS-based prediction methods on tasks from the HELM-Lite benchmark suite \citep{liang2022holistic}.
+Specifically, we consider four tasks: MATH \citep{hendrycksmath2021}, which includes 7 subject-based subtasks; LegalBench \citep{guha2023legalbenchcollaborativelybuiltbenchmark}, which includes 11 legal reasoning subtasks; MedQA \citep{jin2020disease}, a multiple-choice medical exam dataset; and WMT-14 \citep{bojar-etal-2014-findings}, which includes 6 language-pair translation subtasks.
+Each task employs a different response-level scoring function, $ s: Q^{*} \to [0,1] $: correctness for MATH, quasi exact match for LegalBench and MedQA, and BLEU score for WMT-14.
+
+For our purposes, the score for a given subtask is the average response-level score across all queries in that task.
+The score for a given task is the average subtask score.
+Full evaluation requires 437 responses for MATH, 2047 responses for LegalBench, 1000 responses for MedQA, 678 responses for WMT-14.'
+
+\paragraph{Models.}
+We evaluate models from the HELM-Lite leaderboard that have been scored on each respective task.
+Because models are evaluated asynchronously and the benchmark evolves over time, different tasks have different sets of evaluated models.
+Critically, our method requires that all models be evaluated on the same set of queries (to construct the distance matrix $D$), so we restrict our analysis to maximal subsets of models sharing a common query set within each subtask and taks.
+The task with the fewest evaluated models is LegalBench (93 models).
+The median and max number of models evaluated on a given task is 95.
+In total, 95 unique models appear across all tasks.
+Table~\ref{tab:model-families} in the Appendix lists all models included in at least one evaluation, and Table~\ref{tab:missing-models} in the Appendix indicates which models were not evaluated on which tasks.
+
+To ensure our evaluation reflects genuine predictive performance, we adopt a ``Leave-One-Family-Out" (LOFO) evaluation protocol.
+Models are grouped into families based on their base architecture and training procedure (e.g., all Llama variants form one family; see Table~\ref{tab:model-families} for complete groupings).
+For each evaluation run, we:
+\begin{enumerate}[label=(\roman*), itemsep=0pt, topsep=2pt, parsep=0pt]
+    \item Select a held-out model family as the prediction target
+    \item Sample $n$ reference models from the remaining families
+    \item Sample a query subset $Q$ of size $m$ from the benchmark
+    \item Construct $d$-dimensional DKPS representations for the reference models and the held-out model family using their responses to $Q$
+    \item Train a decision function $\hat{h}_n$ on $\{(\widehat{\psi}_i, y_i)\}$ for the $n$ reference models to make prediction $\hat{y} = \hat{h}_{n}^{(m)}(\widehat{\psi})$
+    \item Predict scores for all models in the held-out family
+\end{enumerate}
+We repeat this protocol $ 1024 $ times for each combination of $(n, m)$ and report the mean absolute error (MAE) averaged across all held-out models.
+The LOFO protocol ensures that predictions do not rely on model family artifacts. As such, our results provide a conservative estimate of real-world query-efficiency.
+
+\paragraph{Embedding function \& DKPS configuration.}
+We map model responses to vector representations using task-appropriate embedding functions.
+Unless stated otherwise, for free-form text responses (MATH, WMT-14) we use the sentence embedding model \texttt{gemini-embedding-001}, which produces one $3024$-dimensional vector per response.
+For multiple-choice responses (MedQA, LegalBench), we use one-hot encodings in $\mathbb{R}^{p}$, where $p$ is the number of answer choices.
+
+While the DKPS framework supports multiple responses per query, HELM-Lite requires only a single response per model-query pair, so $r=1$ throughout\footnote{For the majority of the publicly evaluated models available on HELM, there were evaluated with a temperature of $ 0 $; that is, $ \mathbb{E}(f(q)) = f(q) $ and so $ r > 1 $ is not necessary.}.
+We assume the pairwise distance matrix $ D $ is a Euclidean distance matrix and hence solve Eq. \eqref{eq:dkps} with GraSPy's \citep{JMLR:v20:19-490} implementation of classical multi-dimensional scaling \citep{torgerson1952multidimensional}.
+We fix $ d=8 $ for consistency across experiments, though adaptive methods such as selecting $d$ based on the elbows in the scree plot \citep{zhu2006automatic} for each task or subtask may yield further improvements.
+\begin{figure*}[t]
+    \centering
+    \includegraphics[width=\linewidth]{figures/fig2.pdf}
+    \caption{Regression in the Data Kernel Perspective Space (DKPS) provides query-efficient benchmark prediction relative to using the sample score across the representative HELM-Lite subtasks. 
+    Lines represent the average mean absolute error across leave-one-family-out and 512 randomly sampled query sets.
+    Lower is better.
+    Actual query-efficiency depends on the number of models used to induce DKPS and train the regression function, as well as the task.
+    The ensemble regressor dominates for nearly all number of queries and all tasks.
+    }
+\label{fig:dkps-better-on-average}
+\end{figure*}
+
+\paragraph{Prediction methods.}
+We compare four prediction methods: two baselines that do not use DKPS representations, and two DKPS-based approaches.
+\begin{itemize}[itemsep=1pt, topsep=3pt]
+\item \textbf{Population Mean}: Predicts the benchmark score as the average score of the $n$ reference models: $\hat{y} = \frac{1}{n}\sum_{i=1}^n y_i$. 
+This baseline ignores both the target model's responses and the query subset.
+\item \textbf{Sample Score}: Predicts the benchmark score using the target model's average response-level score on the query subset $Q$: $\hat{y}_{sample} = \frac{1}{m}\sum_{q \in Q} s(f(q))$. When $m = M$, this recovers the true benchmark score. 
+This baseline uses the target model's responses but ignores information from reference models.
+\item \textbf{DKPS}: Trains a linear regressor on the DKPS representations of the $n$ reference models to predict benchmark scores: $\hat{y}_{DKPS} = \beta_0 + \beta_{1}^\top \widehat{\psi}$, where $(\beta_0, \beta_{1})$ are learned via ordinary least squares on $\{(\widehat{\psi}_i, y_i)\}_{i=1}^n$. 
+This method leverages cross-model structure but does not directly use response-level scores.
+We sometimes evaluate various choices of $ n $.
+\item \textbf{Ensemble}: Convex combination of Sample Score and DKPS predictions: 
+$\hat{y}_{\text{ensemble}} = \alpha \cdot \hat{y}_{\text{sample}} + (1-\alpha) \cdot\hat{y}_{\text{DKPS}}.$
+In our experiments, we set $ \alpha = m / M $.
+This weighting reflects our confidence in the sample-based estimate: when $m$ is small, we rely more on DKPS; when $m \approx M$, we rely more on the direct sample score.
+\end{itemize}
+All predictions are clipped to $[0,1]$.
+We use ordinary least squares for the DKPS regressor due to its strong empirical performance when testing.
+Alternatives such as kernel regression or locally weighted regression may further improve performance and are required for the theoretical query-efficiency guarantees in Section~\ref{sec:theory}.
+We leave exploration of these methods to future work.
+
+\subsection{Results}
+\paragraph{DKPS-based methods outperform Sample Score at low query budgets.}
+Figure \ref{fig:dkps-better-on-average} shows the MAE for each of the prediction methods for the representative subtasks.
+For $ m $ small, DKPS-based methods outperform Sample Score acrosss all subtasks and all number of reference models.
+Importantly, for $ n = \text{ALL} $, the earliest intersection between the performance of $ y_{DKPS} $ and $ y_{SS} $ is $ m \approx 10 $ (for MATH's counting and probability).
+For the other three subtasks, however, the region in which $ y_{DKPS} $ outperforms $ y_{NN} $ is even more substantial -- the performances of the two methods intersect beyond $ m = 30 $.
+
+The more reference models that are included, the better the DKPS-based methods perform.
+The effect of adding more reference models depends on the task.
+As hinted by Assumption \ref{ass:model-support}, it is possible that including more reference models would meaningfully shift the point where the performances intersect.
+
+Table~\ref{tab:dkps} shows performance of the methods as a function of query budget $ m $ for the full tasks from HELM-Lite.
+We observe similar relative performance at the task level as we do at the subtask level.
+
+\paragraph{Ensemble method dominates across all query budgets.}
+While DKPS and Sample Score each excel in different number of query regimes, the Ensemble method achieves the best performance across nearly all $(m, \text{task})$ combinations, often outperforming both components and the Population Mean baseline.
+The ensemble's adaptive weighting ($ \alpha = \frac{m}{M}$) is effective: at small $m$, it inherits DKPS's ability to exploit cross-model structure; at large $m$, it transitions to rely on the target model's actual response-level scores.
+This result has important implications.
+In particular, practitioners need not choose between methods.
+In some cases where cross-task structure can be assumed, more adaptive weightings may provide additional efficiency \citep{math12050746} -- though the proposed weighting appears sufficient for out-of-the-box use.
+
+\hspace{-3cm}
+\paragraph{Embedding function choice can have non-negligible effect.}
+The preceding results used \texttt{gemini-embedding-001} to map responses to vectors. 
+Figure~\ref{fig:embedding_comparison} examines whether this choice matters by comparing six embedding functions on the Math (counting and probability) subtask. 
+At small $m$, embedding choice has a meaningful effect: the best-performing embedding (\texttt{gemini-embedding-001}) achieves roughly 20\% lower MAE than the worst (\texttt{all-minilm-l6-v2}) at $m=1$. 
+This gap narrows as query budget increases, and by $m \geq 30$ all embeddings perform comparably. 
+
+Notably, embedding capacity does not predict performance.
+Larger models do not uniformly outperform smaller ones, suggesting that alignment between the embedding space and task structure may matter more than raw dimensionality. 
+For practitioners, we recommend selecting an embedding function carefully when operating at low query budgets: a 2-3\% reduction in MAE can translate to significant cumulative savings when evaluating new model variants.
+% Figure~\ref{fig:embedding_comparison} compares DKPS-based prediction performance across six different embedding functions on the Math (counting and probability) subtask.
+% While all embedding-based methods substantially outperform the Sample Mean baseline (which does not use embeddings) at low query budgets, we observe meaningful differences among embedding choices.
+% The best-performing \texttt{embeddings—all-minilm-l6-v2} [cite] and \texttt{text-embedding-3-large} [cite] achieve MAE of approximately [X] at $m=10$ queries, while the worst-performing embedding (\texttt{nomic-text-v2-moe} [cite]) shows roughly \textcolor{red}{xxx}\% higher error at the same budget.
+% Notably, larger or more recent embedding models do not uniformly outperform smaller alternatives: all-minilm-l6-v2, a relatively compact model, matches or exceeds the performance of larger embeddings like text-embedding-3-large across most query budgets.
+% This suggests that the alignment between the embedding space and the task structure matters more than raw embedding capacity.
+% As query budget increases, all embeddings converge to similar performance, indicating that embedding choice is most critical in the low-budget regime where DKPS provides the largest advantages.
+
+\paragraph{Model-level performance reveals broad applicability}
+The top row of Figure~\ref{fig:dkps-better-by-model} shows the distribution of performance gain from using Ensemble (relative to Sample Score) at the individual model level.
+A dot above $ 0 $ indicates that using the ensemble improve benchmark estimation for that model.
+As can be seen in the figure, the majority of the mass of each distribution is above $ 0 $ for all $ m $ and all subtasks.
+At low query budgets, the distributions are heavily concentrated above zero across all tasks.
+This observation indicates that combining DKPS-based prediction with sample scores benefits diverse model types, even with LOFO protocol.
+
+However, the variance in these benefits differs substantially across tasks.
+WMT exhibits remarkably low spread, with models clustering tightly around the mean, suggesting the Ensemble's adaptive weighting provides uniform improvements for this task.
+In contrast, MedQA and Math the performance differences have wider distributions -- some models gain substantially from the Ensemble while others show minimal effects. 
+We leave deeper investigations into model-specific benefits, such as predicting the suitability of DKPS-based methods for a particular model, to future work. 
+\begin{figure}[t]
+    \centering
+    \includegraphics[width=\linewidth]{figures/fig5.pdf}
+    \caption{Choice of embedding function can have a large effect at small $ m $. For small $ m $, the best performing embedding model (\texttt{gemini-embedding-001}) improves upon the worst performing (\texttt{all-minilm-l6-v2}) by $ \approx 20\% $ (from  MAE $\approx 0.15 $ to MAE $\approx 0.12 $) at $ m = 1 $. 
+    For large enough $ m $, any modern sentence embedding function is sufficient.}
+\label{fig:embedding_comparison}
+\end{figure}
+\begin{figure*}
+    \centering
+    \includegraphics[width=\linewidth]{figures/fig3.pdf}
+    \caption{Performance gain (MAE of Sample Score minus MAE of Ensemble regressor) on a per model basis (top) and a per query set basis (bottom) for the four representative subtasks. 
+    Each dot represents the average difference in performance across query sets (top) or across models (bottom). A
+    A dot above 0 indicates that the Ensemble regressor is better than just using Sample Score.
+    The majority of the mass of the distribution of the difference is above 0 for all number of queries and all tasks.}
+\label{fig:dkps-better-by-model}
+\end{figure*}
+
+\paragraph{Query set matters.}
+The bottom row of Figure~\ref{fig:dkps-better-by-model} shows performance variation across different random query subsets.
+Each point represents the mean performance difference (Sample Score MAE minus Ensemble MAE) for a single randomly-sampled query set of size $m$, averaged across models.
+A point above $0$ indicates that the Ensemble outperforms Sample Score for that query set.
+As can be seen in the figure, at small query budgets ($m \leq 10$), the distributions span a wide range: some query sets yield substantial Ensemble improvements while others produce negligible or negative gains.
+This variance arises because the quality of the DKPS representations $\widehat{\psi}$ depends on which queries are used to construct the distance matrix $D$ -- with few queries, unlucky selections can produce uninformative representations.
+As query budget increases, the variance contracts, but poor query selection at low $m$ is precisely where DKPS-based methods would otherwise provide the largest savings.
+This motivates developing query selection strategies that move beyond uniform random sampling.
+% Figure~\ref{fig:dkps-better-by-model} examines performance variation across different random query subsets, revealing that the specific queries selected have substantial impact on prediction quality, particularly for DKPS-based methods.
+% Each gray point represents the performance difference (Sample Score MAE minus Ensemble MAE) for a single randomly-sampled query set of size $m$, while black points show the mean across query sets.
+% At small query budgets ($m \leq 10$), the distribution spans a remarkably wide range: some query sets yield Ensemble improvements of \textcolor{red}{xxx} MAE while others produce negligible or even negative gains.
+% This high variance reflects a fundamental challenge for DKPS-based methods: the quality of the low-dimensional model representations $\widehat{\psi}$ depends critically on which queries are used to construct the distance matrix $D$, and with few queries, unlucky selections can produce uninformative or misleading representations.
+% In contrast, Sample Score performance is inherently tied to the specific queries evaluated, but DKPS compounds this sensitivity by using the query set to construct the entire representational geometry.
+% As query budget increases, the variance contracts—by $m = 100$, most query sets produce similar results—but the damage from poor query selection at low $m$ is precisely where DKPS-based methods would provide the largest computational savings.
+% This motivates the need for principled query selection strategies that move beyond uniform random sampling.
+\paragraph{Active query set selection protects against bad query sets.}
+We propose a simple offline selection strategy that leverages cached responses from reference models.
+Given a query budget $m$:
+\begin{enumerate}[label=(\roman*), itemsep=0pt, topsep=2pt, parsep=0pt]
+    \item Sample $ B $ candidate query sets of size $m$ uniformly at random
+    \item For each candidate, construct DKPS representations of the reference models and fit a linear regressor to predict their known benchmark scores
+    \item Compute the goodness-of-fit ($R^2$) between predicted and actual scores
+    \item Select the query set that maximizes $R^2$
+\end{enumerate}
+If a query set produces DKPS representations that predict benchmark scores for reference models, it likely captures task-relevant model structure and will generalize to new models.
+This process operates entirely on cached responses and can be performed once and reused for all future evaluations at budget $m$.
+\begin{figure*}
+    \centering
+    \includegraphics[width=\linewidth]{figures/fig4.pdf}
+    \caption{Active query selection can improve query-efficiency of DKPS-based prediction methods.
+    \textbf{Top left.} Relationship between MAE and linear goodness-of-fit ($ R^{2} $) between DKPS representations of reference models and full benchmark score for $ m = 8 $ queries on the MATH counting and probability subtask. The highest $ R^{2} $ (lowest $1-R^{2}$ is highlighted with a red $ \times $.
+    \textbf{Top center.} Histogram of MAE for different query subsets. Color indicates number of reference models. Using the query set that induces the DKPS representations that maximizes $ R^{2} $ has a lower  better than the average query set for both $ n = 20 $ and $ n = ALL $.
+    \textbf{Top right.} MAE versus $ 1 - R^{2} $ densities for different $ (n, m) $ pairs.
+    \textbf{Bottom.} MAE distribution across query sets for various models. If the red $ \times $ is lower than the dotted line, the query set that maximized $ R^{2} $ is preferred over the average query set.}
+    \label{fig:query-selection}
+\end{figure*}
+
+Figure~\ref{fig:query-selection} demonstrates the effectiveness of this approach on the MATH counting and probability subtask with $m = 8$ queries.
+The top-left panel shows that $R^2$ on reference models correlates with prediction error on held-out models, validating $R^2$ as a selection criterion.
+The max-$R^2$ query set (red $\times$) achieves lower error than the mean random query set.
+As can be seen in the top-center and bottom panels, this improvement is broad: the selected query set lies in the favorable tail of the error distribution and provides lower error across nearly all individual models.
+The top-right panel shows that the benefit of active selection diminishes as query budget increases—at larger $m$, random selection suffices.
+This is expected: active selection matters most where query set variance most limits DKPS effectiveness.
+
+More broadly, DKPS-based prediction is complementary to query selection methods.
+Our $R^2$-based approach is one such method, but DKPS can equally operate on queries selected via other principled or brute force selection strategies—potentially compounding efficiency gains beyond what either approach achieves alone.
+% As demonstrated in Figure~\ref{fig:query_level_performance}, random query selection at small budgets produces high variance in prediction quality—precisely the regime where DKPS-based methods offer the largest computational savings.
+% This variance arises because the DKPS representations $\widehat{\psi}$ depend fundamentally on which queries are used to construct the distance matrix $D$: some query sets capture model relationships that strongly correlate with benchmark performance, while others produce less informative or even misleading geometric structure.
+% Unlike Sample Score, where performance is inherently tied to evaluating specific queries, DKPS amplifies query selection effects by using the query set to define the entire representational space.
+% This motivates developing query selection strategies that identify informative query sets without requiring evaluation of the target model.
+
+% We propose a simple offline selection strategy that leverages cached responses from reference models.
+% Given a query budget $m$, we: (1) sample $n_{\text{samples}}$ candidate query sets of size $m$ uniformly at random, (2) for each candidate, construct DKPS representations of the reference models and fit a linear regressor to predict their known benchmark scores, (3) compute the goodness-of-fit ($R^2$) between predicted and actual scores, and (4) select the query set that maximizes $R^2$.
+% The intuition is straightforward: if a query set produces DKPS representations that strongly predict benchmark scores for reference models, it likely captures model structure relevant to performance and will generalize to new models.
+% Critically, this entire process operates on cached responses—no evaluation of the target model is required—making it a true offline optimization that can be performed once and reused for all future model evaluations at budget $m$.
+
+% Figure~\ref{fig:query_selection} demonstrates the effectiveness of $R^2$-based selection on [TASK\_NAME] with $m = [X]$ queries.
+% The top-left panel visualizes the selection process: each gray point represents a candidate query set plotted by its $1-R^2$ (x-axis) and resulting prediction error on held-out models (y-axis).
+% The linear fit (teal line) shows a clear relationship between $R^2$ and prediction quality, validating that $R^2$ on reference models is a reliable proxy for generalization performance.
+% The max-$R^2$ query set (red X) achieves error of [0.04], substantially below both the mean random query set error ([0.06], dashed line) and representing roughly [X]\% improvement.
+% The top-middle panel compares error distributions: the max-$R^2$ selection (marked X) lies in the favorable tail when using all reference models (blue), demonstrating it successfully identifies outlier-quality query sets.
+% Using more reference models ($n_{\text{models}}=\text{ALL}$ vs. 20) shifts the entire distribution leftward and makes the max-$R^2$ selection more reliable.
+% The top-right panel examines sample efficiency: performance improves rapidly with $n_{\text{samples}}$ but plateaus around 32-64 candidates, indicating that modest computational investment (evaluating [Y] query sets offline) suffices to capture most of the available gains.
+% Finally, the bottom panel shows per-model error distributions, revealing that the max-$R^2$ query set (red X) provides consistently lower error across nearly all models compared to mean random selection (blue line).
+% This broad improvement—rather than optimization for specific model types—demonstrates that $R^2$-based selection identifies genuinely informative query structure.
+% Across tasks, this offline selection strategy reduces prediction error by [Z-W]\% at low query budgets, partially mitigating the query-set variance that otherwise limits DKPS effectiveness.
+
+\section{Discussion}
+We proposed an approach to benchmark score prediction that leverages cached responses from previously-evaluated models via the Data Kernel Perspective Space.
+We established formal query-efficiency guarantees, proving that nearest neighbor regression in DKPS outperforms predicting benchmark scores using the model's score on a subset of queries under certain technical assumptions.
+
+These theoretical predictions were validated empirically across diverse HELM-Lite tasks spanning mathematical reasoning, legal analysis, medical question answering, and machine translation.
+The Ensemble method -- which adaptively combines DKPS-based prediction with direct sample scores -- consistently achieved the best performance.
+We further demonstrated that offline query selection strategies can provide additional improvements to query efficiency.
+Overall, our results demonstrate that information encoded in cached responses enables more efficient performance prediction—an important capability as evaluation continues to scale in cost and complexity.
+
+\subsection*{Limitations and future work}
+\noindent\textbf{Extensions across modalities and metrics.} Our framework extends beyond some of the specific design choices made here.
+While we focused on language models with Frobenius norm on embedded responses, the approach applies to any modality (image, code, multimodal generation) where models can be embedded via appropriate functions $g: \mathcal{X} \to \mathbb{R}^p$, and to alternative distance metrics (Wasserstein, maximum mean discrepancy, task-specific similarities) that may better capture model relationships for particular benchmarks.
+Exploring these variations across evaluation scenarios represents a promising direction for future work.
+
+\noindent\textbf{Stochastic scoring functions.}
+Our theoretical analysis assumes the mapping from a response to its score is deterministic.
+However, many modern evaluation frameworks use LLM-as-judge scoring \citep{zheng2023judging}, where scores are stochastic and may depend on contextual factors beyond individual responses.
+Extending our framework to this setting is conceptually straightforward.
+DKPS representations can be constructed from multiple response samples, and scoring uncertainty can be propagated through the prediction pipeline.
+The established theoretical guarantees would similarly require modification.
+our proof technique relies on smoothness in the (deterministic) mapping from $y$ to $\psi(Q)$.
+We conjecture that similar query-efficiency results hold under appropriate noise assumptions, though likely for $k$-nearest neighbors with $k \to \infty$ and $k/n \to 0$ as opposed to the current $k = 1$.
+
+\noindent\textbf{Evaluation without response-level scores.}
+A subtle but important feature of DKPS-based methods is that they remain valid even when response-level scoring is unavailable or expensive.
+Traditional subset scoring methods require scoring each response to identify informative queries, but DKPS constructs representations purely from response embeddings without invoking the scoring function.
+This enables prediction in scenarios where: (1) scoring is proprietary or access-controlled (e.g., human evaluation), (2) scoring is computationally expensive (e.g., running code, simulation), or (3) scores are only available at the benchmark level, not per-query.
+Demonstration of the utility of DKPS to these settings is an exciting area of future work.
+
+\noindent\textbf{Unstructured query sets and missing data.}
+Our analysis assumes all reference models are evaluated on the same query set, enabling direct construction of the distance matrix $D$.
+In practice, benchmark data often exhibits partial overlap -- different models may be evaluated on different query subsets due to asynchronous evaluation, budget constraints, or benchmark evolution. 
+Several approaches could extend DKPS to this setting.
+For example, restricting to models sharing a common query set (our current approach), using matrix completion methods \citep{candes2008exactmatrixcompletionconvex} to estimate distances from incomplete data, or aligning separate DKPS representations via models evaluated on multiple query sets \citep{priebe2011manifoldmatchingjointoptimization}.
+Understanding how query set overlap affects DKPS quality and developing principled aggregation methods would significantly broaden the practical reach of our framework, particularly for settings where models are continuously added with varying query coverage.
+
+\noindent\textbf{Query efficiency in practice.}
+Our empirical results revealed efficiency heterogeneity across task.
+Understanding which task properties (e.g., response diversity, scoring function complexity, query difficulty distribution, alignment between embeddings and evaluation metrics) predict when DKPS-based methods excel would enable practitioners to assess applicability before deployment.
+
+In terms of practical deployment, our results suggest a simple workflow: maintain cached responses from evaluated models, use the Ensemble method with offline query selection, and allocate approximately 10\% of the full query budget for new model evaluation.
+Notably, our Leave-One-Family-Out evaluation protocol provides conservative estimates of real-world performance since in practice reference sets may include models from the same family as the target, yielding stronger cross-model signal and further improving query efficiency.
+As model zoos and benchmark suites continue to grow, integrating DKPS-based prediction into evaluation pipelines will yield substantial cumulative savings.

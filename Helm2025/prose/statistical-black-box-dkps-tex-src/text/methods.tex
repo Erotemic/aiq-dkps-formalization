@@ -1,0 +1,272 @@
+\section{The Data Kernel Perspective Space}
+Before we present our results related to statistical inference on black-box generative models, we first describe how to obtain finite-dimensional vector representations of the models. 
+% Vector representations of objects facilitates statistical analysis of the objects with conventional methods. 
+The particular method for obtaining vector representations for generative models that we study herein has previously been discussed in \cite{helm2024tracking} and \cite{aranyak}.
+
+% Representing objects of interests with finite-dimensional vectors often facilitates statistical analysis of the objects with conventional statistical tools. 
+% For instance, one can group a given set of objects into different clusters by clustering their vector representations. 
+% Before we present our key results concerning statistical inference on vector representations of generative models, we describe here how we obtain the vector representations of the generative models. 
+% We remind the reader here that this particular method is not novel to this paper, it has already been discussed in two previous works \cite{duderstadt2023comparing} and \cite{aranyak}.
+
+% -- such as predicting if a model has had access to sensitive information or predicting a model's performance on a benchmark. 
+
+% \subsection*{Methodology}
+Let $ f: \mathcal{Q} \to \mathcal{X} $ be a generative model from a query space $ \mathcal{Q} $ to an output space $ \mathcal{X} $. 
+Given $ q \in \mathcal{Q} $, we assume that $ f(q) $ produces a random element in $ \mathcal{X} $.
+In our setting there are $ n $ models $f_{1},\hdots f_{n} $ and $ m $ queries $ q_{1}, \hdots, q_{m} $ with $ q_{j} \in \mathcal{Q} $.
+We assume that each model responds to every query $ r $ independent times and let $ f_{i}(q_{j})_{k} $ be the $ k $-th response to $ q_{j} $ from $ f_{i} $. 
+% Throughout our discussion we let $ i\;\text{\&} \;i'$ index models, $ j \;\text{\&} \;j' $ index queries, and $ k $ index response replicates.
+
+
+
+% Suppose there are $n$ generative models $f_1,\dots f_n$ and $m$ queries $q_1,\dots q_m$.  and let $f_i(q_j)_k$ denote the $k$-th replicate of the response of $f_i$ to $q_j$. For every $i,j$, the replicates $f_i(q_j)_1,\dots f_i(q_j)_r$ are independently and identically distributed over some pool of responses. 
+
+
+% The setting is as follows. Suppose there are $n$ generative models $f_1,\dots f_n$ and $m$ queries $q_1,\dots q_m$. Each model $f_i$ responds to every query $q_j$ on $r$ replicates, and let $f_i(q_j)_k$ denote the $k$-th replicate of the response of $f_i$ to $q_j$. For every $i,j$, the replicates $f_i(q_j)_1,\dots f_i(q_j)_r$ are independently and identically distributed over some pool of responses. 
+
+
+We let $ g: \mathcal{X} \to \mathbb{R}^{p} $ be an embedding function that maps a model response to a $p$-dimensional real-valued vector.
+Further, we let $x_{ijk}=g(f_i(q_j)_k)$ denote the embedding of $ f_{i}(q_{j})_{k} $ and $ F_{ij} $ denote the distribution of $ x_{ijk} $ on $ \mathbb{R}^{p} $. 
+That is, $x_{ij1},\dots x_{ijr} \iid  F_{ij} $. 
+% \footnote{We sometimes refer to $ F_{ij} $ as the \textit{generation distribution} of $ f_{i} $ with respect to $ q_{j} $.}
+
+We let $ \bar{x}_{ij} = \frac{1}{r} \sum_{k=1}^{r} x_{ijk} $ be the empirical average embedded response of $f_{i}$ to $q_{j}$ and $ \bar{X}_{i} \in \mathbb{R}^{m \times p}$ denote the matrix whose $ j $-th row is $ \bar{x}_{ij} $.
+We view $ \bar{X}_{i} $ as a matrix representation of model $ f_{i} $ with respect to $ \{ q_1,\dots, q_m \}$ and $ g $. 
+We define $ D $ as the $ n \times n $ pairwise distance matrix with entries 
+\begin{align}
+\label{euc-dist-matrix}
+    D_{ii'} = \frac{1}{m} \big|\big| \bar{X}_{i} - \bar{X}_{i'} \big|\big|_{F}
+\end{align} and note that $ D_{ii'} $ captures the difference in empirical average model behavior between $ f_{i} $ and $ f_{i'} $ with respect to $ \{q_{1}, \hdots, q_{m}\} $ and $ g $.
+
+With the form described by Eq. \eqref{euc-dist-matrix}, $ D $ is a rescaled Euclidean distance matrix. 
+Hence, multidimensional scaling (MDS) of $ D $ yields $ d $-dimensional Euclidean representations of the matrices $ \bar{X}_{i} $ (and thereby of the models $f_i$) with respect to $ \{q_{1}, \hdots, q_{m}\} $ and $ g $ \citep{torgerson1952multidimensional}.
+Letting $ \widehat{\psi} := \text{MDS}(D) \in \mathbb{R}^{n \times d} $, we refer to $ \widehat{\psi} $ as the \textit{data kernel perspective space} (DKPS).
+We emphasize that the $ i $-th row of the DKPS -- $ \widehat{\psi}_{i} $ -- is a $ d $-dimensional vector representation of the generative model $ f_{i} $.
+
+% In particular, let $ D^{2} $ be the $ n \times n $ matrix with entries $ D_{ii'}^{2} $, $ e_{n} \in \mathbb{R}^{n}$ be the vector of all ones, $ I_{n} $ be the $ n \times n $ identity matrix, and $ P = I_{n} - e_{n}e_{n}^{T} / n $. Then, letting $ B = -\frac{1}{2} P D^{2} P^{T} $ and $ v_{\ell} $ be the eigenvector associated with the $ \ell $th largest eigenvalue $ \lambda_{\ell} $ of $ B $, the rows of the matrix $ \widehat{\psi} \in \mathbb{R}^{n \times d} $ with columns $ \lambda_{\ell}^{2} v_{\ell} $ are $ d $-dimensional Euclidean representations of the models with respect to $ Q $. 
+
+
+
+% \subsubsection*{Properties of the Euclidean representations}
+
+% \clearpage
+\subsection{Analytical properties of the DKPS}
+
+While the DKPS representations of the models are Euclidean objects, it is not possible to comment on their properties without imposing constraints on the $ F_{ij} $.
+%To facilitate analysis we assume each query is from the query distribution $ G $ with support $ \mathscr{Q} $  
+% let the distribution of response distributions $ F_{ij} $ with $ q_{j} \sim G $ be $ \mathcal{F}_{i}(G) $ for fixed $ f_{i} $ (i.e., $ F_{ij} \sim \mathcal{F}_{i}(G) $) 
+We let $ \mu_i \in \mathbb{R}^{m \times p}$ be the population counterpart of $ \bar{X}_i $ whose $ j $-th row is $ \mathbb{E}_{x \sim F_{ij}}(x)$. 
+Similarly, we let $ \Delta $ be the population counterpart of $ D $ whose $(i,i')$-th element is $ \Delta_{ii'} = \frac{1}{m}||\mu_{i} - \mu_{i'}||_{F} $.
+We assume
+ $ \Delta^{*}_{i i'} = \lim \frac{1}{m} || \mu_{i} - \mu_{i'}||_{F} $ for every pair $ (i,i') $ as $ m, r \to \infty $ exists
+% In our setting, where both $ m, r \to \infty $, we assume
+ % $ \Delta^{*}_{i i'} = \lim_{m,r \to \infty} \frac{1}{m} || \mu_{i} - \mu_{i'}||_{F} $ for every pair $ (i,i') $.
+% \begin{align*}
+% \mu_{i}(G)~:=~\mathbb{E}_{F_{ij}\sim\mathcal{F}(G)}\left[\mathbb{E}_{x\sim F_{ij}}\left[g(x))\right]\right].
+% \end{align*}
+and that $ g $ is bounded.
+% \footnote{Boundedness is typically satisfied in practice for well-defined $ g $. For language models, an element of $ \mathcal{X} $ is a finite sequence from a finite vocabulary; for text-to-image models $ \mathcal{X} = \{0, \hdots, 255\}^{3}$ is finite.}
+
+% . For example, for language models elements of both $ \mathscr{Q} $ and $ \mathcal{X} $ are sequences of tokens from a finite vocabulary where the length of an element in $ \mathscr{Q} $ is bounded above by the size of the context window and the length of an element of $ \mc{X} $ is bounded above by a user-defined maximum sequence length.
+
+%( i.e., $ |\mathscr{Q}| < \infty $ and $ |\mathcal{X}| < \infty $).  
+% Together, these imply that the image of $ \mathcal{X} $ under $ g $ is bounded and, hence, that $ g(x) $ with $ x \sim F_{ij} $ has finite moments and $ \mathbb{E}_{F_{ij} \sim \mathcal{F}(G)}\left[\mathbb{E}_{x \sim F_{ij}}\left[g(x)\right] \right] $ is finite. 
+
+In our setting, under appropriate assumptions described in \citep{aranyak},
+% and letting 
+% \begin{align*}
+% \mu_{i}(G)~:=~\mathbb{E}_{F_{ij}\sim\mathcal{F}(G)}\left[\mathbb{E}_{x\sim F_{ij}}\left[g(x))\right]\right],
+% \end{align*}
+%we have
+% $|D_{i i'}-\Delta_{i i'}(G)| \to 0$  as $m,r \to \infty$ 
+% with high probability for all $ i, i'$.
+% where $\Delta_{i i'}(G)=\frac{1}{m}
+% \left\lVert 
+% \mu_i(G)-\mu_{i'}(G)
+% \right\rVert
+% $. 
+% Additionally, we assume 
+% $\lim_{m,r \to \infty}
+% \Delta_{i i'}(G)
+% \to \Delta^{(\infty)}(G)
+% $  for all $n$, where $\Delta^{(\infty)}
+% \in \mathbb{R}^{n \times n}
+% $ is a dissimilarity matrix, so we have
+% for all $n$,
+\begin{equation}
+    D_{i i'}=
+    \frac{1}{m}
+    \left\lVert 
+\bar{X}_i-\bar{X}_{i'}
+    \right\rVert
+    \to 
+    \Delta_{i i'}^{*}
+\end{equation}
+with high probability
+as $m,r \to \infty$ for all $ (i, i') \in \{1, \hdots, n\} \times \{1, \hdots, n\} $.
+%\begin{align}
+%\label{eq:entry-of-D2}
+%    D_{ii'} = \frac{1}{m} \big\| \big(\bar{X}_{i} - \bar{X}_{i'}\big) \big\|_{F} 
+%    \xrightarrow[]{}
+%    \big\|  \mu_{i}(G) - \mu_{i'}(G) \big\|_{F} =: \Delta_{ii'}(G)
+%\end{align} 
+%as $ R, m \to \infty $ for all $ (i, i') \in \{1, \hdots, n\} \times \{1, \hdots, n\} $ \citep{aranyak}.  
+Further, there exists $ \psi := \text{MDS}(\Delta^{*}) \in \mathbb{R}^{m \times d} $ such that $ \widehat{\psi} \to \psi $. 
+That is, the configuration $ \psi $ is the population counterpart of $ \widehat{\psi} $. $ \psi $ captures the true geometry of the mean discrepancies of the model responses with respect to the queries  $ \{q_1,\hdots, q_m \} $.
+%We drop the argument of $ \psi $ when the distribution of the queries is clear.
+% and hinges on the boundedness of $ g(x) $. 
+Importantly, in settings where the models are not fixed and are instead assumed to be $ i.i.d. $ realizations from a model distribution $ P_{model} $, the distance matrix $ D $ converges to $ \Delta^{*} $ and, under technical assumptions, there exists $ \psi $ such that $ \widehat{\psi} \to \psi $ as $ m, r \to \infty $ for all $n$ \citep{aranyak}.
+
+% In settings where the query space contains only a single element or where each $ F_{ij} $ is a point mass on $ x_{ij} $, $ \Delta_{ii'} $ is exactly the maximum mean discrepancy \citep{gretton2012kernel} of the distributions $ F_{ij} $ and $ F_{i'j} $ under a linear map applied to $ g(x) $. 
+% For settings where $ | \mathscr{Q} | > 1 $ and the $ F_{ij} $ are not all point masses, the analysis is more complicated since both $ F_{ij} $ and $ \bar{x}_{ij}$ 
+% are random variables. 
+% The entry-wise convergence of $ D $ to $ \Delta(G) $ implies the convergence of $ Z_{i} $ to an analogously defined $ Z^{*}_{i}(G) \in \mathbb{R}^{p} $ up to an orthogonal transformation. The proof of this is provided in Appendix [ref].
+
+
+% While we do not explore alternative dissimilarities on the $ m \times p \times R $ matrices obtained after embedding the $ R $ samples from each $ F_{ij} $ in this paper, we note that it is possible (and perhaps worthwhile) to consider more expressive notion of dissimilarity on the models. 
+% For example, we could replace the row-wise difference with the average of a row-wise MMD with a universal kernel to ensure that we capture all relevant differences between the response distributions induced by different $ f_{i} $.
+% The resulting $ n \times n $ pairwise distance matrix will likely not be a Euclidean distance matrix, though transforming it into useful and analyzable representations of the models is sometimes possible [cite, Trosset?].
+
+% \clearpage
+
+\subsection{Statistical inference in the DKPS}
+\label{subsec:inference}
+
+We now extend the consistency of $ \widehat{\psi} $ to $ \psi $ to model-level inference.
+Consider the classical statistical learning problem \citep[Chapter~2]{hastie2009elements} in the context of a collection of generative models: given training data $ \mathcal{T}_{n} = \{ (f_{1}, y_{1}), \hdots, (f_{n}, y_{n}) \} $ assumed to be  $ i.i.d. $ realizations from the joint distribution $ P_{f Y} $, choose the decision function $ h: \mathcal{F} \to \mathcal{Y} $ that minimizes the expected value of a loss function $ \ell $ with respect to $ P_{f Y} $ within a class of decision functions $ \mathcal{H} $ for a test observation $ f $ assumed to be an independent realization from the marginal distribution $ P_{f}$. 
+Or, with $ \mathcal{R}_{\ell}(P_{f Y}, h) := \mathbb{E}_{P_{f Y}}\left[\ell(h(f), y)\right] $, select $ h^* $ such that 
+\begin{align*}
+\label{eq:risk}
+    h^* \in \argmin_{h \in \mathcal{H}} \mathcal{R}_{\ell}(P_{f Y}, h). 
+\end{align*}
+We let $ \mathcal{R}_{\ell}^{*}(P_{f Y}, \mathcal{H})=
+\mathcal{R}_{\ell}(P_{f Y}, h^*)
+$ denote the expected loss (or ``risk") of $ h^* $. 
+
+The joint distribution $ P_{f Y} $ is often unavailable and the decision function is selected based on the training data. 
+We let $ h(\; \cdot \;; \mathcal{T}_{n}) $ denote such a decision function and say \textit{the sequence of decision functions $ \left(h(\; \cdot \;; \mathcal{T}_{1}), \hdots, h(\;\cdot\;; \mathcal{T}_{n})\right) $ is consistent for $ P_{f Y} $ with respect to $ \mathcal{H}$} if \begin{align*}
+Pr\big(\;\big|  \mathcal{R}_{\ell}(P_{f Y}, h(\;\cdot\;; \mathcal{T}_{n})) - \mathcal{R}^{*}_{\ell}(P_{f Y}, \mathcal{H}) \big| > \epsilon\big) \to 0
+\end{align*} as $ n \to \infty $.
+
+% Consider the classical statistical learning problem \citep[Chapter~2]{hastie2009elements} in the context of a collection of generative models: given training data $ \mathcal{T}_{n} = \{ (f_{1}, y_{1}), \hdots, (f_{n}, y_{n}) \} $ assumed to be  $ i.i.d. $ realizations from the joint distribution $ P_{\psi Y} $, choose the decision function $ h: \mathcal{X} \to \mathcal{Y} $ that minimizes the expected value of a loss function $ \ell $ with respect to $ P_{\psi Y} $ within a class of decision functions $ \mathcal{H} $ for a test observation $ \psi $ assumed to be an independent realization from the marginal distribution $ P_{\psi}$. Or, with $ \mathcal{R}_{\ell}(P_{\psi Y}, h) := \mathbb{E}_{P_{\psi Y}}\left[\ell(h(\psi), y)\right] $, select $ h^* $ such that 
+% \begin{align*}
+% \label{eq:risk}
+%     h^* \in \argmin_{h \in \mathcal{H}} \mathcal{R}_{\ell}(P_{\psi Y}, h). 
+% \end{align*}
+% We let $ \mathcal{R}_{\ell}^{*}(P_{\psi Y}, \mathcal{H})=
+% \mathcal{R}_{\ell}(P_{\psi Y}, h^*)
+% $ denote the expected loss of $ h^* $.
+
+% The joint distribution $ P_{\psi Y} $ is often unavailable and the decision function is selected based on $ \mathcal{T}_{n} $. 
+% We let $ h(\; \cdot \;; \mathcal{T}_{n}) $ denote such a decision function and say \textit{the sequence of decision functions $ \left(h(\; \cdot \;; \mathcal{T}_{1}), \hdots, h(\;\cdot\;; \mathcal{T}_{n})\right) $ is consistent for $ P_{\psi Y} $ with respect to $ \mathcal{H}$} if \begin{align*}
+% Pr\big(\;\big|  \mathcal{R}_{\ell}(P_{\psi Y}, h(\;\cdot\;; \mathcal{T}_{n})) - \mathcal{R}^{*}_{\ell}(P_{\psi Y}, \mathcal{H}) \big| > \epsilon\big) \to 0
+% \end{align*} as $ n \to \infty $.
+
+In the black-box setting we do not have direct access to useful representations of the models. 
+Instead, we must query each model repeatedly and use the representations $ \{ \psi_1,\hdots, \psi_n \} $ as proxies for the models $ \{ f_{1}, \hdots, f_{n}\} $. 
+Hence, $\mathcal{T}_n=\{ (\psi_1,y_1),\hdots ,(\psi_n,y_n) \}$
+% With a slight abuse of notation, we henceforth denote the training data by $\mathcal{T}_n=\{ (\psi_1,y_1),\hdots ,(\psi_n,y_n) \}$ 
+where $(\psi_i,y_i) \sim^{iid} P_{\psi Y}$ and our goal is to choose a decision function $h^*$ which minimizes the average loss 
+$ \mathcal{R}_{\ell}(P_{\psi Y}, h) := \mathbb{E}_{P_{\psi Y}}\left[\ell(h(\psi), y)\right] $ within an appropriately defined $\mathcal{H}$.
+Note that the true $ \{\psi_{1}, \hdots, \psi_{n}\} $ are not known \textit{a priori} and must be estimated via $ \{\widehat{\psi}_{1}, \hdots, \widehat{\psi}_{n}\} $.
+We let $ \widehat{\mathcal{T}}_{n} $ be the training data where $ \psi_{i} $ is replaced with $ \widehat{\psi}_{i} $.
+% Note that in order to compute $\psi_i$ we need access to the response distributions $F_{ij} $, hence we estimate $\psi_i$ using its sample counterpart $\widehat{\psi}_i$. In the abovementioned statistical learning problem, instead of dealing with the dataset
+%Instead, we have access to representations of their generative properties with respect to $ \{q_{1}, \hdots, q_{m}\} $ captured via the data kernel perspective space.
+%That is, we let $ \mathcal{T}_{n} = \{\psi_{1}, y_{1}), \hdots, \psi_{n}, y_{n})\} $ and the corresponding joint distribution, class of decision function, and loss function defined on $ \psi $ parameterize the inference problem.
+% and the test observation $\psi_{n+1} $.
+%Further, we do not observe $ \psi_{i} $ directly and must estimate it via $ \widehat{\psi}_{i} $.
+% We note that the $ \widehat{\psi}_{i} $'s are errorful observations of the true-but-unknown $ \psi_{i} $. 
+% Letting $ \{(f_{1}, y_{1}), \hdots, (f_{n}, y_{n})\} $ be $ i.i.d. $ realizations from a distribution on generative models and $ P_{\psi Y} $ be the corresponding distribution induced by MDS($\Delta$),
+
+Two important extensions of the DKPS consistency results in the context of the classical statistical learning problem are the following theorems:
+\begin{theorem}
+\label{thm:rule-convergence}
+    Under technical assumptions described in Appendix \ref{app:proofs}, \begin{align*}
+    \mathcal{R}_{\ell}(P_{\psi Y}, h(\; \cdot \;; \widehat{\mathcal{T}}_{n})) \to \mathcal{R}_{\ell}(P_{\psi Y}, h(\; \cdot \;; \mathcal{T}_{n})) 
+    \end{align*} as $ m, r \to \infty $, for every $n$.
+\end{theorem} That is, the risk of a decision function based on $\widehat{\mathcal{T}}_n=
+\{
+(\widehat{\psi}_1,y_1),\hdots ,
+(\widehat{\psi}_n,y_n)
+\}
+$ converges to the risk of the decision function based on the true-but-unknown $ \mathcal{T}_{n} $.
+For situations where $ \{\psi_{1}, \hdots, \psi_{n}\} $ are good proxies, Theorem \ref{thm:rule-convergence} states that increasing the number of queries and/or number of replicates per query will improve the performance of decision functions trained on $ \widehat{\mathcal{T}}_{n} $.
+% and
+\begin{theorem}
+\label{thm:consistency}
+    Under technical assumptions described in Appendix \ref{app:proofs}, if $ (h(\; \cdot \;; \mathcal{T}_{1}), \hdots, h(\; \cdot \;; \mathcal{T}_{n})) $ is consistent for $ P_{\psi Y} $ with respect to
+    $ \mathcal{H} $, then $ (h(\; \cdot \;; \widehat{\mathcal{T}}_{1}), \hdots, h(\; \cdot \;; \widehat{\mathcal{T}}_{n})) $ is consistent for 
+    $ P_{\psi Y} $ 
+    with respect to
+    $ \mathcal{H} $ as $ n, m, r \to \infty $.
+\end{theorem}
+Theorem \ref{thm:consistency} states that if the sequence of decision functions learned from $ \mathcal{T}_{n} $ is consistent then the sequence of decision functions learned from the analogous $ \widehat{\mathcal{T}}_{n} $ is also consistent.
+This result suggests that inference performance should improve with more training data.
+While a logical follow-on to Theorem \ref{thm:rule-convergence} and a well-understood principle in classical statistical learning settings, the consistency of the DKPS in the setting where the number of models grows is a non-trivial extension of the fixed $ n $ case.
+
+The proofs of Theorems \ref{thm:rule-convergence} and \ref{thm:consistency} are provided in Appendix \ref{app:proofs}.
+
+\subsubsection{Non-standard considerations}
+\label{subsec:non-standard-considerations}
+
+Given that our analysis is based on estimates $ \{\widehat{\psi}_{1}, \hdots, \widehat{\psi}_{n} \}$ of proxies $ \{\psi_{1}, \hdots, \psi_{n}\} $ of the objects of interest $ \{f_{1}, \hdots, f_{n}\}$, it is important to note some non-standard theoretical considerations.
+We let $ \mathcal{R}^{*}_{\ell}(P_{fY}) := \inf_{\{h: \mathcal{F} \to \mathcal{Y}\}}\mathcal{R}_{\ell}(P_{fY}, h) $ be the Bayes optimal risk of $ P_{fY} $ and $ P_{query} $ be a probability distribution on queries. 
+
+For example, while our theoretical results provide insights as to how performance will be affected by increasing $ n, m, $ and $ r $, our results do not comment on the magnitude of $ | \mathcal{R}^{*}_{\ell}(P_{\psi Y}) - \mathcal{R}^{*}_{\ell}(P_{fY}) | $, which measures how good of a proxy $ \{\psi_{1}, \hdots, \psi_{n}\} $ is for $ \{f_{1}, \hdots, f_{n}\} $.
+In particular, if $ | \mathcal{R}^{*}_{\ell}(P_{\psi Y}) - \mathcal{R}^{*}_{\ell}(P_{fY}) | = 0 $ then the $ \psi_{i} $ are lossless proxies of the $ f_{i} $ with respect to $ y $ \citep[Chapter~32]{devroye2013probabilistic}.
+We expect it to be challenging to understand $ | \mathcal{R}^{*}_{\ell}(P_{\psi Y}) - \mathcal{R}^{*}_{\ell}(P_{fY}) | $ in a general setting.
+
+Similarly, let $ q_{1}, \hdots, q_{m} \sim^{iid} P_{query} $ and $ q'_{1}, \hdots, q'_{m} \sim^{iid} P'_{query} $ with $ P_{query} \neq P'_{query} $.
+The proxies of the models induced by these two query sets -- $ \{\psi_{1}, \hdots, \psi_{n}\} $ and $ \{\psi_{1}', \hdots, \psi_{n}'\} $, respectively -- will be of different quality.
+Without an initial understanding of the models and their relationship with the covariates, we expect that it will be impossible to know which query distribution is preferred \textit{a priori}. 
+We highlight the importance of $ P_{query} $ in an experimental setting below. 
+
+Lastly, we note that representations of the models that we analyze herein capture the intrinsic geometry of the mean discrepancies of the models for the queries $ \{q_{1}, \hdots, q_{n}\} $.
+For covariates that cannot be described as a function of the mean discrepancies of the models, it is unclear how to interpret Theorems \ref{thm:rule-convergence} and \ref{thm:consistency}.
+We discuss potential alternatives to the representations that we study in the limitations section.
+
+\subsection{An illustrative example -- ``Was RA Fisher great?"}
+\label{subsec:fisher}
+\begin{figure*}[t!]
+    \centering
+    \begin{subfigure}[t]{0.45\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{figures/was-ra-fisher-great/3d-surface-plot-091524.png}
+    \end{subfigure}
+    ~ 
+    \begin{subfigure}[t]{0.45\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{figures/was-ra-fisher-great/ideal_fig1_nmr.png}
+    \end{subfigure}
+    \caption{
+    \textbf{Left.} The 2-d Data Kernel Perspective Space (DKPS) and covariate surface for a collection of 550 models parameterized by fixed augmentations.
+    \textbf{Right.} The performance of the 1-nearest neighbor regressor in DKPS for predicting the probability that an unlabeled model responds ``yes" to ``Was RA Fisher great?". 
+    % The first dimension of DKPS correlates strongly with the covariate. Performance of the 1-NN regressor depends on both the number of models with known covariates and the number of queries used to induce the DKPS.
+    }
+    \label{fig:ra-fisher}
+\end{figure*}
+
+The first model-level inference task we study is a toy example where the task is to predict the probability that a model will respond ``yes" to the question ``Was RA Fisher great?". 
+The question is chosen due to its subjectiveness -- there is no correct answer to the question of a person's greatness -- and its duality -- Ronald A. Fisher is considered one of the most influential statisticians in history and is considered an advocate of the 20th century Eugenics movement \citep{bodmer2021outstanding}. 
+
+We use a 4-bit version of Meta's \texttt{LLaMA-2-7B-Chat} \citep{touvron2023llama} as a base model and consider a collection of models parameterized by fixed context augmentations. 
+Each augmentation $ a_{i} $ contains information related to RA Fisher's statistical achievements (i.e., $ a_{i} $ = ``RA Fisher pioneered the principles of the design of experiments") or to his involvement in the eugenics movement (i.e., $ a_{i} $ = ``RA Fisher's view on eugenics were primarily based on anecdotes and prejudice.") and is prepended to every query.
+The covariate corresponding to a given model is calculated by prompting the base model with the appropriately formatted prompt ``Give a precise answer to the question based on the context. Don't be verbose. The answer should be either a yes or a no. $ a_{i} $. Was RA Fisher great?" until there are 100 valid responses. We let $ y_{i} $ be the average number of ``yes"es.
+
+To induce a DKPS for this task, we consider queries sampled from OpenAI's ChatGPT with the prompt ``Provide 100 questions related to RA Fisher.".  
+For a given query $ q_{j} $ we prompt the base model with the appropriately formatted prompt ``$a_{i} \; q_{j}$" and fix $ r = 1 $.
+The left figure of Figure \ref{fig:ra-fisher} is a 3-d figure where the first two dimensions are the DKPS of the $ n = 550 $ ($ 275 $ statistics augmentations, $ 275 $ eugenics augmentations) models induced with $ m = 100 $ queries. Model responses are embedded by averaging the per-token last layer activation of the base model.  
+The third dimension is an interpolated $ y_{i} $ surface with a linear kernel \citep{du2008radial}. 
+We emphasize that the dots populating the left figure of Figure \ref{fig:ra-fisher} are representations of the models with respect to all 100 queries -- not just vector representations of a query or a response to a query -- and that the $ y $-surface corresponds to the average response of each model to a query not included in the 100 queries.
+
+The first dimension of the DKPS is clearly capable of distinguishing between models adorned with ``statistics" augmentations and models adorned with ``eugenics" augmentations. 
+The shape of the interpolated covariate surface is highly correlated with this feature.
+A description of the augmentations that parameterize the models and the queries used to induce the DKPS is provided in Appendix \ref{app:fisher}.
+
+The right figure of Figure \ref{fig:ra-fisher} shows the performance of a 1-nearest neighbor (1-NN) regressor in DKPS for a varying number of labeled models and a varying number of queries. 
+The DKPS is induced with $ n $ models and the regressor is trained with $ n - 1 $ of the model-level covariates. 
+The mean squared error reported is the error of the 1-NN regressor for predicting the ``left out" model's covariate ($\pm$ 1 S.E.).
+As Theorems \ref{thm:rule-convergence} and \ref{thm:consistency} suggest, the performance of the regressor is dependent on both the number of models and the number of queries: the more models and the more queries the better.
+The scale of the impact of more models and more queries, however, depends on its counterpart. 
+The amount of models does not have a large impact on predictive performance if the number of queries is small. 
+The amount of queries has a large impact on performance regardless of the number of models.

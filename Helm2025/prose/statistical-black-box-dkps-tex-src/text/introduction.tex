@@ -1,0 +1,76 @@
+% \section{Introduction}
+% Generative models have recently met or surpassed human-level standards on benchmarks across a range of tasks \citep{nori2023capabilitiesgpt4medicalchallenge, katz2024gpt, dubey2024llama}. 
+% While these claims warrant skepticism and further robustness evaluation \citep{ness2024medfuzzexploringrobustnesslarge}, the impressive capabilities have created a competitive environment for training state-of-the-art models and have inspired the development of complementary methods to adapt models to particular use cases.
+% For example, quantizing the weights of a neural model enables a trade-off of model precision with vRAM and disk space \citep{gholami2022survey} while methods such as Low Rank Adaptation (LoRA) \citep{hu2021lora} and prompt-tuning \citep{lester2021power} enable compute- and data-efficient model adaptation. 
+% Other methods such as retrieval-augmented generation \citep{rag}, model merging \citep{model-merging}, constrained decoding \citep{constrained-decoding}, etc. \citep{dettmers2024qlora, graphrag}, have similarly contributed to the rapid development of a large population of diverse and accessible models.
+
+% Each model in the population has an accompanying set of covariates -- scores on benchmarks, training mixture proportions, model safety scores, probability of hallucination, etc. -- that are a function of the model, the training set, the architecture, the retrieval database, or derivatives thereof.
+% For a given model, the covariate of interest or the function to calculate it may not be available to the user.
+% For example, a proprietary model may have been trained on copyrighted data and the indicator for whether or not the model has had access to the data is unknown.
+% Methods for predicting model-level covariates are necessary in these settings, and others, to fully understand the behavior and properties of a model.
+
+% In this paper we extend recent theoretical results for embedding-based representations of generative models \citep{aranyak} to statistical inference settings.
+% In particular, our results show that the embedding-based representations of a collection of models can be used for consistent inference for a wide class of inference problems.
+% We demonstrate the effectiveness of the representations for three downstream inference tasks, including predicting the presence of sensitive information in a model's training mixture and predicting a model's safety. We include empirical investigations of  performance sensitivity to hyperparameters required to induce the model representations. 
+
+% \subsection{Background \& related work}
+
+% Our work is an extension of recent theoretical and empirical results on embedding-based representations of generative models \citep{aranyak}, which itself is a continuation of a long-line of embedding-based investigations of the inputs and outputs of generative models \citep{mikolov2013efficient, reimers2019sentence, neelakantan2022text, 10098736}. 
+% Of particular relevance is recent empirical work defining the data kernel \citep{duderstadt2023comparing} and investigations into its ability to track the dynamics of interacting models \citep{helm2024tracking}, in which the experiments demonstrate the ability to parlay the embeddings of a collection of inputs or outputs into useful vector representations of the generative models themselves in both white-box and black-box settings.
+% The results herein further theoretically and empirically validate these findings in the context of statistical inference.
+
+% Our work is also related to using embedding-based techniques for inference on complicated objects such as entire mouse connectomes \citep{WANG2020117274}, physiological data \citep{chen2022mental}, and classification distributions \citep{helm2021inducing}.
+% In each of these settings, the authors define a pairwise distance matrix on the objects and apply multi-dimensionsal scaling to obtain vector representations of each of the objects.
+% Once there is one vector representation per object, standard inference methods for the specific task can be used.
+% The method we study herein follows this general formula, with the additional complication that the objects are random mappings.
+
+% Lastly, our work is a part of the relatively new literature on inference on generative models. 
+% For example, FlashHELM \citep{perlitz2023efficient} uses the score on a subset of a benchmark such as HELM \citep{liang2022holistic} to quickly identify where a model fits on a leaderboard. 
+% More recent work proposes scaling laws to predict the performance of base models on a suite of benchmarks as a function of training FLOPs \citep{ruan2024observational}. 
+% % \textcolor{red}{REF} uses the log-probabilities of input tokens to identify if a model has had access to sensitive data in its training process.
+% The method proposed herein does not assume access to a scoring function nor does it assume access to a function of the model's weights at inference time.
+% % Our approach can operate in a black-box setting and relies only the outputs and scores of a subset of previously scored models. 
+% Perhaps most importantly, our setting and method can be applied to general model-level prediction scenarios.
+
+\section{Introduction}
+Generative models have recently met or surpassed human-level standards on benchmarks across a range of tasks \citep{nori2023capabilitiesgpt4medicalchallenge, katz2024gpt, dubey2024llama}. 
+While these claims warrant skepticism and further robustness evaluation \citep{ness2024medfuzzexploringrobustnesslarge}, the impressive capabilities have created a competitive environment for training state-of-the-art models and have inspired the development of complementary methods to adapt models to particular use cases.
+For example, quantizing the weights of a neural model enables a trade-off of model precision with vRAM and disk space \citep{gholami2022survey} while methods such as Low Rank Adaptation (LoRA) \citep{hu2021lora} and prompt-tuning \citep{lester2021power} enable compute- and data-efficient model adaptation. 
+Other methods such as retrieval-augmented generation \citep{rag}, model merging \citep{model-merging}, constrained decoding \citep{constrained-decoding}, etc. \citep{dettmers2024qlora, graphrag}, have similarly contributed to the rapid development of a large population of diverse and accessible models.
+
+Each model in the population has an accompanying set of covariates – scores on benchmarks, training mixture proportions, model safety scores, etc. – that are a function of the model, the training set, the architecture, the retrieval database, or derivatives thereof. 
+For a given model, the covariate of interest may not be available to the user or it may be too expensive to calculate.
+For example, it may not be known if a proprietary model has been trained on copyrighted data.
+Or, it may be too resource intensive to directly evaluate the toxicity of every model.
+Methods for predicting model-level
+covariates are necessary in these settings, and others, to fully understand the behavior and properties
+of a model.
+
+In this paper we extend recent theoretical results for vector representations of black-box generative models \citep{aranyak} to model-level statistical inference settings.
+Our results show that the embeddings of the responses from a collection of generative models can be used for consistent inference for a wide class of inference problems.
+We demonstrate the effectiveness of the representations for three downstream inference tasks, including predicting the presence of sensitive information in a model's training mixture and predicting a model's safety. 
+We include empirical investigations of performance sensitivity to hyperparameters required to generate the model-level vector representations. 
+
+\noindent \textbf{Contribution.} Our contribution is the theoretical and empirical validation for using vector representations of black-box generative models for model-level inference tasks.
+The representations that we study herein are based on the embeddings of their responses.
+The theoretical results apply to any generic, well-behaved embedding function.
+Given the representations, any vector-based method can be used for inference on the models.
+
+\subsection{Background \& related work}
+
+Our work is an extension of recent theoretical and empirical results on embedding-based representations of generative models \citep{aranyak}, which itself is a continuation of a long-line of embedding-based investigations of the inputs and outputs of generative models \citep{mikolov2013efficient, reimers2019sentence, neelakantan2022text, 10098736}. 
+Of particular relevance is recent empirical work defining the data kernel \citep{duderstadt2023comparing} and investigations into its ability to track the dynamics of interacting models \citep{helm2024tracking}, in which the experiments demonstrate the ability to parlay the embeddings of a collection of inputs or outputs into useful vector representations of the generative models themselves in both white-box and black-box settings.
+The results herein further theoretically and empirically validate these findings in the context of statistical inference.
+
+Our work is also related to using embedding-based techniques for inference on complicated objects such as entire mouse connectomes \citep{WANG2020117274}, physiological data \citep{chen2022mental}, and classification distributions \citep{helm2021inducing}.
+In each of these settings, the authors define a pairwise distance matrix on the objects and apply multi-dimensionsal scaling to obtain vector representations of each of the objects.
+Once there is one vector representation per object, standard inference methods for the specific task can be used.
+The method we study herein follows this general formula, with the additional complication that the objects are random mappings.
+
+Lastly, our work is a part of the relatively new literature on inference on generative models. 
+For example, FlashHELM \citep{perlitz2023efficient} uses the score on a subset of a benchmark such as HELM \citep{liang2022holistic} to quickly identify where a model fits on a leaderboard. 
+More recent work proposes scaling laws to predict the performance of base models on a suite of benchmarks as a function of training FLOPs \citep{ruan2024observational}. 
+% \textcolor{red}{REF} uses the log-probabilities of input tokens to identify if a model has had access to sensitive data in its training process.
+The method proposed herein does not assume access to a scoring function nor does it assume access to a function of the model's weights at inference time.
+% Our approach can operate in a black-box setting and relies only the outputs and scores of a subset of previously scored models. 
+Perhaps most importantly, our setting and method can be applied to general model-level prediction.

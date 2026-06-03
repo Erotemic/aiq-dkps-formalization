@@ -1,0 +1,264 @@
+\begin{thebibliography}{52}
+\providecommand{\natexlab}[1]{#1}
+
+\bibitem[{Acharyya et~al.(2024)Acharyya, Trosset, Priebe, and Helm}]{aranyak}
+Aranyak Acharyya, Michael~W. Trosset, Carey~E. Priebe, and Hayden~S. Helm. 2024.
+\newblock \href {https://arxiv.org/abs/2409.17308} {Consistent estimation of generative model representations in the data kernel perspective space}.
+\newblock \emph{Preprint}, arXiv:2409.17308.
+
+\bibitem[{Bengio et~al.(2003)Bengio, Paiement, Vincent, Delalleau, Roux, and Ouimet}]{bengio2003out}
+Yoshua Bengio, Jean-fran{\c{c}}cois Paiement, Pascal Vincent, Olivier Delalleau, Nicolas Roux, and Marie Ouimet. 2003.
+\newblock Out-of-sample extensions for lle, isomap, mds, eigenmaps, and spectral clustering.
+\newblock \emph{Advances in neural information processing systems}, 16.
+
+\bibitem[{Bodmer et~al.(2021)Bodmer, Bailey, Charlesworth, Eyre-Walker, Farewell, Mead, and Senn}]{bodmer2021outstanding}
+Walter Bodmer, RA~Bailey, Brian Charlesworth, Adam Eyre-Walker, Vernon Farewell, Andrew Mead, and Stephen Senn. 2021.
+\newblock The outstanding scientist, ra fisher: his views on eugenics and race.
+\newblock \emph{Heredity}, 126(4):565--576.
+
+\bibitem[{Chen et~al.(2022)Chen, Helm, Lytvynets, Yang, and Priebe}]{chen2022mental}
+Guodong Chen, Hayden~S Helm, Kate Lytvynets, Weiwei Yang, and Carey~E Priebe. 2022.
+\newblock Mental state classification using multi-graph features.
+\newblock \emph{Frontiers in Human Neuroscience}, 16:930291.
+
+\bibitem[{Chung et~al.(2019)Chung, Pedigo, Bridgeford, Varjavand, Helm, and Vogelstein}]{JMLR:v20:19-490}
+Jaewon Chung, Benjamin~D. Pedigo, Eric~W. Bridgeford, Bijan~K. Varjavand, Hayden~S. Helm, and Joshua~T. Vogelstein. 2019.
+\newblock \href {http://jmlr.org/papers/v20/19-490.html} {Graspy: Graph statistics in python}.
+\newblock \emph{Journal of Machine Learning Research}, 20(158):1--7.
+
+\bibitem[{Dettmers et~al.(2024)Dettmers, Pagnoni, Holtzman, and Zettlemoyer}]{dettmers2024qlora}
+Tim Dettmers, Artidoro Pagnoni, Ari Holtzman, and Luke Zettlemoyer. 2024.
+\newblock Qlora: Efficient finetuning of quantized llms.
+\newblock \emph{Advances in Neural Information Processing Systems}, 36.
+
+\bibitem[{Devroye et~al.(2013)Devroye, Gy{\"o}rfi, and Lugosi}]{devroye2013probabilistic}
+Luc Devroye, L{\'a}szl{\'o} Gy{\"o}rfi, and G{\'a}bor Lugosi. 2013.
+\newblock \emph{A probabilistic theory of pattern recognition}, volume~31.
+\newblock Springer Science \& Business Media.
+
+\bibitem[{Dhamala et~al.(2021)Dhamala, Sun, Kumar, Krishna, Pruksachatkun, Chang, and Gupta}]{bold_2021}
+Jwala Dhamala, Tony Sun, Varun Kumar, Satyapriya Krishna, Yada Pruksachatkun, Kai-Wei Chang, and Rahul Gupta. 2021.
+\newblock \href {https://doi.org/10.1145/3442188.3445924} {Bold: Dataset and metrics for measuring biases in open-ended language generation}.
+\newblock In \emph{Proceedings of the 2021 ACM Conference on Fairness, Accountability, and Transparency}, FAccT '21, page 862–872, New York, NY, USA. Association for Computing Machinery.
+
+\bibitem[{Du~Toit(2008)}]{du2008radial}
+Wilna Du~Toit. 2008.
+\newblock \emph{Radial basis function interpolation}.
+\newblock Ph.D. thesis, Stellenbosch: Stellenbosch University.
+
+\bibitem[{Dubey et~al.(2024)Dubey, Jauhri, Pandey, Kadian, Al-Dahle, Letman, Mathur, Schelten, Yang, Fan et~al.}]{dubey2024llama}
+Abhimanyu Dubey, Abhinav Jauhri, Abhinav Pandey, Abhishek Kadian, Ahmad Al-Dahle, Aiesha Letman, Akhil Mathur, Alan Schelten, Amy Yang, Angela Fan, et~al. 2024.
+\newblock The llama 3 herd of models.
+\newblock \emph{arXiv preprint arXiv:2407.21783}.
+
+\bibitem[{Duderstadt et~al.(2023)Duderstadt, Helm, and Priebe}]{duderstadt2023comparing}
+Brandon Duderstadt, Hayden~S Helm, and Carey~E Priebe. 2023.
+\newblock Comparing foundation models using data kernels.
+\newblock \emph{arXiv preprint arXiv:2305.05126}.
+
+\bibitem[{Edge et~al.(2024)Edge, Trinh, Cheng, Bradley, Chao, Mody, Truitt, and Larson}]{graphrag}
+Darren Edge, Ha~Trinh, Newman Cheng, Joshua Bradley, Alex Chao, Apurva Mody, Steven Truitt, and Jonathan Larson. 2024.
+\newblock From local to global: A graph rag approach to query-focused summarization.
+\newblock \emph{arXiv preprint arXiv:2404.16130}.
+
+\bibitem[{Ferrara(2024)}]{sci6010003}
+Emilio Ferrara. 2024.
+\newblock \href {https://doi.org/10.3390/sci6010003} {Fairness and bias in artificial intelligence: A brief survey of sources, impacts, and mitigation strategies}.
+\newblock \emph{Sci}, 6(1).
+
+\bibitem[{Gehman et~al.(2020)Gehman, Gururangan, Sap, Choi, and Smith}]{gehman2020realtoxicityprompts}
+Samuel Gehman, Suchin Gururangan, Maarten Sap, Yejin Choi, and Noah~A Smith. 2020.
+\newblock Realtoxicityprompts: Evaluating neural toxic degeneration in language models.
+\newblock \emph{arXiv preprint arXiv:2009.11462}.
+
+\bibitem[{Gholami et~al.(2022)Gholami, Kim, Dong, Yao, Mahoney, and Keutzer}]{gholami2022survey}
+Amir Gholami, Sehoon Kim, Zhen Dong, Zhewei Yao, Michael~W Mahoney, and Kurt Keutzer. 2022.
+\newblock A survey of quantization methods for efficient neural network inference.
+\newblock In \emph{Low-Power Computer Vision}, pages 291--326. Chapman and Hall/CRC.
+
+\bibitem[{Hastie et~al.(2009)Hastie, Tibshirani, Friedman, and Friedman}]{hastie2009elements}
+Trevor Hastie, Robert Tibshirani, Jerome~H Friedman, and Jerome~H Friedman. 2009.
+\newblock \emph{The elements of statistical learning: data mining, inference, and prediction}, volume~2.
+\newblock Springer.
+
+\bibitem[{Helm et~al.(2024)Helm, Duderstadt, Park, and Priebe}]{helm2024tracking}
+Hayden Helm, Brandon Duderstadt, Youngser Park, and Carey~E Priebe. 2024.
+\newblock Tracking the perspectives of interacting language models.
+\newblock \emph{arXiv preprint arXiv:2406.11938}.
+
+\bibitem[{Helm et~al.(2023)Helm, Priebe, and Yang}]{helm2023statisticalturingtestgenerative}
+Hayden Helm, Carey~E. Priebe, and Weiwei Yang. 2023.
+\newblock \href {https://arxiv.org/abs/2309.08913} {A statistical turing test for generative models}.
+\newblock \emph{Preprint}, arXiv:2309.08913.
+
+\bibitem[{Helm et~al.(2020)Helm, Mehta, Duderstadt, Yang, White, Geisa, Vogelstein, and Priebe}]{helm2020partitionbased}
+Hayden~S. Helm, Ronak~D. Mehta, Brandon Duderstadt, Weiwei Yang, Christoper~M. White, Ali Geisa, Joshua~T. Vogelstein, and Carey~E. Priebe. 2020.
+\newblock \href {https://arxiv.org/abs/2011.06557} {A partition-based similarity for classification distributions}.
+\newblock \emph{Preprint}, arXiv:2011.06557.
+
+\bibitem[{Helm et~al.(2021)Helm, Yang, Bharadwaj, Lytvynets, Riva, White, Geisa, and Priebe}]{helm2021inducing}
+Hayden~S Helm, Weiwei Yang, Sujeeth Bharadwaj, Kate Lytvynets, Oriana Riva, Christopher White, Ali Geisa, and Carey~E Priebe. 2021.
+\newblock Inducing a hierarchy for multi-class classification problems.
+\newblock \emph{arXiv preprint arXiv:2102.10263}.
+
+\bibitem[{Henderson et~al.(2023)Henderson, Li, Jurafsky, Hashimoto, Lemley, and Liang}]{henderson2023foundation}
+Peter Henderson, Xuechen Li, Dan Jurafsky, Tatsunori Hashimoto, Mark~A Lemley, and Percy Liang. 2023.
+\newblock Foundation models and fair use.
+\newblock \emph{Journal of Machine Learning Research}, 24(400):1--79.
+
+\bibitem[{Hokamp and Liu(2017)}]{constrained-decoding}
+Chris Hokamp and Qun Liu. 2017.
+\newblock Lexically constrained decoding for sequence generation using grid beam search.
+\newblock \emph{arXiv preprint arXiv:1704.07138}.
+
+\bibitem[{Hu et~al.(2021)Hu, Shen, Wallis, Allen-Zhu, Li, Wang, Wang, and Chen}]{hu2021lora}
+Edward~J Hu, Yelong Shen, Phillip Wallis, Zeyuan Allen-Zhu, Yuanzhi Li, Shean Wang, Lu~Wang, and Weizhu Chen. 2021.
+\newblock Lora: Low-rank adaptation of large language models.
+\newblock \emph{arXiv preprint arXiv:2106.09685}.
+
+\bibitem[{Ji et~al.(2023)Ji, Qiu, Chen, Zhang, Lou, Wang, Duan, He, Zhou, Zhang et~al.}]{ji2023ai}
+Jiaming Ji, Tianyi Qiu, Boyuan Chen, Borong Zhang, Hantao Lou, Kaile Wang, Yawen Duan, Zhonghao He, Jiayi Zhou, Zhaowei Zhang, et~al. 2023.
+\newblock Ai alignment: A comprehensive survey.
+\newblock \emph{arXiv preprint arXiv:2310.19852}.
+
+\bibitem[{Jiang et~al.(2023)Jiang, Sablayrolles, Mensch, Bamford, Chaplot, Casas, Bressand, Lengyel, Lample, Saulnier et~al.}]{jiang2023mistral}
+Albert~Q Jiang, Alexandre Sablayrolles, Arthur Mensch, Chris Bamford, Devendra~Singh Chaplot, Diego de~las Casas, Florian Bressand, Gianna Lengyel, Guillaume Lample, Lucile Saulnier, et~al. 2023.
+\newblock Mistral 7b.
+\newblock \emph{arXiv preprint arXiv:2310.06825}.
+
+\bibitem[{Katz et~al.(2024)Katz, Bommarito, Gao, and Arredondo}]{katz2024gpt}
+Daniel~Martin Katz, Michael~James Bommarito, Shang Gao, and Pablo Arredondo. 2024.
+\newblock Gpt-4 passes the bar exam.
+\newblock \emph{Philosophical Transactions of the Royal Society A}, 382(2270):20230254.
+
+\bibitem[{Lemley and Casey(2020)}]{lemley2020fair}
+Mark~A Lemley and Bryan Casey. 2020.
+\newblock Fair learning.
+\newblock \emph{Tex. L. Rev.}, 99:743.
+
+\bibitem[{Lester et~al.(2021)Lester, Al-Rfou, and Constant}]{lester2021power}
+Brian Lester, Rami Al-Rfou, and Noah Constant. 2021.
+\newblock The power of scale for parameter-efficient prompt tuning.
+\newblock \emph{arXiv preprint arXiv:2104.08691}.
+
+\bibitem[{Lewis et~al.(2020)Lewis, Perez, Piktus, Petroni, Karpukhin, Goyal, K{\"u}ttler, Lewis, Yih, Rockt{\"a}schel et~al.}]{rag}
+Patrick Lewis, Ethan Perez, Aleksandra Piktus, Fabio Petroni, Vladimir Karpukhin, Naman Goyal, Heinrich K{\"u}ttler, Mike Lewis, Wen-tau Yih, Tim Rockt{\"a}schel, et~al. 2020.
+\newblock Retrieval-augmented generation for knowledge-intensive nlp tasks.
+\newblock \emph{Advances in Neural Information Processing Systems}, 33:9459--9474.
+
+\bibitem[{Liang et~al.(2022)Liang, Bommasani, Lee, Tsipras, Soylu, Yasunaga, Zhang, Narayanan, Wu, Kumar et~al.}]{liang2022holistic}
+Percy Liang, Rishi Bommasani, Tony Lee, Dimitris Tsipras, Dilara Soylu, Michihiro Yasunaga, Yian Zhang, Deepak Narayanan, Yuhuai Wu, Ananya Kumar, et~al. 2022.
+\newblock Holistic evaluation of language models.
+\newblock \emph{arXiv preprint arXiv:2211.09110}.
+
+\bibitem[{Matena and Raffel(2022)}]{model-merging}
+Michael~S Matena and Colin~A Raffel. 2022.
+\newblock Merging models with fisher-weighted averaging.
+\newblock \emph{Advances in Neural Information Processing Systems}, 35:17703--17716.
+
+\bibitem[{Mikolov(2013)}]{mikolov2013efficient}
+Tomas Mikolov. 2013.
+\newblock Efficient estimation of word representations in vector space.
+\newblock \emph{arXiv preprint arXiv:1301.3781}.
+
+\bibitem[{Neelakantan et~al.(2022)Neelakantan, Xu, Puri, Radford, Han, Tworek, Yuan, Tezak, Kim, Hallacy et~al.}]{neelakantan2022text}
+Arvind Neelakantan, Tao Xu, Raul Puri, Alec Radford, Jesse~Michael Han, Jerry Tworek, Qiming Yuan, Nikolas Tezak, Jong~Wook Kim, Chris Hallacy, et~al. 2022.
+\newblock Text and code embeddings by contrastive pre-training.
+\newblock \emph{arXiv preprint arXiv:2201.10005}.
+
+\bibitem[{Ness et~al.(2024)Ness, Matton, Helm, Zhang, Bajwa, Priebe, and Horvitz}]{ness2024medfuzzexploringrobustnesslarge}
+Robert~Osazuwa Ness, Katie Matton, Hayden Helm, Sheng Zhang, Junaid Bajwa, Carey~E. Priebe, and Eric Horvitz. 2024.
+\newblock \href {https://arxiv.org/abs/2406.06573} {Medfuzz: Exploring the robustness of large language models in medical question answering}.
+\newblock \emph{Preprint}, arXiv:2406.06573.
+
+\bibitem[{Nori et~al.(2023)Nori, King, McKinney, Carignan, and Horvitz}]{nori2023capabilitiesgpt4medicalchallenge}
+Harsha Nori, Nicholas King, Scott~Mayer McKinney, Dean Carignan, and Eric Horvitz. 2023.
+\newblock \href {https://arxiv.org/abs/2303.13375} {Capabilities of gpt-4 on medical challenge problems}.
+\newblock \emph{Preprint}, arXiv:2303.13375.
+
+\bibitem[{Nussbaum et~al.(2024)Nussbaum, Morris, Duderstadt, and Mulyar}]{nussbaum2024nomicembedtrainingreproducible}
+Zach Nussbaum, John~X. Morris, Brandon Duderstadt, and Andriy Mulyar. 2024.
+\newblock \href {https://arxiv.org/abs/2402.01613} {Nomic embed: Training a reproducible long context text embedder}.
+\newblock \emph{Preprint}, arXiv:2402.01613.
+
+\bibitem[{Patil et~al.(2023)Patil, Boit, Gudivada, and Nandigam}]{10098736}
+Rajvardhan Patil, Sorio Boit, Venkat Gudivada, and Jagadeesh Nandigam. 2023.
+\newblock \href {https://doi.org/10.1109/ACCESS.2023.3266377} {A survey of text representation and embedding techniques in nlp}.
+\newblock \emph{IEEE Access}, 11:36120--36146.
+
+\bibitem[{Perlitz et~al.(2023)Perlitz, Bandel, Gera, Arviv, Ein-Dor, Shnarch, Slonim, Shmueli-Scheuer, and Choshen}]{perlitz2023efficient}
+Yotam Perlitz, Elron Bandel, Ariel Gera, Ofir Arviv, Liat Ein-Dor, Eyal Shnarch, Noam Slonim, Michal Shmueli-Scheuer, and Leshem Choshen. 2023.
+\newblock Efficient benchmarking (of language models).
+\newblock \emph{arXiv preprint arXiv:2308.11696}.
+
+\bibitem[{Reimers(2019)}]{reimers2019sentence}
+N~Reimers. 2019.
+\newblock Sentence-bert: Sentence embeddings using siamese bert-networks.
+\newblock \emph{arXiv preprint arXiv:1908.10084}.
+
+\bibitem[{Ruan et~al.(2024)Ruan, Maddison, and Hashimoto}]{ruan2024observational}
+Yangjun Ruan, Chris~J Maddison, and Tatsunori Hashimoto. 2024.
+\newblock Observational scaling laws and the predictability of language model performance.
+\newblock \emph{arXiv preprint arXiv:2405.10938}.
+
+\bibitem[{Sekhon(2021)}]{sekhon2021result}
+Senan Sekhon. 2021.
+\newblock A result on convergence of double sequences of measurable functions.
+\newblock \emph{arXiv preprint arXiv:2104.09819}.
+
+\bibitem[{Sheng et~al.(2019)Sheng, Chang, Natarajan, and Peng}]{sheng2019woman}
+Emily Sheng, Kai-Wei Chang, Premkumar Natarajan, and Nanyun Peng. 2019.
+\newblock The woman worked as a babysitter: On biases in language generation.
+\newblock \emph{arXiv preprint arXiv:1909.01326}.
+
+\bibitem[{Tang et~al.(2013)Tang, Sussman, and Priebe}]{10.1214/13-AOS1112}
+Minh Tang, Daniel~L. Sussman, and Carey~E. Priebe. 2013.
+\newblock \href {https://doi.org/10.1214/13-AOS1112} {{Universally consistent vertex classification for latent positions graphs}}.
+\newblock \emph{The Annals of Statistics}, 41(3):1406 -- 1430.
+
+\bibitem[{Torgerson(1952)}]{torgerson1952multidimensional}
+Warren~S Torgerson. 1952.
+\newblock Multidimensional scaling: I. theory and method.
+\newblock \emph{Psychometrika}, 17(4):401--419.
+
+\bibitem[{Touvron et~al.(2023)Touvron, Martin, Stone, Albert, Almahairi, Babaei, Bashlykov, Batra, Bhargava, Bhosale et~al.}]{touvron2023llama}
+Hugo Touvron, Louis Martin, Kevin Stone, Peter Albert, Amjad Almahairi, Yasmine Babaei, Nikolay Bashlykov, Soumya Batra, Prajjwal Bhargava, Shruti Bhosale, et~al. 2023.
+\newblock Llama 2: Open foundation and fine-tuned chat models.
+\newblock \emph{arXiv preprint arXiv:2307.09288}.
+
+\bibitem[{Trosset and Priebe(2008)}]{trosset2008out}
+Michael~W Trosset and Carey~E Priebe. 2008.
+\newblock The out-of-sample problem for classical multidimensional scaling.
+\newblock \emph{Computational statistics \& data analysis}, 52(10):4635--4642.
+
+\bibitem[{Vidgen et~al.(2021)Vidgen, Thrush, Waseem, and Kiela}]{vidgen2021lftw}
+Bertie Vidgen, Tristan Thrush, Zeerak Waseem, and Douwe Kiela. 2021.
+\newblock Learning from the worst: Dynamically generated datasets to improve online hate detection.
+\newblock In \emph{ACL}.
+
+\bibitem[{Wang et~al.(2020)Wang, Anderson, Ashbrook, Gopalakrishnan, Park, Priebe, Qi, Laoprasert, Vogelstein, Williams, and Johnson}]{WANG2020117274}
+Nian Wang, Robert~J. Anderson, David~G. Ashbrook, Vivek Gopalakrishnan, Youngser Park, Carey~E. Priebe, Yi~Qi, Rick Laoprasert, Joshua~T. Vogelstein, Robert~W. Williams, and G.~Allan Johnson. 2020.
+\newblock \href {https://doi.org/10.1016/j.neuroimage.2020.117274} {Variability and heritability of mouse brain structure: Microscopic mri atlases and connectomes for diverse strains}.
+\newblock \emph{NeuroImage}, 222:117274.
+
+\bibitem[{Wen et~al.(2023)Wen, Ke, Sun, Zhang, Li, Bai, and Huang}]{wen2023unveiling}
+Jiaxin Wen, Pei Ke, Hao Sun, Zhexin Zhang, Chengfei Li, Jinfeng Bai, and Minlie Huang. 2023.
+\newblock Unveiling the implicit toxicity in large language models.
+\newblock \emph{arXiv preprint arXiv:2311.17391}.
+
+\bibitem[{Wolf et~al.(2019)Wolf, Debut, Sanh, Chaumond, Delangue, Moi, Cistac, Rault, Louf, Funtowicz et~al.}]{wolf2019huggingface}
+Thomas Wolf, Lysandre Debut, Victor Sanh, Julien Chaumond, Clement Delangue, Anthony Moi, Pierric Cistac, Tim Rault, R{\'e}mi Louf, Morgan Funtowicz, et~al. 2019.
+\newblock Huggingface's transformers: State-of-the-art natural language processing.
+\newblock \emph{arXiv preprint arXiv:1910.03771}.
+
+\bibitem[{Zhang et~al.(2015)Zhang, Zhao, and LeCun}]{NIPS2015_250cf8b5}
+Xiang Zhang, Junbo Zhao, and Yann LeCun. 2015.
+\newblock \href {https://proceedings.neurips.cc/paper_files/paper/2015/file/250cf8b51c773f3f8dc8b4be867a9a02-Paper.pdf} {Character-level convolutional networks for text classification}.
+\newblock In \emph{Advances in Neural Information Processing Systems}, volume~28. Curran Associates, Inc.
+
+\bibitem[{Zhu and Ghodsi(2006)}]{zhu2006automatic}
+Mu~Zhu and Ali Ghodsi. 2006.
+\newblock Automatic dimensionality selection from the scree plot via the use of profile likelihood.
+\newblock \emph{Computational Statistics \& Data Analysis}, 51(2):918--930.
+
+\end{thebibliography}

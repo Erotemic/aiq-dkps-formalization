@@ -1,0 +1,713 @@
+% This must be in the first 5 lines to tell arXiv to use pdfLaTeX, which is strongly recommended.
+\pdfoutput=1
+% In particular, the hyperref package requires pdfLaTeX in order to break URLs across lines.
+
+\documentclass[11pt]{article}
+
+% Change "review" to "final" to generate the final (sometimes called camera-ready) version.
+% Change to "preprint" to generate a non-anonymous version with page numbers.
+\usepackage[preprint]{acl/acl}
+
+\usepackage{mathtools}
+\usepackage{enumerate}
+\usepackage{wrapfig}
+\input{hayden_preamble}
+% \setlength{\parskip}{2pt}
+% Standard package includes
+\usepackage{times}
+\usepackage{latexsym}
+
+% For proper rendering and hyphenation of words containing Latin characters (including in bib files)
+\usepackage[T1]{fontenc}
+% For Vietnamese characters
+% \usepackage[T5]{fontenc}
+% See https://www.latex-project.org/help/documentation/encguide.pdf for other character sets
+
+% This assumes your files are encoded as UTF8
+\usepackage[utf8]{inputenc}
+
+% This is not strictly necessary, and may be commented out,
+% but it will improve the layout of the manuscript,
+% and will typically save some space.
+\usepackage{microtype}
+
+% This is also not strictly necessary, and may be commented out.
+% However, it will improve the aesthetics of text in
+% the typewriter font.
+\usepackage{inconsolata}
+
+%Including images in your LaTeX document requires adding
+%additional package(s)
+\usepackage{graphicx}
+
+% If the title and author information does not fit in the area allocated, uncomment the following
+%
+%\setlength\titlebox{<dim>}
+%
+% and set <dim> to something 5cm or larger.
+
+\title{Statistical inference on black-box generative models in the data kernel perspective space}
+
+% Author information can be set in various styles:
+% For several authors from the same institution:
+% \author{Author 1 \and ... \and Author n \\
+%         Address line \\ ... \\ Address line}
+% if the names do not fit well on one line use
+%         Author 1 \\ {\bf Author 2} \\ ... \\ {\bf Author n} \\
+% For authors from different institutions:
+% \author{Author 1 \\ Address line \\  ... \\ Address line
+%         \And  ... \And
+%         Author n \\ Address line \\ ... \\ Address line}
+% To start a separate ``row'' of authors use \AND, as in
+% \author{Author 1 \\ Address line \\  ... \\ Address line
+%         \AND
+%         Author 2 \\ Address line \\ ... \\ Address line \And
+%         Author 3 \\ Address line \\ ... \\ Address line}
+
+\author{Hayden Helm \\
+  Helivan \\ \texttt{hayden@helivan.io} \And Aranyak Acharyya \\
+  Johns Hopkins University
+  \And Youngser Park \\
+  Johns Hopkins University 
+  \AND Brandon Duderstadt \\
+  Nomic AI
+  \And Carey E. Priebe \\
+  Johns Hopkins University}
+
+%\author{
+%  \textbf{First Author\textsuperscript{1}},
+%  \textbf{Second Author\textsuperscript{1,2}},
+%  \textbf{Third T. Author\textsuperscript{1}},
+%  \textbf{Fourth Author\textsuperscript{1}},
+%\\
+%  \textbf{Fifth Author\textsuperscript{1,2}},
+%  \textbf{Sixth Author\textsuperscript{1}},
+%  \textbf{Seventh Author\textsuperscript{1}},
+%  \textbf{Eighth Author \textsuperscript{1,2,3,4}},
+%\\
+%  \textbf{Ninth Author\textsuperscript{1}},
+%  \textbf{Tenth Author\textsuperscript{1}},
+%  \textbf{Eleventh E. Author\textsuperscript{1,2,3,4,5}},
+%  \textbf{Twelfth Author\textsuperscript{1}},
+%\\
+%  \textbf{Thirteenth Author\textsuperscript{3}},
+%  \textbf{Fourteenth F. Author\textsuperscript{2,4}},
+%  \textbf{Fifteenth Author\textsuperscript{1}},
+%  \textbf{Sixteenth Author\textsuperscript{1}},
+%\\
+%  \textbf{Seventeenth S. Author\textsuperscript{4,5}},
+%  \textbf{Eighteenth Author\textsuperscript{3,4}},
+%  \textbf{Nineteenth N. Author\textsuperscript{2,5}},
+%  \textbf{Twentieth Author\textsuperscript{1}}
+%\\
+%\\
+%  \textsuperscript{1}Affiliation 1,
+%  \textsuperscript{2}Affiliation 2,
+%  \textsuperscript{3}Affiliation 3,
+%  \textsuperscript{4}Affiliation 4,
+%  \textsuperscript{5}Affiliation 5
+%\\
+%  \small{
+%    \textbf{Correspondence:} \href{mailto:email@domain}{email@domain}
+%  }
+%}
+
+\begin{document}
+\maketitle
+
+
+\input{text/abstract.tex}
+
+\input{text/introduction.tex}
+\label{introduction}
+
+\input{text/methods.tex}
+\label{method}
+
+\input{text/experiments.tex}
+\label{experiments}
+
+\bibliography{biblio}
+
+\clearpage
+
+\appendix
+\onecolumn
+
+\section{Proofs of Theorems 1 \& 2}
+\label{app:proofs}
+
+We introduce some notation to make the proofs of Theorems \ref{thm:rule-convergence} and \ref{thm:consistency} easier to read.
+Bold letters (such as $\mathbf{B}$ or $\boldsymbol{\mu}$) are used to represent vectors and matrices.
+Any vector by default is a column vector. For a matrix $\mathbf{B}$, the $j$-th row is denoted by $(\mathbf{B})_{j \cdot}$, and the $(i,i')$-th entry is denoted by $\mathbf{B}_{i i'}$. Moreover, $\left\lVert \mathbf{B} \right\rVert_F$ denotes the Frobenius norm of the matrix $\mathbf{B}$. For any two vectors $\mathbf{x}$ and $\mathbf{y}$, $\left\lVert 
+\mathbf{x}-\mathbf{y}
+\right\rVert$ denotes the Euclidean distance between $\mathbf{x}$ and $\mathbf{y}$. 
+ The set $\lbrace 1,2,\dots n \rbrace$ is denoted by $[n]$.
+The set of $d \times d$ orthogonal matrices is denoted by $\mathcal{O}(d)$.
+For a sequence of random variables $ X_{1}, \hdots, X_{n} $, we say $ X_{n} $ converges in probability to $ X $ if $ \lim_{n \to \infty}
+Pr
+\left[ 
+\left\lVert 
+X_n -X
+\right\rVert > \epsilon
+\right] =0
+$
+for every $ \epsilon > 0$. 
+We denote convergence in probability with $ X_{n} \to^{P} X $.
+
+
+Recall that our setting includes the observed training set $ \widehat{\mathcal{T}} = \{(\widehat{\psi}_{1}, y_{1}), \hdots, (\widehat{\psi}_{n}, y_{n})\} $ with the true-but-not-observed $ (\psi_{i}, y_{i}) \iid P_{\psi Y} $ and realizations $ \psi_{i} \in \mathbb{R}^{d} $ and $ y_{i} \in \mathbb{R}^{d'} $, a unlabeled test observation $ \widehat{\psi}_{n+1} $, a class of decision functions $ \mathcal{H} \subset \{h: \mathbb{R}^{d} \to \mathbb{R}^{d'}\} $, and a loss function $ \ell: \mathbb{R}^{d'} \times \mathbb{R}^{d'} \to \mathbb{R}_{\ge 0} $.
+
+\subsection{Proof of Theorem 1}
+Define 
+\begin{align*}
+ \mathcal{R}_{\ell}(P_{\psi Y},h(\; \cdot \;;\widehat{\mathcal{T}}_n))
+&=\mathbb{E}_{(\psi_i,y_i)_{i \in [n+1]} \iid P_{\psi Y}}
+[
+l(h(\widehat{\psi}_{n+1}
+;
+\lbrace (\widehat{\psi}_i,y_i)
+\rbrace_{i=1}^n)
+,y_{n+1})
+]  
+\end{align*}
+and, analogously,
+\begin{align*}
+\mathcal{R}_{\ell}(P_{\psi Y},h(\;\cdot\; ;\mathcal{T}_n))&=\mathbb{E}_{(\psi_i,y_i)_{i \in [n+1]} \iid P_{\psi Y}}
+[
+l(h(\psi_{n+1}
+;
+\left\lbrace (\psi_i,y_i)
+\right\rbrace_{i=1}^n)
+,y_{n+1})
+].
+\end{align*}
+Recall that $ n $ remains fixed. Following \cite{aranyak}, we let  $ m $ grow with the number of replicates $r$. 
+Thus, $\widehat{\psi}_i$ depends on $r$. 
+We write $\widehat{\psi}_i^{(r)}$ to emphasize this dependence when necessary. 
+Note that 
+$
+\mathcal{R}_{\ell}(P_{\psi Y},h(\;\cdot\;;\widehat{\mathcal{T}}_n))
+$ also depends on $ r $ (and $ m $, through $ r $).
+
+We make some assumptions about the decision function $ h $ and the loss function $l$. 
+
+\noindent \textbf{Assumption 1.} The decision function $h$ is invariant to affine transformation.
+That is, for any 
+ $\mathbf{W} \in \mathcal{O}(d)$ and $\mathbf{a} \in \mathbb{R}^d$,
+\begin{align*}
+    h(\mathbf{W} \psi_{n+1}+\mathbf{a}; \left\lbrace 
+(\mathbf{W} \psi_i+\mathbf{a},y_i) 
+\right\rbrace_{i=1}^n
+)=
+h(\psi_{n+1};
+\left\lbrace
+ (\psi_i,
+ y_i)
+\right\rbrace_{i=1}^n
+).
+\end{align*}
+
+\noindent \textbf{Assumption 2.} The decision function $h$ is continuous. That is, if
+\begin{align*}
+\max_{i \in [n]}
+\left\lVert 
+\widehat{\psi}_i^{(r)}-
+\psi_i
+\right\rVert
+ \to 0 \text{ as } r \to \infty,
+\end{align*}
+then
+\begin{align*}
+\left\lVert
+h \left(\widehat{\psi}_{n+1}^{(r)};
+\lbrace (\widehat{\psi}_i^{(r)},y_i) \rbrace_{i=1}^n
+\right)-
+h \left(\psi_{n+1};
+\left\lbrace (\psi_i,y_i) \right\rbrace_{i=1}^n
+\right)
+\right\rVert \to 0.
+\end{align*}
+
+\noindent \textbf{Assumption 3.} We assume that the $\mathcal{H}$ is such that for every $h \in \mathcal{H}$, the image set of the function $h$ is closed, bounded and complete.
+
+\noindent \textbf{Assumption 4.} The loss function $l$ is continuous. That is, for every $y \in \mathbb{R}^{d'}$,
+$
+\left\lVert
+l(h',y)-l(h'',y)
+\right\rVert
+\to 0
+$ if 
+$
+\left\lVert
+h'-h''
+\right\rVert \to 0$.
+
+
+\noindent Thus, by \textit{Theorem 2} of \cite{aranyak},
+ we can say that there exist sequences $\lbrace 
+ \mathbf{W}^{(u)}
+ \rbrace_{u=1}^{\infty}$ and $\lbrace 
+ \mathbf{a}^{(u)}
+ \rbrace_{u=1}^{\infty}$, where $\mathbf{W}^{(u)} \in \mathcal{O}(d)$
+and $\mathbf{a}^{(u)} \in \mathbb{R}^d$ for all $u \in \mathbb{N}$,
+ such that
+\begin{equation}
+\label{Eq:Prf_Th1_accumulation_of_perspectives}
+\max_{i \in [n]}
+\left\lVert 
+\widehat{\psi}_i^{(r_u)}-
+(\mathbf{W}^{(u)}
+\psi_i +\mathbf{a}^{(u)})
+\right\rVert
+ \to 0
+ \text{ as $u \to \infty$}.
+ \end{equation}
+Now,
+\begin{equation*}
+\begin{aligned}
+    &\mathcal{R}_{\ell}(P_{\psi Y},h(\;.\;;\hat{\mathcal{T}}_n))-
+    \mathcal{R}_{\ell}(P_{\psi Y},h(\;.\;;\mathcal{T}_n)) \\
+    &=
+    \mathbb{E}
+    \left[
+    l(h(\widehat{\psi}_{n+1}^{(r_u)};
+    \lbrace 
+(\widehat{\psi}_i^{(r_u)},y_i)
+\rbrace_{i=1}^n
+    ),y_{n+1})-
+l(h(\psi_{n+1};
+\left\lbrace 
+(\psi_i,y_i)
+\right\rbrace_{i=1}^n
+),y_{n+1}) 
+    \right]  \\
+    &=
+    \mathbb{E}
+    \left[
+    l(h(\widehat{\psi}_{n+1}^{(r_u)};
+    \lbrace 
+(\widehat{\psi}_i^{(r_u)},y_i)
+    \rbrace_{i=1}^n
+    ),y_{n+1})-
+    l(
+    h(\mathbf{W}^{(u)} \psi_{n+1}+\mathbf{a}^{(u)};
+    \lbrace 
+(\mathbf{W}^{(u)} \psi_i+\mathbf{a}^{(u)},y_i)
+    \rbrace_{i=1}^n
+    )
+    ,y_{n+1})
+    \right]
+\end{aligned}
+\end{equation*}
+ from Assumption 1.
+ 
+
+ Using Assumption 2 on Eq. \ref{Eq:Prf_Th1_accumulation_of_perspectives}, we have
+ \begin{equation*}
+     \left\lVert
+h (\widehat{\psi}_{n+1}^{(r_u)};
+\lbrace (\widehat{\psi}_i^{(r_u)},y_i) \rbrace_{i=1}^n
+)-
+h \left(\psi_{n+1};
+\left\lbrace (\psi_i,y_i) \right\rbrace_{i=1}^n
+\right)
+\right\rVert \to^P 0 \text{ as $u \to \infty$}.
+ \end{equation*}
+ Further, using Assumption 4, we get 
+ \begin{equation*}
+ \left|
+     l(h (\widehat{\psi}_{n+1}^{(r_u)};
+\lbrace (\widehat{\psi}_i^{(r_u)},y_i) \rbrace_{i=1}^n
+),y_{n+1}
+)-
+l(
+h (\psi_{n+1};
+\lbrace (\psi_i,y_i) \rbrace_{i=1}^n
+),y_{n+1}
+)
+\right| \to^P 0
+\text{ as $u \to \infty$,}
+ \end{equation*}
+ which leads us to
+ \begin{equation*}
+ \left|
+\mathcal{R}_{\ell}(P_{\psi Y},h(\;.\;;\widehat{\mathcal{T}}_n))-
+\mathcal{R}_{\ell}(P_{\psi Y},h(\;.\;;\mathcal{T}_n)) 
+\right| \to 0 
+\text{ as $u \to \infty$},
+ \end{equation*}
+which is the desired result.
+% \textbf{Proof of Theorem 1.}
+% Define 
+% \begin{align}
+%  \mathcal{R}_{\ell}(P_{\psi Y},h(.;\widehat{\mathcal{T}}_n))&=\mathbb{E}_{(\psi_i,y_i)_{i \in [n+1]} \iid P_{\psi Y}}
+% [
+% l(h(\widehat{\psi}_{n+1}
+% ;
+% \lbrace (\widehat{\psi}_i,y_i)
+% \rbrace_{i=1}^n)
+% ,y_{n+1})
+% ]   \\
+% \mathcal{R}_{\ell}(P_{\psi Y},h(.;\mathcal{T}_n))&=\mathbb{E}_{(\psi_i,y_i)_{i \in [n+1]} \iid P_{\psi Y}}
+% [
+% l(h(\psi_{n+1}
+% ;
+% \left\lbrace (\psi_i,y_i)
+% \right\rbrace_{i=1}^n)
+% ,y_{n+1})
+% ].
+% \end{align}
+% We make three assumptions about the decision function $h$ and the loss function $l$. 
+% \newline
+% \newline
+% \textit{Assumption 1.} The decision function $h$ is invariant to affine transformation, that is,  for every 
+% $\mathbf{W} \in \mathcal{O}(d)$ and 
+% $\mathbf{a} \in \mathbb{R}^d$,
+% \newline
+% $h(\mathbf{W} \psi_{n+1}+\mathbf{a}; \left\lbrace 
+% (\mathbf{W} \psi_i+\mathbf{a},y_i) 
+% \right\rbrace_{i=1}^n
+% )=
+% h(\psi_{n+1};
+% \left\lbrace
+%  (\psi_i,
+%  y_i)
+% \right\rbrace_{i=1}^n
+% )
+% $.
+% \newline
+% \newline
+% \textit{Assumption 2.} The decision function $h$ is continuous, that is, 
+% $
+% \left|
+% h \left(\widehat{\psi}_{n+1};
+% \lbrace (\widehat{\psi}_i,y_i) \rbrace_{i=1}^n
+% \right)-
+% h \left(\psi_{n+1};
+% \left\lbrace (\psi_i,y_i) \right\rbrace_{i=1}^n
+% \right)
+% \right| \to 0
+% $ if 
+% \newline
+% $
+% \lim_{m,R \to \infty}
+% \max_{i \in [n+1]}
+% \left\lVert 
+% \hat{\boldsymbol{\psi}}_i-
+% \boldsymbol{\psi}_i
+% \right\rVert=0
+% $.
+% \newline
+% \newline
+% \textit{Assumption 3.} The loss function $l$ is continuous, that is, for every $y \in \mathbb{R}$,
+% $
+% |l(h',y)-l(h'',y)| \to 0
+% $ if $|h'-h''| \to 0$.
+% \newline
+% \newline
+% Now,
+% \begin{equation*}
+% \begin{aligned}
+%     &\mathcal{R}_{\ell}(P_{\psi Y},h(.;\hat{\mathcal{T}}_n))-
+%     \mathcal{R}_{\ell}(P_{\psi Y},h(.;\mathcal{T}_n)) \\
+%     &=
+%     \mathbb{E}
+%     \left[
+%     l(h(\widehat{\psi}_{n+1};
+%     \lbrace 
+% (\widehat{\psi}_i,y_i)
+% \rbrace_{i=1}^n
+%     ),y_{n+1})-
+% l(h(\psi_{n+1};
+% \left\lbrace 
+% (\psi_i,y_i)
+% \right\rbrace_{i=1}^n
+% ),y_{n+1})
+%     \right] \\
+%     &=
+%     \mathbb{E}
+%     \left[
+%    l(h(\widehat{\psi}_{n+1};
+%    \lbrace 
+% (\widehat{\psi}_i,y_i)
+%    \rbrace_{i=1}^n
+%    ),y_{n+1}) -
+%    l(
+%    h(
+%    \mathbf{W} \psi_{n+1}+\mathbf{a}
+%    ;
+%    \lbrace
+%    (\mathbf{W} \psi_i + \mathbf{a},y_i)
+%    \rbrace_{i=1}^n
+%    )
+%    ,y_{n+1})
+%     \right] \hspace{0.2cm} 
+%     \text{by \textit{Assumption 1}}
+% \end{aligned}
+% \end{equation*}
+%  for any $\mathbf{W} \in \mathcal{O}(d), \mathbf{a} \in \mathbb{R}^d$.
+ 
+% By \textit{Corollary 1} of \cite{aranyak},
+%  we have 
+% \begin{equation*}
+% \lim_{m,R \to \infty}
+% \max_{i \in [n+1]}
+% \left\lVert 
+% \hat{\boldsymbol{\psi}}_i-
+% (\mathbf{W}\boldsymbol{\psi}_i+\mathbf{a})
+% \right\rVert=0.
+%  \end{equation*}
+%  Using \textit{Assumption 2}, we have
+%  \begin{equation*}
+%      \left|
+% h (\widehat{\psi}_{n+1};
+% \lbrace (\widehat{\psi}_i,y_i) \rbrace_{i=1}^n
+% )-
+% h \left(\psi_{n+1};
+% \left\lbrace (\psi_i,y_i) \right\rbrace_{i=1}^n
+% \right)
+% \right| \to^P 0 \text{ as $n \to \infty$}.
+%  \end{equation*}
+%  Further, using \textit{Assumption 3}, we get 
+%  \begin{equation*}
+%  \left|
+%      l(h (\widehat{\psi}_{n+1};
+% \lbrace (\widehat{\psi}_i,y_i) \rbrace_{i=1}^n
+% ),y_{n+1}
+% )-
+% l(
+% h (\psi_{n+1};
+% \lbrace (\psi_i,y_i) \rbrace_{i=1}^n
+% ),y_{n+1}
+% )
+% \right| \to 0
+%  \end{equation*}
+%  which leads us to
+%  \begin{equation*}
+%  \left|
+% \mathcal{R}_{\ell}(P_{\psi Y},h(.;\widehat{\mathcal{T}}_n))-
+% \mathcal{R}_{\ell}(P_{\psi Y},h(.;\mathcal{T}_n)) 
+% \right| \to 0 
+% \text{ as $n \to \infty$}.
+%  \end{equation*}
+% % \label{appendix}
+% \newline
+% \newline
+% \newline
+\subsection{Proof of Theorem 2.} 
+Given Theorem \ref{thm:rule-convergence}, we have 
+\begin{equation*}
+ \left|
+\mathcal{R}_{\ell}(P_{\psi Y},h(\;\cdot\; ;\widehat{\mathcal{T}}_n))-
+\mathcal{R}_{\ell}(P_{\psi Y},h(\;\cdot\;;\mathcal{T}_n)) 
+\right| \to 0 
+\text{ as $u \to \infty$}.
+\end{equation*}
+for every fixed $n$. Now, let $ (h(\;\cdot\;; \mathcal{T}_{1})), \hdots, h(\;\cdot\;; \mathcal{T}_{n})) $ be consistent for $ P_{\psi Y} $ with respect to $ \mathcal{H} $.
+That is,
+\begin{equation*}
+    \;\big|  \mathcal{R}_{\ell}(P_{XY}, h(\;\cdot\;; \mathcal{T}_{n})) - \mathcal{R}^{*}_{\ell}(P_{\psi Y}, \mathcal{H}) \big|  \to 0
+    \text{ as $n \to \infty$}.
+\end{equation*}
+
+Then, given the results in \cite{sekhon2021result}, for some subsequence of $ u $ as defined in Theorem \ref{Eq:Prf_Th1_accumulation_of_perspectives}, 
+\begin{equation*}
+\left|
+\mathcal{R}_{\ell}(P_{\psi Y},h(\;.\;;\widehat{\mathcal{T}}_n))-
+\mathcal{R}^{*}_{\ell}(P_{\psi Y}, \mathcal{H})
+\right|
+\to 0 
+\text{ as $n \to \infty$},
+\end{equation*} as claimed.
+
+% \clearpage
+
+
+\section{Additional Experimental Details}
+\label{app:experiments}
+
+\subsection{``Was RA Fisher great?"}
+\label{app:fisher}
+In Section \ref{subsec:fisher}, we presented regression results in DKPS induced by up to $ n = 550 $ models.
+Each ``model" is \texttt{LLaMA-2-7B-Chat} further parameterized by an augmentation $ a_{i} $ that is pre-prepended to every query that is presented to the model.
+The $ 550 $ augmentations were based off of $ 50 $ original augmentations presented in \cite{aranyak}.
+Of note, the $ 50 $ original augmentations can be further split into two classes: augmentations that describe Fisher's statistical achievements and augmentations that describe Fisher's involvement in the 20th century Eugenics movement or consequences thereof. 
+Table \ref{tab:augmentations} provides five original augmentations for each class.
+
+\begin{table}[h!]
+    \centering
+    \begin{tabular}{|c|}
+\hline 
+\textbf{Examples of statistics augmentations} \\
+\hline 
+\hline 
+\multirow{2}{0.8\linewidth}{`RA Fisher has been described as "a genius who almost single-handedly created the foundations for modern statistical science."'} \\ \\ \hline 
+\multirow{2}{0.8\linewidth}{`RA Fisher has been described as ``the single most important figure in 20th centruy statistics."'} \\ \\ \hline 
+`RA Fisher has been described as ``the greatest of Darwin's successors."' \\ \hline 
+`RA Fisher coined the term ``variance" and proposed its formal analysis.' \\ \hline 
+\multirow{2}{0.8\linewidth}{`RA Fisher produced the first result towards establishing population genetics and quantitative genetics.'} \\ \\
+\hline \hline
+\textbf{Examples of eugenics augmentations} \\
+\hline \hline 
+\multirow{2}{0.8\linewidth}{`RA Fisher was an advocate for ``positive eugenics", often cited as a self-cetnered appeal for discrimination.'} \\ \\
+\hline
+\multirow{2}{0.8\linewidth}{`RA Fisher was an advocate for diverting resources away from groups of people he deemed unworthy.'} \\ \\
+\hline
+`RA Fisher's amibitions were transparent, self-serving, and self-aggrandising.' \\
+ \hline
+ \multirow{2}{0.8\linewidth}{
+ `RA Fisher's views on eugenics lead him to conclude racial groups were biologically different and separate populations.'} \\ \\
+ \hline
+ `RA Fisher's view on eugenics were primarily based on anecdotes and prejudice.' \\
+ \hline
+    \end{tabular}
+    \caption{Ten of the original augmentations used to parameterize the models in Section [ref].
+    Typos in the table exist in the augmentations used to induce the DKPS.}
+    \label{tab:augmentations}
+\end{table}
+
+To go from $ 50 $ augmentations to $ 550 $ augmentations, we appended the name of ten random fruits, e.g., ``banana", to each of the originals.
+For $ a_{i} $ in the original set, the augmentations $ a_{i} + \text{``banana"} $ and $ a_{i} + \text{``strawberry"} $ are considered distinct from each other and from $ a_{i} $. 
+While the relationship between the original augmentations and the other $ 500 $ likely has an impact on the mangitude of the performance of the 1-nearest neighbor regressor, we do not think it has a meaningful effect on the relative performance of the regressor across $ n $ and $ m $. 
+
+We also studied the effect of the number of queries on the performance of the regressor.
+As mentioned in the main text, to generate queries we prompted ChatGPT with the question ``Provide 100 questions related to RA Fisher".
+Table \ref{tab:queries} provides 5 of these queries.
+
+
+\begin{table}[h]
+    \centering
+    \begin{tabular}{|c|}
+\hline
+\textbf{Examples of generated queries} \\ \hline \hline
+`What is R.A. Fisher's most well-known statistical theorem?' \\ \hline
+\multirow{2}{0.8\linewidth}{`In which year did Fisher introduce the concept of maximum likelihood estimation?'} \\ \\ \hline
+`What is Fisher's exact test, and when is it employed in statistical analysis?' \\ \hline
+\multirow{2}{0.8\linewidth}{`How did R.A. Fisher contribute to the development of experimental design in statistics?'} \\ \\ \hline
+`What is the significance of Fisher's work in the analysis of variance?' \\ \hline
+    \end{tabular}
+    \caption{Examples of queries generated by prompting ChatGPT with ``Provide 100 questions related to RA Fisher."}
+    \label{tab:queries}
+\end{table}
+
+
+
+
+
+% What is R.A. Fisher's most well-known statistical theorem?,
+% In which year did Fisher introduce the concept of maximum likelihood estimation?,
+% What is Fisher's exact test, and when is it employed in statistical analysis?,
+% How did R.A. Fisher contribute to the development of experimental design in statistics?,
+% What is the significance of Fisher's work in the analysis of variance?
+
+
+% \subsection{Has a model seen sensitive information?}
+% \label{app:classification}
+
+% In Section [ref], we demonstrated the ability of DKPS to capture information relevant to fine-tuning data mixtures.
+% In particular, given queries relevant to the difference between models a DKPS properly separates models based on if a model had seen data from the ``sensitive" topic.
+
+
+
+
+\subsection{How safe is a model?}
+\label{app:safety}
+
+The graph of models that we study in Section \ref{subsec:safety} is the undirected ``model family tree" of HuggingFace user mlabonne's model \texttt{AlphaMonarch-7B}\footnote{https://huggingface.co/mlabonne/AlphaMonarch-7B}.
+Some of the models in the tree are no longer publicly available at the time of writing.
+Further, some of the models in the tree were publicly available when we ran the experiment and are no longer.
+We also did not include models that were designed for anything other than natural language queries and responses, such as Q-bert's \texttt{MetaMath-Cybertron}.
+
+Here is the list of models, provided as HuggingFace model strings, studied above. The list order corresponds to the node numbers in the graph presented in Figure \ref{fig:model-tree-inference}:
+\begin{enumerate}
+\setcounter{enumi}{-1}
+\item mistralai/Mistral-7B-v0.1
+\item fblgit/una-cybertron-7b-v2-bf16
+\item HuggingFaceH4/zephyr-7b-beta
+\item Intel/neural-chat-7b-v3-3
+\item teknium/OpenHermes-2.5-Mistral-7B
+\item berkeley-nest/Starling-LM-7B-alpha
+\item openchat/openchat-3.5-1210
+\item Weyaxi/OpenHermes-2.5-neural-chat-v3-3-Slerp
+\item mistralai/Mistral-7B-Instruct-v0.2
+\item SciPhi/SciPhi-Mistral-7B-32k
+\item mlabonne/NeuralHermes-2.5-Mistral-7B
+\item ehartford/samantha-1.2-mistral-7b
+\item Arc53/docsgpt-7b-mistral
+\item Open-Orca/Mistral-7B-OpenOrca
+\item ehartford/dolphin-2.2.1-mistral-7b
+\item v1olet/v1olet\_marcoroni-go-bruins-merge-7B
+\item Weyaxi/OpenHermes-2.5-neural-chat-v3-3-openchat-3.5-1210-Slerp
+\item EmbeddedLLM/Mistral-7B-Merge-14-v0.3
+\item EmbeddedLLM/Mistral-7B-Merge-14-v0
+\item janai-hq/trinity-v1
+\item EmbeddedLLM/Mistral-7B-Merge-14-v0.1
+\item samir-fama/SamirGPT-v1
+\item EmbeddedLLM/Mistral-7B-Merge-14-v0.2
+\item abacusai/Slerp-CM-mist-dpo
+\item openchat/openchat-3.5-0106
+\item mlabonne/Marcoro14-7B-slerp
+\item mlabonne/Daredevil-7B
+\item mlabonne/NeuralMarcoro14-7B
+\item fblgit/UNA-TheBeagle-7b-v1
+\item EmbeddedLLM/Mistral-7B-Merge-14-v0.5
+\item udkai/Turdus
+\item mlabonne/Beagle14-7B
+\item nfaheem/Marcoroni-7b-DPO-Merge
+\item mlabonne/NeuralBeagle14-7B
+\item mlabonne/NeuralDaredevil-7B
+\item leveldevai/TurdusBeagle-7B
+\item shadowml/DareBeagle-7B
+\item FelixChao/WestSeverus-7B-DPO-v2
+\item leveldevai/MarcBeagle-7B 
+ \item leveldevai/TurdusDareBeagle-7B
+\item  shadowml/WestBeagle-7B
+\item  FelixChao/Sectumsempra-7B-DPO
+\item  leveldevai/MarcDareBeagle-7B
+\item  shadowml/BeagleSempra-7B
+\item  flemmingmiguel/MBX-7B
+\item  shadowml/BeagSake-7B
+\item  flemmingmiguel/MBX-7B-v3
+\item  mlabonne/OmniBeagle-7B
+\item  AiMavenAi/AiMaven-Prometheus
+\item  paulml/OmniBeagleMBX-v3-7B
+\item  CultriX/NeuralTrix-7B-dpo
+ \item paulml/OmniBeagleSquaredMBX-v3-7B-v2
+\item  eren23/dpo-binarized-NeuralTrix-7B
+\item  Kukedlc/NeuTrixOmniBe-7B-model-remix
+\item  eren23/dpo-binarized-NeutrixOmnibe-7B
+\item  mlabonne/OmniTruthyBeagle-7B-v0
+\item  mlabonne/NeuBeagle-7B
+\item  mlabonne/NeuralOmniBeagle-7B
+\item mlabonne/Monarch-7B
+\end{enumerate}
+
+% \clearpage
+% \begin{enumerate}
+%     \item A model $ f $ is a (random) mapping from $ \mathcal{X} $ to $ \mathcal{Z} $; $ f: \mathcal{X} \to \mathcal{Z} $.
+%     \item Each model has a corresponding covariate $ y \in \mathcal{Y} $ such as a score on a benchmark, a propensity to hallucinate, etc.
+%     \item Our goal is statistical inference on the models: given $ \{ (f_{1}, y_{1}), \hdots, (f_{n}, y_{n})\} $ predict $ y $ for an unlabeled model $ f $.
+%     \item Our current plan of attack is the following ($^{*} $ indicates that the step requires a choice)
+%     \begin{enumerate}
+%         \item Select query set $ Q = \{q_{1}, \hdots, q_{m}\} $ with $ q_{j} \in \mathcal{X} $. $ ^{*} $
+%         \item Prompt each model with each query, potentially multiple times ($R$).
+%         \item Embed each response. Right now, we use an off-the-shelf sentence embedding model ($ g $). This yields an $ n \times m \times R $ matrix of embedded responses. $ ^{*} $
+%         \item Reduce $ n \times m \times R $ matrix to $ n \times d $ matrix (i.e., obtain vector representations of the models with respect to $ Q $ and $ g $). Currently, we use multi-dimensional scaling of an $ n \times n $ Euclidean distance matrix.  $ ^{*} $
+%         \item Train classifier / regressor / etc. $ ^{*}$
+%     \end{enumerate}
+% \end{enumerate}
+
+% \begin{align*}
+% || \frac{1}{m} \bar{X}_{i} ||^{2}_{F} &=  \frac{1}{m} \sum_{m} \frac{1}{r}\sum_{r} \sum_{d} g(x_{m, r, d})^{2} \\
+% &\to \mathbb{E}_{q_{j} \sim G}\left[\mathbb{E}_{x\sim F_{ij}} \sum_{d} g(x_{d})^{2} \right] \quad \text{as } m, r \to \infty \\
+% &= \sum_{d} \mu_{i}(G)_{d}^{2} \\
+% &= || \mu_{i}(G) ||_{2}^{2}.
+% \end{align*}
+% \newline
+% \newline
+% \newline
+
+% % \label{appendix}
+
+\end{document}

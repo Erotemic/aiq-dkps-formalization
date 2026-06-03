@@ -1,0 +1,79 @@
+\begin{table*}[h]
+\centering
+\caption{Mean absolute error (MAE) of benchmark prediction methods under varying query budgets for four HELM-Lite tasks. Results averaged over 1024 random query subsets of size $m$ using all available reference models for DKPS and Ensemble. 
+Evaluation is under the Leave-One-Family-Out protocol.
+Lower is better; bold indicates lowest MAE per (task, $m$) pair. DKPS-based methods consistently outperform baselines at low query budgets, achieving comparable accuracy with substantially fewer queries (e.g., on legalbench, DKPS at $m=1$ achieves MAE $\approx$ Sample Score at $m=16$, a 16$\times$ reduction).}
+\small
+\setlength{\tabcolsep}{2.25pt}
+\begin{tabular}{l *{16}{S[table-format=1.3]}}
+\toprule
+& \multicolumn{4}{c}{\textbf{legalbench}} & \multicolumn{4}{c}{\textbf{medqa}} & \multicolumn{4}{c}{\textbf{wmt\_14}} & \multicolumn{4}{c}{\textbf{math}} \\
+\cmidrule(lr){2-5} \cmidrule(lr){6-9} \cmidrule(lr){10-13} \cmidrule(lr){14-17}
+\textit{Num. queries} & {1} & {4} & {16} & {64} & {1} & {4} & {16} & {64} & {1} & {4} & {16} & {64} & {1} & {4} & {16} & {64} \\
+\midrule
+Pop. Mean & 0.093 & 0.093 & 0.093 & 0.093 & 0.131 & 0.131 & 0.131 & 0.131 & 0.048 & 0.048 & 0.048 & 0.048 & 0.234 & 0.234 & 0.234 & 0.234 \\
+Sample Score & 0.472 & 0.199 & 0.097 & 0.048 & 0.420 & 0.189 & 0.093 & 0.044 & 0.153 & 0.073 & 0.037 & 0.017 & 0.339 & 0.163 & 0.079 & \textbf{0.037} \\
+DKPS & \textbf{0.087} & \textbf{0.067} & 0.051 & 0.034 & \textbf{0.121} & \textbf{0.094} & 0.066 & 0.039 & \textbf{0.038} & \textbf{0.026} & 0.019 & 0.016 & 0.144 & 0.105 & 0.082 & 0.070 \\
+Ensemble & \textbf{0.087} & \textbf{0.067} & \textbf{0.049} & \textbf{0.033} & \textbf{0.121} & \textbf{0.094} & \textbf{0.065} & \textbf{0.038} & \textbf{0.038} & \textbf{0.026} & \textbf{0.018} & \textbf{0.013} & \textbf{0.143} & \textbf{0.104} & \textbf{0.074} & 0.042 \\
+\bottomrule
+\end{tabular}
+\label{tab:dkps}
+\end{table*}
+% }
+
+\section{Introduction}
+Benchmarks for machine learning methods are widely used to measure the field’s progress.
+While they are not without flaw \citep{pmlr-v97-recht19a}, the ubiquity and longevity of early benchmarks such as MNIST \citep{lecun2010mnist}, CIFAR-10 \citep{Krizhevsky09learningmultiple}, and the Iris dataset \citep{fisher36lda} attest to their practical utility.
+In the era of modern generative models, benchmarks have shifted away from evaluating performance on a single, well-defined task and moved towards evaluating performance across a suite of tasks designed to capture a model’s overall capability. 
+For example, \citep{liang2022holistic} introduced the HELM benchmark suite and leaderboard as an attempt to evaluate language models as comprehensively and transparently as possible. 
+Similar multi-task benchmark suites and leaderboards now exist for embedding models \citep{muennighoff2023mtebmassivetextembedding}, image generation \citep{huang2025t2icompbenchenhancedcomprehensivebenchmark}, coding \citep{chen2021evaluatinglargelanguagemodels}, and ``intelligence" \citep{chollet2019measureintelligence}, among others.
+
+Although multi-task evaluations offer a more complete picture of a model’s strengths and weaknesses, they are often computationally expensive. 
+Evaluating a model on a modern multi-task benchmark typically requires generating and scoring thousands of responses, making full evaluation increasingly impractical as both model sizes and benchmark scopes grow. 
+At the same time, it is easier than ever to produce new model behavior -- via parameter efficient fine-tuning \citep{han2024parameterefficientfinetuninglargemodels}, instruction tuning \citep{zhang2025instructiontuninglargelanguage}, model merging \citep{model-merging}, distillation \citep{Gou_2021}, prompt engineering \citep{sahoo2025systematicsurveypromptengineering}, etc. -- making it infeasible to evaluate each new variant.
+
+These trends motivate the need for query-efficient alternatives to full benchmark evaluation. 
+In this paper, we address this problem by leveraging information and responses from previously evaluated models under the assumption that it is possible to predict a new model’s score by leveraging the similarity between its responses and cached responses from already-scored models on a (small) subset of queries. 
+
+\noindent \textbf{Contribution.} We make two primary contributions.
+\begin{enumerate}[itemsep=0pt, topsep=0pt, parsep=2pt]
+\item \textbf{Theoretical:} We prove that a benchmark prediction method based on the Data Kernel Perspective Space (DKPS) is query-efficient relative to estimating benchmark performance using a subset of queries.
+
+\item \textbf{Empirical:} We validate theoretical query-efficiency of DKPS-based methods. 
+As summarized in Table~\ref{tab:dkps}, DKPS-based methods can reduce the number of queries required to achieve a given performance by more than 10$\times$.
+\end{enumerate}
+\subsection{Background \& related work}
+
+
+\paragraph{Low-dimensional representations of language models.}
+Our work contributes to a growing literature on low-dimensional representations of language models. 
+Some approaches construct representations by comparing internal activations across models \citep{duderstadt2023comparing, huh2024platonicrepresentationhypothesis, horwitz2025chartatlasworldsmodels} or by comparing model weights directly \citep{chen2025extracting}. 
+However, evaluation frameworks typically do not require (or even allow) access to model internals, and instead rely only on model responses.
+The Data Kernel Perspective Space (DKPS), first introduced in the context of monitoring multi-agent systems \citep{helm2024tracking}, addresses this setting by mapping a collection of generative models into a low-dimensional Euclidean space via multidimensional scaling of matrices containing average embedded responses. 
+Recent theoretical work has shown that DKPS recovers ground-truth low-dimensional model structure as the number of models, queries, and responses per query grow \citep{aranyak,acharyya2025concentrationboundsresponsebasedvector} and that supervised inference methods trained on DKPS representations are consistent \citep{helm-etal-2025-statistical}.
+We frame predicting the score of a model on a benchmark as an instance of model-level inference in the black-box setting and extend recent theoretical and empirical results realted to the DKPS to query-efficiency for benchmark score prediction.
+
+\paragraph{Efficient benchmarking.}
+
+Several lines of work aim to reduce the computational cost of benchmark evaluation.
+\citet{polo2024tinybenchmarks} use Item Response Theory to construct benchmark subsets of 100 examples (approx. 1\% of original size) that predict performance within 2\% error.
+\citet{vivek-etal-2024-anchor} propose clustering examples based on cross-model predictions and selecting cluster centers as "anchor points," achieving accurate rankings with significantly fewer examples.
+\citet{bean2025scales} propose item-centric selection based on cognitive embeddings, improving cold-start performance and cross-family transferability.
+\citet{li2024active} use reinforcement learning to model dependencies across examples, reducing estimation error by 25-50\% via active selection.
+\citet{perlitz2024efficient} analyze benchmark design choices and propose ranking algorithms achieving 100× cost reductions with minimal ``reliability" loss.
+These techniques typically require explicit or implicit task-specific structure, model metadata, access to model internals, or an response-level scoring functions.
+
+Our approach is complementary to prior work in that we leverage cached responses from previously evaluated models, operate purely via black-box access and model response similarity, and assume no structure across tasks or subtasks. 
+Importantly, this enables combining our method with existing techniques -- e.g., using DKPS-based methods to predict performance on IRT-selected subsets \citep{polo2024tinybenchmarks} or on  ``anchor points" \citep{vivek-etal-2024-anchor} -- to potentially compound efficiency gains beyond what either approach achieves alone.
+
+\subsection{Problem statement}
+Given a generative model $ f $, we consider the problem of predicting its score on a benchmark $ Q^{*} = \{q_{1}, \hdots, q_{M}\} $.
+Let $ y: \mathcal{F} \times 2^{Q^{*}} \to [0,1] $ denote the benchmark scoring function.
+That is, $ y(f, Q^{*}) $ is the score assigned to $ f $ after evaluating it on all queries.
+We refer to $ y(f, Q^{*})$ as $ y $ when the context is clear.
+
+As described above, full evaluation of $ f $ on all queries may be infeasible. 
+Instead, we assume access to previously-evaluated (model, score) pairs $ (f_{1}, y_{1}), \hdots (f_{n}, y_{n}) $ and each model's response to each query $ \{\{f_{i}(q_{j})\}_{j=1}^{M}\}_{i=1}^{n} $.
+Given this additional information, our goal is to estimate $ y $ with $ m \ll M $ queries.
+That is, we seek to identify an estimate $ \hat{y} $ that predicts the full benchmark score of $
+f $ from its responses to a subset $ Q \in 2{^{Q^*}} $ of the benchmark queries and the information available from the previously-evaluated models.

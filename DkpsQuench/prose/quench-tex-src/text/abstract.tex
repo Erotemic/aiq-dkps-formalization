@@ -1,0 +1,24 @@
+% [benchmark suites and public leaderboards are a popular way to understand a new model's relative strengths and weaknesses.]
+% [we apply recent empirical and thereotical results related to model-level inference based on the data kernel perspective space to the task of predicting a model's score on a benchmark]
+% [we empirically demonstrate that methods that leverage the data kernel perspective space can provide a query-efficient prediction of the model's overall score on the benchmark.
+% we provide theoretical results for when we can expect the observed efficiency to hold in practice and conclude by alternative to subsampling questions in the benchmarkpredicting a model's benchmark score in the low-query regime and can be combined with standard scoring techniques to improve upon ]
+
+\begin{abstract}
+Evaluating a new model on an existing benchmark is often necessary to understand its behavior before deployment.
+For modern evaluation frameworks, generating and evaluating a response for all  queries can be prohibitively expensive.
+In practice, responses from previously-evaluated models are often cached -- creating a potential opportunity to use this additional information to decrease the number of queries required to accurately evaluate a new model.
+In this paper, we introduce an approach for predicting benchmark performance that leverages cached model responses based on the Data Kernel Perspective Space (DKPS), a method for quantifying the relationship between models in the black-box setting.
+Theoretically, we show that DKPS-based methods are query-efficient under certain conditions.
+Empirically, we demonstrate that DKPS-based methods achieve the same mean absolute error as baselines with a substantially decreased query budget.
+We conclude by proposing an offline method for selecting a set of queries that maximizes the goodness-of-fit on reference models, improving prediction accuracy over random query selection.
+\end{abstract}
+% \begin{abstract}
+% Evaluating a new model on an existing benchmark is often necessary to understand its relative strengths and weaknesses before deployment.
+% For some evaluation frameworks, generating and scoring a response for all queries can be prohibitively expensive.
+% In this paper, we introduce an approach for predicting benchmark performance based on the Data Kernel Perspective Space (DKPS), low-dimensional representations of generative models that capture relative model behavior with respect to a query set.
+% Theoretically, we show that DKPS-based methods are query-efficient under certain conditions.
+% Empirically, we show that DKPS-based methods effectively use cached model responses to improve the query-efficiency of model evaluation while requiring only a small subset of queries. 
+% We conclude by studying an offline method for selecting a query set that improves upon using a random query set. 
+% \end{abstract}
+
+% Evaluating new models on existing benchmarks is crucial for understanding their strengths and weaknesses, yet fully scoring all queries can be prohibitively expensive. We introduce a query-efficient approach based on the Data Kernel Perspective Space (DKPS), a low-dimensional representation of generative models induced by a query set, for predicting benchmark performance. Empirically, DKPS-based methods produce accurate scoring functions while requiring only a small subset of queries across diverse evaluation settings. We further provide theoretical guarantees on the query-efficiency of these methods under mild assumptions. Finally, we study an offline query-selection procedure that outperforms random selection by constructing a growing query set that closely approximates the predictive power of the best fixed-size set.

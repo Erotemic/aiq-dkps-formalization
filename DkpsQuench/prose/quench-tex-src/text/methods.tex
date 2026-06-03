@@ -1,0 +1,169 @@
+\section{The Data Kernel Perspective Space}
+For our purposes, a model $ f \in \mathcal{F} $ is a random mapping from a query space $ \mathcal{Q} $ to a response space $ \mathcal{X} $. 
+Given $ q \in \mathcal{Q} $, model responses $ f(q)_{1}, \hdots, f(q)_{r} $ are sampled $ i.i.d. $ from the distribution $ F $.
+We let $ g: \mathcal{X} \to \mathbb{R}^{p} $ be a fixed embedding function that maps a response to a real-valued vector.
+
+Given models $ f_{1}, \hdots, f_{n} $ and queries $ Q = \{q_{1}, \hdots, q_{m}\} $,  we let $ \bar{X}_{i} \in \mathbb{R}^{m \times p} $ be the matrix whose $ j $th row is the average embedded response from $ f_{i} $ to query $ q_{j} $; or,  $\bar{X}_{ij\cdot} = \frac{1}{r} \sum_{k=1}^{r} g(f_{i}(q_{j}))_{k} $.
+Further, we let $ D $ be the pairwise distance matrix with entries $ D_{ii'} = || \bar{X}_{i} - \bar{X}_{i'} ||_{F} $.
+We refer to the distribution on embedded responses induced by $ f_{i}(q_{j}) $ as $ F_{ij} $.
+
+Following \citep{aranyak}, the $d$-dimensional Data Kernel Perspective Space (DKPS) representations of the models are defined as the vectors $ (\widehat{\psi}_{1}, \hdots, \widehat{\psi}_{n}) $ that are a solution to
+\begin{equation}
+(\widehat{\psi}_{1}, \hdots, \widehat{\psi}_{n}) =    \text{argmin}_{z_i \in \mathbb{R}^d} 
+    \sum_{i,i'}^{n}
+    (
+\lvert\lvert
+z_i - z_{j} \rvert\rvert
+ -
+D_{ii'}
+    )^2.
+\label{eq:dkps}
+\end{equation}
+DKPS enables treating model-level analysis as a problem in a low-dimensional Euclidean space.
+We note that the solution to Eq. \eqref{eq:dkps} -- and the quality of the representations for a given task -- may depend on the choice of query set $ Q $ and embedding function $ g $.
+When the context is not clear, we emphasize the dependence on $ Q $ by referring to $ \psi $ as $ \psi(Q) $.
+In the benchmark setting, the choice of $ Q $ is reasonably constrained to elements of $ 2^{Q^{*}} $.
+Finally, we let $ \widehat{\Psi}_{Q}: \mathcal{F} \to \mathbb{R}^{d} $ be a mapping from the model space to the estimated perspective space under $ Q $; that is $ \widehat{\Psi}_{Q}(f_{i}) = \widehat{\psi}_{i}(Q) $.
+
+Figure \ref{fig:dkps-example} shows the $ d = 2 $ DKPS of models induced by various choices of $ n $ and $ m $. 
+Each dot is a model colored by score on the counting and probability subtask from HELM-Lite.
+\begin{figure}
+    \centering
+    \includegraphics[width=\linewidth]{figures/fig1.pdf}
+    \caption{Example $ d = 2 $-dimensional Data Kernel Perspective Spaces (DKPS) for models publicly evaluated on HELM-Lite's MATH counting and probability subtask. 
+    Each panel includes the DKPS representations for different $(n,m)$ =
+     (number of models, number of queries) pairs induced by a random query set of size $ m $.
+    Each dot is a model colored by its score on the subtask.
+    As the number of queries increases (left to right), the models with similar scores are more tightly clustered.
+    As the number of models increases (top to bottom), there are more models to help localize score signal.}
+\label{fig:dkps-example}
+\end{figure}
+
+\subsection{Theoretical properties of the DKPS}
+For a fixed collection of models, query set, and number of responses, the $ d $-dimensional DKPS representations of the models -- $ \widehat{\psi}_{1}, \hdots, \widehat{\psi}_{n} $ --  are estimates of a set of ``true" $ d $-dimensional vectors $ \psi_{1}, \hdots, \psi_{n} $.
+That is, as $ n, m, $ and $ r $ tend to infinity at particular relative rates, $ \lim \widehat{\psi}_{i} \to \psi_{i} $ \citep{aranyak}.
+Further, the error of the worst estimate is bounded above by a constant dependent on the number of models, the number of queries, the number of replicates, and the DKPS dimension: $ \max_{i}|| \widehat{\psi}_{i} - \psi_{i}||_{2} \le c(n,m,r,d)$ with high probability \citep{acharyya2025concentrationboundsresponsebasedvector}.
+Given its importance to provable query-efficiency, we state this last result in its entirety here:
+\begin{theorem}
+\label{thm:concentration}
+  [\citet{acharyya2025concentrationboundsresponsebasedvector} Theorem 2] In our setting, suppose $ r = \omega(n^{3}) $ and $ \sup_{ij} \;\text{trace}\left(Cov\left(F_{ij}\right)\right) = O(1)  $. 
+  Then, under technical assumptions, for every $ \delta \in (0, 1/2) $ and for sufficiently large $ n $ and $ r $  \begin{align*}
+      \max_{i} || \widehat{\psi}_{i}  - \psi_{i} ||_{2} \le \text{Poly}_{3}\left(\left(\frac{n^{3}}{r}\right)^{\frac{1}{2} - \delta}\right)
+  \end{align*}
+  with high probability, where $ \text{Poly}_{3} \left(x\right) $ is a third degree polynomial in $ x $.
+\end{theorem}
+The concentration result of Theorem \ref{thm:concentration} is necessary to make claims related to the quality of representations for a given $ (n, m, r) $, which is critical for analyzing the query efficiency of DKPS-based methods for benchmark score prediction.
+
+\subsection{Inference in the DKPS}
+Following \citet{helm-etal-2025-statistical}, we consider model-level inference in DKPS as a statistical problem: Let $ (f, y), (f_{1}, y_{1}), \hdots, (f_{n}, y_{n}) $ be $ i.i.d. $ samples from a joint distribution on (model,  score) pairs. 
+In the benchmark prediction setting, given $ f $ the true benchmark score $ y $ is deterministic and analysis with the marginal distribution on $ f $ is equivalent to analysis with the joint distribution. 
+We refer to the distribution on models as $ P_{f} $.
+
+Our goal is to construct a decision function $ h: \mathcal{F} \to \mathcal{Y} $  that minimizes the expected loss over $ P_{f} $. 
+In practice, operating directly on the space of models is too complex.
+Instead, we consider the proxy problem of model-level inference in DKPS: we observe perspective-score pairs $ (\widehat{\Psi}_{Q}(f), y), (\widehat{\Psi}_{Q}(f_{1}), y_{1}), \ldots, (\widehat{\Psi}_{Q}(f_{n}), y_{n}) $ and use these to construct a decision function $ h_{n}^{Q}: \mathcal{F} \to \mathcal{Y} $ defined by $ h_{n}^{Q}(f) = \hat{h}_{n}^{Q}(\widehat{\Psi}_{Q}(f)) $ where $ \hat{h}_{n}^{Q}: \mathbb{R}^{d} \to \mathcal{Y} $ is trained on $ \{(\widehat{\Psi}_{Q}(f_{i}), y_{i})\}_{i=1}^{n} $.
+Formally, with loss function $ \ell: \mathcal{Y} \times \mathcal{Y} \to \mathbb{R} $, our goal is to select $ \hat{h}_{n}^{Q} $ to minimize
+\begin{equation*}
+\mathbb{E}_{P_{f}}[\ell(h_{n}^{Q}(f), y)] = \mathbb{E}_{P_{f}}[\ell(\hat{h}_{n}^{Q}(\widehat{\Psi}_{Q}(f)), y)].
+\end{equation*}
+We sometimes refer to $ h_{n}^{Q} $ as $ h_{n}^{(m)} $ as context requires.
+
+% Our goal is to construct a decision function $ h: \mathcal{F} \to \mathcal{Y} $  that minimizes the expected loss over $ P_{f} $. 
+% In practice, operating directly on the space of models is too complex.
+% Instead, we consider the proxy problem of model-level inference in DKPS: we observe  $ (\widehat{\Psi}_{Q}(f), y), (\widehat{\Psi}_{Q}(f)_{1}, y_{1}), \hdots, (\widehat{\Psi}_{Q}(f)_{n}, y_{n}) $ and want to construct a decision function $ h_{n} := h(\;\cdot\;; \{(\widehat{\Psi}_{Q}(f)_{i}, y_{i})\}_{i=1}^{n}\}) $ that minimizes the expected loss over the marginal distribution $ P_{f} $. 
+% Or, with loss function $ \ell: \mathcal{Y} \times \mathcal{Y} \to \mathbb{R} $, select $ h $ such that $ \mathbb{E}_{\widehat{\psi}(Q)}[\ell(h(\widehat{\psi}(Q)), y)]$ is minimized.
+
+% Given its dependence on $ |Q| = m $ (and more generally $ Q $ itself) we sometimes refer to $ h_{n} $ as $ h_{n}^{Q} $ or $ h_{n}^{(m)} $ as context requires.
+
+\section{Provable query-efficiency in the DKPS}
+\label{sec:theory}
+In this section we define query-efficiency and prove that a simple regression function on the perspectives is query-efficient relative to estimating the model's score with its score on a subset of the benchmark queries.
+Recall $ y := y(f, Q^{*}) $.
+
+For a fixed $ Q \subseteq Q^{*} $ with $ |Q | = m$, we say the sequence of decision functions $ (h_{1}^{Q}, h_{2}^{Q}, \hdots) $ is \textit{$Q $ query-efficient} relative to $ (h_{1}'^{Q}, h_{2}'^{Q}, \hdots) $ if there exists $ N \in \mathbb{N} $ such that
+\begin{equation}
+\label{eq:query-efficiency}
+\small{
+\mathbb{E}_{P_f}\,
+% \mathbb{E}_{\widehat Q}
+\Big[\ell\big(h^{Q}_{n}(f),\; y\big)\Big]
+\le\;
+\mathbb{E}_{P_{f}}\,
+% \mathbb{E}_{\widehat Q}
+\Big[\ell\big(h'^{Q}_{n}(f),\; y\big)\Big]
+}
+\end{equation}
+for all $ n > N $. 
+We say the sequence of decision functions $ (h_{1}^{(m)}, \hdots, h_{n}^{(m)}) $ is \textit{m query-efficient} relative to $ (h_{1}'^{(m)}, \hdots, h_{n}'^{(m)}) $ if for all $ Q $ with $ |Q | = m $ there exists $ N_{Q} \in \mathbb{N} $ such that Eq. \eqref{eq:query-efficiency} holds for all $ n > N_{Q} $.
+
+Finally, we say the sequence of decision functions $ (h_{1}^{(m)}, \hdots, h_{n}^{(m)}) $ is \textit{query-efficient} relative to $ (h_{1}'^{(m)}, \hdots, h_{n}'^{(m)}) $ if for all $ m < M $ there exists $ N^{(m)} \in \mathbb{N} $ such that it is $ m $-query efficient.
+
+
+For our theoretical analysis we assume the benchmark score function is well-defined on all subsets of $ Q^{*} $.
+For $ Q \subset \mathcal{Q} $, we let $ \hat{y}_{Q} := y(f, Q) $.
+
+Let $ h_{n}^{(m)} $ be nearest neighbor regression in perspective space and $ \delta^{*} = \min_{i} || \widehat{\psi}_{i} - \widehat{\psi}||_{2} $:
+\small{
+\begin{align*}
+\hat{y}_{NN} := h^{(m)}_{n}(\widehat{\psi})
+= \frac{\sum_{i=1}^n \mathbf{1}\{i: ||\widehat{\psi}_{i} - \widehat{\psi}||_{2} = \delta^{*} \}y_{i}}{\sum_{i=1}^n \mathbf{1}\{i: ||\widehat{\psi}_{i} - \widehat{\psi}||_{2} = \delta^{*}\}}.
+\end{align*}
+}
+
+To establish query-efficiency of nearest neighbor regression in DKPS, we require two key assumptions.
+\begin{assumption}[Lipschitz Score Function]
+\label{ass:lipschitz-score}
+Given $ Q \subseteq 2^{Q^*} $, the benchmark score function $y(\;\cdot\;, Q^{*}): \mathcal{F} \rightarrow \mathbb{R}$ is $\gamma$-Lipschitz on the perspective space induced by $ Q $; or, there exists $ \gamma > 0 $ such that for any $f, f' \in \mathcal{F}$,
+$$|y(f, Q^{*}) - y(f', Q^{*})| \leq \gamma \cdot ||\psi(Q) - \psi'(Q)||_2.$$
+\end{assumption}
+The smoothness on the mapping from $ y $ to $ \psi(Q) $ ensures that nearby models in DKPS have similar benchmark scores.
+In practice, when $ m = M $ Assumption \ref{ass:lipschitz-score} will hold if the embedding function $ g $ is sufficiently smooth with respect to $ y $.
+With the same condition on $ g $,
+Assumption \ref{ass:lipschitz-score} will hold in practice for $ m < M $ in a probabilistic sense.
+
+\begin{assumption}[Model Distribution Support]
+\label{ass:model-support}
+The model distribution $P_f$ has non-zero measure on all compact subsets of $\mathcal{F}$. Equivalently, for any target model $f$ and radius $\delta > 0$, there exists $\epsilon > 0$ such that 
+$$P_f(B_\delta(f)) \geq \epsilon$$
+where $B_\delta(f) = \{f' \in \mathcal{F}: d_{\mathcal{F}}(f, f') < \delta\}$ for some appropriately defined $ d_{\mathcal{F}} $.
+\end{assumption}
+Denseness on the space of models ensures that as $n$ increases, we observe models close to any target model with high probability.
+In practice, Assumption \ref{ass:model-support} suggests that a large, diverse set of reference models may be needed to realize query efficiency for an arbitrary target model.
+
+Given Assumptions \ref{ass:lipschitz-score} \& \ref{ass:model-support} we are able to arbitrarily bound the prediction error of nearest neighbor regression as a function of $(n, m, r)$.
+We now state our main theoretical result:
+\begin{theorem}
+\label{thm:query-efficiency}
+    For any $ \epsilon > 0 $ there exists $ (n,m,r) $ such that 
+    %$ MSE(y_{NN}) \le 2\cdot \epsilon^{2} $ 
+    $ MSE(\hat{y}_{NN}) \le \epsilon $
+    with high probability.
+    That is, for $ m < M $ such that $ MSE(\hat{y}_{Q}) > 0 $, $ \hat{y}_{NN} $ is query-efficient relative to $ \hat{y}_{Q} $ with high probability. 
+\end{theorem}
+We provide the proof of Theorem \ref{thm:query-efficiency} in its entirety.
+\begin{proof}[Proof.]
+Fix $ Q \subseteq Q^{*} $. 
+Let $f$ be a target model with true perspective $\psi$ and estimated perspective $\widehat{\psi}$, and let $f^* \in \arg\min_{i} \|\widehat{\psi}_i - \widehat{\psi}\|_2$ denote one if its nearest neighbors with perspectives $\psi^*$ and $\widehat{\psi}^*$. The prediction error is $|\hat{y}_{NN} - y| = |y(f^*, Q^*) - y(f, Q^*)|$.
+
+By Assumption \ref{ass:lipschitz-score}, we have $|y(f^*, Q^*) - y(f, Q^*)| \leq \gamma \cdot \|\psi^* - \psi\|_2$. 
+By the triangle inequality:
+\begin{equation*}
+\|\psi^* - \psi\|_2 \leq \|\psi^* - \widehat{\psi}^*\|_2 + \|\widehat{\psi}^* - \widehat{\psi}\|_2 + \|\widehat{\psi} - \psi\|_2.
+\end{equation*}
+Let $\delta^* = \|\widehat{\psi}^* - \widehat{\psi}\|_2$ and let $c = c(n,m,r,d)$ be the concentration bound from Theorem \ref{thm:concentration}. With high probability, $\max_i \|\widehat{\psi}_i - \psi_i\|_2 \leq c$, so $\|\psi^* - \psi\|_2 \leq 2c + \delta^*$. Thus $|y^* - y| \leq \gamma(2c + \delta^*)$.
+
+By Theorem \ref{thm:concentration}, for $r = \omega(n^3)$ and sufficiently large $n $ and $ r$, the constant $c \leq \text{Poly}_3(({n^3}/{r})^{{1}/{2}-\delta})$ can be made arbitrarily small. 
+
+By Assumption \ref{ass:model-support}, for any $\epsilon' > 0$, there exists $n_0$ such that for $n > n_0$, $P_f(\min_i \|\psi_i - \psi\|_2 < \epsilon') \geq 1 - \eta$ for arbitrarily small $\eta > 0$. Combined with the concentration result, $\delta^* < \epsilon' + 2c$ with high probability.
+
+Therefore, with high probability:
+\begin{equation*}
+|y^* - y| \leq \gamma(2c + \delta^*) < \gamma(4c + \epsilon').
+\end{equation*}
+For any $\epsilon > 0$, choose $c < \epsilon^{1/2}/(8\gamma)$ and $\epsilon' = \epsilon^{1/2}/(2\gamma)$ with $ n $ and $ r $ sufficiently large.
+Then with high probability, $|y^* - y| < \gamma \cdot \epsilon^{1/2}/\gamma = \epsilon^{1/2}$, so $MSE(\hat{y}_{NN}) = \mathbb{E}_{P_f}[(y^* - y)^2] \leq \epsilon$ with high probability.
+
+Thus, if $MSE(\hat{y}_{Q}) > 0$ then there exists $N$ such that for $n > N$, $MSE(\hat{y}_{NN}) < MSE(\hat{y}_{Q})$, establishing query-efficiency.
+\end{proof}
+
+That is, benchmark score prediction using the geometry induced by DKPS using a sufficiently large number of models and cached responses to a subset of benchmark queries is better than using a model’s score on the subset of queries.

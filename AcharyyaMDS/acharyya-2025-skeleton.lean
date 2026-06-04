@@ -13,7 +13,7 @@ It also fixes:
 Deterministic lemma from Appendix A.2 is fully proved.
 All other proofs are either:
 - proved by composing axioms (where the paper cites external results), or
-- left as `axiom` with detailed comments describing the intended proof.
+- left as theorem statements with `sorry` and detailed comments describing the intended proof obligation.
 -/
 
 import Mathlib
@@ -160,13 +160,13 @@ def ConvergesInProbability₀ (P : Measure Ω) {α : Type} [PseudoMetricSpace α
 
 end Prob
 
-/-! # Axioms capturing the cited MDS-stability results ([23]) -/
+/-! # Placeholder theorem statements capturing the cited MDS-stability results ([23]) -/
 
 section Trosset
 
 variable {Ω : Type} [MeasurableSpace Ω]
 
-axiom Trosset_Lemma1
+theorem Trosset_Lemma1
   (P : Measure Ω)
   {n d : ℕ}
   (Dseq : ℕ → Ω → DisMat n)
@@ -179,7 +179,8 @@ axiom Trosset_Lemma1
       ∃ ψ : Fin n → Rvec d,
         ψ ∈ MDS n d Δ∞ ∧
         ∀ i j : Fin n,
-          ConvergesInProbability (Ω:=Ω) P (fun t ω => pairDistErr (ψhat (u t) ω) ψ i j) 0
+          ConvergesInProbability (Ω:=Ω) P (fun t ω => pairDistErr (ψhat (u t) ω) ψ i j) 0 := by
+  sorry
 
 end Trosset
 

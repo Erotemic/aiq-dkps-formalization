@@ -82,7 +82,7 @@ noncomputable def ConfigError {n d : Nat} (ψhat ψ : Config n d) : Real :=
 /--
 High-probability events are monotone under pointwise event inclusion.
 
-Formalized by Codex.
+Formalized by Codex 5.5 High, per user-observed model label.
 -/
 theorem HighProbAtTop.mono {Ω : Type} [MeasurableSpace Ω]
     {P : Nat → Measure Ω} {E F : Nat → Set Ω}
@@ -94,15 +94,76 @@ theorem HighProbAtTop.mono {Ω : Type} [MeasurableSpace Ω]
   exact ⟨N, fun n hn => (hN n hn).trans (MeasureTheory.measure_mono (h_subset n))⟩
 
 /--
+High-probability metric error bounds with deterministic rate tending to zero
+imply convergence in probability.
+
+This wraps the paper-independent real-valued probability lemma in
+`Acharyya2024.WellKnown` into the `ConvergesInProbability` interface used by the
+DKPS scaffolds.
+
+Formalized by Codex 5.5 High, per user-observed model label.
+-/
+theorem ConvergesInProbability.of_highProb_dist_le_rate
+    {Ω α : Type} [MeasurableSpace Ω] [PseudoMetricSpace α]
+    (P : Measure Ω) [IsProbabilityMeasure P]
+    (X : Nat → Ω → α)
+    (x : α)
+    (rate : Nat → Real)
+    (hgood_meas :
+      ∀ n, MeasurableSet {ω | |dist (X n ω) x| ≤ rate n})
+    (hrate : Tendsto rate atTop (𝓝 0))
+    (hgood :
+      HighProbAtTop (fun _n : Nat => P)
+        (fun n => {ω | dist (X n ω) x ≤ rate n})) :
+    ConvergesInProbability P X x := by
+  intro ε hε
+  have h :=
+    tendsto_measure_abs_gt_zero_of_highProb_abs_le_rate P
+    (fun n ω => dist (X n ω) x) rate hgood_meas hrate
+    (HighProbAtTop.mono hgood
+      (fun n ω hω => by
+        simpa [abs_of_nonneg dist_nonneg] using hω))
+  simpa [abs_of_nonneg dist_nonneg] using h ε hε
+
+/--
 Each component error is bounded by the total configuration error.
 
-Formalized by Codex.
+Formalized by Codex 5.5 High, per user-observed model label.
 -/
 theorem norm_config_le_ConfigError {n d : Nat} (ψhat ψ : Config n d) (i : Fin n) :
     ‖ψhat i - ψ i‖ ≤ ConfigError ψhat ψ := by
   classical
   unfold ConfigError
   exact Finset.single_le_sum (fun j _ => norm_nonneg (ψhat j - ψ j)) (Finset.mem_univ i)
+
+/--
+Every entry of a dissimilarity matrix is bounded by its Frobenius norm.
+
+Formalized by Codex 5.5 High, per user-observed model label.
+-/
+theorem abs_entry_le_frob {n : Nat} (A : DisMat n) (i j : Fin n) :
+    |A i j| ≤ frob A := by
+  have hsq_entry_le_row :
+      (A i j)^2 ≤ ∑ j' : Fin n, (A i j')^2 :=
+    Finset.single_le_sum (fun j' _ => sq_nonneg (A i j')) (Finset.mem_univ j)
+  have hsq_entry_le_total :
+      (A i j)^2 ≤ ∑ i' : Fin n, ∑ j' : Fin n, (A i' j')^2 := by
+    exact hsq_entry_le_row.trans
+      (Finset.single_le_sum
+        (fun i' _ => Finset.sum_nonneg fun j' _ => sq_nonneg (A i' j'))
+        (Finset.mem_univ i))
+  unfold frob frobSq
+  exact Real.le_sqrt_of_sq_le (by simpa [sq_abs] using hsq_entry_le_total)
+
+/--
+Every entrywise difference is bounded by the Frobenius norm of the matrix
+difference.
+
+Formalized by Codex 5.5 High, per user-observed model label.
+-/
+theorem abs_entry_sub_le_frobSub {n : Nat} (A B : DisMat n) (i j : Fin n) :
+    |A i j - B i j| ≤ frobSub A B := by
+  simpa [frobSub] using abs_entry_le_frob (fun i j => A i j - B i j) i j
 
 /-! ## Response-matrix dissimilarities -/
 
@@ -127,7 +188,7 @@ Deterministic Appendix A.2 inequality for one dissimilarity entry.
 This is the bridge from response-matrix estimation error to distance-matrix
 estimation error before the probabilistic Markov/union-bound step.
 
-Formalized by Codex.
+Formalized by Codex 5.5 High, per user-observed model label.
 -/
 theorem abs_responseDistEntry_sub_responseDistEntry_le
     {n m p : Nat} (Xbar μ : Fin n → Mat m p) (i j : Fin n) :
@@ -146,7 +207,7 @@ sum of the per-model response-matrix errors.
 This is a finite-dimensional deterministic reduction used before the
 probabilistic part of Theorem 2.
 
-Formalized by Codex.
+Formalized by Codex 5.5 High, per user-observed model label.
 -/
 theorem frobSub_responseDist_le_sum_errors
     {n m p : Nat} (Xbar μ : Fin n → Mat m p) :
@@ -186,11 +247,10 @@ reduction.  It is deliberately stated without probability: probabilistic
 concentration theorems can prove the hypothesis event and then use this lemma to
 propagate that event to the distance-matrix layer.
 
-Formalized by Codex.
+Formalized by Codex 5.5 High, per user-observed model label.
 -/
 theorem frobSub_responseDist_le_of_uniform_errors
     {n m p : Nat} (Xbar μ : Fin n → Mat m p) {η : Real}
-    (hη_nonneg : 0 ≤ η)
     (hη : ∀ i : Fin n, ‖Xbar i - μ i‖ ≤ η) :
     frobSub (responseDist Xbar) (responseDist μ)
       ≤ ((n : Real) * (n : Real)) * (((m : Real)⁻¹) * (2 * η)) := by

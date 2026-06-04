@@ -20,7 +20,9 @@ proofs/
 ├── DkpsQuench/        # lean_lib: ICML Quench companion proof (DKPS)  + prose/
 ├── DrsbBridge/        # lean_lib: DRSB (Schrödinger bridge)           + prose/
 ├── Helm2025/          # lean_lib: HELM-2025 statistical inference      + prose/
-├── AcharyyaMDS/       # lean_lib: Acharyya DKPS/MDS embedding-consistency (shared foundation)
+├── AcharyyaMDS/       # lean_lib: compatibility layer for older Acharyya foundation imports
+├── Acharyya2024/      # lean_lib: Acharyya et al. 2024 DKPS consistency scaffold + prose/
+├── Acharyya2025/      # lean_lib: Acharyya et al. 2025 DKPS concentration scaffold + prose/
 ├── Oneoff/            # lean_lib: small standalone proofs
 └── tensor-programs/   # SEPARATE project (pins Lean v4.27.0) — not in the workspace
 ```
@@ -68,11 +70,22 @@ lake build              # build all libs, or e.g. `lake build DkpsQuench`
 - `old-attempt/` — superseded drafts: `-version1`, `-version2`, `-bounded-envelope`,
   `-bounded-labels`, `-option-B`
 
-### AcharyyaMDS/  (Acharyya DKPS/MDS embedding-consistency — shared foundation)
-- `acharyya-2025-skeleton.lean` — raw-stress MDS / Trosset stability; ψ̂ → ψ consistency
-  (Acharyya et al., "Consistent estimation of generative model representations in the
-  data kernel perspective space"). Underpins both the Quench and HELM-2025 lines; not
-  used directly by either proof yet.
+### Acharyya2024/  (DKPS consistency foundation)
+- `Basic.lean` — entry point.
+- `Common.lean` — shared finite-dimensional DKPS/MDS definitions.
+- `Consistency.lean` — scaffold for Acharyya et al. 2024 consistency theorems.
+- `prose/` — markdown transcription of arXiv:2409.17308.
+- Status: scaffold only; no declaration-level assumptions, open obligations are marked with `sorry`.
+
+### Acharyya2025/  (DKPS concentration foundation)
+- `Basic.lean` — entry point.
+- `Concentration.lean` — scaffold for Acharyya et al. 2025 concentration theorems.
+- `prose/` — markdown transcription of arXiv:2511.08307.
+- Status: scaffold only; no declaration-level assumptions, open obligations are marked with `sorry`.
+
+### AcharyyaMDS/  (compatibility layer for older Acharyya DKPS/MDS imports)
+- `acharyya-2025-skeleton.lean` — retained older raw-stress MDS / Trosset stability scaffold, now using `sorry` rather than declaration-level assumptions.
+- `Basic.lean`, `Common.lean`, `Consistency2024.lean`, `Concentration2025.lean` — compatibility shims to the paper-specific libraries above.
 
 ### Oneoff/  (small standalone proofs)
 - `wikifact_consistency_claim.lean` — `namespace WikiFactNoise` consistency claim

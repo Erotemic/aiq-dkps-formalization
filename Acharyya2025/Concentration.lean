@@ -50,6 +50,10 @@ sample dissimilarity matrix around the population dissimilarity matrix.
 
 This is load-bearing: replacing this `sorry` requires response-average
 concentration plus the induced matrix-norm concentration argument.
+
+Mathematical source/citation:
+- Acharyya, Agterberg, Park, Priebe, "Concentration bounds on response-based
+  vector embeddings of black-box generative models", Theorem 1 and Corollary 1.
 -/
 theorem dissimilarity_matrix_concentrates
   (P : Nat → Measure Ω)
@@ -68,6 +72,16 @@ sample DKPS coordinates are close to population DKPS coordinates up to an allowe
 orthogonal/alignment transformation.
 
 This is the load-bearing spectral step.
+
+Mathematical source/citation:
+- Acharyya, Agterberg, Park, Priebe, Theorem 2 and Appendix A.
+- Yu, Wang, Samworth (2015), "A useful variant of the Davis-Kahan theorem for
+  statisticians", Biometrika 102(2):315-323.
+- Chen, Chi, Fan, Ma et al. (2021), "Spectral Methods for Data Science: A
+  Statistical Perspective", Foundations and Trends in Machine Learning
+  14(5):566-806.
+- Agterberg, Lubberts, Arroyo (2022), decomposition strategy used by Acharyya et
+  al. for CMDS perturbation.
 -/
 theorem classical_mds_embedding_perturbation
   (P : Nat → Measure Ω)
@@ -112,7 +126,7 @@ A paper-faithful version should derive this from
 `dkps_embedding_concentration_scaffold`, plus a componentwise bound and explicit
 probability-measure assumptions.
 
-Formalized by Codex.
+Formalized by Codex 5.5 High, per user-observed model label.
 -/
 theorem quench_style_uniform_embedding_error
   (P : Nat → Measure Ω)

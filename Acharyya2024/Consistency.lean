@@ -33,6 +33,10 @@ MDS configurations have a convergent subsequence whose pairwise distances match 
 limiting MDS solution.
 
 This is load-bearing: replacing this `sorry` requires the MDS stability proof.
+
+Mathematical source/citation:
+- Trosset and Priebe, "Continuous multidimensional scaling", cited as Theorem 2
+  in Acharyya et al. 2024, Appendix A.1/A.2.
 -/
 theorem rawStress_mds_stability
   (P : Measure Ω)
@@ -78,6 +82,11 @@ population limiting dissimilarity matrix.
 
 This is load-bearing: replacing this `sorry` requires the variance, trace,
 Markov/union-bound, and query-growth formalization.
+
+Mathematical source/citation:
+- Acharyya, Trosset, Priebe, Helm, "Consistent estimation of generative model
+  representations in the data kernel perspective space", Theorem 2 and Appendix
+  A.2.
 -/
 theorem growing_queries_dissimilarity_converges
   (P : Measure Ω)
@@ -110,19 +119,34 @@ theorem fixed_models_growing_queries_consistency
 A deliberately abstract statement for the growing-model regime.
 
 The paper's final regime involves a triangular array of model sets and query sets.
-This theorem records the shape downstream users usually need: along a subsequence,
-all finite pairwise distances in the estimated configuration converge to the
-corresponding limiting distances.
+This theorem records the shape downstream users usually need: for each finite
+stage `k`, along one shared subsequence of sampling/query budgets, the estimated
+MDS pairwise distances converge in probability to pairwise distances in an MDS
+configuration for the limiting `k`-model dissimilarity matrix.
 
 This is load-bearing and currently only a target statement.
+
+Mathematical source/citation:
+- Acharyya, Trosset, Priebe, Helm, "Consistent estimation of generative model
+  representations in the data kernel perspective space", Theorem 4 and Appendix
+  A.3.
 -/
 theorem growing_models_growing_queries_consistency
   (P : Measure Ω)
   (d : Nat)
   (nOf : Nat → Nat)
   (Dseq : Nat → Ω → (k : Nat) → DisMat (nOf k))
-  (DeltaInf : (k : Nat) → DisMat (nOf k)) :
-  ∃ u : Nat → Nat, Subseq u := by
+  (DeltaInf : (k : Nat) → DisMat (nOf k))
+  (ψhat : Nat → Ω → (k : Nat) → Config (nOf k) d)
+  (hψhat : ∀ r ω k, ψhat r ω k ∈ MDS (nOf k) d (Dseq r ω k)) :
+  ∃ u : Nat → Nat,
+    Subseq u ∧
+    ∀ k : Nat,
+      ∃ ψ : Config (nOf k) d,
+        ψ ∈ MDS (nOf k) d (DeltaInf k) ∧
+        ∀ i j : Fin (nOf k),
+          ConvergesInProbability P
+            (fun t ω => pairDistErr (ψhat (u t) ω k) ψ i j) 0 := by
   sorry
 
 end Acharyya2024.Consistency

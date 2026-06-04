@@ -1,0 +1,217 @@
+/-
+Deterministic bridges from the Acharyya DKPS concentration scaffolds to the
+Helm et al. 2025 alignment-consistency interface.
+
+The probability/convergence bridge still needs measurability and fixed-measure
+bookkeeping.  This file isolates the theorem that does not need those analytic
+assumptions: Acharyya-style finite configuration error controls Helm's finite
+sample `iSup` alignment error.
+-/
+
+import Acharyya2025.Bridge
+import Helm2025.Basic
+
+open scoped BigOperators Topology
+open Filter MeasureTheory
+
+namespace Helm2025.DKPS.AcharyyaBridge
+
+open Acharyya2024
+
+variable {Ω : Type} [MeasurableSpace Ω]
+
+/--
+Acharyya finite-configuration error controls Helm's samplewise alignment error
+for the identity alignment.
+
+This is the deterministic core needed before upgrading an Acharyya-style
+high-probability configuration bound into Helm's `DKPSAlignmentConsistency`.
+
+Formalized by Codex 5.5 High, per user-observed model label.
+-/
+theorem sample_alignment_iSup_le_configError
+    {n d d' : Nat}
+    (ψhat : (Sample n d d') → Fin (n + 1) → E d)
+    (ω : Sample n d d') :
+    (⨆ i : Fin (n + 1), dist (ψhat ω i) ((ω i).1))
+      ≤ ConfigError (ψhat ω) (fun i : Fin (n + 1) => (ω i).1) := by
+  exact ciSup_le fun i => by
+    simpa [dist_eq_norm] using
+      norm_config_le_ConfigError (ψhat ω) (fun i : Fin (n + 1) => (ω i).1) i
+
+/--
+The finite-sample Helm alignment error is nonnegative.
+
+Formalized by Codex 5.5 High, per user-observed model label.
+-/
+theorem sample_alignment_iSup_nonneg
+    {n d d' : Nat}
+    (ψhat : (Sample n d d') → Fin (n + 1) → E d)
+    (ω : Sample n d d') :
+    0 ≤ (⨆ i : Fin (n + 1), dist (ψhat ω i) ((ω i).1)) := by
+  have hle :
+      dist (ψhat ω (Fin.last n)) ((ω (Fin.last n)).1)
+        ≤ (⨆ i : Fin (n + 1), dist (ψhat ω i) ((ω i).1)) :=
+    le_ciSup
+      (Finite.bddAbove_range
+        (fun i : Fin (n + 1) => dist (ψhat ω i) ((ω i).1)))
+      (Fin.last n)
+  exact dist_nonneg.trans hle
+
+/--
+Event-level bridge from an Acharyya-style configuration-error event to Helm's
+sample-alignment-error event.
+
+Formalized by Codex 5.5 High, per user-observed model label.
+-/
+theorem sample_alignment_event_of_configError_event
+    {n d d' : Nat}
+    (ψhat : Nat → (Sample n d d') → Fin (n + 1) → E d)
+    (rate : Nat → Real)
+    (u : Nat) :
+    {ω : Sample n d d' |
+      ConfigError (ψhat u ω) (fun i : Fin (n + 1) => (ω i).1) ≤ rate u}
+      ⊆
+    {ω : Sample n d d' |
+      (⨆ i : Fin (n + 1), dist (ψhat u ω i) ((ω i).1)) ≤ rate u} := by
+  intro ω hω
+  exact (sample_alignment_iSup_le_configError (ψhat u) ω).trans hω
+
+/--
+Event-level bridge from an Acharyya-style configuration-error event to the
+absolute-value event used by Helm's convergence-in-probability definition.
+
+Formalized by Codex 5.5 High, per user-observed model label.
+-/
+theorem sample_alignment_abs_event_of_configError_event
+    {n d d' : Nat}
+    (ψhat : Nat → (Sample n d d') → Fin (n + 1) → E d)
+    (rate : Nat → Real)
+    (u : Nat) :
+    {ω : Sample n d d' |
+      ConfigError (ψhat u ω) (fun i : Fin (n + 1) => (ω i).1) ≤ rate u}
+      ⊆
+    {ω : Sample n d d' |
+      |(⨆ i : Fin (n + 1), dist (ψhat u ω i) ((ω i).1))| ≤ rate u} := by
+  intro ω hω
+  change |(⨆ i : Fin (n + 1), dist (ψhat u ω i) ((ω i).1))| ≤ rate u
+  rw [abs_of_nonneg (sample_alignment_iSup_nonneg (ψhat u) ω)]
+  exact (sample_alignment_iSup_le_configError (ψhat u) ω).trans hω
+
+/--
+High-probability event bridge from Acharyya-style finite configuration
+concentration to Helm-style finite sample alignment-error concentration.
+
+This deliberately stays at the high-probability event layer.  The next formal
+bridge to `DKPSAlignmentConsistency` should add the fixed product measure,
+measurability, and `rate → 0` assumptions needed to turn these events into
+convergence in probability.
+
+Formalized by Codex 5.5 High, per user-observed model label.
+-/
+theorem highProb_sample_alignment_of_configError
+    {n d d' : Nat}
+    (P : Nat → Measure (Sample n d d'))
+    (ψhat : Nat → (Sample n d d') → Fin (n + 1) → E d)
+    (rate : Nat → Real)
+    (hconfig :
+      HighProbAtTop P
+        (fun u =>
+          {ω : Sample n d d' |
+            ConfigError (ψhat u ω) (fun i : Fin (n + 1) => (ω i).1) ≤ rate u})) :
+    HighProbAtTop P
+      (fun u =>
+        {ω : Sample n d d' |
+          (⨆ i : Fin (n + 1), dist (ψhat u ω i) ((ω i).1)) ≤ rate u}) := by
+  exact HighProbAtTop.mono hconfig
+    (fun u => sample_alignment_event_of_configError_event ψhat rate u)
+
+/--
+High-probability event bridge for the absolute-value version of the Helm sample
+alignment error.
+
+Formalized by Codex 5.5 High, per user-observed model label.
+-/
+theorem highProb_abs_sample_alignment_of_configError
+    {n d d' : Nat}
+    (P : Nat → Measure (Sample n d d'))
+    (ψhat : Nat → (Sample n d d') → Fin (n + 1) → E d)
+    (rate : Nat → Real)
+    (hconfig :
+      HighProbAtTop P
+        (fun u =>
+          {ω : Sample n d d' |
+            ConfigError (ψhat u ω) (fun i : Fin (n + 1) => (ω i).1) ≤ rate u})) :
+    HighProbAtTop P
+      (fun u =>
+        {ω : Sample n d d' |
+          |(⨆ i : Fin (n + 1), dist (ψhat u ω i) ((ω i).1))| ≤ rate u}) := by
+  exact HighProbAtTop.mono hconfig
+    (fun u => sample_alignment_abs_event_of_configError_event ψhat rate u)
+
+/--
+High-probability Acharyya-style finite configuration concentration with a
+deterministic rate tending to zero gives Helm's finite-sample alignment error
+convergence in probability.
+
+The measurability hypothesis is the genuine remaining analytic bridge needed to
+turn event-level high-probability control into convergence in probability.
+
+Formalized by Codex 5.5 High, per user-observed model label.
+-/
+theorem sample_alignment_convergesInProbabilityToZero_of_highProb_configError
+    {n d d' : Nat}
+    (P : Measure (Sample n d d')) [IsProbabilityMeasure P]
+    (ψhat : Nat → (Sample n d d') → Fin (n + 1) → E d)
+    (rate : Nat → Real)
+    (hgood_meas :
+      ∀ u, MeasurableSet
+        {ω : Sample n d d' |
+          |(⨆ i : Fin (n + 1), dist (ψhat u ω i) ((ω i).1))| ≤ rate u})
+    (hrate : Tendsto rate atTop (𝓝 0))
+    (hconfig :
+      HighProbAtTop (fun _u : Nat => P)
+        (fun u =>
+          {ω : Sample n d d' |
+            ConfigError (ψhat u ω) (fun i : Fin (n + 1) => (ω i).1) ≤ rate u})) :
+    ConvergesInProbabilityToZero P
+      (fun u ω => (⨆ i : Fin (n + 1), dist (ψhat u ω i) ((ω i).1))) := by
+  exact tendsto_measure_abs_gt_zero_of_highProb_abs_le_rate P
+    (fun u ω => (⨆ i : Fin (n + 1), dist (ψhat u ω i) ((ω i).1)))
+    rate hgood_meas hrate
+    (highProb_abs_sample_alignment_of_configError
+      (fun _u : Nat => P) ψhat rate hconfig)
+
+/--
+Acharyya-style finite configuration concentration supplies Helm's alignment
+consistency with the identity affine-isometry alignment.
+
+This theorem is the currently cleanest formal seam between Acharyya2025 and
+Helm2025: the remaining hypotheses are rate convergence, rate nonnegativity, and
+measurability of the finite sample alignment events.
+
+Formalized by Codex 5.5 High, per user-observed model label.
+-/
+theorem alignmentConsistency_of_highProb_configError
+    {n d d' : Nat}
+    (P : Measure (Z d d')) [IsProbabilityMeasure P]
+    (ψhat : Nat → (Sample n d d') → Fin (n + 1) → E d)
+    (rate : Nat → Real)
+    (hgood_meas :
+      ∀ u, MeasurableSet
+        {ω : Sample n d d' |
+          |(⨆ i : Fin (n + 1), dist (ψhat u ω i) ((ω i).1))| ≤ rate u})
+    (hrate : Tendsto rate atTop (𝓝 0))
+    (hconfig :
+      HighProbAtTop (fun _u : Nat => Measure.pi (fun _ : Fin (n + 1) => P))
+        (fun u =>
+          {ω : Sample n d d' |
+            ConfigError (ψhat u ω) (fun i : Fin (n + 1) => (ω i).1) ≤ rate u})) :
+    DKPSAlignmentConsistency n d d' P ψhat := by
+  refine ⟨fun _u => AffineIsometryEquiv.refl Real (E d), ?_⟩
+  simpa using
+    sample_alignment_convergesInProbabilityToZero_of_highProb_configError
+      (Measure.pi (fun _ : Fin (n + 1) => P))
+      ψhat rate hgood_meas hrate hconfig
+
+end Helm2025.DKPS.AcharyyaBridge

@@ -50,7 +50,7 @@ noncomputable def classicalMDSMatrix {n : Nat} (D : DisMat n) : DisMat n :=
 /--
 Entrywise perturbations bound perturbations of row means.
 
-Formalized by Codex.
+Formalized by Codex 5.5 High, per user-observed model label.
 -/
 theorem abs_rowMean_sub_le_of_entrywise
     {n : Nat} (hn : 0 < n) {A B : DisMat n} {ε : Real}
@@ -82,7 +82,7 @@ theorem abs_rowMean_sub_le_of_entrywise
 /--
 Entrywise perturbations bound perturbations of column means.
 
-Formalized by Codex.
+Formalized by Codex 5.5 High, per user-observed model label.
 -/
 theorem abs_colMean_sub_le_of_entrywise
     {n : Nat} (hn : 0 < n) {A B : DisMat n} {ε : Real}
@@ -114,7 +114,7 @@ theorem abs_colMean_sub_le_of_entrywise
 /--
 Entrywise perturbations bound perturbations of the grand mean.
 
-Formalized by Codex.
+Formalized by Codex 5.5 High, per user-observed model label.
 -/
 theorem abs_grandMean_sub_le_of_entrywise
     {n : Nat} (hn : 0 < n) {A B : DisMat n} {ε : Real}
@@ -162,7 +162,7 @@ If every entry of `A - B` is bounded by `ε`, then every entry of the centered
 matrices differs by at most `4ε`.  This is the deterministic centering link in
 the DKPS/MDS chain.
 
-Formalized by Codex.
+Formalized by Codex 5.5 High, per user-observed model label.
 -/
 theorem abs_doubleCenter_sub_le_of_entrywise
     {n : Nat} (hn : 0 < n) {A B : DisMat n} {ε : Real}

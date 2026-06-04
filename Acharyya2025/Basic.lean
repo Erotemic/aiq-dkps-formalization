@@ -9,3 +9,6 @@ matrix/configuration definitions only.
 
 import Acharyya2025.Deterministic
 import Acharyya2025.Concentration
+import Acharyya2025.MathlibBridge
+import Acharyya2025.Bridge
+import Acharyya2025.SpectralPipeline

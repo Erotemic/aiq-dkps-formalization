@@ -9,6 +9,7 @@ sample `iSup` alignment error.
 -/
 
 import Acharyya2025.Bridge
+import Acharyya2025.AlignedPipeline
 import Helm2025.Basic
 
 open scoped BigOperators Topology
@@ -213,5 +214,75 @@ theorem alignmentConsistency_of_highProb_configError
     sample_alignment_convergesInProbabilityToZero_of_highProb_configError
       (Measure.pi (fun _ : Fin (n + 1) => P))
       ψhat rate hgood_meas hrate hconfig
+
+/--
+**Helm alignment consistency from the aligned CMDS spectral estimator.**
+
+Helm's population configuration is the *per-`ω`* tuple of latents
+`fun i => (ω i).1`, so the matrix-world capstone (which fixes a single population
+Gram matrix) cannot be instantiated against a single fixed `ψ`.  Instead the
+aligned estimator is evaluated with the ω-dependent population fed in as its `ψ`
+argument:
+`ψhat u ω := alignedSpectralConfig hd Dhat hsym (fun i => (ω i).1) cBound u ω`.
+
+By `configError_alignedSpectralConfig_le`, whenever the alignment isometry exists
+at sample `(u, ω)` against this per-`ω` population (the hypothesis `halign`), the
+estimator achieves `ConfigError ≤ cBound u`.  We transport the high-probability
+alignment-existence event to the high-probability `ConfigError` event and feed it
+to the existing `alignmentConsistency_of_highProb_configError`, discharging Helm's
+`DKPSAlignmentConsistency`.
+
+What is composed: the per-`ω` alignment-existence event is turned into the
+`ConfigError` event by the aligned estimator's defining property.  What is
+hypothesized: the high-probability alignment-existence event `halign` (which the
+capstone produces at each `ω` against a *fixed* population; here the per-`ω`
+population blocks a single capstone call, so it is taken as a hypothesis — this
+is the documented per-`ω`-population seam), the measurability of the sample
+alignment events, and the rate convergence.
+
+Formalized by Claude Fable 5, per user-observed model label (claude-fable-5[1m]).
+-/
+theorem alignmentConsistency_of_aligned_spectral
+    {n d d' : Nat} (hd : d ≤ n + 1)
+    (P : Measure (Z d d')) [IsProbabilityMeasure P]
+    (Dhat : Nat → (Sample n d d') → Acharyya2024.DisMat (n + 1))
+    (hsym : ∀ u ω,
+      (Acharyya2025.MathlibBridge.disMatToMatrix
+        (Acharyya2025.Deterministic.classicalMDSMatrix (Dhat u ω))).IsHermitian)
+    (rate : Nat → Real)
+    (hgood_meas :
+      ∀ u, MeasurableSet
+        {ω : Sample n d d' |
+          |(⨆ i : Fin (n + 1),
+              dist
+                (Acharyya2025.AlignedPipeline.alignedSpectralConfig hd Dhat hsym
+                  (fun i : Fin (n + 1) => (ω i).1) rate u ω i)
+                ((ω i).1))| ≤ rate u})
+    (hrate : Tendsto rate atTop (𝓝 0))
+    (halign :
+      HighProbAtTop (fun _u : Nat => Measure.pi (fun _ : Fin (n + 1) => P))
+        (fun u =>
+          {ω : Sample n d d' |
+            Acharyya2025.AlignedPipeline.AlignExists hd Dhat hsym
+              (fun i : Fin (n + 1) => (ω i).1) rate u ω})) :
+    DKPSAlignmentConsistency n d d' P
+      (fun u ω => Acharyya2025.AlignedPipeline.alignedSpectralConfig hd Dhat hsym
+        (fun i : Fin (n + 1) => (ω i).1) rate u ω) := by
+  -- Transport the alignment-existence HP event to the `ConfigError` HP event.
+  have hconfig :
+      HighProbAtTop (fun _u : Nat => Measure.pi (fun _ : Fin (n + 1) => P))
+        (fun u =>
+          {ω : Sample n d d' |
+            ConfigError
+              (Acharyya2025.AlignedPipeline.alignedSpectralConfig hd Dhat hsym
+                (fun i : Fin (n + 1) => (ω i).1) rate u ω)
+              (fun i : Fin (n + 1) => (ω i).1) ≤ rate u}) := by
+    refine HighProbAtTop.mono halign (fun u ω hω => ?_)
+    exact Acharyya2025.AlignedPipeline.configError_alignedSpectralConfig_le
+      hd Dhat hsym (fun i : Fin (n + 1) => (ω i).1) rate u ω hω
+  exact alignmentConsistency_of_highProb_configError P
+    (fun u ω => Acharyya2025.AlignedPipeline.alignedSpectralConfig hd Dhat hsym
+      (fun i : Fin (n + 1) => (ω i).1) rate u ω)
+    rate hgood_meas hrate hconfig
 
 end Helm2025.DKPS.AcharyyaBridge

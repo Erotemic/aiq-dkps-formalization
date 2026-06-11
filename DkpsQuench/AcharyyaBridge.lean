@@ -10,6 +10,7 @@ configuration.
 -/
 
 import Acharyya2025.Concentration
+import Acharyya2025.AlignedPipeline
 import DkpsQuench.Basic
 
 open scoped BigOperators Topology
@@ -63,5 +64,80 @@ theorem quench_uniform_embedding_error_of_finite_configError
       _ ≤ ConfigError (ψhatFinite u ω) ψFinite :=
             norm_config_le_ConfigError (ψhatFinite u ω) ψFinite (indexOf f)
       _ ≤ c u := hω)
+
+/--
+**Quench uniform embedding error from the aligned CMDS spectral estimator.**
+
+A thin, honest composition: the matrix-world spectral capstone (via
+`Acharyya2025.AlignedPipeline.highProb_aligned_configError_of_entrywise_close`)
+produces a high-probability bound on `ConfigError (alignedSpectralConfig …) ψ`,
+and the existing generic
+`quench_uniform_embedding_error_of_finite_configError` lifts it to Quench's
+uniform model-space embedding-error event, provided the Quench embedding maps
+factor through the finite Acharyya configuration by an index map.
+
+What is composed end-to-end: the entrywise CMDS-closeness HP event `hcenter` is
+fed through the proved capstone to produce the aligned-`ConfigError` HP event,
+which is then transported by the index-map factorization.  What is hypothesized:
+the factorization data (`indexOf`, `hψ`, `hψHat`), the spectral hypotheses of the
+capstone (PSD/rank/floor/cap/smallness/polar), the Gram realization of `ψ`, and
+the entrywise-closeness HP event `hcenter`.
+
+Formalized by Claude Fable 5, per user-observed model label (claude-fable-5[1m]).
+-/
+theorem quench_uniform_embedding_error_of_aligned_spectral
+    (μ : Nat → Measure Ω)
+    (hμ : ∀ k, IsProbabilityMeasure (μ k))
+    {n d : Nat} (hd : d ≤ n)
+    (Dhat : Nat → Ω → Acharyya2024.DisMat n) (D : Acharyya2024.DisMat n)
+    (hsym : ∀ u ω,
+      (Acharyya2025.MathlibBridge.disMatToMatrix
+        (Acharyya2025.Deterministic.classicalMDSMatrix (Dhat u ω))).IsHermitian)
+    (hB : (Acharyya2025.MathlibBridge.disMatToMatrix
+        (Acharyya2025.Deterministic.classicalMDSMatrix D)).PosSemidef)
+    (hrank : (Acharyya2025.MathlibBridge.disMatToMatrix
+        (Acharyya2025.Deterministic.classicalMDSMatrix D)).rank ≤ d)
+    {α Λ : Real} (hα_pos : 0 < α)
+    (hfloor : ∀ i : Fin n, (i : ℕ) < d →
+      α ≤ Acharyya2025.MatrixPerturbation.sortedEigenvalues hB.isHermitian i)
+    (hΛ : ∀ l, Acharyya2025.MatrixPerturbation.sortedEigenvalues hB.isHermitian l ≤ Λ)
+    (ψFinite : Config n d)
+    (hψFinite : ∀ i j, (∑ k, ψFinite i k * ψFinite j k)
+      = Acharyya2025.Deterministic.classicalMDSMatrix D i j)
+    (rate : Nat → Real) (hrate_nonneg : ∀ u, 0 ≤ rate u)
+    (hsmall : ∀ u, (n : Real) * rate u ≤ α / 2)
+    (hpolar : ∀ u, (d : Real) *
+      (4 * (n : Real) * ((n : Real) * rate u)^2 / α^2) ≤ 1/2)
+    (hcenter : Acharyya2024.HighProbAtTop μ (fun u => {ω |
+      Acharyya2025.Bridge.EntrywiseClose
+        (Acharyya2025.Deterministic.classicalMDSMatrix (Dhat u ω))
+        (Acharyya2025.Deterministic.classicalMDSMatrix D) (rate u)}))
+    (indexOf : Model Q X → Fin n)
+    (ψ : Model Q X → Vec d)
+    (ψHat : Nat → Ω → Model Q X → Vec d)
+    (hψ : ∀ f, ψ f = ψFinite (indexOf f))
+    (hψHat : ∀ u ω f, ψHat u ω f =
+      Acharyya2025.AlignedPipeline.alignedSpectralConfig hd Dhat hsym ψFinite
+        (fun u => Acharyya2025.ConfigPerturbation.configBound n d α Λ
+          ((n : Real) * rate u)) u ω (indexOf f)) :
+    _root_.HighProbAtTop μ hμ
+      (fun u => {ω | ∀ f, ‖ψHat u ω f - ψ f‖ ≤
+        Acharyya2025.ConfigPerturbation.configBound n d α Λ
+          ((n : Real) * rate u)}) := by
+  -- Capstone composition: produce the aligned-`ConfigError` HP event.
+  have haligned :=
+    Acharyya2025.AlignedPipeline.highProb_aligned_configError_of_entrywise_close
+      μ hd Dhat D hsym hB hrank hα_pos hfloor hΛ ψFinite hψFinite
+      rate hrate_nonneg hsmall hpolar hcenter
+  -- Lift through the index-map factorization with the existing generic theorem.
+  exact quench_uniform_embedding_error_of_finite_configError
+    μ hμ indexOf ψFinite
+    (Acharyya2025.AlignedPipeline.alignedSpectralConfig hd Dhat hsym ψFinite
+      (fun u => Acharyya2025.ConfigPerturbation.configBound n d α Λ
+        ((n : Real) * rate u)))
+    ψ ψHat
+    (fun u => Acharyya2025.ConfigPerturbation.configBound n d α Λ
+      ((n : Real) * rate u))
+    hψ hψHat haligned
 
 end DkpsQuench.AcharyyaBridge

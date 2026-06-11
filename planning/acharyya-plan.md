@@ -210,10 +210,65 @@ Triangular-array Thm 4/5 statement repair (probability hypotheses per stage k);
 derive from WP2 machinery + diagonal subsequence extraction. The continuous-MDS
 (Lemma 2/[23] Thm 3) part stays a cited seam.
 
-### WP9 — Trosset–Priebe raw-stress stability assessment
-Likely outcome: keep as cited seam. Partial targets that are honest progress:
-existence of raw-stress minimizers over centered configurations (coercivity +
-compactness), and lower semicontinuity of the stress. Decide after WP2–WP7.
+### WP9 — Trosset–Priebe raw-stress stability: ATTACK DESIGN (2026-06-11)
+
+The bridge is done, so this is now the last hard theorem. Decompose into a
+fully-provable DETERMINISTIC core plus a smaller probabilistic seam.
+
+Deterministic core (new file `Acharyya2024/RawStress.lean`):
+* (a) **√-stress is 1-Lipschitz in the dissimilarity**: viewing
+  `rawStress Δ z = Σᵢⱼ (‖zᵢ−zⱼ‖ − Δᵢⱼ)²` as a squared `ℓ²(pairs)` distance,
+  `|√(rawStress Δ z) − √(rawStress Δ' z)| ≤ frobSub Δ Δ'` (Minkowski on
+  `EuclideanSpace ℝ (Fin n × Fin n)`). This single inequality replaces all
+  ε-δ continuity-in-Δ bookkeeping.
+* (b) **Existence of minimizers**: `(MDS n d Δ).Nonempty`.
+  Stress is translation-invariant (depends on differences), so minimize over
+  CENTERED configs (Σᵢ zᵢ = 0). Coercivity: stress ≥ (‖zᵢ−zⱼ‖ − Δᵢⱼ)² forces
+  bounded pairwise distances on sublevel sets; centered + bounded pair dists ⇒
+  ‖zᵢ‖ ≤ maxⱼ‖zᵢ−zⱼ‖ (mean of differences). So sublevel ∩ centered is closed
+  bounded ⇒ compact (fin dim) ⇒ `IsCompact.exists_isMinOn` with continuity of
+  stress in z. Minimizing over the compact set = global inf by translation
+  invariance + coercive radius.
+* (c) **Deterministic stability**: if `frobSub (D k) Δ → 0` and
+  `z k ∈ MDS n d (D k)` with each `z k` centered, then a subsequence of `z`
+  converges to some `ψ ∈ MDS n d Δ`, hence all pairwise distances converge.
+  Proof: √stress(Δ, z k) ≤ √stress(D k, z k) + ‖D k − Δ‖ ≤
+  √stress(D k, ψ₀) + ‖·‖ ≤ √stress(Δ, ψ₀) + 2‖D k − Δ‖ (minimality + (a)
+  twice), so stress(Δ, z k) → inf and the z k eventually lie in a fixed
+  compact sublevel set; extract a convergent subsequence
+  (`IsCompact.tendsto_subseq`), the limit attains the inf by continuity.
+
+Probabilistic upgrade (REMAINS A SEAM, scoped): in-probability dissimilarity
+convergence ⇒ a.s. convergence along a subsequence
+(`MeasureTheory.TendstoInMeasure.exists_seq_tendsto_ae` exists in Mathlib),
+then the deterministic core applies ω-wise — but the extracted subsequence
+and limit configuration are ω-DEPENDENT, while the paper's Theorem 1 asserts a
+single subsequence and a fixed ψ ∈ MDS(Δ). Whether the legacy
+`rawStress_mds_stability` statement (fixed ψ, convergence in probability of
+`pairDistErr`) is exactly true requires a measurable-selection argument that
+the paper does not spell out — watch-list item; the deterministic core is the
+honest provable content now.
+
+### WP6-core — matrix-world capstone (transport layer)
+To make `ConfigPerturbation` consumable by the legacy DKPS pipeline
+(`classicalMDSMatrix` events from Bridge.lean), prove in a new file
+`Acharyya2025/MatrixPerturbation.lean`:
+* Transport of spectral hypotheses matrix → operator: for `B : SqMat n`
+  PSD with `B.rank ≤ d`, the operator `toEuclideanLin B` is symmetric with
+  nonneg sorted eigenvalues, trailing sorted eigenvalues (index ≥ d) ZERO
+  (#nonzero = rank for symmetric operators — derive from
+  `Matrix.IsHermitian.rank_eq_card_non_zero_eigs` + a sorted/unsorted
+  permutation argument, or reprove operator-side: rank = finrank of range,
+  range = span of eigenvectors with nonzero eigenvalues), and the floor
+  `α ≤ λᵢ` for `i < d` from a matrix-side floor hypothesis.
+* `Gram(spectralConfig T) = B` when trailing eigenvalues vanish (spectral
+  expansion `B i j = ⟪eᵢ, T eⱼ⟫ = Σ λₖ uₖ(i) uₖ(j)`, top-d only).
+* Matrix-world corollary of `exists_isometry_configError_spectralConfig_le`:
+  entrywise-close CMDS matrices (the Bridge.lean event) + PSD/rank/floor on
+  the population ⇒ ∃ isometry W, ConfigError(W∘ψ̂, ψ) ≤ explicit bound, where
+  ψ is ANY Gram realization of B (via WP4 Procrustes rigidity to move from
+  spectralConfig T to ψ).
+Then the legacy seams #5/#6/#9 can be re-derived (WP6 proper).
 
 ### WP10 — iid second-moment lemma (connects WP2's `v(r)` to the paper's γ/r)
 `E‖(1/r)Σₖ Xₖ − μ‖² = trace(Σ)/r` for iid square-integrable vector RVs,

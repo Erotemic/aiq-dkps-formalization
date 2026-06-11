@@ -1,162 +1,157 @@
 # AIQ DKPS Formalization
 
-This repository contains Lean 4 formalizations for four DKPS-related theorem
-developments:
+Lean 4 formalizations for response-based embeddings of black-box generative
+models, centered on the data kernel perspective space (DKPS) and the
+multidimensional-scaling / spectral-perturbation infrastructure needed to make
+those theorem statements precise.
 
-- `Acharyya2024` — asymptotic DKPS / raw-stress MDS consistency.
-- `Acharyya2025` — finite-sample DKPS concentration and aligned spectral
-  perturbation bounds.
-- `DkpsQuench` — a conditional query-efficiency theorem for DKPS-based model
-  selection, with an Acharyya2025 bridge.
-- `Helm2025` — a conditional statistical-inference transfer theorem, with an
-  Acharyya2025 bridge.
+This repository focuses on four active Lean libraries:
 
-The repository is a filtered standalone extraction from a larger research
-workspace. The active Lean libraries are at the repository root; historical
-commit history for the retained files has been preserved where possible.
+| Library        | Role                                                                                                                    |
+| -------------- | ------------------------------------------------------------------------------------------------------------------------|
+| `Acharyya2024` | Asymptotic DKPS/raw-stress MDS consistency for model representations.                                                   |
+| `Acharyya2025` | Finite-sample concentration for response-based vector embeddings, including a proved CMDS spectral perturbation bridge. |
+| `DkpsQuench`   | Query-efficiency theorem layer for DKPS-based benchmark prediction from cached responses.                               |
+| `Helm2025`     | Transfer of statistical-inference guarantees from population DKPS embeddings to estimated/aligned embeddings.           |
 
-## Quick start
+The active libraries formalize more than paper-facing wrappers.  They include
+supporting mathematics for raw-stress multidimensional scaling, classical MDS
+double-centering, finite-dimensional spectral perturbation, Procrustes/alignment
+bookkeeping, sample-mean concentration, high-probability event propagation, and
+consistency transfer.
 
-Install or verify Lean/Lake:
+## Repository layout
+
+```text
+.
+├── Acharyya2024.lean      # root module for the 2024 consistency library
+├── Acharyya2024/          # raw-stress MDS, probability, second moments, paper-facing consistency
+├── Acharyya2025.lean      # root module for the 2025 concentration library
+├── Acharyya2025/          # CMDS, Weyl/Davis-Kahan/Procrustes, aligned finite-sample rates
+├── DkpsQuench.lean        # root module for the cached-response query-efficiency layer
+├── DkpsQuench/            # theorem statements plus bridge from Acharyya2025 concentration
+├── Helm2025.lean          # root module for the statistical-inference transfer layer
+├── Helm2025/              # population/estimated DKPS transfer theorem statements and bridge
+├── planning/              # current polishing notes and Mathlib-extraction candidates
+├── lakefile.toml          # Lake workspace for the four active libraries
+├── lake-manifest.json     # pinned dependency manifest
+└── lean-toolchain         # Lean toolchain pin
+```
+
+The sidecar files such as `Acharyya2025.lean` are normal Lean root modules.  The
+subdirectory files are imported as submodules, for example
+`Acharyya2025.RateChain`.
+
+## Fresh environment
+
+In a fresh environment you will need to setup Lean4, see:
 
 ```bash
 ./setup_lean.sh
 ```
 
-Fetch Mathlib cache and build the active libraries:
+## Build
 
 ```bash
 lake exe cache get
 lake build Acharyya2024 Acharyya2025 DkpsQuench Helm2025
 ```
 
-The project is pinned by `lean-toolchain` and `lake-manifest.json`. At the time
-of this extraction, the toolchain is:
+To build everything declared in `lakefile.toml`:
 
-```text
-leanprover/lean4:v4.28.0-rc1
+```bash
+lake build
 ```
 
-## Repository layout
-
-```text
-.
-├── lakefile.toml
-├── lake-manifest.json
-├── lean-toolchain
-├── setup_lean.sh
-├── Acharyya2024.lean
-├── Acharyya2024/
-├── Acharyya2025.lean
-├── Acharyya2025/
-├── DkpsQuench.lean
-├── DkpsQuench/
-├── Helm2025.lean
-├── Helm2025/
-├── AcharyyaMDS/
-└── planning/
-```
-
-`AcharyyaMDS/` is retained as an older compatibility layer for prior Acharyya
-DKPS/MDS imports and notes. It is useful context, but the publication-facing
-build targets are the four libraries listed above.
-
-Some directories may contain archived drafts under `old-attempt/`. Those files
-are retained for provenance only and are not imported by the active library
-entry points.
-
-## Project status
+## Formalization scope
 
 ### `Acharyya2024`
 
-Formalizes the DKPS consistency layer associated with:
-
-> Acharyya, Trosset, Priebe, Helm. *Consistent estimation of generative model
-> representations in the data kernel perspective space*. arXiv:2409.17308.
-
-The active library proves the repaired asymptotic/raw-stress MDS consistency
-statements with explicit hypotheses. The current paper-facing entry point is
-`Acharyya2024.lean`, which imports `Acharyya2024.Basic`.
-
-Important modules include:
-
-- `Acharyya2024/Common.lean` — finite-dimensional DKPS/MDS definitions.
-- `Acharyya2024/Probability.lean` — Chebyshev and union-bound probability step.
-- `Acharyya2024/SecondMoment.lean` — iid sample-mean second-moment algebra.
-- `Acharyya2024/RawStress.lean` — raw-stress stability toolkit.
-- `Acharyya2024/Consistency.lean` — paper-facing consistency theorem shapes.
+Formalizes the consistency layer for generative-model representations in DKPS.
+The library includes finite-dimensional DKPS/MDS definitions, second-moment
+sample-mean algebra, probability bounds via Chebyshev and union bounds,
+raw-stress stability, and repaired paper-facing consistency statements with
+explicit hypotheses for uniqueness and sampling/limit behavior.
 
 ### `Acharyya2025`
 
-Formalizes the finite-sample DKPS concentration and aligned spectral pipeline
-associated with:
-
-> Acharyya, Agterberg, Park, Priebe. *Concentration bounds on response-based
-> vector embeddings of black-box generative models*. arXiv:2511.08307.
-
-This is the main linear-algebra and spectral-perturbation layer used by the
-bridges into `DkpsQuench` and `Helm2025`. The current entry point is
-`Acharyya2025.lean`, which imports `Acharyya2025.Basic`.
-
-Important modules include:
-
-- `Acharyya2025/Bridge.lean` — deterministic and high-probability event
-  propagation from response means to CMDS inputs.
-- `Acharyya2025/Weyl.lean` and `Acharyya2025/DavisKahan.lean` — spectral
-  perturbation lemmas.
-- `Acharyya2025/ConfigPerturbation.lean` — aligned configuration perturbation.
-- `Acharyya2025/AlignedPipeline.lean` — choice-based aligned spectral estimator
-  and high-probability aligned error theorem.
-- `Acharyya2025/RateChain.lean` — explicit end-to-end rate composition.
+Formalizes a finite-sample concentration chain for response-based vector
+embeddings.  Beyond the probability step, this library proves an aligned
+classical-MDS perturbation pipeline: double-centering stability,
+entrywise-to-operator transport, Weyl-style spectral perturbation,
+Davis-Kahan-style subspace control, Procrustes/Gram realization facts,
+quantitative polar alignment, and an explicit end-to-end rate chain.
 
 ### `DkpsQuench`
 
-Contains the DKPS query-efficiency formalization and its bridge to the
-Acharyya2025 concentration layer. The current entry point is `DkpsQuench.lean`,
-which imports:
-
-- `DkpsQuench.Basic`
-- `DkpsQuench.AcharyyaBridge`
-
-The theorem layer is intentionally conditional: assumptions such as Lipschitz
-score behavior, support/cover conditions, finite factorization, and uniform
-embedding concentration are made explicit rather than hidden.
+Formalizes the conditional query-efficiency theorem layer for benchmark-score
+prediction from cached model responses.  The bridge file connects the
+finite-configuration concentration result from `Acharyya2025` to the uniform
+embedding-error hypotheses used by the query-efficiency argument.
 
 ### `Helm2025`
 
-Contains the statistical-inference transfer formalization and its bridge to the
-Acharyya2025 concentration layer. The current entry point is `Helm2025.lean`,
-which imports:
+Formalizes transfer results for statistical inference on black-box generative
+models in DKPS.  The bridge file connects `Acharyya2025` aligned finite-sample
+concentration to estimated-embedding alignment events and consistency
+hypotheses used by the inference layer.
 
-- `Helm2025.Basic`
-- `Helm2025.AcharyyaBridge`
+## References
 
-The theorem layer states sufficient analytic conditions explicitly, including
-boundedness, continuity, measurability, and alignment-consistency hypotheses.
+### Direct theorem targets
 
-## Suggested verification checks
+- Aranyak Acharyya, Michael W. Trosset, Carey E. Priebe, and Hayden S. Helm.
+  *Consistent estimation of generative model representations in the data kernel
+  perspective space*. arXiv:2409.17308, 2024.
 
-Build the active libraries:
+- Aranyak Acharyya, Joshua Agterberg, Youngser Park, and Carey E. Priebe.
+  *Concentration bounds on response-based vector embeddings of black-box
+  generative models*. arXiv:2511.08307, 2025.
 
-```bash
-lake build Acharyya2024 Acharyya2025 DkpsQuench Helm2025
-```
+- Hayden S. Helm, Aranyak Acharyya, Youngser Park, Brandon Duderstadt, and
+  Carey E. Priebe. *Statistical inference on black-box generative models in the
+  data kernel perspective space*. Findings of ACL, 2025.
 
-Check for active proof placeholders in the four publication-facing libraries:
+- Hayden Helm, Ben Johnson, and Carey Priebe. *Query-efficient model evaluation
+  using cached responses*. arXiv:2605.07096, 2026.
 
-```bash
-grep -RInE '\b(sorry|admit|axiom)\b|sorryAx' \
-  Acharyya2024 Acharyya2025 DkpsQuench Helm2025 \
-  --include='*.lean' \
-  --exclude-dir='old-attempt'
-```
+### DKPS and response-based model embeddings
 
-After history-surgery passes, rerun your local filename/content audits for any excluded topics and confirm that the only remaining files are the four active libraries, retained Acharyya compatibility material, build metadata, setup scripts, and documentation you intentionally kept.
+- Brandon Duderstadt, Hayden S. Helm, and Carey E. Priebe. *Comparing
+  Foundation Models using Data Kernels*. arXiv:2305.05126, 2023.
 
-## Notes for maintainers
+- Hayden Helm, Brandon Duderstadt, Youngser Park, and Carey Priebe. *Tracking
+  the perspectives of interacting language models*. EMNLP, 2024.
 
-- Prefer building named targets rather than relying on historical default-target
-  configuration during transition periods.
-- Keep archival drafts out of the active import graph.
-- When changing history, make a backup copy first and audit both filenames and
-  blob contents across reachable commits.
+### Multidimensional scaling and alignment
+
+- Warren S. Torgerson. *Multidimensional Scaling: I. Theory and Method*.
+  Psychometrika, 17(4):401-419, 1952.
+
+- J. C. Gower. *Some Distance Properties of Latent Root and Vector Methods Used
+  in Multivariate Analysis*. Biometrika, 53(3-4):325-338, 1966.
+
+- J. B. Kruskal. *Multidimensional scaling by optimizing goodness of fit to a
+  nonmetric hypothesis*. Psychometrika, 29:1-27, 1964.
+
+- Michael W. Trosset and Carey E. Priebe. *Continuous Multidimensional
+  Scaling*. arXiv:2402.04436, 2024.
+
+- Anna Little, Yuying Xie, and Qiang Sun. *An Analysis of Classical
+  Multidimensional Scaling with Applications to Clustering*. Information and
+  Inference: A Journal of the IMA, 12(1):72-112, 2023.
+
+- Colin Goodall. *Procrustes Methods in the Statistical Analysis of Shape*.
+  Journal of the Royal Statistical Society, Series B, 53(2):285-321, 1991.
+
+### Spectral perturbation
+
+- Chandler Davis and W. M. Kahan. *The Rotation of Eigenvectors by a
+  Perturbation. III*. SIAM Journal on Numerical Analysis, 7(1):1-46, 1970.
+
+- Yi Yu, Tengyao Wang, and Richard J. Samworth. *A useful variant of the
+  Davis-Kahan theorem for statisticians*. Biometrika, 102(2):315-323, 2015.
+
+- Yuxin Chen, Yuejie Chi, Jianqing Fan, and Cong Ma. *Spectral Methods for Data
+  Science: A Statistical Perspective*. Foundations and Trends in Machine
+  Learning, 14(5):566-806, 2021.

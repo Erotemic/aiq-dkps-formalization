@@ -1,95 +1,162 @@
-# Proofs
+# AIQ DKPS Formalization
 
-Lean4 (+ prose) formalizations, organized as **one Lake workspace with a
-separate library per thrust**. Most of these come from TA1 theory-team results
-(TA2 evaluation work). This is an exploration scratchpad.
+This repository contains Lean 4 formalizations for four DKPS-related theorem
+developments:
 
-Within each library, the **active** working file(s) live at the library root
-(named `Basic.lean` where there's a single current version), and superseded
-drafts are sequestered under an `old-attempt/` subfolder so they don't get
-confused with the current work.
+- `Acharyya2024` — asymptotic DKPS / raw-stress MDS consistency.
+- `Acharyya2025` — finite-sample DKPS concentration and aligned spectral
+  perturbation bounds.
+- `DkpsQuench` — a conditional query-efficiency theorem for DKPS-based model
+  selection, with an Acharyya2025 bridge.
+- `Helm2025` — a conditional statistical-inference transfer theorem, with an
+  Acharyya2025 bridge.
 
-## Layout
+The repository is a filtered standalone extraction from a larger research
+workspace. The active Lean libraries are at the repository root; historical
+commit history for the retained files has been preserved where possible.
 
-```
-proofs/
-├── lakefile.toml      # umbrella workspace: one lean_lib per thrust, shared Mathlib
-├── lean-toolchain     # v4.28.0-rc1 (shared by all libs below)
-├── lake-manifest.json
-├── .lake/             # single shared Mathlib build — no per-project duplication
-├── DkpsQuench/        # lean_lib: ICML Quench companion proof (DKPS)  + prose/
-├── DrsbBridge/        # lean_lib: DRSB (Schrödinger bridge)           + prose/
-├── Helm2025/          # lean_lib: HELM-2025 statistical inference      + prose/
-├── AcharyyaMDS/       # lean_lib: compatibility layer for older Acharyya foundation imports
-├── Acharyya2024/      # lean_lib: Acharyya et al. 2024 DKPS consistency scaffold + prose/
-├── Acharyya2025/      # lean_lib: Acharyya et al. 2025 DKPS concentration scaffold + prose/
-├── Oneoff/            # lean_lib: small standalone proofs
-└── tensor-programs/   # SEPARATE project (pins Lean v4.27.0) — not in the workspace
-```
+## Quick start
 
-The v4.28 thrusts live in a single Lake workspace so they share one Mathlib
-checkout/build instead of compiling it once per project. Each library is
-self-contained in its own root directory, so any one can be **lifted into a
-standalone project later** by moving its directory out and giving it its own
-`lakefile.toml` + `lean-toolchain` + `lake-manifest.json` (copy them from here).
-
-`tensor-programs/` is intentionally kept separate: it pins a different toolchain
-(v4.27.0) and so cannot share this build.
-
-## Building
+Install or verify Lean/Lake:
 
 ```bash
-cd proofs
-lake exe cache get      # fetch prebuilt Mathlib once for the whole workspace
-lake build              # build all libs, or e.g. `lake build DkpsQuench`
+./setup_lean.sh
 ```
 
-> Note: many source filenames contain `-`/`.` (e.g. `drsb-v3.1.lean`), which are
-> not valid Lean module names, so `lake build` will not pick them up as library
-> modules. To check an individual draft, open it in the Lean LSP or run
-> `lake env lean DkpsQuench/Basic.lean`.
+Fetch Mathlib cache and build the active libraries:
 
-## File inventory
+```bash
+lake exe cache get
+lake build Acharyya2024 Acharyya2025 DkpsQuench Helm2025
+```
 
-### DkpsQuench/  (ICML Quench / DKPS)
-- `Basic.lean` — **active** working proof (was `dkps-v4.lean`)
-- `prose/` — ICML Quench paper source (`quench-tex-src/`, transcription `.md`)
-- `old-attempt/` — superseded drafts: `quench-query-efficiency`, `dkps-statement-v4/v5`,
-  `dkps-v2`, `dkps-v4` (= `Basic.lean`), `dkps-aristotle-v2-121013(+gpt-revision)`,
-  `dkps-gpt-pro-v1/v2`, `negated-2026-02-14-011207`, `checks`
+The project is pinned by `lean-toolchain` and `lake-manifest.json`. At the time
+of this extraction, the toolchain is:
 
-### DrsbBridge/  (DRSB / Schrödinger bridge)
-- `drsb-v1.lean` — **active**: compiles, but may not match the prose claim
-- `drsb-v4.lean` — **active**: pushing for the full proof (not complete yet)
-- `prose/` — `main.tex` (annotated transcription), `orig-transcription.tex`, `suggested-fixes.tex` (PAC-Bayes bound for DRSB)
-- `old-attempt/` — superseded drafts: `drsb-v2`, `drsb-v3`, `drsb-v3.1`
+```text
+leanprover/lean4:v4.28.0-rc1
+```
 
-### Helm2025/  (HELM-2025)
-- `Basic.lean` — **active** working proof (was `helm-2025-stat-inference-dkps.lean`)
-- `prose/` — ACL paper source (`statistical-black-box-dkps-tex-src/`, transcription `.md`)
-- `old-attempt/` — superseded drafts: `-version1`, `-version2`, `-bounded-envelope`,
-  `-bounded-labels`, `-option-B`
+## Repository layout
 
-### Acharyya2024/  (DKPS consistency foundation)
-- `Basic.lean` — entry point.
-- `Common.lean` — shared finite-dimensional DKPS/MDS definitions.
-- `Consistency.lean` — scaffold for Acharyya et al. 2024 consistency theorems.
-- `prose/` — markdown transcription of arXiv:2409.17308.
-- Status: scaffold only; no declaration-level assumptions, open obligations are marked with `sorry`.
+```text
+.
+├── lakefile.toml
+├── lake-manifest.json
+├── lean-toolchain
+├── setup_lean.sh
+├── Acharyya2024.lean
+├── Acharyya2024/
+├── Acharyya2025.lean
+├── Acharyya2025/
+├── DkpsQuench.lean
+├── DkpsQuench/
+├── Helm2025.lean
+├── Helm2025/
+├── AcharyyaMDS/
+└── planning/
+```
 
-### Acharyya2025/  (DKPS concentration foundation)
-- `Basic.lean` — entry point.
-- `Concentration.lean` — scaffold for Acharyya et al. 2025 concentration theorems.
-- `prose/` — markdown transcription of arXiv:2511.08307.
-- Status: scaffold only; no declaration-level assumptions, open obligations are marked with `sorry`.
+`AcharyyaMDS/` is retained as an older compatibility layer for prior Acharyya
+DKPS/MDS imports and notes. It is useful context, but the publication-facing
+build targets are the four libraries listed above.
 
-### AcharyyaMDS/  (compatibility layer for older Acharyya DKPS/MDS imports)
-- `acharyya-2025-skeleton.lean` — retained older raw-stress MDS / Trosset stability scaffold, now using `sorry` rather than declaration-level assumptions.
-- `Basic.lean`, `Common.lean`, `Consistency2024.lean`, `Concentration2025.lean` — compatibility shims to the paper-specific libraries above.
+Some directories may contain archived drafts under `old-attempt/`. Those files
+are retained for provenance only and are not imported by the active library
+entry points.
 
-### Oneoff/  (small standalone proofs)
-- `wikifact_consistency_claim.lean` — `namespace WikiFactNoise` consistency claim
+## Project status
 
-### tensor-programs/  (separate project — Tensor Programs / Master Theorem, Lean v4.27.0)
-- Full project with the `TensorPrograms` library (`TP/` modules).
-- `tensorprogram.lean` — Master Theorem scaffold scratch (`import TP.Empirical`).
+### `Acharyya2024`
+
+Formalizes the DKPS consistency layer associated with:
+
+> Acharyya, Trosset, Priebe, Helm. *Consistent estimation of generative model
+> representations in the data kernel perspective space*. arXiv:2409.17308.
+
+The active library proves the repaired asymptotic/raw-stress MDS consistency
+statements with explicit hypotheses. The current paper-facing entry point is
+`Acharyya2024.lean`, which imports `Acharyya2024.Basic`.
+
+Important modules include:
+
+- `Acharyya2024/Common.lean` — finite-dimensional DKPS/MDS definitions.
+- `Acharyya2024/Probability.lean` — Chebyshev and union-bound probability step.
+- `Acharyya2024/SecondMoment.lean` — iid sample-mean second-moment algebra.
+- `Acharyya2024/RawStress.lean` — raw-stress stability toolkit.
+- `Acharyya2024/Consistency.lean` — paper-facing consistency theorem shapes.
+
+### `Acharyya2025`
+
+Formalizes the finite-sample DKPS concentration and aligned spectral pipeline
+associated with:
+
+> Acharyya, Agterberg, Park, Priebe. *Concentration bounds on response-based
+> vector embeddings of black-box generative models*. arXiv:2511.08307.
+
+This is the main linear-algebra and spectral-perturbation layer used by the
+bridges into `DkpsQuench` and `Helm2025`. The current entry point is
+`Acharyya2025.lean`, which imports `Acharyya2025.Basic`.
+
+Important modules include:
+
+- `Acharyya2025/Bridge.lean` — deterministic and high-probability event
+  propagation from response means to CMDS inputs.
+- `Acharyya2025/Weyl.lean` and `Acharyya2025/DavisKahan.lean` — spectral
+  perturbation lemmas.
+- `Acharyya2025/ConfigPerturbation.lean` — aligned configuration perturbation.
+- `Acharyya2025/AlignedPipeline.lean` — choice-based aligned spectral estimator
+  and high-probability aligned error theorem.
+- `Acharyya2025/RateChain.lean` — explicit end-to-end rate composition.
+
+### `DkpsQuench`
+
+Contains the DKPS query-efficiency formalization and its bridge to the
+Acharyya2025 concentration layer. The current entry point is `DkpsQuench.lean`,
+which imports:
+
+- `DkpsQuench.Basic`
+- `DkpsQuench.AcharyyaBridge`
+
+The theorem layer is intentionally conditional: assumptions such as Lipschitz
+score behavior, support/cover conditions, finite factorization, and uniform
+embedding concentration are made explicit rather than hidden.
+
+### `Helm2025`
+
+Contains the statistical-inference transfer formalization and its bridge to the
+Acharyya2025 concentration layer. The current entry point is `Helm2025.lean`,
+which imports:
+
+- `Helm2025.Basic`
+- `Helm2025.AcharyyaBridge`
+
+The theorem layer states sufficient analytic conditions explicitly, including
+boundedness, continuity, measurability, and alignment-consistency hypotheses.
+
+## Suggested verification checks
+
+Build the active libraries:
+
+```bash
+lake build Acharyya2024 Acharyya2025 DkpsQuench Helm2025
+```
+
+Check for active proof placeholders in the four publication-facing libraries:
+
+```bash
+grep -RInE '\b(sorry|admit|axiom)\b|sorryAx' \
+  Acharyya2024 Acharyya2025 DkpsQuench Helm2025 \
+  --include='*.lean' \
+  --exclude-dir='old-attempt'
+```
+
+After history-surgery passes, rerun your local filename/content audits for any excluded topics and confirm that the only remaining files are the four active libraries, retained Acharyya compatibility material, build metadata, setup scripts, and documentation you intentionally kept.
+
+## Notes for maintainers
+
+- Prefer building named targets rather than relying on historical default-target
+  configuration during transition periods.
+- Keep archival drafts out of the active import graph.
+- When changing history, make a backup copy first and audit both filenames and
+  blob contents across reachable commits.

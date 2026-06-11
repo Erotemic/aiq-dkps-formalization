@@ -1,19 +1,29 @@
 /-
-Scaffold for:
+Consistency theorems for:
 
 Acharyya, Trosset, Priebe, Helm.
 "Consistent estimation of generative model representations in the data kernel perspective space"
 arXiv:2409.17308.
 
-Status:
-- This is a scaffold, not a completed formalization.
-- Load-bearing future proof obligations are expressed as theorem statements ending
-  in `by sorry`, not declaration-level assumptions.
-- This makes the open work visible in editor/build warnings and avoids hiding it
-  behind a theorem that appears assumption-free.
+Status (2026-06-11): COMPLETE — no `sorry` remains in this file.
+
+- The probabilistic Trosset–Priebe raw-stress stability is proved in
+  `Acharyya2024.RawStress`: deterministic core (minimizer existence, √-stress
+  Lipschitz continuity, subsequence stability) + a modulus of continuity at the
+  limit matrix + outer-measure event inclusion.  No measurable selection of
+  minimizers is needed anywhere.
+- Statements that were false as written in the original scaffold (missing
+  probability hypotheses; an unconditional fixed-limit claim that fails when
+  the limiting matrix admits minimizers with distinct distance profiles) have
+  been REPAIRED: each now carries the honest hypotheses
+  (`hsample`/`hlimit`/`huniq`) and is proved.  The repair history is recorded
+  in planning/acharyya-plan.md and in git.
+
+Formalized by Claude Fable 5, per user-observed model label (claude-fable-5[1m]).
 -/
 
 import Acharyya2024.Common
+import Acharyya2024.RawStress
 
 open scoped BigOperators Topology
 open Filter MeasureTheory
@@ -25,28 +35,59 @@ variable {Ω : Type} [MeasurableSpace Ω]
 /-! ## Paper layer 1: fixed model set, fixed query set -/
 
 /--
-Trosset-style raw-stress MDS stability.
+**Unconditional raw-stress MDS stability (set version).**
 
-This is the deterministic/geometric bridge used by the 2024 paper: if observed
-dissimilarity matrices converge to a limiting dissimilarity matrix, then raw-stress
-MDS configurations have a convergent subsequence whose pairwise distances match a
-limiting MDS solution.
+If the observed dissimilarity matrices converge in probability to `DeltaInf`,
+then with probability tending to one, the random MDS output is `ε`-close in
+every pairwise distance to *some* raw-stress minimizer of `DeltaInf`.  This is
+the strongest statement that is true without further hypotheses: when
+`DeltaInf` admits minimizers with genuinely different distance profiles, no
+fixed limit configuration (and no subsequence) can serve all sample paths.
 
-This is load-bearing: replacing this `sorry` requires the MDS stability proof.
+Proved in `Acharyya2024.RawStress.mds_stability_inProbability_set` via a
+modulus of continuity at `DeltaInf` plus outer-measure event inclusion — no
+measurable selection of minimizers is required.
 
 Mathematical source/citation:
 - Trosset and Priebe, "Continuous multidimensional scaling", cited as Theorem 2
   in Acharyya et al. 2024, Appendix A.1/A.2.
 
-PARTIAL (2026-06-11): the deterministic core is PROVED in
-`Acharyya2024.RawStress` — minimizer existence (`mds_nonempty`), √-stress
-1-Lipschitz continuity, and deterministic subsequence stability
-(`exists_subseq_tendsto_mds`, `pairDist_tendsto`). The remaining gap in THIS
-statement is the probabilistic upgrade: the deterministic subsequence and
-limit configuration are ω-dependent, while this statement asserts a single
-subsequence and a fixed `ψ ∈ MDS` with convergence in probability — a
-measurable-selection argument the paper does not spell out (see the plan
-watch-list).
+Formalized by Claude Fable 5, per user-observed model label (claude-fable-5[1m]).
+-/
+theorem rawStress_mds_stability_set
+  (P : Measure Ω)
+  {n d : Nat}
+  (Dseq : Nat → Ω → DisMat n)
+  (DeltaInf : DisMat n)
+  (ψhat : Nat → Ω → Config n d)
+  (hψhat : ∀ r ω, ψhat r ω ∈ MDS n d (Dseq r ω))
+  (hD : ConvergesInProbabilityZero P (fun r ω => frobSub (Dseq r ω) DeltaInf))
+  {ε : Real} (hε : 0 < ε) :
+  Tendsto (fun r => P {ω | ¬ ∃ ψ ∈ MDS n d DeltaInf,
+    ∀ i j : Fin n, pairDistErr (ψhat r ω) ψ i j ≤ ε}) atTop (𝓝 0) :=
+  RawStress.mds_stability_inProbability_set P Dseq DeltaInf ψhat hψhat hD hε
+
+/--
+Trosset-style raw-stress MDS stability — REPAIRED + PROVED (2026-06-11).
+
+The original scaffold statement asserted a single subsequence and a fixed
+`ψ ∈ MDS n d DeltaInf` with convergence in probability, with no hypothesis on
+the minimizer set of `DeltaInf`.  That is not provable: if `DeltaInf` has two
+minimizers with distinct pairwise-distance profiles and the sample output
+oscillates between their neighborhoods with probability `1/2` each, no
+subsequence converges in probability to a fixed profile.  The repaired
+statement adds the profile-uniqueness hypothesis `huniq` the paper implicitly
+needs, and in exchange concludes along the FULL sequence (the witness
+subsequence is `id`) — strictly stronger than the paper's subsequence claim.
+
+The unconditional content (closeness to the minimizer SET) is
+`rawStress_mds_stability_set` above.
+
+Mathematical source/citation:
+- Trosset and Priebe, "Continuous multidimensional scaling", cited as Theorem 2
+  in Acharyya et al. 2024, Appendix A.1/A.2.
+
+Formalized by Claude Fable 5, per user-observed model label (claude-fable-5[1m]).
 -/
 theorem rawStress_mds_stability
   (P : Measure Ω)
@@ -55,6 +96,7 @@ theorem rawStress_mds_stability
   (DeltaInf : DisMat n)
   (ψhat : Nat → Ω → Config n d)
   (hψhat : ∀ r ω, ψhat r ω ∈ MDS n d (Dseq r ω))
+  (huniq : RawStress.UniquePairProfile n d DeltaInf)
   (hD : ConvergesInProbabilityZero P (fun r ω => frobSub (Dseq r ω) DeltaInf)) :
   ∃ u : Nat → Nat,
     Subseq u ∧
@@ -62,9 +104,16 @@ theorem rawStress_mds_stability
       ψ ∈ MDS n d DeltaInf ∧
       ∀ i j : Fin n,
         ConvergesInProbability P (fun t ω => pairDistErr (ψhat (u t) ω) ψ i j) 0 := by
-  sorry
+  obtain ⟨ψ, hψ_mem, hψ_conv⟩ :=
+    RawStress.mds_stability_inProbability_of_uniqueProfile P Dseq DeltaInf ψhat hψhat huniq hD
+  exact ⟨id, strictMono_id, ψ, hψ_mem, fun i j => hψ_conv i j⟩
 
-/-- Fixed `n,m` consistency theorem: paper Theorem 1 shape. -/
+/--
+Fixed `n,m` consistency theorem: paper Theorem 1 shape, with the repaired
+profile-uniqueness hypothesis threaded through.
+
+Formalized by Claude Fable 5, per user-observed model label (claude-fable-5[1m]).
+-/
 theorem fixed_models_fixed_queries_consistency
   (P : Measure Ω)
   {n d : Nat}
@@ -72,6 +121,7 @@ theorem fixed_models_fixed_queries_consistency
   (DeltaInf : DisMat n)
   (ψhat : Nat → Ω → Config n d)
   (hψhat : ∀ r ω, ψhat r ω ∈ MDS n d (Dseq r ω))
+  (huniq : RawStress.UniquePairProfile n d DeltaInf)
   (hD : ConvergesInProbabilityZero P (fun r ω => frobSub (Dseq r ω) DeltaInf)) :
   ∃ u : Nat → Nat,
     Subseq u ∧
@@ -79,7 +129,7 @@ theorem fixed_models_fixed_queries_consistency
       ψ ∈ MDS n d DeltaInf ∧
       ∀ i j : Fin n,
         ConvergesInProbability P (fun t ω => pairDistErr (ψhat (u t) ω) ψ i j) 0 := by
-  exact rawStress_mds_stability P Dseq DeltaInf ψhat hψhat hD
+  exact rawStress_mds_stability P Dseq DeltaInf ψhat hψhat huniq hD
 
 /-! ## Paper layer 2: fixed model set, growing query set -/
 
@@ -206,6 +256,7 @@ theorem fixed_models_growing_queries_consistency
   (DeltaInf : DisMat n)
   (ψhat : Nat → Ω → Config n d)
   (hψhat : ∀ r ω, ψhat r ω ∈ MDS n d (Dseq r ω))
+  (huniq : RawStress.UniquePairProfile n d DeltaInf)
   (hsample :
     ConvergesInProbabilityZero P (fun r ω => frobSub (Dseq r ω) (Delta r)))
   (hlimit : Tendsto (fun r => frobSub (Delta r) DeltaInf) atTop (𝓝 0)) :
@@ -215,31 +266,34 @@ theorem fixed_models_growing_queries_consistency
       ψ ∈ MDS n d DeltaInf ∧
       ∀ i j : Fin n,
         ConvergesInProbability P (fun t ω => pairDistErr (ψhat (u t) ω) ψ i j) 0 := by
-  exact fixed_models_fixed_queries_consistency P Dseq DeltaInf ψhat hψhat
+  exact fixed_models_fixed_queries_consistency P Dseq DeltaInf ψhat hψhat huniq
     (growing_queries_dissimilarity_converges P Dseq Delta DeltaInf hsample hlimit)
 
 /-! ## Paper layer 3: growing model set and growing query set -/
 
 /--
-A deliberately abstract statement for the growing-model regime.
+Triangular-array consistency for the growing-model regime — REPAIRED + PROVED
+(2026-06-11, WP8).
 
-The paper's final regime involves a triangular array of model sets and query sets.
-This theorem records the shape downstream users usually need: for each finite
-stage `k`, along one shared subsequence of sampling/query budgets, the estimated
-MDS pairwise distances converge in probability to pairwise distances in an MDS
-configuration for the limiting `k`-model dissimilarity matrix.
+The paper's final regime involves a triangular array of model sets and query
+sets: at stage `k` there are `nOf k` models, and for each fixed `k` the sampled
+dissimilarity matrices converge (in probability) to the stage-`k` limit
+`DeltaInf k`.  The original scaffold statement had NO probability hypotheses
+connecting `Dseq` to `DeltaInf` and was false as written; the repaired version
+adds the per-stage hypotheses `hD` (dissimilarity convergence) and `huniq`
+(profile uniqueness, as in `rawStress_mds_stability`).
 
-This is load-bearing and currently only a target statement.
+The paper extracts one shared subsequence across all stages by a diagonal
+argument.  Under the repaired layer-1 stability the diagonal argument is
+unnecessary: the full sequence converges at every stage, so the shared
+subsequence is simply `id` — a strictly stronger conclusion.
 
 Mathematical source/citation:
 - Acharyya, Trosset, Priebe, Helm, "Consistent estimation of generative model
   representations in the data kernel perspective space", Theorem 4 and Appendix
   A.3.
 
-TODO(false-statement): no probability hypotheses connect `Dseq` to `DeltaInf`,
-so this is false as written (same disease as
-`growing_queries_dissimilarity_converges`). Repair deferred; see
-planning/acharyya-plan.md WP8.
+Formalized by Claude Fable 5, per user-observed model label (claude-fable-5[1m]).
 -/
 theorem growing_models_growing_queries_consistency
   (P : Measure Ω)
@@ -248,7 +302,10 @@ theorem growing_models_growing_queries_consistency
   (Dseq : Nat → Ω → (k : Nat) → DisMat (nOf k))
   (DeltaInf : (k : Nat) → DisMat (nOf k))
   (ψhat : Nat → Ω → (k : Nat) → Config (nOf k) d)
-  (hψhat : ∀ r ω k, ψhat r ω k ∈ MDS (nOf k) d (Dseq r ω k)) :
+  (hψhat : ∀ r ω k, ψhat r ω k ∈ MDS (nOf k) d (Dseq r ω k))
+  (huniq : ∀ k, RawStress.UniquePairProfile (nOf k) d (DeltaInf k))
+  (hD : ∀ k, ConvergesInProbabilityZero P
+    (fun r ω => frobSub (Dseq r ω k) (DeltaInf k))) :
   ∃ u : Nat → Nat,
     Subseq u ∧
     ∀ k : Nat,
@@ -257,6 +314,46 @@ theorem growing_models_growing_queries_consistency
         ∀ i j : Fin (nOf k),
           ConvergesInProbability P
             (fun t ω => pairDistErr (ψhat (u t) ω k) ψ i j) 0 := by
-  sorry
+  refine ⟨id, strictMono_id, fun k => ?_⟩
+  obtain ⟨ψ, hψ_mem, hψ_conv⟩ :=
+    RawStress.mds_stability_inProbability_of_uniqueProfile P
+      (fun r ω => Dseq r ω k) (DeltaInf k) (fun r ω => ψhat r ω k)
+      (fun r ω => hψhat r ω k) (huniq k) (hD k)
+  exact ⟨ψ, hψ_mem, fun i j => hψ_conv i j⟩
+
+/--
+Triangular-array consistency in the paper's Theorem-5 form: the per-stage
+dissimilarity convergence is split into a per-stage sampling error against a
+stage-and-budget population `Delta r k` plus a deterministic per-stage
+Assumption-1 error, mirroring `fixed_models_growing_queries_consistency`.
+
+Formalized by Claude Fable 5, per user-observed model label (claude-fable-5[1m]).
+-/
+theorem growing_models_growing_queries_consistency_of_sample_limit
+  (P : Measure Ω)
+  (d : Nat)
+  (nOf : Nat → Nat)
+  (Dseq : Nat → Ω → (k : Nat) → DisMat (nOf k))
+  (Delta : Nat → (k : Nat) → DisMat (nOf k))
+  (DeltaInf : (k : Nat) → DisMat (nOf k))
+  (ψhat : Nat → Ω → (k : Nat) → Config (nOf k) d)
+  (hψhat : ∀ r ω k, ψhat r ω k ∈ MDS (nOf k) d (Dseq r ω k))
+  (huniq : ∀ k, RawStress.UniquePairProfile (nOf k) d (DeltaInf k))
+  (hsample : ∀ k, ConvergesInProbabilityZero P
+    (fun r ω => frobSub (Dseq r ω k) (Delta r k)))
+  (hlimit : ∀ k, Tendsto (fun r => frobSub (Delta r k) (DeltaInf k)) atTop (𝓝 0)) :
+  ∃ u : Nat → Nat,
+    Subseq u ∧
+    ∀ k : Nat,
+      ∃ ψ : Config (nOf k) d,
+        ψ ∈ MDS (nOf k) d (DeltaInf k) ∧
+        ∀ i j : Fin (nOf k),
+          ConvergesInProbability P
+            (fun t ω => pairDistErr (ψhat (u t) ω k) ψ i j) 0 := by
+  refine growing_models_growing_queries_consistency P d nOf Dseq DeltaInf ψhat
+    hψhat huniq (fun k => ?_)
+  exact growing_queries_dissimilarity_converges P
+    (fun r ω => Dseq r ω k) (fun r => Delta r k) (DeltaInf k)
+    (hsample k) (hlimit k)
 
 end Acharyya2024.Consistency

@@ -38,6 +38,18 @@ idea; say *why* it died.
   `(toEuclideanLin M x) i` is still rfl-equal to `(M.mulVec (WithLp.ofLp x)) i`
   (use `show` to switch).
 
+- 2026-06-11 — WP7(c) trap: after Procrustes-aligning the eigenvector blocks,
+  the residual `‖Λ̂^{1/2}W − WΛ^{1/2}‖` CANNOT be bounded by naive triangle
+  splitting — entries `(√λ̂_k − √λ_l)W_{kl}` are large for k ≠ l without
+  per-eigenvalue gaps inside the top block. Resolution: the Sylvester-style
+  identity `Λ̂Q − QΛ = Ûᵀ(B̂−B)U` for the UNALIGNED overlap `Q = ÛᵀU`, then
+  divide entrywise by `√λ̂_k + √λ_l ≥ √(α/2)+√α`. See plan WP7(c).
+- 2026-06-11 — scoped notation: `⟪·,·⟫_ℝ` needs BOTH
+  `open scoped RealInnerProductSpace` and (in this Mathlib rev) the plain
+  notation came through `InnerProductSpace` scope in DavisKahan.lean; missing
+  the latter produced a confusing parse error at the `⟫_ℝ` token, far from the
+  actual cause.
+
 ## Open questions / watch list
 
 - Does Mathlib have Courant–Fischer / sorted eigenvalues for

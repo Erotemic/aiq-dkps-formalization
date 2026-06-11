@@ -314,18 +314,26 @@ componentwise via `ProbabilityTheory.variance` + independence. Paper-agnostic �
       configBound continuity at 0, endToEndRate, tendsto_endToEndRate_zero;
       docstring compares with paper's Poly₃((n³/r)^{1/2−δ}))
 - [x] READMEs updated to reflect completed (non-scaffold) status
-- [ ] Mathlib-candidate list extracted (WellKnown + WP5 + WP7 + WP10)
+- [x] Mathlib-candidate list extracted — see planning/mathlib-candidates.md
+      (10 ranked candidates verified against Mathlib commit 0e4799ceff90;
+      top tier: Donsker–Varadhan, Procrustes rigidity into the brand-new
+      GramMatrix.lean, QoL bundle, Courant–Fischer+Weyl; two local
+      duplicates found: sortedEigenvalues = eigenvalues₀, integral_eval_pi =
+      integral_comp_eval)
 
-## Remaining work (next sessions)
+ALL MILESTONES COMPLETE.
 
-1. Mathlib-candidate extraction (Weyl, DavisKahan, PolarFactor, Procrustes,
-   GramRealization, OperatorBridge, SecondMoment, WellKnown) — packaging for
-   upstream contribution; the mathematics is done.
+## Remaining work (optional, next sessions)
+
+1. Actually submitting the Mathlib PRs per the ranked plan in
+   planning/mathlib-candidates.md.
 2. Optional strengthenings: sub-Gaussian tails in place of Chebyshev
    (paper's exact Poly₃ constants); sufficient conditions for
    UniquePairProfile (e.g. embeddable Δ with affinely independent
    configuration); Helm per-ω-population capstone (currently an explicitly
    documented halign hypothesis).
+3. Local cleanup: migrate MatrixPerturbation.sortedEigenvalues to Mathlib's
+   eigenvalues₀; drop DrsbBridge integral_eval_pi for integral_comp_eval.
 
 ## Progress ledger
 

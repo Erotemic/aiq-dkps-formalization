@@ -268,9 +268,11 @@ Davis-Kahan eigenspace perturbation under the paper's fixed-rank/eigengap
 assumptions.
 
 TODO(false-statement): vacuous `MDSStabilityAssumptions`, arbitrary `ψhat`, and
-unaligned `ConfigError` make this false as written. Repair deferred to WP6
-after the spectral bridge (WP4/WP5/WP7) is in place; see
-planning/acharyya-plan.md.
+unaligned `ConfigError` make this false as written. SUPERSEDED: the true
+high-probability aligned version is proved in
+`Acharyya2025.AlignedPipeline.highProb_aligned_configError_of_entrywise_close`
+(built on `MatrixPerturbation.exists_isometry_configError_le_of_entrywise_close`).
+This legacy statement is retained only as a scaffold record.
 -/
 theorem cited_cmds_embedding_perturbation_from_centered_entrywise
     (P : Nat → Measure Ω)

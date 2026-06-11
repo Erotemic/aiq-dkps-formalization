@@ -299,26 +299,33 @@ componentwise via `ProbabilityTheory.variance` + independence. Paper-agnostic �
       PROVED end-to-end: exists_isometry_configError_spectralConfig_le with the
       explicit configBound constant
 - [x] WP10 committed (iid second-moment algebra)
-- [ ] READMEs updated to reflect non-scaffold status of finished layers
+- [x] WP8 committed (triangular-array regimes repaired + proved; diagonal
+      argument unnecessary — full-sequence convergence makes the shared
+      subsequence `id`)
+- [x] WP9 committed IN FULL (modulus of continuity at Δ + outer-measure event
+      inclusion closes the probabilistic Trosset–Priebe gap WITHOUT measurable
+      selection; unconditional set version + fixed-ψ version under
+      UniquePairProfile, both full-sequence)
+- [x] Retirement pass committed (4 false-as-written legacy sorries + their
+      sorry-inheriting consumers + vacuous-Prop structures → prose "Retired
+      seam" records; BOTH LIBRARIES NOW SORRY-FREE, every statement true as
+      written)
+- [x] Rate bookkeeping committed (RateChain.lean: Chebyshev→HP uniform event,
+      configBound continuity at 0, endToEndRate, tendsto_endToEndRate_zero;
+      docstring compares with paper's Poly₃((n³/r)^{1/2−δ}))
+- [x] READMEs updated to reflect completed (non-scaffold) status
 - [ ] Mathlib-candidate list extracted (WellKnown + WP5 + WP7 + WP10)
 
 ## Remaining work (next sessions)
 
-1. ~~WP6 statement-repair pass~~ DONE 2026-06-11. Sorry census 8 → 5:
-   3 are SUPERSEDED scaffold records (Concentration ×2, Bridge ×1,
-   SpectralPipeline cited_cmds ×1 — actually 4 markers), 1 PARTIAL
-   (rawStress_mds_stability, deterministic core proved in RawStress.lean),
-   1 open (growing_models = WP8).
-2. WP8 triangular-array regimes (2024 Thm 4/5) — last open non-superseded
-   sorry in Consistency.lean.
-3. WP9 probabilistic upgrade of Trosset–Priebe: ω-dependent subsequence vs
-   the paper's fixed-ψ in-probability claim (measurable-selection gap; see
-   graveyard watch list).
-4. Paper-faithful rate bookkeeping: chain WP10 (γ/r) → WP2 → entrywise →
-   cmdsEntrywiseRate → operator (n·ε) → configBound to extract the
-   end-to-end Poly((n³/r)^…)-style rate and compare with the paper's.
-5. READMEs + Mathlib-candidate extraction (Weyl, DavisKahan, PolarFactor,
-   Procrustes, GramRealization, OperatorBridge, SecondMoment, WellKnown).
+1. Mathlib-candidate extraction (Weyl, DavisKahan, PolarFactor, Procrustes,
+   GramRealization, OperatorBridge, SecondMoment, WellKnown) — packaging for
+   upstream contribution; the mathematics is done.
+2. Optional strengthenings: sub-Gaussian tails in place of Chebyshev
+   (paper's exact Poly₃ constants); sufficient conditions for
+   UniquePairProfile (e.g. embeddable Δ with affinely independent
+   configuration); Helm per-ω-population capstone (currently an explicitly
+   documented halign hypothesis).
 
 ## Progress ledger
 
@@ -372,3 +379,28 @@ componentwise via `ProbabilityTheory.variance` + independence. Paper-agnostic �
   audit to [propext, Classical.choice, Quot.sound]. The chain
   iid responses → Chebyshev → dissimilarity → CMDS perturbation → aligned
   embedding error → Quench/Helm hypotheses is formally connected end-to-end.
+- 2026-06-11 (final session): END-TO-END COMPLETE — both libraries sorry-free,
+  axiom-free, every statement true as written. Three parallel agents +
+  main-session rewiring:
+  (1) WP9 ✅ f1f39df — exists_modulus_pairDist (contradiction at δ=1/(k+1)
+  from deterministic subsequence stability, after centering),
+  mds_stability_inProbability_set (unconditional, outer-measure event
+  inclusion — NO measurable selection), UniquePairProfile +
+  mds_stability_inProbability_of_uniqueProfile (fixed-ψ Theorem-1 shape,
+  full sequence). Consistency.lean rewired: rawStress_mds_stability repaired
+  (legacy unconditional form not provable — oscillating-minimizer
+  counterexample documented), WP8 growing_models repaired+proved (per-stage
+  hD/huniq; shared subsequence = id), Theorem-5 sample/limit split variant
+  added.
+  (2) Retirement ✅ 8aa31cd — Concentration.lean now comment-only historical
+  record; Bridge/SpectralPipeline keep live proved content; vacuous-Prop
+  structures removed; import Concentration dropped from Bridge.
+  (3) RateChain ✅ 607e422 — measurability-free HighProbAtTop complement
+  helper; Chebyshev+union-bound → HP UniformResponseMeanClose (only
+  Integrable hypotheses); configBound continuous & 0 at 0 (unconditional —
+  Lean junk-value conventions); endToEndRate := configBound(n·
+  cmdsEntrywiseRate(R, t)); highProb_aligned_configError_endToEndRate (single
+  exact against AlignedPipeline — no statement mismatch);
+  tendsto_endToEndRate_zero (inner rate = 16Rn³/m·t).
+  All capstones audit to [propext, Classical.choice, Quot.sound]. READMEs
+  updated. Sorry census: 0. The formalization goal of this plan is achieved.

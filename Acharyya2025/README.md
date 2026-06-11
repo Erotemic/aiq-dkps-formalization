@@ -1,43 +1,38 @@
-# Acharyya2025 — DKPS concentration scaffold
+# Acharyya2025 — DKPS concentration (formalized)
 
 Paper:
 
 - Acharyya, Agterberg, Park, Priebe. *Concentration bounds on response-based vector embeddings of black-box generative models*. arXiv:2511.08307.
 
-This library is the paper-specific scaffold for the finite-sample/high-probability
-DKPS concentration result used as a load-bearing hypothesis by the downstream
-DkpsQuench and Helm2025 formalizations.
+This library formalizes the finite-sample/high-probability DKPS concentration
+result used as a load-bearing hypothesis by the downstream DkpsQuench and
+Helm2025 formalizations.
 
 ## Status
 
-The hard spectral bridge is COMPLETE (2026-06-11): every analytic step of the
-paper's Theorem 2 chain — Weyl, Davis–Kahan, Procrustes alignment, and the
-final configuration perturbation — is formally proved with explicit constants
-and zero sorries in the new files listed below. The remaining `sorry`s live
-only in the LEGACY scaffold statements (Concentration.lean, Bridge.lean,
-SpectralPipeline.lean), several of which are marked `TODO(false-statement)`;
-they are pending the WP6 repair pass that re-derives them from the proved
-bridge. See `../planning/acharyya-plan.md`.
+COMPLETE (2026-06-11): **zero sorries, zero axioms** — every statement in the
+library is proved and true as written. The full chain is formally connected:
+
+> iid responses → second moments (trace(Σ)/r) → Chebyshev + union bound →
+> dissimilarity entrywise events → CMDS double-centering → Weyl /
+> Davis–Kahan / polar-factor perturbation → aligned embedding error
+> (`alignedSpectralConfig`, explicit `configBound`) → Quench's uniform
+> embedding-error hypothesis and Helm's alignment consistency,
+
+with the explicit end-to-end rate composed in `RateChain.lean`
+(`endToEndRate`, vanishing as replicates grow; module docstring compares with
+the paper's Poly₃((n³/r)^{1/2−δ}) bookkeeping).
+
+The four legacy scaffold statements that were false as written (vacuous
+Prop-field structures, unaligned `ConfigError`, placeholder rates) have been
+RETIRED: each is now a prose "Retired seam" record pointing at its proved
+replacement; the original statements live in git history. See
+`../planning/acharyya-plan.md` for the work-package history.
 
 Model/provenance note: the original scaffold session's model label is recorded
-as `Codex 5.5 High`; the spectral bridge (Weyl, DavisKahan, RankGap, Overlap,
-PolarFactor, ConfigPerturbation, GramRealization, Procrustes, OperatorBridge)
-was formalized by Claude Fable 5 (claude-fable-5[1m]), per user-observed model
-labels.
-
-- There are no declaration-level assumptions in the new scaffold files.
-- Load-bearing unfinished proofs are marked with `sorry`.
-- The main open obligations are response/dissimilarity matrix concentration and
-  the cited CMDS spectral perturbation theorem.
-- Deterministic plumbing now includes response-mean-to-distance propagation,
-  componentwise error extraction, and double-centering stability.
-- The downstream-compatible uniform embedding error shape is proved from the
-  scaffold concentration theorem plus componentwise error extraction.
-- Downstream adapters now expose the deterministic reductions into
-  `DkpsQuench` and `Helm2025` without hiding the remaining analytic bridges.
-- The MDS/spectral proof is now laid out as a pipeline:
-  DKPS curried matrices → Mathlib matrices → operator-norm perturbation →
-  spectral theorem / Davis-Kahan → Procrustes-aligned configurations.
+as `Codex 5.5 High`; the spectral bridge, aligned pipeline, rate chain, and
+the retirement pass were formalized by Claude Fable 5 (claude-fable-5[1m]),
+per user-observed model labels.
 
 ## Files
 
@@ -61,19 +56,27 @@ New proved bridge (zero sorries, 2026-06-11):
 - `Procrustes.lean` — exact Gram rigidity: equal Grams ⇒ isometry-related.
 - `OperatorBridge.lean` — honest ℓ²→ℓ² operator-norm transport
   matrix ↔ operator world.
+- `MatrixPerturbation.lean` — matrix-world capstone:
+  `exists_isometry_configError_le_of_entrywise_close` (entrywise η ⇒ aligned
+  ConfigError ≤ configBound, rank-transport for trailing eigenvalues).
+- `AlignedPipeline.lean` — `alignedSpectralConfig` (choice-based aligned
+  estimator) + the HP aligned-ConfigError theorems, including the end-to-end
+  response-mean version.
+- `RateChain.lean` — explicit end-to-end rate: Chebyshev/union-bound HP
+  lemma, `configBound` continuity at 0, `endToEndRate`, and its vanishing.
 
-Legacy scaffold (contains the remaining sorries; WP6 repair pending):
+Supporting layers (all proved; retired seams kept as prose records):
 
-- `Deterministic.lean` — proved finite-dimensional centering definitions and
+- `Deterministic.lean` — finite-dimensional centering definitions and
   double-centering stability.
 - `MathlibBridge.lean` — paper-independent conversions from curried `DisMat`
   objects to Mathlib `Matrix`, plus symmetry/Frobenius/operator-bound predicates.
-- `SpectralPipeline.lean` — the staged CMDS proof pipeline with separate cited
-  seams for norm comparison, population Gram realization, and
-  Davis-Kahan/Weyl/Procrustes perturbation.
-- `Bridge.lean` — proved deterministic/high-probability event propagation and
-  the cited CMDS perturbation seam.
-- `Concentration.lean` — paper-facing concentration theorem statements.
+- `SpectralPipeline.lean` — world-map between DKPS/CMDS, matrix, spectral, and
+  configuration layers; hardened `CMDSpectralAssumptions`; population CMDS
+  Gram realization (proved).
+- `Bridge.lean` — deterministic/high-probability event propagation chain
+  (response mean → Frobenius → entrywise → CMDS entrywise).
+- `Concentration.lean` — historical record of the retired scaffold layer.
 - `../DkpsQuench/AcharyyaBridge.lean` — finite-configuration concentration to
   Quench's model-space uniform concentration, under an explicit finite
   factorization hypothesis.

@@ -36,6 +36,7 @@ Formalized by Claude Fable 5, per user-observed model label (claude-fable-5[1m])
 -/
 
 import Mathlib
+import ForMathlib.Analysis.InnerProductSpace.Spectrum
 import Acharyya2025.Weyl
 
 open scoped BigOperators RealInnerProductSpace InnerProductSpace
@@ -55,25 +56,19 @@ eigenbases is the inner product scaled by the eigenvalue difference. -/
 /-- **Cross-term identity.** The matrix entry of `S − T` between the `i`-th
 eigenvector of `T` and the `j`-th eigenvector of `S` equals the eigenvalue
 difference times the overlap of the two eigenvectors:
-`⟪uᵢ, (S − T) ûⱼ⟫ = (λ̂ⱼ − λᵢ) ⟪uᵢ, ûⱼ⟫`. -/
+`⟪uᵢ, (S − T) ûⱼ⟫ = (λ̂ⱼ − λᵢ) ⟪uᵢ, ûⱼ⟫`.
+
+Thin `ℝ`-instantiation of the Mathlib-staged
+`ForMathlib.inner_eigenvectorBasis_map_sub_eigenvectorBasis` (stated over
+`RCLike 𝕜`); kept under its original name for downstream call-sites. -/
 theorem inner_eigenvector_map_sub_eq
     (hT : T.IsSymmetric) (hS : S.IsSymmetric) (hn : finrank ℝ E = n)
     (i j : Fin n) :
     ⟪hT.eigenvectorBasis hn i, (S - T) (hS.eigenvectorBasis hn j)⟫_ℝ
       = (hS.eigenvalues hn j - hT.eigenvalues hn i)
           * ⟪hT.eigenvectorBasis hn i, hS.eigenvectorBasis hn j⟫_ℝ := by
-  set u := hT.eigenvectorBasis hn with hu
-  set v := hS.eigenvectorBasis hn with hv
-  -- `⟪uᵢ, S ûⱼ⟫ = λ̂ⱼ ⟪uᵢ, ûⱼ⟫`
-  have hSterm : ⟪u i, S (v j)⟫_ℝ = hS.eigenvalues hn j * ⟪u i, v j⟫_ℝ := by
-    rw [hv, hS.apply_eigenvectorBasis, real_inner_smul_right]
-    norm_num
-  -- `⟪uᵢ, T ûⱼ⟫ = ⟪T uᵢ, ûⱼ⟫ = λᵢ ⟪uᵢ, ûⱼ⟫`
-  have hTterm : ⟪u i, T (v j)⟫_ℝ = hT.eigenvalues hn i * ⟪u i, v j⟫_ℝ := by
-    rw [← hT (u i) (v j), hu, hT.apply_eigenvectorBasis, real_inner_smul_left]
-    norm_num
-  rw [LinearMap.sub_apply, inner_sub_right, hSterm, hTterm]
-  ring
+  simpa using
+    ForMathlib.inner_eigenvectorBasis_map_sub_eigenvectorBasis hT hS hn i j
 
 /-! ### Helper: total cross-energy bound (Parseval in the `u`-basis)
 

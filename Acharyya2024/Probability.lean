@@ -24,6 +24,7 @@ No `axiom`, no `sorry`.
 -/
 
 import Acharyya2024.Common
+import ForMathlib.Probability.Moments.Variance
 
 open scoped BigOperators Topology
 open Filter MeasureTheory
@@ -40,9 +41,9 @@ Chebyshev/Markov inequality in second-moment form, packaged for `ENNReal`.
 For a nonnegative measurable function `Y` with `∫ Y² ≤ v` and `0 < η`,
 the probability of `{ω | η < Y ω}` is at most `ENNReal.ofReal (v / η²)`.
 
-The proof applies `mul_meas_ge_le_integral_of_nonneg` to `Y²` at level `η²`,
-uses `{η < Y} ⊆ {η² ≤ Y²}`, and converts the resulting real-valued measure
-bound to `ENNReal` using that `P` is a probability measure.
+Thin wrapper around the Mathlib-staged
+`ForMathlib.meas_gt_le_ofReal_integral_sq_div_sq`; kept under its original
+name for downstream call-sites.
 
 Formalized by Claude Fable 5, per user-observed model label (claude-fable-5[1m]).
 -/
@@ -51,39 +52,8 @@ theorem meas_gt_le_ofReal_secondMoment_div_sq
     {Y : Ω → Real}
     (hY_int : Integrable (fun ω => (Y ω) ^ 2) P)
     {v η : Real} (hη : 0 < η) (hmoment : ∫ ω, (Y ω) ^ 2 ∂P ≤ v) :
-    P {ω | η < Y ω} ≤ ENNReal.ofReal (v / η ^ 2) := by
-  -- Markov on Y² at level η².
-  have hsq_nonneg : 0 ≤ᵐ[P] fun ω => (Y ω) ^ 2 :=
-    Eventually.of_forall fun ω => sq_nonneg (Y ω)
-  have hmarkov :
-      η ^ 2 * P.real {ω | η ^ 2 ≤ (Y ω) ^ 2} ≤ ∫ ω, (Y ω) ^ 2 ∂P :=
-    mul_meas_ge_le_integral_of_nonneg hsq_nonneg hY_int (η ^ 2)
-  -- The bad set is contained in the squared-threshold set.
-  have hsubset : {ω | η < Y ω} ⊆ {ω | η ^ 2 ≤ (Y ω) ^ 2} := by
-    intro ω hω
-    have : η < Y ω := hω
-    exact pow_le_pow_left₀ hη.le this.le 2
-  have hηsq_pos : 0 < η ^ 2 := by positivity
-  -- Real-valued bound on P.real of the bad set.
-  have hbad_real :
-      P.real {ω | η < Y ω} ≤ v / η ^ 2 := by
-    have hmono : P.real {ω | η < Y ω} ≤ P.real {ω | η ^ 2 ≤ (Y ω) ^ 2} :=
-      measureReal_mono hsubset
-    have h1 : η ^ 2 * P.real {ω | η < Y ω} ≤ ∫ ω, (Y ω) ^ 2 ∂P := by
-      refine le_trans ?_ hmarkov
-      exact mul_le_mul_of_nonneg_left hmono hηsq_pos.le
-    have h2 : η ^ 2 * P.real {ω | η < Y ω} ≤ v := h1.trans hmoment
-    rw [le_div_iff₀ hηsq_pos]
-    calc P.real {ω | η < Y ω} * η ^ 2
-          = η ^ 2 * P.real {ω | η < Y ω} := by ring
-      _ ≤ v := h2
-  -- Convert to ENNReal.
-  have hne_top : P {ω | η < Y ω} ≠ ⊤ := measure_ne_top P _
-  calc P {ω | η < Y ω}
-        = ENNReal.ofReal (P.real {ω | η < Y ω}) := by
-          rw [measureReal_def, ENNReal.ofReal_toReal hne_top]
-    _ ≤ ENNReal.ofReal (v / η ^ 2) :=
-          ENNReal.ofReal_le_ofReal hbad_real
+    P {ω | η < Y ω} ≤ ENNReal.ofReal (v / η ^ 2) :=
+  ForMathlib.meas_gt_le_ofReal_integral_sq_div_sq P hY_int hη hmoment
 
 /--
 Main probabilistic theorem (paper Theorem 2 / Appendix A.2).

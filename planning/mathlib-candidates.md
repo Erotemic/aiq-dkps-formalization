@@ -6,6 +6,26 @@ probability/analysis) of the proved, zero-sorry content in `Acharyya2024/` and
 against the local checkout `proofs/.lake/packages/mathlib` at commit
 `0e4799ceff90` (2026-02-13), not from memory.
 
+**Update 2026-06-11 (same day, later session):** the workspace was bumped to
+Mathlib master `476fb97b621c` (2026-06-11, toolchain v4.31.0-rc2).  Gap claims
+for candidates #1, #2 (both halves), and #3b were RE-VERIFIED against the new
+pin and still hold; `mul_meas_ge_le_integral_of_nonneg` and the
+`IsSymmetric.eigenvalues`/`eigenvectorBasis` sorted spectral API also survive
+(eigenvalues are now an `irreducible_def` over `RCLike 𝕜`, same decreasing
+convention).  Candidates #3a, #4, #5, #6, #7 have NOT yet been re-verified
+against the new pin — re-grep before porting them.  Note Mathlib now uses the
+module system (`module` / `public import` headers); staged files must be
+converted at PR time.
+
+**Staging status:** candidates #1, #2 (both lemmas), and #3b are now staged in
+the `ForMathlib/` library (see `ForMathlib/README.md`), generalized to
+`RCLike 𝕜` where applicable, with the paper libraries rewired to consume them
+(`Acharyya2025/Procrustes.lean`, `Acharyya2025/RateChain.lean`,
+`Acharyya2024/Probability.lean`, `Acharyya2025/DavisKahan.lean` are now thin
+wrappers/consumers).  Remaining to stage: #3a (Courant–Fischer + Weyl), #4
+(sample-mean MSE), #5 (Gram realization + eigenvalue tail), #6 (polar factor),
+#7 (`TendstoInMeasure` constructor).
+
 Formalized by Claude Fable 5, per user-observed model label (claude-fable-5[1m]).
 
 Effort grades: **S** = statement+proof port nearly verbatim; **M** = moderate

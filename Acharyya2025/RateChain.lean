@@ -45,6 +45,7 @@ Formalized by Claude Fable 5, per user-observed model label (claude-fable-5[1m])
 -/
 
 import Mathlib
+import ForMathlib.MeasureTheory.Measure.Typeclasses.Probability
 import Acharyya2024.Probability
 import Acharyya2025.AlignedPipeline
 
@@ -83,14 +84,9 @@ theorem highProbAtTop_of_tendsto_compl_zero
   obtain ⟨N, hN⟩ := eventually_atTop.mp hev
   refine ⟨N, fun u hu => ?_⟩
   have hcompl : P u ((E u)ᶜ) ≤ δ := (hN u (le_of_lt hu)).le
-  -- Subadditivity: 1 ≤ P (E u) + P (E uᶜ), without measurability.
-  have hsplit : (1 : ENNReal) ≤ P u (E u) + P u ((E u)ᶜ) := by
-    calc (1 : ENNReal) = P u Set.univ := (measure_univ (μ := P u)).symm
-      _ = P u (E u ∪ (E u)ᶜ) := by rw [Set.union_compl_self]
-      _ ≤ P u (E u) + P u ((E u)ᶜ) := measure_union_le _ _
+  -- Measurability-free complement bound, staged for Mathlib.
   have h1 : (1 : ENNReal) - δ ≤ 1 - P u ((E u)ᶜ) := tsub_le_tsub_left hcompl 1
-  have h2 : (1 : ENNReal) - P u ((E u)ᶜ) ≤ P u (E u) := tsub_le_iff_right.mpr hsplit
-  exact h1.trans h2
+  exact h1.trans (ForMathlib.one_sub_measure_compl_le (P u) (E u))
 
 /-! ### (1) Chebyshev → uniform high-probability response-mean event -/
 

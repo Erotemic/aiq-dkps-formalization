@@ -5,10 +5,11 @@ models, centered on the data kernel perspective space (DKPS) and the
 multidimensional-scaling / spectral-perturbation infrastructure needed to make
 those theorem statements precise.
 
-This repository focuses on four active Lean libraries:
+This repository focuses on five active Lean libraries:
 
 | Library        | Role                                                                                                                    |
 | -------------- | ------------------------------------------------------------------------------------------------------------------------|
+| `ForMathlib`   | Mathlib-staging library: paper-agnostic results restated in Mathlib idiom/generality, one file per target Mathlib path. |
 | `Acharyya2024` | Asymptotic DKPS/raw-stress MDS consistency for model representations.                                                   |
 | `Acharyya2025` | Finite-sample concentration for response-based vector embeddings, including a proved CMDS spectral perturbation bridge. |
 | `DkpsQuench`   | Query-efficiency theorem layer for DKPS-based benchmark prediction from cached responses.                               |
@@ -24,6 +25,8 @@ consistency transfer.
 
 ```text
 .
+├── ForMathlib.lean        # root module for the Mathlib-staging library
+├── ForMathlib/            # staged Mathlib additions (see ForMathlib/README.md)
 ├── Acharyya2024.lean      # root module for the 2024 consistency library
 ├── Acharyya2024/          # raw-stress MDS, probability, second moments, paper-facing consistency
 ├── Acharyya2025.lean      # root module for the 2025 concentration library
@@ -54,7 +57,7 @@ In a fresh environment you will need to setup Lean4, see:
 
 ```bash
 lake exe cache get
-lake build Acharyya2024 Acharyya2025 DkpsQuench Helm2025
+lake build ForMathlib Acharyya2024 Acharyya2025 DkpsQuench Helm2025
 ```
 
 To build everything declared in `lakefile.toml`:
@@ -64,6 +67,16 @@ lake build
 ```
 
 ## Formalization scope
+
+### `ForMathlib`
+
+Staging area for upstream Mathlib contributions extracted from the paper
+libraries: results are restated in Mathlib idiom (e.g. generalized from `ℝ` to
+`RCLike 𝕜`), placed in files mirroring their proposed Mathlib destination
+paths, and import only Mathlib.  The paper libraries import these general
+versions and keep only thin paper-facing specializations.  See
+`ForMathlib/README.md` for the contribution workflow and
+`planning/mathlib-candidates.md` for the ranked candidate list.
 
 ### `Acharyya2024`
 

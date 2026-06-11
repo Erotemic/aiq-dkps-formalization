@@ -411,3 +411,31 @@ ALL MILESTONES COMPLETE.
   tendsto_endToEndRate_zero (inner rate = 16Rn³/m·t).
   All capstones audit to [propext, Classical.choice, Quot.sound]. READMEs
   updated. Sorry census: 0. The formalization goal of this plan is achieved.
+- 2026-06-11 (mathlib-prep session): MATHLIB BUMP + STAGING LIBRARY.
+  (1) Workspace bumped: toolchain v4.28.0-rc1 → v4.31.0-rc2, mathlib
+  0e4799ceff90 (Feb 13) → master 476fb97b621c (Jun 11). Breakage fixed in 4
+  files (10 errors): `zero_le _` → `zero_le` (argument now implicit;
+  Probability, RawStress ×2); DkpsQuench/Basic ennreal_inter_bound rewritten
+  cleanly (old ring_nf/decide tactic soup died; note `le_tsub_of_add_le_right`
+  and `tsub_add_tsub_comm` do NOT apply to ENNReal — missing AddLeftReflectLE;
+  use `ENNReal.le_sub_of_add_le_right`/`ENNReal.sub_add_eq_add_sub`);
+  dist_triangle4 simpa needs explicit `dist_eq_norm` now; Helm2025/Basic three
+  `convert ... using 1` calls replaced by `exact` (reducible-transparency
+  congruence no longer closes defeq `risk`/integral and composition goals).
+  Deprecations fixed: push_neg → `push Not`, continuous_finset_sum →
+  continuous_finsetSum, isHermitian_iff_isSymmetric →
+  isSymmetric_toEuclideanLin_iff, EuclideanSpace.ofLp_single →
+  PiLp.ofLp_single. Mathlib now uses the module system (`module`/`public
+  import`) — relevant at PR time only.
+  (2) New `ForMathlib` staging library (lakefile lean_lib + default target):
+  one file per target Mathlib path, Mathlib-only imports, all under the
+  `ForMathlib` namespace. Staged: candidate #1 Procrustes rigidity
+  (GramMatrix.lean — generalized ℝ → RCLike 𝕜 essentially verbatim, plus new
+  `Matrix.gram` iff-characterization `gram_eq_gram_iff_exists_...`); #2a
+  measurability-free `1 − μ sᶜ ≤ μ s`; #2b uncentered second-moment Chebyshev;
+  #3b Davis–Kahan cross-term identity (also RCLike, via RCLike.conj_ofReal).
+  Gap claims for these re-verified against the new pin (still absent
+  upstream). Paper libs rewired as thin consumers: Procrustes.lean,
+  Probability.lean (Chebyshev), RateChain.lean (complement bound),
+  DavisKahan.lean (cross-term via simpa). Remaining to stage: #3a, #4, #5,
+  #6, #7 (re-grep gaps before porting — only re-verified for staged items).

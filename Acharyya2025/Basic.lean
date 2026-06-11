@@ -12,3 +12,6 @@ import Acharyya2025.Concentration
 import Acharyya2025.MathlibBridge
 import Acharyya2025.Bridge
 import Acharyya2025.SpectralPipeline
+import Acharyya2025.GramRealization
+import Acharyya2025.Procrustes
+import Acharyya2025.Weyl

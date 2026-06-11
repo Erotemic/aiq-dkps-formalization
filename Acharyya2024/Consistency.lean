@@ -74,42 +74,131 @@ theorem fixed_models_fixed_queries_consistency
 /-! ## Paper layer 2: fixed model set, growing query set -/
 
 /--
-Probability step for the fixed-model/growing-query regime.
+Convergence in probability to zero survives adding a deterministic vanishing
+perturbation: if `0 ≤ C r ω ≤ A r ω + b r` with `A → 0` in probability and
+`b → 0` deterministically, then `C → 0` in probability.
 
-This packages the paper's response-sampling argument: empirical dissimilarities
-constructed from sample-average embedded responses converge in probability to the
-population limiting dissimilarity matrix.
+This is the triangle-inequality layer of the paper's Theorem 2: it splits the
+empirical-to-limit error into the sampling error (handled by
+`Acharyya2024.Probability`) and the deterministic Assumption-1 error.
 
-This is load-bearing: replacing this `sorry` requires the variance, trace,
-Markov/union-bound, and query-growth formalization.
+Formalized by Claude Fable 5, per user-observed model label (claude-fable-5[1m]).
+-/
+theorem convergesInProbabilityZero_of_le_add
+    (P : Measure Ω)
+    (A C : Nat → Ω → Real)
+    (b : Nat → Real)
+    (hC_nonneg : ∀ r ω, 0 ≤ C r ω)
+    (hle : ∀ r ω, C r ω ≤ A r ω + b r)
+    (hA : ConvergesInProbabilityZero P A)
+    (hb : Tendsto b atTop (𝓝 0)) :
+    ConvergesInProbabilityZero P C := by
+  intro ε hε
+  have hb_event : ∀ᶠ r in atTop, b r ≤ ε / 2 := by
+    have hball : ∀ᶠ r in atTop, b r ∈ Metric.ball (0 : Real) (ε / 2) :=
+      hb.eventually (Metric.ball_mem_nhds _ (by linarith))
+    filter_upwards [hball] with r hr
+    have : |b r| < ε / 2 := by
+      simpa [Metric.mem_ball, dist_eq_norm] using hr
+    exact ((abs_lt.mp this).2).le
+  have hA_half := hA (ε / 2) (by linarith)
+  rw [ENNReal.tendsto_nhds_zero] at hA_half ⊢
+  intro δ hδ
+  filter_upwards [hA_half δ hδ, hb_event] with r hAr hbr
+  refine le_trans (measure_mono ?_) hAr
+  intro ω hω
+  have hCω : ε < C r ω := by
+    have : dist (C r ω) 0 > ε := hω
+    rwa [Real.dist_eq, sub_zero, abs_of_nonneg (hC_nonneg r ω)] at this
+  have hAω : ε / 2 < A r ω := by
+    have := hle r ω
+    linarith
+  show dist (A r ω) 0 > ε / 2
+  rw [Real.dist_eq, sub_zero]
+  exact lt_of_lt_of_le hAω (le_abs_self _)
+
+/--
+Probability step for the fixed-model/growing-query regime (paper Theorem 2),
+REPAIRED version.
+
+The original scaffold statement had no hypotheses and was false. The honest
+content splits as `frobSub (Dseq r ω) DeltaInf ≤
+frobSub (Dseq r ω) (Delta r) + frobSub (Delta r) DeltaInf` where:
+
+* `hsample` — the sampling error `frobSub (Dseq r ω) (Delta r)` converges to
+  zero in probability; in the paper this is supplied by the Markov/variance
+  argument, formalized in `Acharyya2024.Probability`
+  (`dissimilarity_convergesInProbability_of_secondMoment`) together with
+  `Acharyya2024.SecondMoment` (the iid `trace(Σ)/r` computation).
+* `hlimit` — the deterministic Assumption-1 error
+  `frobSub (Delta r) DeltaInf → 0`.
 
 Mathematical source/citation:
-- Acharyya, Trosset, Priebe, Helm, "Consistent estimation of generative model
-  representations in the data kernel perspective space", Theorem 2 and Appendix
-  A.2.
+- Acharyya, Trosset, Priebe, Helm, arXiv:2409.17308, Theorem 2 and Appendix
+  A.2 (the final triangle-inequality step invoking Assumption 1).
 
-TODO(false-statement): as written this has NO hypotheses (any `Dseq`, any
-`DeltaInf`) and is therefore false. The true version needs the responseDist
-structure plus second-moment hypotheses; see `Acharyya2024/Probability.lean`
-and planning/acharyya-plan.md WP2. Deliberately deferred per the
-hard-bridge-first strategy.
+Formalized by Claude Fable 5, per user-observed model label (claude-fable-5[1m]).
 -/
 theorem growing_queries_dissimilarity_converges
   (P : Measure Ω)
   {n : Nat}
   (Dseq : Nat → Ω → DisMat n)
-  (DeltaInf : DisMat n) :
+  (Delta : Nat → DisMat n)
+  (DeltaInf : DisMat n)
+  (hsample :
+    ConvergesInProbabilityZero P (fun r ω => frobSub (Dseq r ω) (Delta r)))
+  (hlimit : Tendsto (fun r => frobSub (Delta r) DeltaInf) atTop (𝓝 0)) :
   ConvergesInProbabilityZero P (fun r ω => frobSub (Dseq r ω) DeltaInf) := by
-  sorry
+  refine convergesInProbabilityZero_of_le_add P
+    (fun r ω => frobSub (Dseq r ω) (Delta r))
+    (fun r ω => frobSub (Dseq r ω) DeltaInf)
+    (fun r => frobSub (Delta r) DeltaInf)
+    (fun r ω => Real.sqrt_nonneg _)
+    (fun r ω => ?_) hsample hlimit
+  -- Triangle inequality for the Frobenius distance, via the `ℓ²(pairs)` norm.
+  have htri := abs_norm_sub_norm_le
+    (WithLp.toLp 2 (fun p : Fin n × Fin n => Dseq r ω p.1 p.2 - DeltaInf p.1 p.2))
+    (WithLp.toLp 2 (fun p : Fin n × Fin n => Delta r p.1 p.2 - DeltaInf p.1 p.2))
+  have hnorm : ∀ (A B : DisMat n),
+      ‖WithLp.toLp 2 (fun p : Fin n × Fin n => A p.1 p.2 - B p.1 p.2)‖
+        = frobSub A B := by
+    intro A B
+    rw [EuclideanSpace.norm_eq, frobSub, frob, frobSq]
+    congr 1
+    rw [Fintype.sum_prod_type]
+    refine Finset.sum_congr rfl fun i _ => Finset.sum_congr rfl fun j _ => ?_
+    simp [Real.norm_eq_abs, sq_abs]
+  have hdiff : ‖WithLp.toLp 2 (fun p : Fin n × Fin n => Dseq r ω p.1 p.2 - DeltaInf p.1 p.2)
+        - WithLp.toLp 2 (fun p : Fin n × Fin n => Delta r p.1 p.2 - DeltaInf p.1 p.2)‖
+      = frobSub (Dseq r ω) (Delta r) := by
+    rw [← hnorm (Dseq r ω) (Delta r)]
+    congr 1
+    apply (WithLp.linearEquiv 2 ℝ _).injective
+    ext p
+    show (Dseq r ω p.1 p.2 - DeltaInf p.1 p.2) - (Delta r p.1 p.2 - DeltaInf p.1 p.2)
+      = Dseq r ω p.1 p.2 - Delta r p.1 p.2
+    ring
+  rw [hnorm, hnorm, hdiff] at htri
+  have := (abs_le.mp htri).2
+  linarith
 
-/-- Fixed `n`, growing-query consistency: paper Theorem 3 shape. -/
+/--
+Fixed `n`, growing-query consistency: paper Theorem 3 shape, with the repaired
+probability-step hypotheses threaded through.
+
+Formalized by Claude Fable 5, per user-observed model label (claude-fable-5[1m]).
+-/
 theorem fixed_models_growing_queries_consistency
   (P : Measure Ω)
   {n d : Nat}
   (Dseq : Nat → Ω → DisMat n)
+  (Delta : Nat → DisMat n)
   (DeltaInf : DisMat n)
   (ψhat : Nat → Ω → Config n d)
-  (hψhat : ∀ r ω, ψhat r ω ∈ MDS n d (Dseq r ω)) :
+  (hψhat : ∀ r ω, ψhat r ω ∈ MDS n d (Dseq r ω))
+  (hsample :
+    ConvergesInProbabilityZero P (fun r ω => frobSub (Dseq r ω) (Delta r)))
+  (hlimit : Tendsto (fun r => frobSub (Delta r) DeltaInf) atTop (𝓝 0)) :
   ∃ u : Nat → Nat,
     Subseq u ∧
     ∃ ψ : Config n d,
@@ -117,7 +206,7 @@ theorem fixed_models_growing_queries_consistency
       ∀ i j : Fin n,
         ConvergesInProbability P (fun t ω => pairDistErr (ψhat (u t) ω) ψ i j) 0 := by
   exact fixed_models_fixed_queries_consistency P Dseq DeltaInf ψhat hψhat
-    (growing_queries_dissimilarity_converges P Dseq DeltaInf)
+    (growing_queries_dissimilarity_converges P Dseq Delta DeltaInf hsample hlimit)
 
 /-! ## Paper layer 3: growing model set and growing query set -/
 

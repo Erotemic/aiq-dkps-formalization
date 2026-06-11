@@ -87,6 +87,12 @@ Mathematical source/citation:
 - Acharyya, Trosset, Priebe, Helm, "Consistent estimation of generative model
   representations in the data kernel perspective space", Theorem 2 and Appendix
   A.2.
+
+TODO(false-statement): as written this has NO hypotheses (any `Dseq`, any
+`DeltaInf`) and is therefore false. The true version needs the responseDist
+structure plus second-moment hypotheses; see `Acharyya2024/Probability.lean`
+and planning/acharyya-plan.md WP2. Deliberately deferred per the
+hard-bridge-first strategy.
 -/
 theorem growing_queries_dissimilarity_converges
   (P : Measure Ω)
@@ -130,6 +136,11 @@ Mathematical source/citation:
 - Acharyya, Trosset, Priebe, Helm, "Consistent estimation of generative model
   representations in the data kernel perspective space", Theorem 4 and Appendix
   A.3.
+
+TODO(false-statement): no probability hypotheses connect `Dseq` to `DeltaInf`,
+so this is false as written (same disease as
+`growing_queries_dissimilarity_converges`). Repair deferred; see
+planning/acharyya-plan.md WP8.
 -/
 theorem growing_models_growing_queries_consistency
   (P : Measure Ω)

@@ -266,6 +266,11 @@ Mathematical source/citation:
 The intended replacement proof uses Weyl eigenvalue perturbation plus
 Davis-Kahan eigenspace perturbation under the paper's fixed-rank/eigengap
 assumptions.
+
+TODO(false-statement): vacuous `MDSStabilityAssumptions`, arbitrary `ψhat`, and
+unaligned `ConfigError` make this false as written. Repair deferred to WP6
+after the spectral bridge (WP4/WP5/WP7) is in place; see
+planning/acharyya-plan.md.
 -/
 theorem cited_cmds_embedding_perturbation_from_centered_entrywise
     (P : Nat → Measure Ω)

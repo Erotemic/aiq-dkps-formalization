@@ -19,6 +19,7 @@ isolated statements, so replacing them can proceed one stage at a time.
 
 import Acharyya2025.MathlibBridge
 import Acharyya2025.Bridge
+import Acharyya2025.GramRealization
 
 open scoped BigOperators Topology
 open Filter MeasureTheory
@@ -56,17 +57,21 @@ theorem symmetric_configGram {n d : Nat} (ψ : Config n d) :
 
 /--
 The population CMDS matrix has the spectral structure needed for a `d`-dimensional
-classical-MDS embedding.
+classical-MDS embedding: positive semidefiniteness and rank at most `d`.
 
-This is deliberately more structured than the older abstract
-`MDSStabilityAssumptions`, but still avoids committing to one eventual Mathlib
-encoding of ordered eigenvalues until the spectral API bridge is implemented.
+HARDENED (2026-06-11, WP6): the original scaffold carried bare `Prop` fields
+(`positive_rank_d : Prop`, `eigengap_at_d : Prop`, `nonzero_gap_constant : Prop`)
+that constrained nothing (see planning/acharyya-graveyard.md, known-bad
+patterns).  The structure now carries the actual mathematical content; symmetry
+is implied by positive semidefiniteness.  Quantitative eigengap/floor data is
+deliberately NOT part of this structure — perturbation statements take it as
+explicit hypotheses (see `Acharyya2025.ConfigPerturbation`).
+
+Formalized by Claude Fable 5, per user-observed model label (claude-fable-5[1m]).
 -/
 structure CMDSpectralAssumptions (n d : Nat) (B : SqMat n) where
-  symmetric : B.IsSymm
-  positive_rank_d : Prop
-  eigengap_at_d : Prop
-  nonzero_gap_constant : Prop
+  posSemidef : B.PosSemidef
+  rank_le : B.rank ≤ d
 
 /--
 Configuration-level output of the population CMDS spectral stage.
@@ -172,7 +177,13 @@ theorem cited_population_cmds_realization
     (stable :
       CMDSpectralAssumptions n d (disMatToMatrix (classicalMDSMatrix D))) :
     ∃ ψ : Config n d, GramRealizesCMDS D ψ := by
-  sorry
+  -- REPAIRED + PROVED (2026-06-11, WP6): the spectral construction is
+  -- `Acharyya2025.GramRealization.exists_config_gram_eq_of_posSemidef_rank_le`,
+  -- applicable now that `CMDSpectralAssumptions` carries real content.
+  obtain ⟨ψ, hψ⟩ :=
+    Acharyya2025.GramRealization.exists_config_gram_eq_of_posSemidef_rank_le
+      (disMatToMatrix (classicalMDSMatrix D)) stable.posSemidef stable.rank_le
+  exact ⟨ψ, fun i j => hψ i j⟩
 
 /--
 Davis-Kahan/Weyl/Procrustes perturbation seam for CMDS configurations.

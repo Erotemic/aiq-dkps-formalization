@@ -23,7 +23,7 @@ Mathematical source/citation:
 Formalized by Claude Fable 5, per user-observed model label (claude-fable-5[1m]).
 -/
 
-import Acharyya2025.SpectralPipeline
+import Acharyya2024.Common
 
 open scoped BigOperators
 open Matrix

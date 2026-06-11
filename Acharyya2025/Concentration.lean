@@ -54,6 +54,11 @@ concentration plus the induced matrix-norm concentration argument.
 Mathematical source/citation:
 - Acharyya, Agterberg, Park, Priebe, "Concentration bounds on response-based
   vector embeddings of black-box generative models", Theorem 1 and Corollary 1.
+
+TODO(false-statement): `ResponseRegularity` carries bare `Prop` fields (they
+constrain nothing) and `proc.sample` is arbitrary, with a placeholder rate
+`1/(u+1)`; false as written. Repair deferred to WP6 (after the spectral bridge
+exists); see planning/acharyya-plan.md.
 -/
 theorem dissimilarity_matrix_concentrates
   (P : Nat → Measure Ω)
@@ -82,6 +87,11 @@ Mathematical source/citation:
   14(5):566-806.
 - Agterberg, Lubberts, Arroyo (2022), decomposition strategy used by Acharyya et
   al. for CMDS perturbation.
+
+TODO(false-statement): `MDSStabilityAssumptions` is vacuous (`Prop` fields),
+`ψhat` is arbitrary, the rate is a placeholder, and the conclusion uses
+unaligned `ConfigError` (CMDS output is only defined up to O(d)); false as
+written. Repair deferred to WP6; see planning/acharyya-plan.md.
 -/
 theorem classical_mds_embedding_perturbation
   (P : Nat → Measure Ω)

@@ -22,7 +22,21 @@ idea; say *why* it died.
 
 ## Dead ends (this effort)
 
-- 2026-06-11 — *(none yet)*
+- 2026-06-11 — `set S : Type := {k // ...}` in GramRealization: `set`-bound
+  type variables are fvars the unifier will not unfold, so `Finset.sum_subtype`
+  (and anything matching `Subtype p` syntactically) fails against `∑ k : S, _`.
+  Fix: inline the subtype literally (no `set` for types). Also:
+  `Finset.sum_subtype`'s function argument is applied as `f ↑a` — a non-Miller
+  pattern — so HO unification cannot infer `f`; pass it explicitly.
+- 2026-06-11 — `rw [← Finset.sum_map univ e f]` cannot fire against a goal of
+  shape `∑ a : Fin d, g a = ∑ k : S, h k` when the RHS is not literally
+  `∑ k ∈ univ, f (e k)`; rewrite the RHS into image form first
+  (`Finset.sum_congr` with the evaluation lemma), then `sum_map`/`sum_subset`.
+- 2026-06-11 — `Matrix.toEuclideanLin` application: WithLp is now a one-field
+  structure (`toLp`), so `fun i a => ...` is NOT defeq-accepted for
+  `Config n d`; wrap with `WithLp.toLp 2 (fun a => ...)`. Coordinate evaluation
+  `(toEuclideanLin M x) i` is still rfl-equal to `(M.mulVec (WithLp.ofLp x)) i`
+  (use `show` to switch).
 
 ## Open questions / watch list
 
@@ -31,9 +45,10 @@ idea; say *why* it died.
   not sorted.) To investigate before committing to WP5 route.
 - `MatrixOperatorNormClose` uses the **sup norm** on the output `Fin n → ℝ`
   (plain pi type) while `‖x‖` is the EuclideanSpace L² norm — an instance
-  mismatch baked into the def. Works for WP1's purposes, but WP7 will want an
-  honest L²→L² operator bound; may need a def change (note: changing the def
-  changes what seam #9 consumers receive).
+  mismatch baked into the def. RESOLVED 2026-06-11: `OperatorBridge.lean` adds
+  the honest `MatrixL2OperatorClose` (via `toEuclideanLin`) with
+  `matrixL2OperatorClose_of_entrywise` (constant n·ε); the old predicate is
+  left untouched for the legacy seam.
 - 2024 paper convergence is *subsequence-based* (`∃ u, Subseq u`) — when wiring
   WP2 into `fixed_models_growing_queries_consistency`, the subsequence comes
   only from the Trosset–Priebe seam, not from the probability step. Keep the

@@ -205,3 +205,17 @@ componentwise via `ProbabilityTheory.variance` + independence. Paper-agnostic �
   Courant–Fischer + Weyl, file Acharyya2025/Weyl.lean). Four agents in flight:
   WP2, WP3, WP4, WP5 — all in disjoint new files, review-then-commit
   individually on completion.
+- 2026-06-11 (later): WP2 ✅ COMMITTED (Probability.lean; WP2/WP3 agents were
+  killed mid-proof by a session interrupt — union-bound/squeeze half finished by
+  main session). WP3 ✅ COMMITTED (GramRealization.lean; final sum-extension,
+  WithLp packaging, Unitary namespace fixed by main session — note: `set`-bound
+  subtype broke unification, had to inline the subtype literally; recorded in
+  graveyard). WP4 ✅ COMMITTED (Procrustes.lean, agent-clean). WP5 ✅ COMMITTED
+  (Weyl.lean, agent-clean on first review). OperatorBridge.lean ✅ COMMITTED
+  (MatrixL2OperatorClose honest l2 operator predicate + entrywise→l2 n·ε +
+  symmetry transport; resolves the sup/l2 watch-list item). WP7(a,b) agent in
+  flight (DavisKahan.lean: cross-term identity + sin-Θ cross-energy bound).
+  WP10 agent in flight (SecondMoment.lean: iid variance algebra).
+  Hard-bridge status: 6 of 9 sorry-inventory items now have their honest core
+  proved; remaining: #9 final configuration-perturbation step (WP7c), #1
+  Trosset–Priebe (WP9), and the statement-repair pass (WP6/WP8).

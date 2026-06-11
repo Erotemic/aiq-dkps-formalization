@@ -153,6 +153,44 @@ File: `Acharyya2025/Weyl.lean`.
   versions; update `DkpsQuench/AcharyyaBridge` + `Helm2025/AcharyyaBridge`
   call-sites if shapes shift.
 
+### WP7(c) — Configuration assembly: ELEMENTARY DESIGN (2026-06-11)
+
+The literature proofs (ALA 2022 / Tu et al.) use SVD + von Neumann trace
+inequality — heavy to formalize. The following fully elementary route avoids
+both. Setting: population `B` symmetric PSD rank `d`, sorted eigenvalues
+`λ₁ ≥ ... ≥ λ_d ≥ α > 0 = λ_{d+1} = ...`, `λ₁ ≤ Λ`; sample `B̂` symmetric,
+`‖B̂−B‖op ≤ ε ≤ α/2`. Spectral factors: `ψ̂ = Û Λ̂^{1/2}` (top-d of B̂, eigenvalues
+clamped at 0), `ψ = U Λ^{1/2}` (canonical; a general Gram realization reduces to
+this by WP4 rigidity). Let `Q := ÛᵀU : Matrix (Fin d) (Fin d) ℝ` (overlap
+matrix), `W := polar(Q)`. Decompose:
+
+  `ψ̂W − ψ = ÛΛ̂^{1/2}(W − Q) + Û(Λ̂^{1/2}Q − QΛ^{1/2}) + (ÛQ − U)Λ^{1/2}`
+
+* **Term 3** (`ÛQ − U`): columns are `P̂u_l − u_l`; Frobenius² = the DK cross
+  sum ≤ `4nε²/α²` (RankGap, DONE). Multiplied by `‖Λ^{1/2}‖ ≤ √Λ`.
+* **Term 2** (the commutator — THE TRAP, see graveyard): entrywise
+  `(√λ̂_k − √λ_l)Q_{kl} = (λ̂_k − λ_l)Q_{kl}/(√λ̂_k + √λ_l)`, and the KEY identity
+  `Λ̂Q − QΛ = Ûᵀ(B̂−B)U` (from `B̂Û = ÛΛ̂`, `BU = UΛ`), so each entry is
+  `⟪û_k, (B̂−B)u_l⟫/(√λ̂_k + √λ_l)`, bounded by `ε/(√(α/2) + √α)`.
+  No naive splitting — the naive `‖Λ̂^{1/2}W − WΛ^{1/2}‖` bound is FALSE without
+  per-eigenvalue gaps.
+* **Term 1** (`W − Q`): `(QᵀQ − I)_{kl} = −Σ_{j≥d}⟪û_j,u_k⟫⟪û_j,u_l⟫` (bilinear
+  Parseval), entrywise ≤ DK cross sum by Cauchy–Schwarz/AM-GM. Polar factor:
+  `W := Q(QᵀQ)^{-1/2}` (spectral inverse-square-root via our eigenbasis
+  machinery on `EuclideanSpace ℝ (Fin d)`); `‖Q − W‖op = max_k |1 − μ_k^{-1/2}|
+  ≤ δ` for `‖QᵀQ−I‖op ≤ δ ≤ 1/2`. Multiplied by `‖Λ̂^{1/2}‖ ≤ √(Λ+ε)`.
+
+Sub-deliverables:
+* (c2) overlap-matrix lemmas: bilinear Parseval `⟪x,y⟫ = Σⱼ⟪bⱼ,x⟫⟪bⱼ,y⟫`,
+  `QᵀQ − I` entrywise bound, `Λ̂Q − QΛ = Ûᵀ(B̂−B)U` identity.
+* (c3) polar factor: PSD `G` with spectrum in `[1−δ, 1+δ]`, `δ ≤ 1/2` ⇒
+  `G^{-1/2}` exists with `‖id − G^{-1/2}‖op ≤ δ`-ish; `W := Q∘G^{-1/2}`
+  orthogonal. All via sorted-eigenbasis sums (no Mathlib CFC needed).
+* (c4) assembly: the three-term decomposition above + `ConfigError ≤ √n·‖·‖F`
+  + clamped-eigenvalue handling (`√λ̂_k` for `λ̂_k` possibly negative beyond
+  `d`: top-d only, Weyl gives `λ̂_k ≥ α − ε ≥ α/2 > 0` for `k < d`, so no
+  clamping needed in the top block).
+
 ### WP7 — Davis–Kahan (finite-dimensional, elementary route)
 Target: spectral-projector perturbation. For symmetric A, Â with top-d
 eigengap γ: `‖P̂ − P‖F ≤ c·‖Â − A‖F/γ`.

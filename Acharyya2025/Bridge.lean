@@ -6,16 +6,18 @@ This file keeps the proof chain explicit:
 response-mean event
   → distance-matrix event
   → centered classical-MDS matrix event
-  → cited spectral/MDS perturbation theorem
+  → spectral/MDS perturbation (proved in `Acharyya2025.AlignedPipeline`)
   → downstream DKPS concentration/alignment hypotheses.
 
-The first two arrows are deterministic and proved here.  The spectral/MDS arrow
-is intentionally isolated as a cited theorem-shaped `sorry`, not a hidden
-declaration-level assumption.
+Every arrow proved in this file is deterministic event propagation or its
+high-probability lift, with explicit rates (`responseFrobRate`,
+`cmdsEntrywiseRate`).  The spectral/MDS arrow is fully proved downstream:
+`Acharyya2025.AlignedPipeline.highProb_aligned_configError_of_entrywise_close`
+consumes the entrywise CMDS-closeness events produced here.  No unproved
+statements remain in this file.
 -/
 
 import Acharyya2025.Deterministic
-import Acharyya2025.Concentration
 
 open scoped BigOperators Topology
 open Filter MeasureTheory
@@ -245,109 +247,59 @@ theorem entrywise_close_to_cmds_entrywise_close_of_bounded
   exact squared_entrywise_close_to_cmds_entrywise_close hn
     (entrywise_close_squared_of_bounded hclose hA hB)
 
-/--
-Paper-facing centered-matrix perturbation seam for classical MDS.
+/-! ### Retired seam (2026-06-11): `cited_cmds_embedding_perturbation_from_centered_entrywise`
 
-This is deliberately a theorem-shaped `sorry`, not a hidden declaration-level
-assumption.  It is the precise place where the finite-dimensional spectral
-perturbation argument should be inserted.
-
-Mathematical source/citation:
-- Acharyya, Agterberg, Park, Priebe, *Concentration bounds on response-based
-  vector embeddings of black-box generative models*, Theorem 2 and Appendix A.
-- Agterberg, Lubberts, Arroyo (2022), decomposition strategy used by Acharyya et
-  al. for the CMDS embedding perturbation.
-- Yu, Wang, Samworth (2015), "A useful variant of the Davis-Kahan theorem for
-  statisticians", Biometrika 102(2):315-323.
-- Chen, Chi, Fan, Ma et al. (2021), *Spectral Methods for Data Science: A
-  Statistical Perspective*, Foundations and Trends in Machine Learning
-  14(5):566-806.
-
-The intended replacement proof uses Weyl eigenvalue perturbation plus
-Davis-Kahan eigenspace perturbation under the paper's fixed-rank/eigengap
-assumptions.
-
-TODO(false-statement): vacuous `MDSStabilityAssumptions`, arbitrary `ψhat`, and
-unaligned `ConfigError` make this false as written. SUPERSEDED: the true
-high-probability aligned version is proved in
+Original purpose: the paper-facing centered-matrix perturbation seam for
+classical MDS — a deliberately isolated, unproved theorem marking exactly where
+the finite-dimensional spectral perturbation argument (Weyl eigenvalue
+perturbation plus Davis-Kahan eigenspace perturbation under fixed-rank/eigengap
+assumptions) was to be inserted.  Citations worth keeping: Acharyya, Agterberg,
+Park, Priebe, *Concentration bounds on response-based vector embeddings of
+black-box generative models*, Theorem 2 and Appendix A; Agterberg, Lubberts,
+Arroyo (2022), the decomposition strategy used by Acharyya et al. for the CMDS
+embedding perturbation; Yu, Wang, Samworth (2015), "A useful variant of the
+Davis-Kahan theorem for statisticians", Biometrika 102(2):315-323; Chen, Chi,
+Fan, Ma et al. (2021), *Spectral Methods for Data Science: A Statistical
+Perspective*, Foundations and Trends in Machine Learning 14(5):566-806.  Why it
+was FALSE as written: it took a vacuous
+`Acharyya2025.Concentration.MDSStabilityAssumptions` (bare `Prop` fields,
+constraining nothing), an arbitrary estimator `ψhat` (no link to the CMDS of
+`Dhat`), and concluded with unaligned `ConfigError` even though CMDS output is
+only defined up to an orthogonal transformation.  Proved TRUE replacement:
 `Acharyya2025.AlignedPipeline.highProb_aligned_configError_of_entrywise_close`
-(built on `MatrixPerturbation.exists_isometry_configError_le_of_entrywise_close`).
-This legacy statement is retained only as a scaffold record.
+(built on
+`Acharyya2025.MatrixPerturbation.exists_isometry_configError_le_of_entrywise_close`),
+whose conclusion carries the alignment isometry baked into
+`alignedSpectralConfig` and whose hypotheses are genuine PSD/rank/eigengap
+floor/cap data with the explicit `configBound` rate.
+
+Retired by Claude Fable 5, per user-observed model label (claude-fable-5[1m]);
+retained as prose for the formalization case-study record. The original
+statement is in git history (see commits noted in planning/acharyya-plan.md).
 -/
-theorem cited_cmds_embedding_perturbation_from_centered_entrywise
-    (P : Nat → Measure Ω)
-    {n d : Nat}
-    (Dhat : Nat → Ω → DisMat n)
-    (D : DisMat n)
-    (ψhat : Nat → Ω → Config n d)
-    (ψ : Config n d)
-    (stable : Acharyya2025.Concentration.MDSStabilityAssumptions n d D)
-    (rate : Nat → Real)
-    (hcenter :
-      HighProbAtTop P
-        (fun u => {ω | EntrywiseClose
-          (classicalMDSMatrix (Dhat u ω)) (classicalMDSMatrix D) (rate u)})) :
-    HighProbAtTop P (fun u => {ω | ConfigError (ψhat u ω) ψ ≤ rate u}) := by
-  sorry
 
-/--
-Main bridge from response-mean concentration to DKPS embedding concentration,
-assuming the cited CMDS spectral perturbation theorem.
+/-! ### Retired seam (2026-06-11): `dkps_config_concentration_from_response_mean_hp`
 
-This theorem proves the reduction chain around the cited spectral theorem:
-response-mean HP event → Frobenius distance-matrix HP event → entrywise
-distance HP event → entrywise CMDS-matrix HP event → cited CMDS perturbation.
+Original purpose: the main bridge from response-mean concentration to DKPS
+embedding concentration — it proved the genuine reduction chain (response-mean
+HP event → Frobenius distance-matrix HP event → entrywise distance HP event →
+entrywise CMDS-matrix HP event) and then closed with the unproved seam above.
+Citation worth keeping: Acharyya, Agterberg, Park, Priebe, arXiv:2511.08307,
+Theorems 1-2.  Why it was FALSE as written: its conclusion depended on
+`cited_cmds_embedding_perturbation_from_centered_entrywise`, so it inherited
+the same defects (vacuous stability structure, arbitrary `ψhat`, unaligned
+`ConfigError`).  The deterministic/HP propagation steps it chained are all
+still live in this file (`response_mean_close_hp_to_frob_hp`,
+`frob_close_hp_to_entrywise_close_hp`,
+`entrywise_close_to_cmds_entrywise_close_of_bounded`).  Proved TRUE
+replacement:
+`Acharyya2025.AlignedPipeline.highProb_aligned_configError_of_response_mean`,
+which composes exactly those live bridges with the proved aligned spectral
+capstone.
 
-The only unproved ingredient it uses is
-`cited_cmds_embedding_perturbation_from_centered_entrywise`, whose docstring
-records the peer-reviewed/high-quality citations.
-
-Formalized by Codex 5.5 High, per user-observed model label.
+Retired by Claude Fable 5, per user-observed model label (claude-fable-5[1m]);
+retained as prose for the formalization case-study record. The original
+statement is in git history (see commits noted in planning/acharyya-plan.md).
 -/
-theorem dkps_config_concentration_from_response_mean_hp
-    (P : Nat → Measure Ω)
-    {n m p d : Nat} (hn : 0 < n)
-    (Xbar : Nat → Ω → Fin n → Mat m p)
-    (μ : Fin n → Mat m p)
-    (ψhat : Nat → Ω → Config n d)
-    (ψ : Config n d)
-    (stable :
-      Acharyya2025.Concentration.MDSStabilityAssumptions n d (responseDist μ))
-    (η R : Nat → Real)
-    (hmean :
-      HighProbAtTop P
-        (fun u => {ω | UniformResponseMeanClose (Xbar u ω) μ (η u)}))
-    (hsample_bound :
-      ∀ u ω i j, |responseDist (Xbar u ω) i j| ≤ R u)
-    (hpopulation_bound :
-      ∀ u i j, |responseDist μ i j| ≤ R u) :
-    HighProbAtTop P
-      (fun u => {ω |
-        ConfigError (ψhat u ω) ψ ≤ cmdsEntrywiseRate n m (R u) (η u)}) := by
-  let Dhat : Nat → Ω → DisMat n := fun u ω => responseDist (Xbar u ω)
-  let D : DisMat n := responseDist μ
-  let frobRate : Nat → Real := fun u => responseFrobRate n m (η u)
-  let cmdsRate : Nat → Real := fun u => cmdsEntrywiseRate n m (R u) (η u)
-  have hfrob :
-      HighProbAtTop P
-        (fun u => {ω | frobSub (Dhat u ω) D ≤ frobRate u}) := by
-    simpa [Dhat, D, frobRate] using
-      response_mean_close_hp_to_frob_hp P Xbar μ η hmean
-  have hentry :
-      HighProbAtTop P
-        (fun u => {ω | EntrywiseClose (Dhat u ω) D (frobRate u)}) := by
-    exact frob_close_hp_to_entrywise_close_hp P Dhat D frobRate hfrob
-  have hcmds :
-      HighProbAtTop P
-        (fun u => {ω | EntrywiseClose
-          (classicalMDSMatrix (Dhat u ω)) (classicalMDSMatrix D) (cmdsRate u)}) := by
-    exact HighProbAtTop.mono hentry
-      (fun u ω hω =>
-        entrywise_close_to_cmds_entrywise_close_of_bounded hn hω
-          (fun i j => by simpa [Dhat] using hsample_bound u ω i j)
-          (fun i j => by simpa [D] using hpopulation_bound u i j))
-  simpa [Dhat, D, cmdsRate] using
-    cited_cmds_embedding_perturbation_from_centered_entrywise
-      P Dhat D ψhat ψ stable cmdsRate hcmds
 
 end Acharyya2025.Bridge

@@ -283,7 +283,16 @@ componentwise via `ProbabilityTheory.variance` + independence. Paper-agnostic �
 - [x] WP3 committed (Gram realization proved; CMDSpectralAssumptions hardening
       pending WP6)
 - [x] WP4 committed (alignment statable — and USED in WP7c4)
-- [ ] WP6 committed (no false statements remain anywhere) — NEXT SESSION
+- [x] WP6 committed (statement-repair pass: growing_queries +
+      cited_population_cmds_realization repaired+proved; matrix-world capstone
+      MatrixPerturbation.lean; remaining legacy sorries are all marked
+      SUPERSEDED scaffold records pointing at proved replacements)
+- [x] Downstream wiring committed (AlignedPipeline.lean: alignedSpectralConfig
+      choice-based aligned estimator, TRUE replacement of legacy seam #6,
+      end-to-end response-mean → aligned ConfigError; DkpsQuench
+      quench_uniform_embedding_error_of_aligned_spectral; Helm2025
+      alignmentConsistency_of_aligned_spectral — the per-ω-population seam in
+      Helm is documented as the halign hypothesis)
 - [x] WP5, WP7(a,b) committed
 - [x] WP7(c) committed IN FULL (c2 Overlap, c3 PolarFactor, c4
       ConfigPerturbation) — the Davis–Kahan seam is not merely "reduced", it is
@@ -295,19 +304,21 @@ componentwise via `ProbabilityTheory.variance` + independence. Paper-agnostic �
 
 ## Remaining work (next sessions)
 
-1. WP6 statement-repair pass: re-derive / replace the 8 legacy sorries
-   (Consistency.lean ×3, Concentration.lean ×2, Bridge.lean ×1,
-   SpectralPipeline.lean ×2) from the new proved bridge. The matrix-world
-   plumbing needed: classicalMDSMatrix → toEuclideanLin symmetric operator
-   (OperatorBridge has the transport), spectralConfig as the formal CMDS
-   estimator definition for the paper-facing statements, Procrustes rigidity
-   (WP4) to pass from spectralConfig T to an arbitrary Gram realization ψ.
-2. WP8 triangular-array regimes (2024 Thm 4/5).
-3. WP9 Trosset–Priebe raw-stress stability — the one genuinely external cited
-   seam that remains.
+1. ~~WP6 statement-repair pass~~ DONE 2026-06-11. Sorry census 8 → 5:
+   3 are SUPERSEDED scaffold records (Concentration ×2, Bridge ×1,
+   SpectralPipeline cited_cmds ×1 — actually 4 markers), 1 PARTIAL
+   (rawStress_mds_stability, deterministic core proved in RawStress.lean),
+   1 open (growing_models = WP8).
+2. WP8 triangular-array regimes (2024 Thm 4/5) — last open non-superseded
+   sorry in Consistency.lean.
+3. WP9 probabilistic upgrade of Trosset–Priebe: ω-dependent subsequence vs
+   the paper's fixed-ψ in-probability claim (measurable-selection gap; see
+   graveyard watch list).
 4. Paper-faithful rate bookkeeping: chain WP10 (γ/r) → WP2 → entrywise →
    cmdsEntrywiseRate → operator (n·ε) → configBound to extract the
    end-to-end Poly((n³/r)^…)-style rate and compare with the paper's.
+5. READMEs + Mathlib-candidate extraction (Weyl, DavisKahan, PolarFactor,
+   Procrustes, GramRealization, OperatorBridge, SecondMoment, WellKnown).
 
 ## Progress ledger
 
@@ -343,3 +354,21 @@ componentwise via `ProbabilityTheory.variance` + independence. Paper-agnostic �
   eigenbasis, no CFC/SVD). WP7(c4) ConfigPerturbation agent in flight (final
   assembly: spectralConfig def + three-term telescoping split + the proven
   toolkit ⇒ ∃ isometry W, ConfigError(W∘ψ̂, ψ) ≤ explicit bound).
+- 2026-06-11 (evening): WP7(c4) ConfigPerturbation.lean ✅ COMMITTED — THE
+  BRIDGE THEOREM exists_isometry_configError_spectralConfig_le proved with
+  explicit configBound. WP9 deterministic core ✅ COMMITTED (RawStress.lean:
+  minimizer existence, √-stress Lipschitz, subsequence stability; gap =
+  measurable selection, documented). WP6-core ✅ COMMITTED
+  (MatrixPerturbation.lean matrix-world capstone
+  exists_isometry_configError_le_of_entrywise_close; rank-transport route for
+  trailing eigenvalues). WP6 repairs ✅ COMMITTED
+  (growing_queries_dissimilarity_converges, cited_population_cmds_realization;
+  legacy seams marked SUPERSEDED with pointers). Downstream wiring ✅
+  COMMITTED 1473c6e: AlignedPipeline.lean (symmetry plumbing,
+  alignedSpectralConfig via Classical.choose, HP aligned-ConfigError theorems
+  incl. end-to-end response-mean version),
+  DkpsQuench.quench_uniform_embedding_error_of_aligned_spectral,
+  Helm2025.alignmentConsistency_of_aligned_spectral. All four wiring theorems
+  audit to [propext, Classical.choice, Quot.sound]. The chain
+  iid responses → Chebyshev → dissimilarity → CMDS perturbation → aligned
+  embedding error → Quench/Helm hypotheses is formally connected end-to-end.

@@ -1,7 +1,7 @@
 name = "aiq_dkps_formalization"
 version = "0.1.0"
 keywords = ["math", "formalization", "DKPS", "MDS", "spectral-perturbation"]
-defaultTargets = ["Acharyya2024", "Acharyya2025", "DkpsQuench", "Helm2025"]
+defaultTargets = ["ForMathlib", "Acharyya2024", "Acharyya2025", "DkpsQuench", "Helm2025"]
 
 # Standalone Lean workspace for four DKPS-related theorem developments.
 # The libraries share one Mathlib checkout/build and are intentionally kept as
@@ -16,6 +16,11 @@ autoImplicit = false
 [[require]]
 name = "mathlib"
 scope = "leanprover-community"
+
+# Mathlib-staging library: paper-agnostic results restated in Mathlib idiom,
+# one file per proposed Mathlib destination path.  See ForMathlib/README.md.
+[[lean_lib]]
+name = "ForMathlib"
 
 [[lean_lib]]
 name = "Acharyya2024"

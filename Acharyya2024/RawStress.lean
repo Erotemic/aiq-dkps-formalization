@@ -513,4 +513,223 @@ theorem pairDist_tendsto
     hi.sub hj
   simpa [pairDist] using hsub.norm
 
+/-! ## Closing the measurable-selection gap
+
+The remaining seam between the deterministic subsequence stability (d) and the
+paper's probabilistic Theorem-1 statement is usually bridged by a measurable
+selection of minimizers.  We avoid measurable selection entirely:
+
+* a contradiction/compactness argument upgrades the subsequence stability to a
+  uniform modulus of continuity (`exists_modulus_pairDist`);
+* the probabilistic statements then follow from event inclusion plus
+  monotonicity of outer measure (`measure_mono` holds for *arbitrary* sets), so
+  no measurability hypotheses on the events are ever needed. -/
+
+open MeasureTheory
+
+/--
+Centering preserves all pairwise distances: `center` subtracts the same mean
+vector from every point of a configuration, so differences of points — and
+hence their norms — are unchanged.
+
+Formalized by Claude Fable 5, per user-observed model label (claude-fable-5[1m]).
+-/
+theorem pairDist_center (z : Config n d) (i j : Fin n) :
+    pairDist (center z) i j = pairDist z i j := by
+  unfold pairDist center
+  congr 1
+  abel
+
+/--
+Centering a raw-stress minimizer yields a raw-stress minimizer: raw stress is
+translation invariant (`rawStress_center`), so subtracting the mean does not
+change the objective value, and global minimality is preserved.
+
+Formalized by Claude Fable 5, per user-observed model label (claude-fable-5[1m]).
+-/
+theorem center_mem_mds {Δ : DisMat n} {z : Config n d} (hz : z ∈ MDS n d Δ) :
+    center z ∈ MDS n d Δ := by
+  intro z'
+  rw [rawStress_center]
+  exact hz z'
+
+/--
+**Uniform modulus of continuity for raw-stress MDS** (the key to closing the
+probabilistic Trosset–Priebe gap WITHOUT measurable selection).
+
+For every tolerance `ε > 0` there is a `δ > 0` such that *any* raw-stress
+minimizer `z` for *any* dissimilarity matrix `D'` within Frobenius distance `δ`
+of `Δ` has all its pairwise distances within `ε` of those of *some* raw-stress
+minimizer `ψ` for `Δ`.
+
+Crucially, `δ` depends only on `(Δ, ε)` — not on `D'`, not on which minimizer
+`z` was chosen.  This uniformity is exactly what lets the probabilistic
+stability theorems below proceed by event inclusion, with no need to select a
+minimizer measurably in `ω`.
+
+Proof: by contradiction.  A failing sequence at `δ = 1/(k+1)` may be centered
+(`center_mem_mds`, `pairDist_center` keep it a counterexample), after which the
+deterministic compactness result `pairDist_tendsto` extracts a subsequence whose
+pairwise distances converge to those of some `ψ ∈ MDS n d Δ` — eventually
+violating the assumed failure at `ψ` for the finitely many index pairs.
+
+Mathematical source/citation: Trosset & Priebe, "Continuous multidimensional
+scaling" (cited as Theorem 2 in Acharyya et al., arXiv:2409.17308, Appendix
+A.1–A.2).
+
+Formalized by Claude Fable 5, per user-observed model label (claude-fable-5[1m]).
+-/
+theorem exists_modulus_pairDist (Δ : DisMat n) {ε : ℝ} (hε : 0 < ε) :
+    ∃ δ : ℝ, 0 < δ ∧ ∀ (D' : DisMat n) (z : Config n d),
+      z ∈ MDS n d D' → frobSub D' Δ ≤ δ →
+      ∃ ψ ∈ MDS n d Δ, ∀ i j : Fin n, pairDistErr z ψ i j ≤ ε := by
+  rcases Nat.eq_zero_or_pos n with hn0 | hnpos
+  · -- `n = 0`: `Fin 0` is empty, so any minimizer `ψ` works; take `δ = 1`.
+    subst hn0
+    obtain ⟨ψ, hψ⟩ := mds_nonempty (d := d) Δ
+    exact ⟨1, one_pos, fun D' z _ _ => ⟨ψ, hψ, fun i => i.elim0⟩⟩
+  have hn : n ≠ 0 := hnpos.ne'
+  by_contra hcon
+  push_neg at hcon
+  -- Counterexamples at `δ = 1/(k+1)` for every `k`.
+  have hex := fun k : Nat => hcon (1 / ((k : ℝ) + 1)) (by positivity)
+  choose D zc hzmem hfrob hbad using hex
+  -- The counterexample matrices converge to `Δ` (squeeze `0 ≤ frobSub ≤ 1/(k+1)`).
+  have hfrob_nonneg : ∀ k, 0 ≤ frobSub (D k) Δ := by
+    intro k; rw [frobSub, frob]; exact Real.sqrt_nonneg _
+  have hD : Tendsto (fun k => frobSub (D k) Δ) atTop (𝓝 0) :=
+    tendsto_of_tendsto_of_tendsto_of_le_of_le tendsto_const_nhds
+      tendsto_one_div_add_atTop_nhds_zero_nat hfrob_nonneg hfrob
+  -- Center the counterexample configurations and apply deterministic stability.
+  obtain ⟨u, hu_mono, ψ, hψ_mds, hpd⟩ :=
+    pairDist_tendsto D Δ (fun k => center (zc k))
+      (fun k => center_mem_mds (hzmem k))
+      (fun k => sum_center_eq_zero hn (zc k)) hD
+  -- Centering does not change pairwise distances.
+  have hpd' : ∀ i j : Fin n,
+      Tendsto (fun t => pairDist (zc (u t)) i j) atTop (𝓝 (pairDist ψ i j)) := by
+    intro i j
+    simpa [pairDist_center] using hpd i j
+  -- For each index pair, the distance error to `ψ` is eventually `≤ ε`.
+  have hev : ∀ p : Fin n × Fin n,
+      ∀ᶠ t in atTop, pairDistErr (zc (u t)) ψ p.1 p.2 ≤ ε := by
+    intro p
+    have hconst : Tendsto (fun _ : Nat => pairDist ψ p.1 p.2) atTop
+        (𝓝 (pairDist ψ p.1 p.2)) := tendsto_const_nhds
+    have h2 : Tendsto (fun t => pairDistErr (zc (u t)) ψ p.1 p.2) atTop (𝓝 0) := by
+      simpa [pairDistErr, sub_self] using ((hpd' p.1 p.2).sub hconst).abs
+    exact h2.eventually (eventually_le_nhds hε)
+  -- Combine over the finitely many pairs and pick a concrete time `t`.
+  obtain ⟨t, ht⟩ := (eventually_all.mpr hev).exists
+  -- The assumed failure at `ψ` produces a pair violating the bound.
+  obtain ⟨i, j, hij⟩ := hbad (u t) ψ hψ_mds
+  exact absurd (ht (i, j)) (not_le.mpr hij)
+
+/--
+**Probabilistic raw-stress MDS stability, set version** (no measurability
+anywhere).
+
+If the random dissimilarity matrices `Dseq r` converge in probability to
+`DeltaInf` in Frobenius norm, and `ψhat r ω` is *any* raw-stress minimizer for
+`Dseq r ω`, then the (outer) probability that `ψhat r ω` fails to be pairwise
+`ε`-close to some minimizer for `DeltaInf` tends to `0`.
+
+This closes the probabilistic Trosset–Priebe gap WITHOUT measurable selection:
+the modulus of continuity `exists_modulus_pairDist` gives the deterministic
+event inclusion `{bad} ⊆ {frobSub > δ}`, and `MeasureTheory.measure_mono` holds
+for *arbitrary* sets (Mathlib measures are outer measures), so no measurability
+of the bad event — and no measurable choice of minimizer — is required.
+
+Formalized by Claude Fable 5, per user-observed model label (claude-fable-5[1m]).
+-/
+theorem mds_stability_inProbability_set
+    {Ω : Type} [MeasurableSpace Ω] (P : Measure Ω)
+    (Dseq : Nat → Ω → DisMat n) (DeltaInf : DisMat n)
+    (ψhat : Nat → Ω → Config n d)
+    (hψhat : ∀ r ω, ψhat r ω ∈ MDS n d (Dseq r ω))
+    (hD : ConvergesInProbabilityZero P (fun r ω => frobSub (Dseq r ω) DeltaInf))
+    {ε : ℝ} (hε : 0 < ε) :
+    Tendsto (fun r => P {ω | ¬ ∃ ψ ∈ MDS n d DeltaInf,
+      ∀ i j : Fin n, pairDistErr (ψhat r ω) ψ i j ≤ ε}) atTop (𝓝 0) := by
+  obtain ⟨δ, hδ, hmod⟩ := exists_modulus_pairDist (n := n) (d := d) DeltaInf hε
+  -- Event inclusion: bad MDS output forces `frobSub > δ`.
+  have hsub : ∀ r, {ω | ¬ ∃ ψ ∈ MDS n d DeltaInf,
+        ∀ i j : Fin n, pairDistErr (ψhat r ω) ψ i j ≤ ε}
+      ⊆ {ω | dist (frobSub (Dseq r ω) DeltaInf) 0 > δ} := by
+    intro r ω hω
+    simp only [Set.mem_setOf_eq] at hω ⊢
+    by_contra hle
+    push_neg at hle
+    have hfrob_nonneg : 0 ≤ frobSub (Dseq r ω) DeltaInf := by
+      rw [frobSub, frob]; exact Real.sqrt_nonneg _
+    rw [Real.dist_eq, sub_zero, abs_of_nonneg hfrob_nonneg] at hle
+    exact hω (hmod (Dseq r ω) (ψhat r ω) (hψhat r ω) hle)
+  -- Squeeze in `ℝ≥0∞` using outer-measure monotonicity.
+  exact tendsto_of_tendsto_of_tendsto_of_le_of_le tendsto_const_nhds (hD δ hδ)
+    (fun r => zero_le _) (fun r => measure_mono (hsub r))
+
+/--
+The limiting dissimilarity matrix has a **unique pairwise-distance profile**:
+all raw-stress minimizers induce the same pairwise distances.  This is the
+hypothesis the paper's Theorem 1 implicitly needs in order to speak of "the"
+embedding distances of the limit; without it only the set version
+(`mds_stability_inProbability_set`) is true.
+
+Formalized by Claude Fable 5, per user-observed model label (claude-fable-5[1m]).
+-/
+def UniquePairProfile (n d : Nat) (Δ : DisMat n) : Prop :=
+  ∀ ψ₁ ∈ MDS n d Δ, ∀ ψ₂ ∈ MDS n d Δ, ∀ i j : Fin n, pairDist ψ₁ i j = pairDist ψ₂ i j
+
+/--
+**Probabilistic raw-stress MDS stability with a fixed limit configuration**
+(full sequence, no subsequence) — the repaired Theorem-1 shape of Acharyya et
+al. under the profile-uniqueness hypothesis the paper implicitly needs.
+
+If additionally all minimizers for `DeltaInf` share the same pairwise-distance
+profile (`UniquePairProfile`), then there is a single fixed minimizer `ψ` such
+that every pairwise-distance error of the random MDS output `ψhat r ω` against
+`ψ` converges to `0` in probability — along the full sequence.
+
+Like `mds_stability_inProbability_set`, this closes the probabilistic
+Trosset–Priebe gap WITHOUT measurable selection: the proof is pure event
+inclusion (any witness `ψ'` from the modulus event has the same distance
+profile as `ψ`, by uniqueness) followed by outer-measure monotonicity, so no
+measurability of events or of a minimizer selection is required.
+
+Formalized by Claude Fable 5, per user-observed model label (claude-fable-5[1m]).
+-/
+theorem mds_stability_inProbability_of_uniqueProfile
+    {Ω : Type} [MeasurableSpace Ω] (P : Measure Ω)
+    (Dseq : Nat → Ω → DisMat n) (DeltaInf : DisMat n)
+    (ψhat : Nat → Ω → Config n d)
+    (hψhat : ∀ r ω, ψhat r ω ∈ MDS n d (Dseq r ω))
+    (huniq : UniquePairProfile n d DeltaInf)
+    (hD : ConvergesInProbabilityZero P (fun r ω => frobSub (Dseq r ω) DeltaInf)) :
+    ∃ ψ ∈ MDS n d DeltaInf, ∀ i j : Fin n,
+      ConvergesInProbability P (fun r ω => pairDistErr (ψhat r ω) ψ i j) 0 := by
+  obtain ⟨ψ, hψ⟩ := mds_nonempty (n := n) (d := d) DeltaInf
+  refine ⟨ψ, hψ, fun i j => ?_⟩
+  intro ε hε
+  -- Event inclusion into the set-version bad event.
+  have hsub : ∀ r, {ω | dist (pairDistErr (ψhat r ω) ψ i j) 0 > ε}
+      ⊆ {ω | ¬ ∃ ψ' ∈ MDS n d DeltaInf,
+          ∀ i' j' : Fin n, pairDistErr (ψhat r ω) ψ' i' j' ≤ ε} := by
+    intro r ω hω
+    simp only [Set.mem_setOf_eq] at hω ⊢
+    rintro ⟨ψ', hψ', hclose⟩
+    -- `ψ'` and `ψ` share the same distance profile, so the bound transfers.
+    have heq : pairDist ψ' i j = pairDist ψ i j := huniq ψ' hψ' ψ hψ i j
+    have herr_eq : pairDistErr (ψhat r ω) ψ i j = pairDistErr (ψhat r ω) ψ' i j := by
+      unfold pairDistErr
+      rw [heq]
+    have hle : pairDistErr (ψhat r ω) ψ i j ≤ ε := by
+      rw [herr_eq]; exact hclose i j
+    have hpe_nonneg : 0 ≤ pairDistErr (ψhat r ω) ψ i j := by
+      unfold pairDistErr; exact abs_nonneg _
+    rw [Real.dist_eq, sub_zero, abs_of_nonneg hpe_nonneg] at hω
+    exact absurd hle (not_le.mpr hω)
+  have hset := mds_stability_inProbability_set P Dseq DeltaInf ψhat hψhat hD hε
+  exact tendsto_of_tendsto_of_tendsto_of_le_of_le tendsto_const_nhds hset
+    (fun r => zero_le _) (fun r => measure_mono (hsub r))
+
 end Acharyya2024.RawStress

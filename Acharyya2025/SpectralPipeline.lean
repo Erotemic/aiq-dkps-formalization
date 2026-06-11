@@ -116,7 +116,38 @@ theorem cited_entrywise_to_operatorNormClose
     {n : Nat} {A B : SqMat n} {ε : Real}
     (hentry : MatrixEntrywiseClose A B ε) :
     MatrixOperatorNormClose A B ((n : Real) * ε) := by
-  sorry
+  intro x
+  rcases Nat.eq_zero_or_pos n with hn | hn
+  · subst hn
+    have hzero : (A - B).mulVec x = 0 := Subsingleton.elim _ _
+    simp [hzero]
+  · have hε : 0 ≤ ε := (abs_nonneg _).trans (hentry ⟨0, hn⟩ ⟨0, hn⟩)
+    have hcoord : ∀ j : Fin n, |x j| ≤ ‖x‖ := by
+      intro j
+      rw [EuclideanSpace.norm_eq]
+      have hsq : (x j) ^ 2 ≤ ∑ i : Fin n, ‖x i‖ ^ 2 := by
+        have h := Finset.single_le_sum
+          (f := fun i : Fin n => ‖x i‖ ^ 2)
+          (fun i _ => sq_nonneg ‖x i‖) (Finset.mem_univ j)
+        simpa [Real.norm_eq_abs, sq_abs] using h
+      exact Real.le_sqrt_of_sq_le (by simpa [sq_abs] using hsq)
+    have hRHS : 0 ≤ (n : Real) * ε * ‖x‖ := by positivity
+    rw [pi_norm_le_iff_of_nonneg hRHS]
+    intro i
+    rw [Real.norm_eq_abs]
+    calc
+      |(A - B).mulVec x i|
+          = |∑ j : Fin n, (A i j - B i j) * x j| := by
+            simp [Matrix.mulVec, dotProduct, Matrix.sub_apply]
+      _ ≤ ∑ j : Fin n, |(A i j - B i j) * x j| :=
+            Finset.abs_sum_le_sum_abs _ _
+      _ = ∑ j : Fin n, |A i j - B i j| * |x j| := by
+            simp [abs_mul]
+      _ ≤ ∑ _j : Fin n, ε * ‖x‖ :=
+            Finset.sum_le_sum fun j _ =>
+              mul_le_mul (hentry i j) (hcoord j) (abs_nonneg _) hε
+      _ = (n : Real) * ε * ‖x‖ := by
+            simp [Finset.sum_const, Finset.card_univ, mul_assoc]
 
 /-! ## Spectral/MDS hard seams -/
 

@@ -7,6 +7,7 @@ already present there in a comparable form.
 -/
 
 import Mathlib
+import ForMathlib.MeasureTheory.Function.ConvergenceInMeasure
 
 open scoped BigOperators Topology
 open Filter MeasureTheory
@@ -121,25 +122,21 @@ theorem tendsto_measure_abs_gt_zero_of_highProb_abs_le_rate
         P {ω | |X n ω| ≤ rate n} ≥ 1 - δ) :
     ∀ ε : Real, 0 < ε →
       Tendsto (fun n => P {ω | |X n ω| > ε}) atTop (𝓝 0) := by
+  -- The complements of the good events have vanishing probability.
+  have hcompl : Tendsto (fun n => P {ω | |X n ω| ≤ rate n}ᶜ) atTop (𝓝 0) :=
+    tendsto_measure_compl_zero_of_forall_eventually_ge_one_sub P _ hgood_meas hgood_prob
+  -- Rewrite them as the exceptional sets of the staged general lemma.
+  have hbad : Tendsto (fun n => P {ω | rate n < dist (X n ω) 0}) atTop (𝓝 0) := by
+    refine hcompl.congr fun n => ?_
+    congr 1
+    ext ω
+    simp [not_le]
+  -- Apply the staged Mathlib candidate: convergence in measure to `0`.
+  have htim : TendstoInMeasure P X atTop (fun _ => (0 : Real)) :=
+    ForMathlib.tendstoInMeasure_of_tendsto_measure_rate_lt_dist hrate hbad
+  -- Extract the bad-event probabilities at a fixed threshold `ε`.
   intro ε hε
-  let E : Nat → Set Ω := fun n => {ω | |X n ω| ≤ rate n}
-  have hcompl :
-      Tendsto (fun n => P (E n)ᶜ) atTop (𝓝 0) :=
-    tendsto_measure_compl_zero_of_forall_eventually_ge_one_sub P E hgood_meas hgood_prob
-  rw [ENNReal.tendsto_nhds_zero] at hcompl ⊢
-  intro δ hδ
-  have hrate_eventually : ∀ᶠ n in atTop, rate n < ε := by
-    have hball : ∀ᶠ n in atTop, rate n ∈ Metric.ball (0 : Real) ε :=
-      hrate.eventually (Metric.ball_mem_nhds _ hε)
-    filter_upwards [hball] with n hn
-    have habs : |rate n| < ε := by
-      simpa [Metric.mem_ball, dist_eq_norm] using hn
-    exact (abs_lt.mp habs).2
-  filter_upwards [hcompl δ hδ, hrate_eventually] with n hcompl_le hrate_lt
-  calc
-    P {ω | |X n ω| > ε} ≤ P (E n)ᶜ := by
-      refine measure_mono ?_
-      intro ω hbad hgood
-      have hlt : |X n ω| < ε := lt_of_le_of_lt hgood hrate_lt
-      exact (not_lt_of_ge hlt.le) hbad
-    _ ≤ δ := hcompl_le
+  have hclosed := (MeasureTheory.tendstoInMeasure_iff_dist.mp htim) ε hε
+  refine tendsto_of_tendsto_of_tendsto_of_le_of_le tendsto_const_nhds hclosed
+    (fun n => zero_le) fun n => measure_mono fun ω hω => ?_
+  simpa [Real.dist_0_eq_abs] using hω.le

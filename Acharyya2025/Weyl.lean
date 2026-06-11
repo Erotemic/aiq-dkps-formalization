@@ -24,6 +24,7 @@ Formalized by Claude Fable 5, per user-observed model label (claude-fable-5[1m])
 -/
 
 import Mathlib
+import ForMathlib.Analysis.InnerProductSpace.CourantFischer
 
 open scoped BigOperators RealInnerProductSpace
 open Module (finrank)
@@ -108,29 +109,12 @@ theorem inner_map_self_eq_sum_eigenvalues_sq
   simp only [RCLike.ofReal_real_eq_id, id_eq]
   ring
 
-/-! ### Step 2: discrete Courant–Fischer directional bounds -/
+/-! ### Step 2: discrete Courant–Fischer directional bounds
 
-/-- Counting lemma: the number of indices `i : Fin n` with `k ≤ i` is `n - k`. -/
-private theorem card_filter_le (k : Fin n) :
-    (Finset.univ.filter (fun i : Fin n => k ≤ i)).card = n - (k : ℕ) := by
-  classical
-  have : (Finset.univ.filter (fun i : Fin n => k ≤ i)).card
-      = (Finset.Ici k).card := by
-    congr 1
-    ext i
-    simp [Finset.mem_Ici]
-  rw [this, Fin.card_Ici]
-
-/-- Counting lemma: the number of indices `i : Fin n` with `i ≤ k` is `k + 1`. -/
-private theorem card_filter_ge (k : Fin n) :
-    (Finset.univ.filter (fun i : Fin n => i ≤ k)).card = (k : ℕ) + 1 := by
-  classical
-  have : (Finset.univ.filter (fun i : Fin n => i ≤ k)).card
-      = (Finset.Iic k).card := by
-    congr 1
-    ext i
-    simp [Finset.mem_Iic]
-  rw [this, Fin.card_Iic]
+The proofs are now thin specializations (at `𝕜 = ℝ`) of the staged Mathlib
+candidate `ForMathlib/Analysis/InnerProductSpace/CourantFischer.lean`, which
+proves them over any `RCLike` field with `RCLike.re ⟪T x, x⟫` in place of
+`⟪T x, x⟫`. -/
 
 /-- **Courant–Fischer, upper direction.** On any subspace `V` of dimension
 `k + 1` there is a unit vector `x` with `⟪T x, x⟫ ≤ λₖ(T)`.
@@ -143,50 +127,7 @@ theorem exists_unit_vector_inner_le_eigenvalue
     (hT : T.IsSymmetric) (hn : finrank ℝ E = n) (k : Fin n)
     (V : Submodule ℝ E) (hV : finrank ℝ V = (k : ℕ) + 1) :
     ∃ x ∈ V, ‖x‖ = 1 ∧ ⟪T x, x⟫ ≤ hT.eigenvalues hn k := by
-  classical
-  set b := hT.eigenvectorBasis hn with hb
-  set W := specSubspace b (fun i : Fin n => k ≤ i) with hW
-  have hWdim : finrank ℝ W = n - (k : ℕ) := by
-    rw [hW, finrank_specSubspace, card_filter_le]
-  -- Dimension counting: `finrank V + finrank W > finrank E`, so `V ⊓ W ≠ ⊥`.
-  have hsum : finrank ℝ V + finrank ℝ W = n + 1 := by
-    rw [hV, hWdim]
-    have hk : (k : ℕ) < n := k.2
-    omega
-  have hinf : V ⊓ W ≠ ⊥ := by
-    intro hbot
-    have hle := Submodule.finrank_sup_add_finrank_inf_eq V W
-    rw [hbot, finrank_bot, add_zero] at hle
-    have hsup : finrank ℝ (↑(V ⊔ W) : Submodule ℝ E) ≤ n := by
-      rw [← hn]; exact Submodule.finrank_le _
-    omega
-  obtain ⟨z, hz, hz0⟩ := Submodule.exists_mem_ne_zero_of_ne_bot hinf
-  obtain ⟨hzV, hzW⟩ := Submodule.mem_inf.mp hz
-  refine ⟨‖z‖⁻¹ • z, V.smul_mem _ hzV, ?_, ?_⟩
-  · rw [norm_smul, norm_inv, norm_norm, inv_mul_cancel₀ (by simpa using hz0)]
-  -- The unit vector still lies in `W`, so its coordinates vanish for `i < k`.
-  · set x := ‖z‖⁻¹ • z with hx
-    have hxW : x ∈ W := W.smul_mem _ hzW
-    have hnx : ‖x‖ = 1 := by
-      rw [hx, norm_smul, norm_inv, norm_norm, inv_mul_cancel₀ (by simpa using hz0)]
-    rw [inner_map_self_eq_sum_eigenvalues_sq hT hn x]
-    -- Bound each surviving term by `λₖ · (repr x i)²`.
-    have hbound : ∀ i ∈ Finset.univ,
-        hT.eigenvalues hn i * (b.repr x i) ^ 2 ≤ hT.eigenvalues hn k * (b.repr x i) ^ 2 := by
-      intro i _
-      by_cases hik : k ≤ i
-      · exact mul_le_mul_of_nonneg_right
-          (hT.eigenvalues_antitone hn hik) (sq_nonneg _)
-      · have : b.repr x i = 0 :=
-          repr_eq_zero_of_mem_specSubspace b _ hxW hik
-        simp [this]
-    calc ∑ i : Fin n, hT.eigenvalues hn i * (b.repr x i) ^ 2
-        ≤ ∑ i : Fin n, hT.eigenvalues hn k * (b.repr x i) ^ 2 :=
-          Finset.sum_le_sum hbound
-      _ = hT.eigenvalues hn k * ∑ i : Fin n, (b.repr x i) ^ 2 := by
-          rw [Finset.mul_sum]
-      _ = hT.eigenvalues hn k * ‖x‖ ^ 2 := by rw [sum_repr_sq_eq_norm_sq]
-      _ = hT.eigenvalues hn k := by rw [hnx]; ring
+  simpa using ForMathlib.exists_unit_vector_re_inner_le_eigenvalue hT hn k V hV
 
 /-- **Courant–Fischer, lower direction.** There is a subspace `V` of dimension
 `k + 1` on which every unit vector `x` satisfies `λₖ(T) ≤ ⟪T x, x⟫`.
@@ -197,56 +138,9 @@ theorem forall_unit_vector_eigenvalue_le_inner
     (hT : T.IsSymmetric) (hn : finrank ℝ E = n) (k : Fin n) :
     ∃ V : Submodule ℝ E, finrank ℝ V = (k : ℕ) + 1 ∧
       ∀ x ∈ V, ‖x‖ = 1 → hT.eigenvalues hn k ≤ ⟪T x, x⟫ := by
-  classical
-  set b := hT.eigenvectorBasis hn with hb
-  refine ⟨specSubspace b (fun i : Fin n => i ≤ k), ?_, ?_⟩
-  · rw [finrank_specSubspace, card_filter_ge]
-  · intro x hxV hnx
-    rw [inner_map_self_eq_sum_eigenvalues_sq hT hn x]
-    have hbound : ∀ i ∈ Finset.univ,
-        hT.eigenvalues hn k * (b.repr x i) ^ 2 ≤ hT.eigenvalues hn i * (b.repr x i) ^ 2 := by
-      intro i _
-      by_cases hik : i ≤ k
-      · exact mul_le_mul_of_nonneg_right
-          (hT.eigenvalues_antitone hn hik) (sq_nonneg _)
-      · have : b.repr x i = 0 := by
-          rw [hb]
-          exact repr_eq_zero_of_mem_specSubspace b _ hxV hik
-        simp [this]
-    calc hT.eigenvalues hn k
-        = hT.eigenvalues hn k * ‖x‖ ^ 2 := by rw [hnx]; ring
-      _ = hT.eigenvalues hn k * ∑ i : Fin n, (b.repr x i) ^ 2 := by rw [sum_repr_sq_eq_norm_sq]
-      _ = ∑ i : Fin n, hT.eigenvalues hn k * (b.repr x i) ^ 2 := by rw [Finset.mul_sum]
-      _ ≤ ∑ i : Fin n, hT.eigenvalues hn i * (b.repr x i) ^ 2 := Finset.sum_le_sum hbound
+  simpa using ForMathlib.forall_unit_vector_eigenvalue_le_re_inner hT hn k
 
 /-! ### Step 3: Weyl's inequality -/
-
-/-- One-sided Weyl bound: `λₖ(S) − λₖ(T) ≤ ‖S − T‖op`.  This is the core
-estimate; Weyl's inequality follows by symmetry.
-
-We take a witness subspace `V` of dimension `k + 1` on which `λₖ(S) ≤ ⟪S x, x⟫`
-(lower direction for `S`), then a unit vector `x ∈ V` with `⟪T x, x⟫ ≤ λₖ(T)`
-(upper direction for `T`).  The difference is controlled by Cauchy–Schwarz. -/
-private theorem eigenvalues_sub_le
-    (hT : T.IsSymmetric) (hS : S.IsSymmetric) (hn : finrank ℝ E = n)
-    {ε : ℝ} (hε : ∀ x : E, ‖(S - T) x‖ ≤ ε * ‖x‖) (k : Fin n) :
-    hS.eigenvalues hn k - hT.eigenvalues hn k ≤ ε := by
-  obtain ⟨V, hVdim, hVlow⟩ := forall_unit_vector_eigenvalue_le_inner hS hn k
-  obtain ⟨x, hxV, hnx, hTup⟩ := exists_unit_vector_inner_le_eigenvalue hT hn k V hVdim
-  have hSlow : hS.eigenvalues hn k ≤ ⟪S x, x⟫ := hVlow x hxV hnx
-  -- `λₖ(S) − λₖ(T) ≤ ⟪Sx,x⟫ − ⟪Tx,x⟫ = ⟪(S−T)x,x⟫ ≤ ‖(S−T)x‖ ≤ ε`.
-  have hdiff : ⟪S x, x⟫ - ⟪T x, x⟫ = ⟪(S - T) x, x⟫ := by
-    rw [LinearMap.sub_apply, inner_sub_left]
-  have hcs : ⟪(S - T) x, x⟫ ≤ ‖(S - T) x‖ * ‖x‖ := real_inner_le_norm _ _
-  have hbnd : ‖(S - T) x‖ * ‖x‖ ≤ ε := by
-    rw [hnx, mul_one]
-    have := hε x
-    rwa [hnx, mul_one] at this
-  calc hS.eigenvalues hn k - hT.eigenvalues hn k
-      ≤ ⟪S x, x⟫ - ⟪T x, x⟫ := by linarith
-    _ = ⟪(S - T) x, x⟫ := hdiff
-    _ ≤ ‖(S - T) x‖ * ‖x‖ := hcs
-    _ ≤ ε := hbnd
 
 /-- **Weyl's inequality** for symmetric operators on a finite-dimensional real
 inner product space: the `k`-th (decreasingly sorted) eigenvalues of `T` and `S`
@@ -260,17 +154,5 @@ Horn & Johnson, *Matrix Analysis* 2nd ed., Theorem 4.3.1; Bhatia,
 theorem abs_eigenvalues_sub_le
     (hT : T.IsSymmetric) (hS : S.IsSymmetric) (hn : finrank ℝ E = n)
     {ε : ℝ} (hε : ∀ x : E, ‖(T - S) x‖ ≤ ε * ‖x‖) (k : Fin n) :
-    |hT.eigenvalues hn k - hS.eigenvalues hn k| ≤ ε := by
-  -- The two directions of `eigenvalues_sub_le`, with the roles of `T` and `S`
-  -- swapped, using `‖(T − S) x‖ = ‖(S − T) x‖`.
-  have hεsymm : ∀ x : E, ‖(S - T) x‖ ≤ ε * ‖x‖ := by
-    intro x
-    have : (S - T) x = -((T - S) x) := by
-      rw [LinearMap.sub_apply, LinearMap.sub_apply]; abel
-    rw [this, norm_neg]; exact hε x
-  rw [abs_le]
-  constructor
-  · have := eigenvalues_sub_le hT hS hn hεsymm k
-    linarith
-  · have := eigenvalues_sub_le hS hT hn hε k
-    linarith
+    |hT.eigenvalues hn k - hS.eigenvalues hn k| ≤ ε :=
+  ForMathlib.abs_eigenvalues_sub_le hT hS hn hε k

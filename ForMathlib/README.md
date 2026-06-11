@@ -36,7 +36,10 @@ per-candidate dossiers live in `planning/mathlib-candidates.md`.
 
 | Staged file | Destination | Candidate (mathlib-candidates.md) |
 | --- | --- | --- |
+| `Analysis/InnerProductSpace/CourantFischer.lean` | new `Mathlib/Analysis/InnerProductSpace/CourantFischer.lean` | #3a Courant–Fischer (both directions) + Weyl's eigenvalue perturbation inequality, `RCLike` |
 | `Analysis/InnerProductSpace/GramMatrix.lean` | `Mathlib/Analysis/InnerProductSpace/GramMatrix.lean` | #1 Procrustes rigidity (equal Grams ⇒ linear isometry equiv), generalized to `RCLike` and stated via `Matrix.gram` |
+| `Analysis/InnerProductSpace/NearIsometry.lean` | new `Mathlib/Analysis/InnerProductSpace/NearIsometry.lean` | #6 quantitative polar factor (near-isometry ⇒ isometry within `2δ`), bundled `≃ₗᵢ` + CLM op-norm corollary |
 | `Analysis/InnerProductSpace/Spectrum.lean` | `Mathlib/Analysis/InnerProductSpace/Spectrum.lean` | #3b Davis–Kahan cross-term identity, generalized to `RCLike` |
+| `MeasureTheory/Function/ConvergenceInMeasure.lean` | `Mathlib/MeasureTheory/Function/ConvergenceInMeasure.lean` | #7 `TendstoInMeasure` from a vanishing rate (general filter, `EDist`, measurability-free) |
 | `MeasureTheory/Measure/Typeclasses/Probability.lean` | `Mathlib/MeasureTheory/Measure/Typeclasses/Probability.lean` | #2a measurability-free `1 − μ sᶜ ≤ μ s` |
 | `Probability/Moments/Variance.lean` | `Mathlib/Probability/Moments/Variance.lean` | #2b uncentered second-moment Chebyshev |

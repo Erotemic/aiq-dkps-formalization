@@ -17,14 +17,16 @@ against the new pin — re-grep before porting them.  Note Mathlib now uses the
 module system (`module` / `public import` headers); staged files must be
 converted at PR time.
 
-**Staging status:** candidates #1, #2 (both lemmas), and #3b are now staged in
+**Staging status (updated later 2026-06-11):** candidates #1, #2 (both
+lemmas), #3a (Courant–Fischer + Weyl, RCLike), #3b, #6 (quantitative polar
+factor, bundled isometry + CLM corollary), and #7 (TendstoInMeasure
+constructors, general filter/EDist) are staged in
 the `ForMathlib/` library (see `ForMathlib/README.md`), generalized to
 `RCLike 𝕜` where applicable, with the paper libraries rewired to consume them
 (`Acharyya2025/Procrustes.lean`, `Acharyya2025/RateChain.lean`,
 `Acharyya2024/Probability.lean`, `Acharyya2025/DavisKahan.lean` are now thin
-wrappers/consumers).  Remaining to stage: #3a (Courant–Fischer + Weyl), #4
-(sample-mean MSE), #5 (Gram realization + eigenvalue tail), #6 (polar factor),
-#7 (`TendstoInMeasure` constructor).
+wrappers/consumers).  Remaining to stage: #4 (sample-mean MSE) and #5 (Gram realization +
+eigenvalue tail) — see planning/opus-handoff.md for the execution plan.
 
 Formalized by Claude Fable 5, per user-observed model label (claude-fable-5[1m]).
 

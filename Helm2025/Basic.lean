@@ -788,8 +788,8 @@ lemma risk_convergence_of_aligned_embeddings (n d d' : ℕ)
         have h_risk_conv : Tendsto (fun u => ∫ ω, loss_est_fn n d d' learn loss psi_hat u ω - loss_true_fn n d d' learn loss ω ∂(Measure.pi (fun _ : Fin (n + 1) => P))) atTop (𝓝 0) := by
           have h_risk_conv : ConvergesInProbabilityToZero (Measure.pi (fun _ : Fin (n + 1) => P)) (fun u ω => loss_est_fn n d d' learn loss psi_hat u ω - loss_true_fn n d d' learn loss ω) := by
             have h_risk_conv : ConvergesInProbabilityToZero (Measure.pi (fun _ : Fin (n + 1) => P)) (fun u ω => dist (loss_est_fn n d d' learn loss psi_hat u ω) (loss_true_fn n d d' learn loss ω)) := by
-              convert loss_converges_in_prob n d d' P learn loss psi_hat h_meas_psi h_conv h_cont_learn h_cont_loss using 1;
-            exact fun ε hε => by simpa [ abs_mul ] using h_risk_conv ε hε;
+              exact loss_converges_in_prob n d d' P learn loss psi_hat h_meas_psi h_conv h_cont_learn h_cont_loss
+            exact fun ε hε => by simpa [ Real.dist_eq, abs_abs ] using h_risk_conv ε hε;
           have h_risk_conv : ∃ M : ℝ, ∀ u, ∀ᵐ ω ∂(Measure.pi (fun _ : Fin (n + 1) => P)), |loss_est_fn n d d' learn loss psi_hat u ω - loss_true_fn n d d' learn loss ω| ≤ M := by
             obtain ⟨ M₁, hM₁ ⟩ := loss_uniformly_bounded n d d' P learn loss psi_hat h_bound_learn h_cont_loss h_bound_label;
             obtain ⟨ M₂, hM₂ ⟩ := loss_uniformly_bounded n d d' P learn loss ( fun _ => fun ω i => ( ω i ).1 ) h_bound_learn h_cont_loss h_bound_label;
@@ -833,7 +833,7 @@ lemma risk_convergence_of_aligned_embeddings (n d d' : ℕ)
               · fun_prop;
             · exact hM 0;
           exact h_integrable.neg;
-      convert h_risk_conv using 1
+      exact h_risk_conv
 
 /-
 Theorem 1: The risk using estimated embeddings converges to the risk using true embeddings.
@@ -1032,7 +1032,7 @@ lemma ContinuousLoss.continuousLossInPred {d' : ℕ} {loss : LossFunction d'}
   have h' : Continuous (fun p : Y d' × Y d' => loss p.1 p.2) := by
     simpa [ContinuousLoss] using h
   -- compose with yhat ↦ (yhat, y)
-  simpa using h'.comp (continuous_id.prodMk continuous_const)
+  exact h'.comp (continuous_id.prodMk continuous_const)
 
 /-- Paper Assumption 2, written as a sequential continuity statement. -/
 def PaperA2_SequentialContinuity (n d d' : ℕ) (learn : LearningRule n d d') : Prop :=

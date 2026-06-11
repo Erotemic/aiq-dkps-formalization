@@ -147,14 +147,14 @@ theorem matrixL2OperatorClose_of_entrywise
 
 /--
 A Hermitian (over `ℝ`: symmetric) matrix induces a symmetric operator on
-Euclidean space.  Thin wrapper around `Matrix.isHermitian_iff_isSymmetric`.
+Euclidean space.  Thin wrapper around `Matrix.isSymmetric_toEuclideanLin_iff`.
 
 Formalized by Claude Fable 5, per user-observed model label (claude-fable-5[1m]).
 -/
 theorem isSymmetric_toEuclideanLin_of_isHermitian
     {n : Nat} {A : SqMat n} (hA : A.IsHermitian) :
     (Matrix.toEuclideanLin A).IsSymmetric :=
-  Matrix.isHermitian_iff_isSymmetric.mp hA
+  Matrix.isSymmetric_toEuclideanLin_iff.mpr hA
 
 /--
 A symmetric curried dissimilarity matrix induces a symmetric Euclidean operator.

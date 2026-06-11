@@ -191,7 +191,7 @@ private theorem toEuclideanLin_single_apply (B : Matrix (Fin n) (Fin n) ℝ)
     (i j : Fin n) :
     (Matrix.toEuclideanLin B (EuclideanSpace.single j (1 : ℝ))) i = B i j := by
   show (B *ᵥ WithLp.ofLp (EuclideanSpace.single j (1 : ℝ))) i = B i j
-  rw [EuclideanSpace.ofLp_single, Matrix.mulVec_single_one]
+  rw [PiLp.ofLp_single, Matrix.mulVec_single_one]
   simp [Matrix.col_apply]
 
 /-- **Operator spectral expansion (coordinatewise).**

@@ -459,7 +459,7 @@ private theorem defect_repr (hT : T.IsSymmetric) (hS : S.IsSymmetric) (hd : d �
     rw [hzero, zero_sub]
   · -- leading block: cancellation `Q_{⟨j⟩,l} = ⟪v_j, u_l⟫`
     rw [if_neg hj]
-    push_neg at hj
+    push Not at hj
     have hcollapse : ∑ k, Q k l * (if j = Fin.castLE hd k then (1:ℝ) else 0) = Q ⟨(j:ℕ), hj⟩ l := by
       rw [Finset.sum_eq_single ⟨(j:ℕ), hj⟩]
       · have hje : j = Fin.castLE hd ⟨(j:ℕ), hj⟩ := by apply Fin.ext; simp [Fin.castLE]
@@ -572,7 +572,7 @@ private theorem term3_norm_sq_le (hd : d ≤ n) (hT : T.IsSymmetric) (hS : S.IsS
     by_cases hd0 : 0 < d
     · have hlt : (z : ℕ) < d := by rw [hz]; simpa using hd0
       exact le_trans (le_of_lt hα_pos) (le_trans (hα z hlt) (hΛ z))
-    · push_neg at hd0
+    · push Not at hd0
       have hdz : d = 0 := Nat.le_zero.mp hd0
       have hge : d ≤ (z : ℕ) := by omega
       have hez := htail z hge

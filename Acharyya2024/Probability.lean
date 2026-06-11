@@ -220,7 +220,7 @@ theorem dissimilarity_convergesInProbability_of_secondMoment
         P {ω | ε < frobSub (responseDist (Xbar r ω)) (responseDist μ)})
         atTop (𝓝 0) :=
     tendsto_of_tendsto_of_tendsto_of_le_of_le tendsto_const_nhds hub
-      (fun r => zero_le _) hbad
+      (fun r => zero_le) hbad
   simpa only [hset_eq] using hsqueeze
 
 end Acharyya2024.Probability

@@ -162,7 +162,7 @@ theorem highProb_uniformResponseMeanClose_of_secondMoment
       atTop (𝓝 0) := by
     simpa using ENNReal.tendsto_ofReal hratio
   exact tendsto_of_tendsto_of_tendsto_of_le_of_le tendsto_const_nhds hub
-    (fun u => zero_le _) hbound
+    (fun u => zero_le) hbound
 
 /-! ### (2) Vanishing of the spectral bound -/
 

@@ -70,7 +70,7 @@ theorem integral_sq_scaled_sum_sub_of_pairwise_indep
   have hr0 : (r : Real) ≠ 0 := by exact_mod_cast hr.ne'
   -- The scaled sum has mean `μc`.
   have hmean_sum : P[fun ω => (r : Real)⁻¹ * (∑ k, Z k ω)] = μc := by
-    rw [integral_const_mul, integral_finset_sum]
+    rw [integral_const_mul, integral_finsetSum]
     · simp_rw [hmean]
       simp only [Finset.sum_const, Finset.card_univ, Fintype.card_fin, nsmul_eq_mul]
       field_simp
@@ -164,7 +164,7 @@ theorem integral_norm_sq_sampleMean_sub_mean_eq_sum
     intro c
     have hsum : MemLp (fun ω => (r : Real)⁻¹ * (∑ k, X k ω c) - μ c) 2 P := by
       have h1 : MemLp (fun ω => ∑ k, X k ω c) 2 P :=
-        memLp_finset_sum (Finset.univ : Finset (Fin r)) (fun k _ => hL2c k c)
+        memLp_finsetSum (Finset.univ : Finset (Fin r)) (fun k _ => hL2c k c)
       exact (h1.const_mul _).sub (memLp_const (μ c))
     exact hsum.integrable_sq
   -- Reduce the LHS norm-square integral to a sum over coordinates.
@@ -196,7 +196,7 @@ theorem integral_norm_sq_sampleMean_sub_mean_eq_sum
         = ∫ ω, ∑ c : ι, ((r : Real)⁻¹ * (∑ k, X k ω c) - μ c) ^ 2 ∂P := by
           simp_rw [hpt]
     _ = ∑ c : ι, ∫ ω, ((r : Real)⁻¹ * (∑ k, X k ω c) - μ c) ^ 2 ∂P := by
-          rw [integral_finset_sum]; exact fun c _ => hintc c
+          rw [integral_finsetSum]; exact fun c _ => hintc c
     _ = ∑ c : ι, (r : Real)⁻¹ ^ 2 * ∑ k, ∫ ω, (X k ω c - μ c) ^ 2 ∂P := by
           apply Finset.sum_congr rfl
           intro c _
@@ -211,7 +211,7 @@ theorem integral_norm_sq_sampleMean_sub_mean_eq_sum
           congr 1
           apply Finset.sum_congr rfl
           intro k _
-          rw [← integral_finset_sum]
+          rw [← integral_finsetSum]
           · apply integral_congr_ae
             exact Eventually.of_forall fun ω => (hptk k ω).symm
           · exact fun c _ => hintkc k c

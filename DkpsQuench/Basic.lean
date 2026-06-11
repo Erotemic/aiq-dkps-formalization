@@ -325,28 +325,24 @@ lemma ennreal_inter_bound {δ p q : ENNReal}
     (hp : 1 - δ / 2 ≤ p)
     (hq : 1 - δ / 2 ≤ q) :
     1 - δ ≤ p + q - 1 := by
-      -- Adding the inequalities $1 - \delta/2 \leq p$ and $1 - \delta/2 \leq q$, we get $2 - \delta \leq p + q$.
-      have h_sum : 2 - δ ≤ p + q := by
-        -- Adding the inequalities $1 - \delta/2 \leq p$ and $1 - \delta/2 \leq q$, we get $2 - \delta \leq p + q$ by the properties of ENNReal.
-        have h_sum : (1 - δ / 2) + (1 - δ / 2) ≤ p + q := by
-          exact add_le_add hp hq;
-        convert h_sum using 1 ; ring_nf;
-        rw [ ENNReal.sub_mul ] ; norm_num;
-        · rw [ ENNReal.div_mul_cancel ] <;> norm_num;
-        · norm_num [ ENNReal.mul_eq_top ];
-      -- Subtracting 1 from both sides of the inequality $2 - \delta \leq p + q$, we get $1 - \delta \leq p + q - 1$.
-      have h_sub : 2 - δ - 1 ≤ p + q - 1 := by
-        exact tsub_le_tsub_right h_sum _;
-      simp +zetaDelta at *;
-      convert tsub_le_tsub_right h_sub 1 using 1 ; ring_nf;
-      · norm_cast;
-      · -- By associativity and commutativity of addition, we can rearrange the terms to show the equality.
-        simp [add_comm];
-        -- By simplifying, we can see that both sides are equal.
-        have h_simp : δ + (1 + (p + q - 1)) - 1 = δ + (p + q - 1) := by
-          rw [ ENNReal.sub_eq_of_eq_add ] <;> ring_nf;
-          decide +kernel;
-        exact h_simp.symm
+      rcases le_or_gt 1 δ with hδ | hδ
+      · -- If δ ≥ 1, then 1 - δ = 0 and the inequality is trivial.
+        simp [tsub_eq_zero_of_le hδ]
+      · -- Otherwise δ < 1, so δ and δ/2 are finite and δ/2 ≤ 1.
+        have hδ_top : δ ≠ ⊤ := hδ.ne_top
+        have hhalf_le : δ / 2 ≤ 1 := ENNReal.half_le_self.trans hδ.le
+        apply ENNReal.le_sub_of_add_le_right ENNReal.one_ne_top
+        -- Goal: 1 - δ + 1 ≤ p + q.  Both sides reduce to 2 - δ ≤ p + q.
+        have h1 : (1 : ENNReal) - δ + 1 = 2 - δ := by
+          rw [ENNReal.sub_add_eq_add_sub hδ.le hδ_top, one_add_one_eq_two]
+        have hhalf_top : δ / 2 ≠ ⊤ := (hhalf_le.trans_lt ENNReal.one_lt_top).ne
+        have hsum : (1 - δ / 2) + (1 - δ / 2) = 2 - δ := by
+          rw [ENNReal.sub_add_eq_add_sub hhalf_le hhalf_top,
+            add_comm (1 : ENNReal) (1 - δ / 2),
+            ENNReal.sub_add_eq_add_sub hhalf_le hhalf_top, tsub_tsub,
+            ENNReal.add_halves, one_add_one_eq_two]
+        rw [h1, ← hsum]
+        exact add_le_add hp hq
 
 section HighProb_Lemmas
 
@@ -513,7 +509,8 @@ lemma step4_support_bound
     ‖ψ i_star - ψ_target‖ ≤ ρ + 4 * c := by
       -- By the triangle inequality, we have ‖ψ i_star - ψ_target‖ ≤ ‖ψ i_star - ψ_hat i_star‖ + ‖ψ_hat i_star - ψ_hat_target‖ + ‖ψ_hat_target - ψ_target‖.
       have h_triangle : ‖ψ i_star - ψ_target‖ ≤ ‖ψ i_star - ψHat i_star‖ + ‖ψHat i_star - ψHat_target‖ + ‖ψHat_target - ψ_target‖ := by
-        simpa using dist_triangle4 ( ψ i_star ) ( ψHat i_star ) ( ψHat_target ) ψ_target;
+        simpa only [dist_eq_norm] using
+          dist_triangle4 (ψ i_star) (ψHat i_star) ψHat_target ψ_target;
       -- By the triangle inequality, we have ‖ψ_hat i_star - ψ_hat_target‖ ≤ 2c + ‖ψ j_star - ψ_target‖.
       obtain ⟨j_star, hj_star⟩ : ∃ j_star, ‖ψ j_star - ψ_target‖ ≤ ρ := h_supp
       have h_triangle_j_star : ‖ψHat i_star - ψHat_target‖ ≤ 2 * c + ‖ψ j_star - ψ_target‖ := by
@@ -681,7 +678,12 @@ theorem Theorem2_part1
           · exact Filter.Eventually.of_forall fun f => sq_nonneg _;
           · norm_num;
           · filter_upwards [ ] with f using by simpa using pow_le_pow_left₀ ( abs_nonneg _ ) ( hN n hn ω hω f ) 2;
-        convert h_mse_le using 1 ; norm_num [ Real.sq_sqrt hε_pos.le ];
+        have h_eq : MSE Pf (fun f => score f Qstar) (fun f => hNN n ω f)
+            = ∫ f, (hNN n ω f - score f Qstar) ^ 2 ∂Pf := by
+          simp only [MSE, sqLoss]
+        rw [h_eq]
+        refine h_mse_le.trans ?_
+        simp [Real.sq_sqrt hε_pos.le]
       intro ε hε_pos
       obtain ⟨N, hN⟩ := h_mse_bound ε hε_pos
       have h_inter : HighProbAtTop μ hμ (fun n => {ω | ∀ f, ‖ψHat n ω f - ψ f‖ ≤ c n} ∩ {ω | ∀ f, ∃ i : Fin n, ‖ψ (f_ref n ω i) - ψ f‖ ≤ Real.sqrt ε / (2 * γ)}) := by

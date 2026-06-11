@@ -147,8 +147,8 @@ maps in the Pi type `Config n d`). -/
 theorem continuous_rawStress (Δ : DisMat n) :
     Continuous (rawStress n d Δ) := by
   unfold rawStress
-  refine continuous_finset_sum _ (fun i _ =>
-    continuous_finset_sum _ (fun j _ => ?_))
+  refine continuous_finsetSum _ (fun i _ =>
+    continuous_finsetSum _ (fun j _ => ?_))
   exact (((continuous_apply i).sub (continuous_apply j)).norm.sub continuous_const).pow 2
 
 /-- The coercivity radius `R₀ := √(rawStress Δ z₀) + ∑ᵢⱼ |Δ i j|` (with `z₀` the
@@ -282,7 +282,7 @@ theorem mds_nonempty : ∀ Δ : DisMat n, (MDS n d Δ).Nonempty := by
   by_cases hz' : rawStress n d Δ z₀ ≤ rawStress n d Δ z'
   · exact hw_le_z₀.trans hz'
   · -- Then `rawStress Δ z' < rawStress Δ z₀`, so `center z' ∈ K`.
-    push_neg at hz'
+    push Not at hz'
     have hcz'_le : rawStress n d Δ (center z') ≤ rawStress n d Δ z₀ := by
       rw [rawStress_center]; exact hz'.le
     have hcent : ∑ i : Fin n, center z' i = 0 := sum_center_eq_zero hn z'
@@ -590,7 +590,7 @@ theorem exists_modulus_pairDist (Δ : DisMat n) {ε : ℝ} (hε : 0 < ε) :
     exact ⟨1, one_pos, fun D' z _ _ => ⟨ψ, hψ, fun i => i.elim0⟩⟩
   have hn : n ≠ 0 := hnpos.ne'
   by_contra hcon
-  push_neg at hcon
+  push Not at hcon
   -- Counterexamples at `δ = 1/(k+1)` for every `k`.
   have hex := fun k : Nat => hcon (1 / ((k : ℝ) + 1)) (by positivity)
   choose D zc hzmem hfrob hbad using hex
@@ -659,14 +659,14 @@ theorem mds_stability_inProbability_set
     intro r ω hω
     simp only [Set.mem_setOf_eq] at hω ⊢
     by_contra hle
-    push_neg at hle
+    push Not at hle
     have hfrob_nonneg : 0 ≤ frobSub (Dseq r ω) DeltaInf := by
       rw [frobSub, frob]; exact Real.sqrt_nonneg _
     rw [Real.dist_eq, sub_zero, abs_of_nonneg hfrob_nonneg] at hle
     exact hω (hmod (Dseq r ω) (ψhat r ω) (hψhat r ω) hle)
   -- Squeeze in `ℝ≥0∞` using outer-measure monotonicity.
   exact tendsto_of_tendsto_of_tendsto_of_le_of_le tendsto_const_nhds (hD δ hδ)
-    (fun r => zero_le _) (fun r => measure_mono (hsub r))
+    (fun r => zero_le) (fun r => measure_mono (hsub r))
 
 /--
 The limiting dissimilarity matrix has a **unique pairwise-distance profile**:
@@ -730,6 +730,6 @@ theorem mds_stability_inProbability_of_uniqueProfile
     exact absurd hle (not_le.mpr hω)
   have hset := mds_stability_inProbability_set P Dseq DeltaInf ψhat hψhat hD hε
   exact tendsto_of_tendsto_of_tendsto_of_le_of_le tendsto_const_nhds hset
-    (fun r => zero_le _) (fun r => measure_mono (hsub r))
+    (fun r => zero_le) (fun r => measure_mono (hsub r))
 
 end Acharyya2024.RawStress

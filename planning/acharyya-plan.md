@@ -222,14 +222,37 @@ componentwise via `ProbabilityTheory.variance` + independence. Paper-agnostic �
 
 ## Milestone definition of done
 
-- [ ] WP1 committed
-- [ ] WP2 committed (false statement #2 repaired)
-- [ ] WP3 committed (seam #8 proved under hardened hypotheses)
-- [ ] WP4 committed (alignment statable)
-- [ ] WP6 committed (no false statements remain anywhere)
-- [ ] WP5, WP7(a,b) committed (Davis–Kahan reduced to ≤ 1 cited seam)
+- [x] WP1 committed
+- [x] WP2 committed (honest content proved in Probability.lean; legacy false
+      statement still carries its TODO marker pending WP6 rewiring)
+- [x] WP3 committed (Gram realization proved; CMDSpectralAssumptions hardening
+      pending WP6)
+- [x] WP4 committed (alignment statable — and USED in WP7c4)
+- [ ] WP6 committed (no false statements remain anywhere) — NEXT SESSION
+- [x] WP5, WP7(a,b) committed
+- [x] WP7(c) committed IN FULL (c2 Overlap, c3 PolarFactor, c4
+      ConfigPerturbation) — the Davis–Kahan seam is not merely "reduced", it is
+      PROVED end-to-end: exists_isometry_configError_spectralConfig_le with the
+      explicit configBound constant
+- [x] WP10 committed (iid second-moment algebra)
 - [ ] READMEs updated to reflect non-scaffold status of finished layers
-- [ ] Mathlib-candidate list extracted (WellKnown + WP5 + WP10)
+- [ ] Mathlib-candidate list extracted (WellKnown + WP5 + WP7 + WP10)
+
+## Remaining work (next sessions)
+
+1. WP6 statement-repair pass: re-derive / replace the 8 legacy sorries
+   (Consistency.lean ×3, Concentration.lean ×2, Bridge.lean ×1,
+   SpectralPipeline.lean ×2) from the new proved bridge. The matrix-world
+   plumbing needed: classicalMDSMatrix → toEuclideanLin symmetric operator
+   (OperatorBridge has the transport), spectralConfig as the formal CMDS
+   estimator definition for the paper-facing statements, Procrustes rigidity
+   (WP4) to pass from spectralConfig T to an arbitrary Gram realization ψ.
+2. WP8 triangular-array regimes (2024 Thm 4/5).
+3. WP9 Trosset–Priebe raw-stress stability — the one genuinely external cited
+   seam that remains.
+4. Paper-faithful rate bookkeeping: chain WP10 (γ/r) → WP2 → entrywise →
+   cmdsEntrywiseRate → operator (n·ε) → configBound to extract the
+   end-to-end Poly((n³/r)^…)-style rate and compare with the paper's.
 
 ## Progress ledger
 

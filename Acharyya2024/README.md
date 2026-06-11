@@ -10,10 +10,17 @@ tracks the later finite-sample concentration paper.
 
 ## Status
 
-This is a scaffold, not a completed formalization.
+The probabilistic content of Theorem 2 is now fully proved (2026-06-11):
+`Probability.lean` (Chebyshev + union bound + the deterministic Appendix A.2
+reduction ⇒ dissimilarity convergence in probability from second-moment decay)
+and `SecondMoment.lean` (iid variance algebra E‖X̄−μ‖² = trace(Σ)/r supplying
+that hypothesis). The remaining `sorry`s are the Trosset–Priebe raw-stress MDS
+stability import and the two statements marked `TODO(false-statement)` pending
+the repair pass. See `../planning/acharyya-plan.md`.
 
-Model/provenance note: this session's model label is recorded as
-`Codex 5.5 High`, per the user-observed UI label.
+Model/provenance note: the original scaffold session's model label is recorded
+as `Codex 5.5 High`; `Probability.lean` and `SecondMoment.lean` were formalized
+by Claude Fable 5 (claude-fable-5[1m]), per user-observed model labels.
 
 - There are no declaration-level assumptions in the new scaffold files.
 - Load-bearing unfinished proofs are marked with `sorry`.
@@ -27,6 +34,10 @@ Model/provenance note: this session's model label is recorded as
 
 ## Files
 
+- `Probability.lean` — PROVED: the Theorem 2 probability step (Chebyshev,
+  union bound, squeeze) from second-moment hypotheses.
+- `SecondMoment.lean` — PROVED: iid sample-mean second-moment algebra
+  (pairwise independence suffices; ≤ γ/r corollary).
 - `Common.lean` — shared finite-dimensional DKPS/MDS definitions.
 - `WellKnown.lean` — paper-independent finite-dimensional norm inequalities
   and high-probability/complement convergence bookkeeping.

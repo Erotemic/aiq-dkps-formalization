@@ -10,10 +10,20 @@ DkpsQuench and Helm2025 formalizations.
 
 ## Status
 
-This is a scaffold, not a completed formalization.
+The hard spectral bridge is COMPLETE (2026-06-11): every analytic step of the
+paper's Theorem 2 chain — Weyl, Davis–Kahan, Procrustes alignment, and the
+final configuration perturbation — is formally proved with explicit constants
+and zero sorries in the new files listed below. The remaining `sorry`s live
+only in the LEGACY scaffold statements (Concentration.lean, Bridge.lean,
+SpectralPipeline.lean), several of which are marked `TODO(false-statement)`;
+they are pending the WP6 repair pass that re-derives them from the proved
+bridge. See `../planning/acharyya-plan.md`.
 
-Model/provenance note: this session's model label is recorded as
-`Codex 5.5 High`, per the user-observed UI label.
+Model/provenance note: the original scaffold session's model label is recorded
+as `Codex 5.5 High`; the spectral bridge (Weyl, DavisKahan, RankGap, Overlap,
+PolarFactor, ConfigPerturbation, GramRealization, Procrustes, OperatorBridge)
+was formalized by Claude Fable 5 (claude-fable-5[1m]), per user-observed model
+labels.
 
 - There are no declaration-level assumptions in the new scaffold files.
 - Load-bearing unfinished proofs are marked with `sorry`.
@@ -30,6 +40,29 @@ Model/provenance note: this session's model label is recorded as
   spectral theorem / Davis-Kahan → Procrustes-aligned configurations.
 
 ## Files
+
+New proved bridge (zero sorries, 2026-06-11):
+
+- `Weyl.lean` — discrete Courant–Fischer + Weyl's eigenvalue perturbation
+  inequality (Mathlib-contribution candidate).
+- `DavisKahan.lean` — cross-term identity + Davis–Kahan cross-block sin-Θ
+  bound (Mathlib-contribution candidate).
+- `RankGap.lean` — gap derivation from rank-d/floor structure via Weyl;
+  composed cross-overlap bound 4nε²/α².
+- `Overlap.lean` — eigenvector overlap matrix, QᵀQ−I deviation, Sylvester
+  commutator identity.
+- `PolarFactor.lean` — quantitative polar factor: near-isometry ⇒ exact
+  isometry within 2δ (no SVD/CFC).
+- `ConfigPerturbation.lean` — THE BRIDGE THEOREM:
+  `exists_isometry_configError_spectralConfig_le` — spectral embeddings of
+  ε-close operators agree up to isometry within explicit `configBound`.
+- `GramRealization.lean` — PSD rank-≤d matrices are Gram matrices of
+  d-dimensional configurations (spectral construction).
+- `Procrustes.lean` — exact Gram rigidity: equal Grams ⇒ isometry-related.
+- `OperatorBridge.lean` — honest ℓ²→ℓ² operator-norm transport
+  matrix ↔ operator world.
+
+Legacy scaffold (contains the remaining sorries; WP6 repair pending):
 
 - `Deterministic.lean` — proved finite-dimensional centering definitions and
   double-centering stability.

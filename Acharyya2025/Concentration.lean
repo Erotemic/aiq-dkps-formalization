@@ -57,8 +57,11 @@ Mathematical source/citation:
 
 TODO(false-statement): `ResponseRegularity` carries bare `Prop` fields (they
 constrain nothing) and `proc.sample` is arbitrary, with a placeholder rate
-`1/(u+1)`; false as written. Repair deferred to WP6 (after the spectral bridge
-exists); see planning/acharyya-plan.md.
+`1/(u+1)`; false as written. SUPERSEDED: the true content is proved —
+`Acharyya2025.Bridge.response_mean_close_hp_to_frob_hp` (HP propagation, with
+the explicit `responseFrobRate`) fed by `Acharyya2024.Probability` +
+`Acharyya2024.SecondMoment` (the Markov/variance step). This legacy statement
+is retained only as a scaffold record.
 -/
 theorem dissimilarity_matrix_concentrates
   (P : Nat → Measure Ω)
@@ -91,7 +94,13 @@ Mathematical source/citation:
 TODO(false-statement): `MDSStabilityAssumptions` is vacuous (`Prop` fields),
 `ψhat` is arbitrary, the rate is a placeholder, and the conclusion uses
 unaligned `ConfigError` (CMDS output is only defined up to O(d)); false as
-written. Repair deferred to WP6; see planning/acharyya-plan.md.
+written. SUPERSEDED: the true theorem is proved —
+`Acharyya2025.ConfigPerturbation.exists_isometry_configError_spectralConfig_le`
+(operator world) and
+`Acharyya2025.MatrixPerturbation.exists_isometry_configError_le_of_entrywise_close`
+(matrix world), with `∃ W` isometry alignment, genuine eigengap/floor
+hypotheses, and the explicit `configBound`. This legacy statement is retained
+only as a scaffold record.
 -/
 theorem classical_mds_embedding_perturbation
   (P : Nat → Measure Ω)

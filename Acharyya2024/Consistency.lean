@@ -37,6 +37,16 @@ This is load-bearing: replacing this `sorry` requires the MDS stability proof.
 Mathematical source/citation:
 - Trosset and Priebe, "Continuous multidimensional scaling", cited as Theorem 2
   in Acharyya et al. 2024, Appendix A.1/A.2.
+
+PARTIAL (2026-06-11): the deterministic core is PROVED in
+`Acharyya2024.RawStress` — minimizer existence (`mds_nonempty`), √-stress
+1-Lipschitz continuity, and deterministic subsequence stability
+(`exists_subseq_tendsto_mds`, `pairDist_tendsto`). The remaining gap in THIS
+statement is the probabilistic upgrade: the deterministic subsequence and
+limit configuration are ω-dependent, while this statement asserts a single
+subsequence and a fixed `ψ ∈ MDS` with convergence in probability — a
+measurable-selection argument the paper does not spell out (see the plan
+watch-list).
 -/
 theorem rawStress_mds_stability
   (P : Measure Ω)

@@ -22,7 +22,7 @@ References:
   Perturbational analysis of classical scaling", *J. Roy. Statist. Soc. Ser. B*
   **41** (1979), 217–229.
 
-Formalized by Claude Opus 4.8.
+Formalized by Claude Fable 5, per user-observed model label (claude-fable-5[1m]).
 -/
 
 import Acharyya2024.Common
@@ -44,7 +44,7 @@ linear-combination map of `φ`), shows it is an isometry there using the equal
 Gram matrices, extends it to all of `E` via `LinearIsometry.extend`, and
 upgrades the resulting self-isometry to an equivalence by finite dimensionality.
 
-Formalized by Claude Opus 4.8.
+Formalized by Claude Fable 5, per user-observed model label (claude-fable-5[1m]).
 -/
 theorem exists_linearIsometryEquiv_of_inner_eq
     {E : Type*} [NormedAddCommGroup E] [InnerProductSpace ℝ E] [FiniteDimensional ℝ E]
@@ -148,7 +148,7 @@ Specialization of `exists_linearIsometryEquiv_of_inner_eq` to the DKPS
 configuration type `Acharyya2024.Config n d = Fin n → EuclideanSpace ℝ (Fin d)`,
 with the Gram condition phrased entrywise as `∑ k, φ i k * φ j k`.
 
-Formalized by Claude Opus 4.8.
+Formalized by Claude Fable 5, per user-observed model label (claude-fable-5[1m]).
 -/
 theorem exists_linearIsometryEquiv_of_gram_eq
     {n d : Nat} (φ ψ : Acharyya2024.Config n d)

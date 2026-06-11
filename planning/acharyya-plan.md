@@ -3,7 +3,7 @@
 Active planning document. Companion: `acharyya-graveyard.md` (approaches tried and
 abandoned, so we and other agents don't re-visit them).
 
-Last updated: 2026-06-11 (Claude Opus 4.8 session).
+Last updated: 2026-06-11 (Claude Fable 5 session, model id claude-fable-5[1m]).
 
 ## Goal
 

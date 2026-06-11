@@ -44,7 +44,7 @@ The proof applies `mul_meas_ge_le_integral_of_nonneg` to `Y²` at level `η²`,
 uses `{η < Y} ⊆ {η² ≤ Y²}`, and converts the resulting real-valued measure
 bound to `ENNReal` using that `P` is a probability measure.
 
-Formalized by Claude Opus 4.8.
+Formalized by Claude Fable 5, per user-observed model label (claude-fable-5[1m]).
 -/
 theorem meas_gt_le_ofReal_secondMoment_div_sq
     (P : Measure Ω) [IsProbabilityMeasure P]
@@ -99,7 +99,7 @@ paper it is established by the iid variance/trace computation `v r = (1/r)·Σγ
 We take it as a hypothesis to separate the concentration step from the variance
 algebra.
 
-Formalized by Claude Opus 4.8.
+Formalized by Claude Fable 5, per user-observed model label (claude-fable-5[1m]).
 -/
 theorem dissimilarity_convergesInProbability_of_secondMoment
     (P : Measure Ω) [IsProbabilityMeasure P]

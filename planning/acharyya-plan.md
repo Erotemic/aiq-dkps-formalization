@@ -30,8 +30,8 @@ point where:
   and are satisfiable in the paper's setting (no vacuous `Prop` struct fields,
   no `1/(u+1)` placeholder rates).
 - One logical commit per work package (WP). Do not commit unrelated dirty files
-  (`DkpsQuench/Basic.lean`, `DrsbBridge/V1.lean`, `Helm2025/Basic.lean` are
-  dirty from other work — leave them out).
+  (`DkpsQuench/Basic.lean`, `Helm2025/Basic.lean` are dirty from other
+  work — leave them out).
 - Failed proof strategies get a dated entry in the graveyard, not silence.
 - Provenance lines in docstrings (`Formalized by <model>`).
 - Verify per-file with `~/.elan/bin/lake env lean <file>`; full
@@ -315,11 +315,10 @@ componentwise via `ProbabilityTheory.variance` + independence. Paper-agnostic �
       docstring compares with paper's Poly₃((n³/r)^{1/2−δ}))
 - [x] READMEs updated to reflect completed (non-scaffold) status
 - [x] Mathlib-candidate list extracted — see planning/mathlib-candidates.md
-      (10 ranked candidates verified against Mathlib commit 0e4799ceff90;
-      top tier: Donsker–Varadhan, Procrustes rigidity into the brand-new
-      GramMatrix.lean, QoL bundle, Courant–Fischer+Weyl; two local
-      duplicates found: sortedEigenvalues = eigenvalues₀, integral_eval_pi =
-      integral_comp_eval)
+      (ranked candidates verified against Mathlib commit 0e4799ceff90;
+      top tier: Procrustes rigidity into the brand-new GramMatrix.lean,
+      QoL bundle, Courant–Fischer+Weyl; local duplicate found:
+      sortedEigenvalues = eigenvalues₀)
 
 ALL MILESTONES COMPLETE.
 
@@ -333,7 +332,7 @@ ALL MILESTONES COMPLETE.
    configuration); Helm per-ω-population capstone (currently an explicitly
    documented halign hypothesis).
 3. Local cleanup: migrate MatrixPerturbation.sortedEigenvalues to Mathlib's
-   eigenvalues₀; drop DrsbBridge integral_eval_pi for integral_comp_eval.
+   eigenvalues₀.
 
 ## Progress ledger
 

@@ -10,8 +10,7 @@ idea; say *why* it died.
   `MDSStabilityAssumptions`, parts of `CMDSpectralAssumptions`): fields like
   `eigengap : Prop` constrain nothing, so theorems taking them are stated
   *stronger than the paper* and are mostly false. Do not prove around them;
-  harden the structure first. (Same disease previously found in DRSB sorry'd
-  lemmas — omitted `Measurable`/`Integrable`/`n ≠ 0` hypotheses.)
+  harden the structure first. 
 - **Placeholder rates `1/(u+1)`** in `HighProbAtTop` statements: makes the
   statement quantify over nothing real; downstream proofs that "consume" the
   rate prove nothing about the paper's `Poly₃((n³/r)^{1/2−δ})`.

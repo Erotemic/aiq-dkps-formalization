@@ -257,3 +257,11 @@ componentwise via `ProbabilityTheory.variance` + independence. Paper-agnostic �
   Hard-bridge status: 6 of 9 sorry-inventory items now have their honest core
   proved; remaining: #9 final configuration-perturbation step (WP7c), #1
   Trosset–Priebe (WP9), and the statement-repair pass (WP6/WP8).
+- 2026-06-11 (later still): RankGap.lean ✅ COMMITTED (Weyl→DK-gap composition,
+  4nε²/α² cross bound under rank-d + floor). WP7(c2) Overlap.lean ✅ COMMITTED
+  (bilinear Parseval, overlap matrix Q, QᵀQ−I deviation, Sylvester identity
+  (λ̂_k−λ_l)Q_kl = ⟪v_k,(S−T)u_l⟫, entrywise ≤ ε). WP7(c3) PolarFactor.lean ✅
+  COMMITTED (near-isometry ⇒ exact isometry within 2δ; inverse-sqrt via
+  eigenbasis, no CFC/SVD). WP7(c4) ConfigPerturbation agent in flight (final
+  assembly: spectralConfig def + three-term telescoping split + the proven
+  toolkit ⇒ ∃ isometry W, ConfigError(W∘ψ̂, ψ) ≤ explicit bound).

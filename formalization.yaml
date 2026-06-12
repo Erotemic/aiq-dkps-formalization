@@ -9,10 +9,7 @@ project:
     - "Jon Crall"
   license: "Apache-2.0"
   repository: "https://github.com/AIQ-Kitware/aiq-dkps-formalization"
-  validated_commit: "b3b2569cd4ffaab896d7ee183c673170a09773d8"
-  validated_commit_short: "b3b2569"
-  validated_commit_date: "2026-06-12 19:04:40 +0000"
-  validated_archive: "aiq-dkps-formalization-source-2026-06-12T140903-5-b3b2569cd4ff.tar.gz"
+  validation_note: "Commit-specific validation metadata is not duplicated here; see git history and the reported build/comparator checks under status.repository_build."
 
 sources:
   - title: "Consistent Estimation of Generative Model Representations in the Data Kernel Perspective Space"
@@ -42,7 +39,8 @@ sources:
 
 status:
   repository_build:
-    last_user_reported_build: "lake build completed successfully on 8626 jobs for an earlier state; latest overlay not Lean-built in the assistant sandbox because Lean/Lake are not installed there."
+    last_user_reported_build: "Earlier state: lake build completed successfully on 8626 jobs. Latest challenge state: local scripts/run_challenge_comparator.sh summary reported all requested challenge configs passed."
+    last_user_reported_challenge_summary: "2026-06-12: scripts/run_challenge_comparator.sh reported PASS for comparator/aiq-gram-rigidity.json, comparator/aiq-psd-gram-realization.json, comparator/aiq-spectral-perturbation.json, and comparator/aiq-inventory.json."
     challenge_commands:
       - "lake env lean Challenge/Gram/Conformance.lean"
       - "lake env lean Challenge/Gram/Leaderboard.lean"
@@ -62,36 +60,52 @@ status:
     of the current ForMathlib theorem surface. The inventory is for calibration
     and comparator checking, not a proposal to upstream everything in one PR.
   main_results:
-    - declaration: "AIQChallenge.procrustes_rigidity_of_inner_eq"
+    - declaration: "ForMathlib.exists_linearIsometryEquiv_of_inner_eq"
+      file: "ForMathlib/Analysis/InnerProductSpace/GramMatrix.lean"
+      sorry_count: 0
+      axioms: ["propext", "Classical.choice", "Quot.sound"]
       challenge_file: "Challenge/Gram/Conformance.lean"
       solution_file: "Challenge/Gram/Leaderboard.lean"
+      challenge_declaration: "AIQChallenge.procrustes_rigidity_of_inner_eq"
       source_declaration: "ForMathlib.exists_linearIsometryEquiv_of_inner_eq"
       source_file: "ForMathlib/Analysis/InnerProductSpace/GramMatrix.lean"
       category: "Procrustes / Gram-matrix rigidity"
       sorry_count_in_solution: 0
       expected_axioms: ["propext", "Classical.choice", "Quot.sound"]
       comparator_config: "comparator/aiq-gram-rigidity.json"
-    - declaration: "AIQChallenge.gram_eq_gram_iff_exists_linearIsometryEquiv"
+    - declaration: "ForMathlib.Matrix.gram_eq_gram_iff_exists_linearIsometryEquiv"
+      file: "ForMathlib/Analysis/InnerProductSpace/GramMatrix.lean"
+      sorry_count: 0
+      axioms: ["propext", "Classical.choice", "Quot.sound"]
       challenge_file: "Challenge/Gram/Conformance.lean"
       solution_file: "Challenge/Gram/Leaderboard.lean"
+      challenge_declaration: "AIQChallenge.gram_eq_gram_iff_exists_linearIsometryEquiv"
       source_declaration: "ForMathlib.Matrix.gram_eq_gram_iff_exists_linearIsometryEquiv"
       source_file: "ForMathlib/Analysis/InnerProductSpace/GramMatrix.lean"
       category: "Procrustes / Gram-matrix rigidity"
       sorry_count_in_solution: 0
       expected_axioms: ["propext", "Classical.choice", "Quot.sound"]
       comparator_config: "comparator/aiq-gram-rigidity.json"
-    - declaration: "AIQChallenge.psd_rank_le_iff_exists_conjTranspose_mul_self"
+    - declaration: "ForMathlib.Matrix.posSemidef_and_rank_le_iff_exists_conjTranspose_mul_self"
+      file: "ForMathlib/LinearAlgebra/Matrix/PosDef.lean"
+      sorry_count: 0
+      axioms: ["propext", "Classical.choice", "Quot.sound"]
       challenge_file: "Challenge/PsdGram/Conformance.lean"
       solution_file: "Challenge/PsdGram/Leaderboard.lean"
+      challenge_declaration: "AIQChallenge.psd_rank_le_iff_exists_conjTranspose_mul_self"
       source_declaration: "ForMathlib.Matrix.posSemidef_and_rank_le_iff_exists_conjTranspose_mul_self"
       source_file: "ForMathlib/LinearAlgebra/Matrix/PosDef.lean"
       category: "Rank-controlled PSD Gram realization"
       sorry_count_in_solution: 0
       expected_axioms: ["propext", "Classical.choice", "Quot.sound"]
       comparator_config: "comparator/aiq-psd-gram-realization.json"
-    - declaration: "AIQChallenge.weyl_abs_eigenvalues_sub_le"
+    - declaration: "ForMathlib.abs_eigenvalues_sub_le"
+      file: "ForMathlib/Analysis/InnerProductSpace/CourantFischer.lean"
+      sorry_count: 0
+      axioms: ["propext", "Classical.choice", "Quot.sound"]
       challenge_file: "Challenge/Spectral/Conformance.lean"
       solution_file: "Challenge/Spectral/Leaderboard.lean"
+      challenge_declaration: "AIQChallenge.weyl_abs_eigenvalues_sub_le"
       source_declaration: "ForMathlib.abs_eigenvalues_sub_le"
       source_file: "ForMathlib/Analysis/InnerProductSpace/CourantFischer.lean"
       category: "Weyl / Courant-Fischer spectral perturbation"
@@ -131,26 +145,37 @@ fidelity:
   known_limitations:
     - "The challenge package has not yet been reviewed for Mathlib style, naming, minimal imports, or ideal statement shape."
     - "The Lean code was AI-authored; the human coordinator is still learning Lean and requests expert review before PR submission."
-    - "The assistant-generated overlay was not Lean-built in this sandbox because Lean/Lake are not installed; run scripts/run_challenge_comparator.sh locally after applying."
+    - "Assistant-generated overlays are not Lean-built in the assistant sandbox because Lean/Lake are not installed there; rely on local lake/comparator runs for validation."
+
+review:
+  status: "self-assessed"
+  reviewers:
+    - "Jon Crall"
+  notes: >
+    Self-assessed metadata and challenge package. The dedicated Gram, PSD-Gram,
+    Spectral, and Inventory comparator configs have been reported locally as
+    passing. The candidates have not yet undergone independent Mathlib reviewer
+    approval or source-author verification.
 
 alignment:
   statements:
     - informal: "Finite configurations with equal pairwise inner products are equivalent up to a linear isometry."
-      lean: "AIQChallenge.procrustes_rigidity_of_inner_eq"
+      lean: "ForMathlib.exists_linearIsometryEquiv_of_inner_eq"
       status: "proved by the downstream ForMathlib staging library"
     - informal: "Equal Gram matrices characterize equality up to linear isometry."
-      lean: "AIQChallenge.gram_eq_gram_iff_exists_linearIsometryEquiv"
+      lean: "ForMathlib.Matrix.gram_eq_gram_iff_exists_linearIsometryEquiv"
       status: "proved by the downstream ForMathlib staging library"
     - informal: "A PSD matrix of rank at most d is a Gram matrix of d-dimensional vectors."
-      lean: "AIQChallenge.psd_rank_le_iff_exists_conjTranspose_mul_self"
+      lean: "ForMathlib.Matrix.posSemidef_and_rank_le_iff_exists_conjTranspose_mul_self"
       status: "proved by the downstream ForMathlib staging library"
     - informal: "Weyl's eigenvalue perturbation inequality for symmetric finite-dimensional operators."
-      lean: "AIQChallenge.weyl_abs_eigenvalues_sub_le"
+      lean: "ForMathlib.abs_eigenvalues_sub_le"
       status: "proved by the downstream ForMathlib staging library"
 
 automation:
   methods:
-    - method: "AI-authored Lean formalization with human coordination"
+    - method: "agent"
+      description: "AI-authored Lean formalization with human coordination"
       models:
         - "GPT-5.2 / ChatGPT 5.2 (reported by human coordinator; GPT commits are often not marked in git metadata)"
         - "Harmonic Aristotle (repo comments identify Aristotle-generated Helm scaffolding)"

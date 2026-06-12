@@ -10,6 +10,7 @@ sample `iSup` alignment error.
 
 import Acharyya2025.Bridge
 import Acharyya2025.AlignedPipeline
+import Acharyya2025.RateChain
 import Helm2025.Basic
 
 open scoped BigOperators Topology
@@ -222,39 +223,43 @@ theorem alignmentConsistency_of_highProb_configError
       ψhat rate hgood_meas hrate hconfig
 
 /--
-**Helm alignment consistency from the aligned CMDS spectral estimator.**
+**Helm alignment consistency from the aligned CMDS spectral estimator — assumptions made explicit.**
 
-Helm's population configuration is the *per-`ω`* tuple of latents
-`fun i => (ω i).1`, so the matrix-world capstone (which fixes a single population
-Gram matrix) cannot be instantiated against a single fixed `ψ`.  Instead the
-aligned estimator is evaluated with the ω-dependent population fed in as its `ψ`
-argument:
-`ψhat u ω := alignedSpectralConfig hd Dhat hsym (fun i => (ω i).1) cBound u ω`.
+Derives Helm's `DKPSAlignmentConsistency` (paper Eq. (3)) for the aligned
+classical-MDS spectral estimator from two *decomposed* inputs, in place of the
+former opaque `halign` primitive:
 
-By `configError_alignedSpectralConfig_le`, whenever the alignment isometry exists
-at sample `(u, ω)` against this per-`ω` population (the hypothesis `halign`), the
-estimator achieves `ConfigError ≤ cBound u`.  We transport the high-probability
-alignment-existence event to the high-probability `ConfigError` event and feed it
-to the existing `alignmentConsistency_of_highProb_configError`, discharging Helm's
-`DKPSAlignmentConsistency`.
+* `hgood` — a high-probability event bundling
+  (i) the paper's **estimation closeness** (the sample CMDS matrix is entrywise
+      `rate u`-close to the per-`ω` population CMDS matrix — the content of the
+      Acharyya consistency Helm cites for Eq. (3)), and
+  (ii) the **latent eigenvalue stability** `α ≤ λ_i` on the top-`d` block of the
+      population CMDS matrix.
+* `hpsd`/`hrank`/`hcap`/`hgram` — structural facts about the population CMDS
+  matrix (PSD, rank `≤ d`, eigenvalue cap `Λ`, and the Gram realization by the
+  true latents `(ω ·).1`).  These are automatic for the distance matrix of a
+  centred `d`-dimensional configuration; `hgram` additionally encodes that the
+  latents are centred (`classicalMDSMatrix` of a distance matrix is the *centred*
+  Gram), and `hpsd` itself follows from `hgram` (Gram matrices are PSD).
 
-What is composed: the per-`ω` alignment-existence event is turned into the
-`ConfigError` event by the aligned estimator's defining property.  What is
-hypothesized: the high-probability alignment-existence event `halign`, the
-measurability of the sample alignment events, and the rate convergence.
+**ASSUMPTION SURFACED BY THE FORMALIZATION (not stated in Helm).**  Conjunct (ii)
+— the latent eigenvalue stability `α ≤ λ_d` — is **Acharyya 2025's Assumption 2**;
+it is *not* among Helm's stated assumptions (A1–A4 constrain only the learning
+rule and loss).  It is required because this bridge realizes the DKPS estimator
+as the **classical / spectral** MDS embedding (`alignedSpectralConfig`,
+Davis–Kahan), whose finite-sample stability genuinely needs an eigengap.  Helm's
+own argument avoids it by citing the *asymptotic raw-stress* consistency
+(Acharyya 2024), which is eigengap-free; a raw-stress variant of this bridge
+would instead surface the milder identifiability condition `UniquePairProfile`.
+The theory/practice MDS-variant discrepancy this exposes is exactly the kind of
+hidden assumption a formalization is meant to surface.
 
-HONEST SEAM.  `halign` is *not derived anywhere in this development* — it is an
-assumed primitive that subsumes the paper's core high-probability alignment
-guarantee.  The matrix-world capstone
-`Acharyya2025.AlignedPipeline.highProb_alignedSpectralConfigError` produces this
-event, but only against a *single fixed* population configuration realizing a
-fixed Gram matrix; the Helm setting feeds the *per-`ω`* population
-`fun i => (ω i).1`, which cannot satisfy a single fixed-Gram realization, so the
-capstone cannot be instantiated and `halign` must be assumed.  Consequently this
-bridge is a faithful *reduction* of Helm's alignment consistency to a
-per-`ω`-population alignment event, NOT an end-to-end derivation of it.
+So `halign` is no longer assumed — it is *derived* from `hgood` via the
+deterministic `alignExists_of_entrywiseClose`, with the eigenvalue-stability
+assumption now explicit and named.
 
-Formalized by Claude Fable 5 (claude-fable-5[1m]).
+Formalized by Claude Fable 5 (claude-fable-5[1m]); `halign` discharged to the
+explicit eigenvalue-stability assumption by Claude Opus 4.8 (claude-opus-4-8[1m]).
 -/
 theorem alignmentConsistency_of_aligned_spectral
     {n d d' : Nat} (hd : d ≤ n + 1)
@@ -263,44 +268,100 @@ theorem alignmentConsistency_of_aligned_spectral
     (hsym : ∀ u ω,
       (Acharyya2025.MathlibBridge.disMatToMatrix
         (Acharyya2025.Deterministic.classicalMDSMatrix (Dhat u ω))).IsHermitian)
-    (rate : Nat → Real)
-    -- extra (implicit) assumption beyond the paper: measurability of the sample
-    -- alignment-error events (needed to pass from events to convergence in probability)
+    -- The per-ω population dissimilarity matrix (of the true latents `(ω ·).1`):
+    (Dpop : (Sample n d d') → Acharyya2024.DisMat (n + 1))
+    {α Λ : Real} (hα_pos : 0 < α)
+    -- Structural facts about the population CMDS matrix (automatic for the distance
+    -- matrix of a centred `d`-dim config; `hpsd` also follows from `hgram`):
+    (hpsd : ∀ ω, (Acharyya2025.MathlibBridge.disMatToMatrix
+        (Acharyya2025.Deterministic.classicalMDSMatrix (Dpop ω))).PosSemidef)
+    (hrank : ∀ ω, (Acharyya2025.MathlibBridge.disMatToMatrix
+        (Acharyya2025.Deterministic.classicalMDSMatrix (Dpop ω))).rank ≤ d)
+    (hcap : ∀ ω l,
+        Acharyya2025.MatrixPerturbation.sortedEigenvalues (hpsd ω).isHermitian l ≤ Λ)
+    -- Gram realization (also encodes centring of the latents):
+    (hgram : ∀ ω i j, (∑ k, (ω i).1 k * (ω j).1 k)
+        = Acharyya2025.Deterministic.classicalMDSMatrix (Dpop ω) i j)
+    -- Vanishing-rate side conditions (`α / 2` smallness, Davis–Kahan polar smallness):
+    (rate : Nat → Real) (hrate_nonneg : ∀ u, 0 ≤ rate u)
+    (hsmall : ∀ u, ((n + 1 : ℕ) : ℝ) * rate u ≤ α / 2)
+    (hpolar : ∀ u, (d : ℝ) *
+      (4 * ((n + 1 : ℕ) : ℝ) * (((n + 1 : ℕ) : ℝ) * rate u) ^ 2 / α ^ 2) ≤ 1 / 2)
+    (hrate_zero : Tendsto (fun u => ((n + 1 : ℕ) : ℝ) * rate u) atTop (𝓝 0))
+    -- measurability of the alignment-error events (implicit, beyond the paper):
     (hgood_meas :
       ∀ u, MeasurableSet
         {ω : Sample n d d' |
           |(⨆ i : Fin (n + 1),
               dist
                 (Acharyya2025.AlignedPipeline.alignedSpectralConfig hd Dhat hsym
-                  (fun i : Fin (n + 1) => (ω i).1) rate u ω i)
-                ((ω i).1))| ≤ rate u})
-    (hrate : Tendsto rate atTop (𝓝 0))
-    (halign :
+                  (fun i : Fin (n + 1) => (ω i).1)
+                  (fun u => Acharyya2025.ConfigPerturbation.configBound (n + 1) d α Λ
+                    (((n + 1 : ℕ) : ℝ) * rate u)) u ω i)
+                ((ω i).1))|
+            ≤ Acharyya2025.ConfigPerturbation.configBound (n + 1) d α Λ
+                (((n + 1 : ℕ) : ℝ) * rate u)})
+    -- ★ Estimation closeness (paper's Acharyya consistency) AND the surfaced latent
+    -- eigenvalue-stability (Acharyya 2025 Assumption 2, NOT among Helm's assumptions):
+    (hgood :
+      HighProbAtTop (fun _u : Nat => Measure.pi (fun _ : Fin (n + 1) => P))
+        (fun u =>
+          {ω : Sample n d d' |
+            Acharyya2025.Bridge.EntrywiseClose
+                (Acharyya2025.Deterministic.classicalMDSMatrix (Dhat u ω))
+                (Acharyya2025.Deterministic.classicalMDSMatrix (Dpop ω)) (rate u)
+            ∧ (∀ i : Fin (n + 1), (i : ℕ) < d →
+                α ≤ Acharyya2025.MatrixPerturbation.sortedEigenvalues (hpsd ω).isHermitian i)})) :
+    -- Conclusion: Helm's alignment consistency (Eq. (3)) — now *derived*, with the
+    -- eigenvalue-stability assumption explicit (see docstring).
+    DKPSAlignmentConsistency n d d' P
+      (fun u ω => Acharyya2025.AlignedPipeline.alignedSpectralConfig hd Dhat hsym
+        (fun i : Fin (n + 1) => (ω i).1)
+        (fun u => Acharyya2025.ConfigPerturbation.configBound (n + 1) d α Λ
+          (((n + 1 : ℕ) : ℝ) * rate u)) u ω) := by
+  -- Derive the alignment-existence HP event from `hgood` via the deterministic capstone.
+  have halign :
       HighProbAtTop (fun _u : Nat => Measure.pi (fun _ : Fin (n + 1) => P))
         (fun u =>
           {ω : Sample n d d' |
             Acharyya2025.AlignedPipeline.AlignExists hd Dhat hsym
-              (fun i : Fin (n + 1) => (ω i).1) rate u ω})) :
-    -- Conclusion: the aligned CMDS spectral estimator satisfies Helm's alignment consistency
-    -- (paper Eq. (3)) — reduced to the assumed per-ω alignment event `halign` (see HONEST SEAM).
-    DKPSAlignmentConsistency n d d' P
-      (fun u ω => Acharyya2025.AlignedPipeline.alignedSpectralConfig hd Dhat hsym
-        (fun i : Fin (n + 1) => (ω i).1) rate u ω) := by
-  -- Transport the alignment-existence HP event to the `ConfigError` HP event.
+              (fun i : Fin (n + 1) => (ω i).1)
+              (fun u => Acharyya2025.ConfigPerturbation.configBound (n + 1) d α Λ
+                (((n + 1 : ℕ) : ℝ) * rate u)) u ω}) := by
+    refine HighProbAtTop.mono hgood (fun u ω hω => ?_)
+    obtain ⟨hclose, hfloor⟩ := hω
+    exact Acharyya2025.AlignedPipeline.alignExists_of_entrywiseClose
+      hd Dhat (Dpop ω) hsym (hpsd ω) (hrank ω) hα_pos hfloor (fun l => hcap ω l)
+      (fun i : Fin (n + 1) => (ω i).1) (hgram ω) rate hrate_nonneg hsmall hpolar u ω hclose
+  -- Transport to the ConfigError HP event, then apply the identity-alignment bridge.
   have hconfig :
       HighProbAtTop (fun _u : Nat => Measure.pi (fun _ : Fin (n + 1) => P))
         (fun u =>
           {ω : Sample n d d' |
             ConfigError
               (Acharyya2025.AlignedPipeline.alignedSpectralConfig hd Dhat hsym
-                (fun i : Fin (n + 1) => (ω i).1) rate u ω)
-              (fun i : Fin (n + 1) => (ω i).1) ≤ rate u}) := by
+                (fun i : Fin (n + 1) => (ω i).1)
+                (fun u => Acharyya2025.ConfigPerturbation.configBound (n + 1) d α Λ
+                  (((n + 1 : ℕ) : ℝ) * rate u)) u ω)
+              (fun i : Fin (n + 1) => (ω i).1)
+              ≤ Acharyya2025.ConfigPerturbation.configBound (n + 1) d α Λ
+                  (((n + 1 : ℕ) : ℝ) * rate u)}) := by
     refine HighProbAtTop.mono halign (fun u ω hω => ?_)
     exact Acharyya2025.AlignedPipeline.configError_alignedSpectralConfig_le
-      hd Dhat hsym (fun i : Fin (n + 1) => (ω i).1) rate u ω hω
+      hd Dhat hsym (fun i : Fin (n + 1) => (ω i).1)
+      (fun u => Acharyya2025.ConfigPerturbation.configBound (n + 1) d α Λ
+        (((n + 1 : ℕ) : ℝ) * rate u)) u ω hω
+  have hrate_c :
+      Tendsto (fun u => Acharyya2025.ConfigPerturbation.configBound (n + 1) d α Λ
+        (((n + 1 : ℕ) : ℝ) * rate u)) atTop (𝓝 0) :=
+    Acharyya2025.RateChain.tendsto_configBound_comp_zero (n + 1) d α Λ hrate_zero
   exact alignmentConsistency_of_highProb_configError P
     (fun u ω => Acharyya2025.AlignedPipeline.alignedSpectralConfig hd Dhat hsym
-      (fun i : Fin (n + 1) => (ω i).1) rate u ω)
-    rate hgood_meas hrate hconfig
+      (fun i : Fin (n + 1) => (ω i).1)
+      (fun u => Acharyya2025.ConfigPerturbation.configBound (n + 1) d α Λ
+        (((n + 1 : ℕ) : ℝ) * rate u)) u ω)
+    (fun u => Acharyya2025.ConfigPerturbation.configBound (n + 1) d α Λ
+      (((n + 1 : ℕ) : ℝ) * rate u))
+    hgood_meas hrate_c hconfig
 
 end Helm2025.DKPS.AcharyyaBridge

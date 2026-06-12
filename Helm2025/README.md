@@ -103,12 +103,19 @@ Each is flagged in-line; the notable ones:
 - **`Eq. (3)` uses `iSup` (supremum) over a finite index** where the paper
   writes `max`; and one **budget index `u`** abstracts the paper's pair
   `(m, r)`.
-- **HONEST SEAM in the bridge.** `alignmentConsistency_of_aligned_spectral`
-  *reduces* Helm's alignment consistency to a per-`ω` alignment-existence event
-  `halign`, which is **assumed, not derived** — the matrix-world capstone only
-  applies to a single fixed population configuration, whereas Helm feeds a
-  per-`ω` population. This is spelled out in a `HONEST SEAM` note above that
-  theorem and is the main thing to be aware of regarding the bridge.
+- **A surfaced assumption in the bridge (the most important thing to scrutinize).**
+  `alignmentConsistency_of_aligned_spectral` now *derives* Helm's alignment
+  consistency (the per-`ω` alignment event `halign` is no longer assumed). The
+  derivation makes one assumption explicit that **Helm does not state**: the
+  true latent embeddings `(ω ·).1` are **eigenvalue-stable** in `d` dimensions
+  (`α ≤ λ_d` on the population CMDS matrix — exactly *Acharyya 2025's
+  Assumption 2*). This is required because the bridge realizes the DKPS estimator
+  as the **classical/spectral** MDS embedding (Davis–Kahan needs an eigengap);
+  Helm's own argument avoids it by citing the *asymptotic raw-stress* consistency
+  (Acharyya 2024), which is eigengap-free. The formalization thus surfaces a
+  theory/practice MDS-variant discrepancy: the estimator the experiments use
+  (spectral) needs an eigenvalue-stability assumption the paper never states. See
+  the `ASSUMPTION SURFACED BY THE FORMALIZATION` note above that theorem.
 
 ---
 
@@ -119,7 +126,7 @@ Each is flagged in-line; the notable ones:
 | [`Basic.lean`](Basic.lean) | Core definitions: learning rule, loss, `risk`/`risk_est`, the paper-notation wrappers (`Rℓ`, `Rhatℓ`, `TrainingSet`), the A1–A4 regularity predicates, and `DKPSAlignmentConsistency` (Eq. (3)). |
 | [`Internal.lean`](Internal.lean) | Analysis machinery and the two **core theorems** `risk_converges_fixed_n` (Theorem 1) and `consistency_transfer_dkps` (Theorem 2). |
 | [`Inference.lean`](Inference.lean) | **Start here.** Paper-facing Assumptions A1–A4, Bayes-risk objects, and `Theorem1` / `Theorem2_bayes`, with a notation crosswalk at the top. |
-| [`AcharyyaBridge.lean`](AcharyyaBridge.lean) | Bridges the Acharyya2025 spectral concentration to Helm's alignment-consistency interface (subject to the `halign` honest seam). |
+| [`AcharyyaBridge.lean`](AcharyyaBridge.lean) | Bridges the Acharyya2025 spectral concentration to Helm's alignment-consistency interface; `halign` is now derived from estimation closeness + an explicit latent eigenvalue-stability assumption (Acharyya 2025 Assumption 2, surfaced — not in Helm). |
 
 ## Build / sanity checks
 

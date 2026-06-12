@@ -119,8 +119,14 @@ CMDS-entrywise event is directly Borel
 (`SpectralMeasurability.measurableSet_entrywiseClose_event`) and deterministically
 contained in `{AlignExists}` (`AlignedPipeline.alignExists_of_entrywiseClose`) —
 so it serves as the measurable HP sub-event with no eigenvector measurability.
-The only remaining honest seam in the whole development is now Helm's `halign`.
-See `docs/planning/hmeas-spec-discharge.md`. History of the relocation below.
+Helm's `halign` is no longer assumed either: `alignmentConsistency_of_aligned_spectral`
+now *derives* it from estimation closeness + an **explicit** latent
+eigenvalue-stability assumption (`α ≤ λ_d`, = Acharyya 2025 Assumption 2), which
+the formalization surfaced as required-by-the-spectral-estimator but absent from
+Helm's stated A1–A4 (Helm's prose avoids it via the eigengap-free raw-stress
+consistency it cites — a documented theory/practice MDS-variant discrepancy; the
+raw-stress "Form B" bridge is future work).  See
+`docs/planning/hmeas-spec-discharge.md`. History of the relocation below.
 
 RESOLVED without any measurable-selection theorem, by relocating the seam:
 

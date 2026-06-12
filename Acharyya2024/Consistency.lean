@@ -288,10 +288,20 @@ argument.  Under the repaired layer-1 stability the diagonal argument is
 unnecessary: the full sequence converges at every stage, so the shared
 subsequence is simply `id` — a strictly stronger conclusion.
 
+SCOPE CAVEAT (honesty).  This is the *per-stage, finite* form: a countable family
+of finite (`Fin (nOf k)`) consistency statements, one per stage `k`.  It is NOT
+the paper's full Theorem 4/5 conclusion, which is an `Lᵖ` average over a
+*continuum* of iid model draws `φ ~ P` from the model space —
+`∫∫ |‖ψ̂₁ − ψ̂₂‖ − ‖mds(φ₁) − mds(φ₂)‖|ᵖ dP dP →P 0`.  Modelling the model
+distribution `P`, the iid draw of models, and the continuous-MDS map `mds(φ)` is
+not formalized here; this theorem is the finite consistency content that the
+paper's argument specializes to at each stage, re-indexed over stages.
+
 Mathematical source/citation:
 - Acharyya, Trosset, Priebe, Helm, "Consistent estimation of generative model
   representations in the data kernel perspective space", Theorem 4 and Appendix
-  A.3.
+  A.3 (the finite per-stage content; the integral-over-`P` form is not
+  formalized — see the scope caveat).
 
 Formalized by Claude Fable 5 (claude-fable-5[1m]).
 -/
@@ -322,10 +332,15 @@ theorem growing_models_growing_queries_consistency
   exact ⟨ψ, hψ_mem, fun i j => hψ_conv i j⟩
 
 /--
-Triangular-array consistency in the paper's Theorem-5 form: the per-stage
+Triangular-array consistency in the paper's Theorem-5 *shape*: the per-stage
 dissimilarity convergence is split into a per-stage sampling error against a
 stage-and-budget population `Delta r k` plus a deterministic per-stage
 Assumption-1 error, mirroring `fixed_models_growing_queries_consistency`.
+
+Same SCOPE CAVEAT as `growing_models_growing_queries_consistency`: this is the
+finite per-stage form, not the paper's `Lᵖ`-over-the-model-distribution
+conclusion (the model distribution and the continuous-MDS map are not
+formalized).
 
 Formalized by Claude Fable 5 (claude-fable-5[1m]).
 -/

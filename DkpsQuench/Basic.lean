@@ -828,6 +828,15 @@ Paper text: “For any ε > 0 there exists (n,m,r) such that MSE(ŷ_NN) ≤ ε w
 We encode “with high probability” as: ∀ δ>0, ∃ n, P( MSE ≤ ε ) ≥ 1-δ.
 
 Here `m := Qsub.card`. The `r` dependence lives inside the concentration hypothesis (`h_conc` / `c n`).
+
+ASSUMPTION DISCLOSURE.  The embedding-concentration event `h_conc` (the paper's
+Theorem 1 content) and its rate `c n` are *assumed here, not derived* — together
+with the coverage event `h_cover` (Assumption 2) and their measurability.  For
+the version that DISCHARGES `h_conc`/`h_conc_meas` from the actual spectral
+concentration chain, see
+`DkpsQuench.AcharyyaBridge.Theorem2_part2_of_aligned_spectral`; for the variant
+that only needs a measurable high-probability sub-event of the error event, see
+`Theorem2_part1_paper_subevent`.
 -/
 theorem Theorem2_part1_paper
   (Pf : Measure (Model Q X)) [IsProbabilityMeasure Pf]
@@ -916,6 +925,15 @@ We formalize the “query-efficient relative to ŷ_Q” conclusion as:
 ∀ δ>0, ∃ n, P( MSE(ŷ_NN) ≤ MSE(ŷ_Q) ) ≥ 1-δ.
 
 Here ŷ_Q(f) := score f Qsub is the baseline.
+
+ASSUMPTION DISCLOSURE.  As in Part 1, the concentration event `h_conc` and rate
+`c n` are *assumed*, not derived.  Only `hMSE_Q_pos` (the `MSE(ŷ_Q) > 0`
+condition) drives the proof; the paper's `m < M` condition `hm` is recorded for
+fidelity but is not used by the formal argument.  This theorem is SUPERSEDED by
+`Theorem2_part2_paper_subevent` (measurable HP sub-event instead of
+`h_conc`/`h_conc_meas`) and by
+`DkpsQuench.AcharyyaBridge.Theorem2_part2_of_aligned_spectral` (which discharges
+`h_conc` from the spectral chain entirely); prefer those for new work.
 -/
 theorem Theorem2_part2_paper
   (Pf : Measure (Model Q X)) [IsProbabilityMeasure Pf]

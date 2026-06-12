@@ -234,11 +234,19 @@ to the existing `alignmentConsistency_of_highProb_configError`, discharging Helm
 
 What is composed: the per-`ω` alignment-existence event is turned into the
 `ConfigError` event by the aligned estimator's defining property.  What is
-hypothesized: the high-probability alignment-existence event `halign` (which the
-capstone produces at each `ω` against a *fixed* population; here the per-`ω`
-population blocks a single capstone call, so it is taken as a hypothesis — this
-is the documented per-`ω`-population seam), the measurability of the sample
-alignment events, and the rate convergence.
+hypothesized: the high-probability alignment-existence event `halign`, the
+measurability of the sample alignment events, and the rate convergence.
+
+HONEST SEAM.  `halign` is *not derived anywhere in this development* — it is an
+assumed primitive that subsumes the paper's core high-probability alignment
+guarantee.  The matrix-world capstone
+`Acharyya2025.AlignedPipeline.highProb_alignedSpectralConfigError` produces this
+event, but only against a *single fixed* population configuration realizing a
+fixed Gram matrix; the Helm setting feeds the *per-`ω`* population
+`fun i => (ω i).1`, which cannot satisfy a single fixed-Gram realization, so the
+capstone cannot be instantiated and `halign` must be assumed.  Consequently this
+bridge is a faithful *reduction* of Helm's alignment consistency to a
+per-`ω`-population alignment event, NOT an end-to-end derivation of it.
 
 Formalized by Claude Fable 5 (claude-fable-5[1m]).
 -/

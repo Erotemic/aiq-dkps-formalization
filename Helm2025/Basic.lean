@@ -576,7 +576,9 @@ lemma risk_est_invariant (n d d' : ℕ)
 Lemma: The transformed estimated embeddings converge to the true embeddings in probability.
 -/
 /--
-Lemma: The transformed estimated embeddings converge to the true embeddings in probability.
+Lemma: under alignment consistency, there *exist* affine isometries `eᵤ` such
+that the `eᵤ⁻¹`-transformed estimated embeddings converge to the true embeddings
+in probability.  (The existential over the per-stage alignments is load-bearing.)
 -/
 lemma transformed_embeddings_converge (n d d' : ℕ)
     (P : Measure (E d × Y d'))
@@ -836,7 +838,13 @@ lemma risk_convergence_of_aligned_embeddings (n d d' : ℕ)
       exact h_risk_conv
 
 /-
-Theorem 1: The risk using estimated embeddings converges to the risk using true embeddings.
+Theorem 1: The risk using estimated embeddings converges to the risk using true
+embeddings — UNDER the alignment-consistency hypothesis `h_align`
+(`DKPSAlignmentConsistency`, the paper's Eq. 3).  This matches the paper's
+theorem structure: alignment consistency is a legitimately-assumed input, not
+derived here; the genuinely-proved content is the transfer (continuous mapping +
+tightness + dominated convergence) from in-probability embedding convergence to
+risk convergence.
 -/
 theorem risk_converges_fixed_n (n d d' : ℕ)
     (P : Measure (E d × Y d')) [IsProbabilityMeasure P]

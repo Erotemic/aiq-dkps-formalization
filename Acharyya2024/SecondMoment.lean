@@ -108,16 +108,17 @@ private theorem bochner_mean_of_coord
 /--
 **Main second-moment identity (additive form).**
 
-Let `X : Fin r → Ω → EuclideanSpace ℝ ι` be jointly independent, square-integrable
-response vectors with common mean `μ : EuclideanSpace ℝ ι` (each coordinate
-`∫ X k ω c = μ c`).  Then the mean-squared error of the sample mean equals `r⁻²`
-times the sum of the individual mean-squared errors:
+Let `X : Fin r → Ω → EuclideanSpace ℝ ι` be pairwise-independent,
+square-integrable response vectors with common mean `μ : EuclideanSpace ℝ ι`
+(each coordinate `∫ X k ω c = μ c`).  Then the mean-squared error of the sample
+mean equals `r⁻²` times the sum of the individual mean-squared errors:
 
   ∫ ‖r⁻¹ Σₖ Xₖ − μ‖² ∂P = r⁻² Σₖ ∫ ‖Xₖ − μ‖² ∂P.
 
-This needs only pairwise independence and identical centring (not identical
-distribution); the cross terms vanish by independence.  The proof reduces
-coordinatewise to `integral_sq_scaled_sum_sub_of_pairwise_indep`.
+Only pairwise independence and identical centring are needed (not identical
+distribution); the cross terms vanish by independence.  The proof upgrades the
+coordinate means to a Bochner mean (`bochner_mean_of_coord`) and applies the
+Mathlib-staged `ForMathlib.integral_norm_sq_average_sub_eq_sum`.
 
 Formalized by Claude Fable 5 (claude-fable-5[1m]).
 -/
@@ -129,18 +130,16 @@ theorem integral_norm_sq_sampleMean_sub_mean_eq_sum
     (μ : EuclideanSpace Real ι)
     (hL2 : ∀ k, MemLp (X k) 2 P)
     (hmean : ∀ k (c : ι), ∫ ω, X k ω c ∂P = μ c)
-    (hindep : iIndepFun X P) :
+    (hindep : Set.Pairwise (Set.univ : Set (Fin r))
+      fun i j => IndepFun (X i) (X j) P) :
     ∫ ω, ‖(r : Real)⁻¹ • (∑ k, X k ω) - μ‖ ^ 2 ∂P
       = (r : Real)⁻¹ ^ 2 * ∑ k, ∫ ω, ‖X k ω - μ‖ ^ 2 ∂P := by
-  -- Bridge the paper's `iIndepFun` + coordinate-mean hypotheses to the
-  -- Mathlib-staged abstract theorem (pairwise independence + Bochner mean).
-  have hpw : Set.Pairwise (Set.univ : Set (Fin r))
-      fun i j => IndepFun (X i) (X j) P :=
-    fun i _ j _ hij => hindep.indepFun hij
+  -- Bridge the paper's coordinate-mean hypotheses to the Mathlib-staged abstract
+  -- theorem (only pairwise independence and a Bochner mean are needed).
   have hbm : ∀ k, ∫ ω, X k ω ∂P = μ :=
     fun k => bochner_mean_of_coord P (X k) μ ((hL2 k).integrable one_le_two)
       (fun c => hmean k c)
-  exact ForMathlib.integral_norm_sq_average_sub_eq_sum P hr X μ hL2 hbm hpw
+  exact ForMathlib.integral_norm_sq_average_sub_eq_sum P hr X μ hL2 hbm hindep
 
 /--
 **iid corollary (equality form).**
@@ -163,7 +162,8 @@ theorem integral_norm_sq_sampleMean_sub_mean
     (μ : EuclideanSpace Real ι)
     (hL2 : ∀ k, MemLp (X k) 2 P)
     (hmean : ∀ k (c : ι), ∫ ω, X k ω c ∂P = μ c)
-    (hindep : iIndepFun X P)
+    (hindep : Set.Pairwise (Set.univ : Set (Fin r))
+      fun i j => IndepFun (X i) (X j) P)
     (hident : ∀ k, ∫ ω, ‖X k ω - μ‖ ^ 2 ∂P
       = ∫ ω, ‖X ⟨0, hr⟩ ω - μ‖ ^ 2 ∂P) :
     ∫ ω, ‖(r : Real)⁻¹ • (∑ k, X k ω) - μ‖ ^ 2 ∂P
@@ -196,7 +196,8 @@ theorem integral_norm_sq_sampleMean_sub_mean_le_of_bound
     (μ : EuclideanSpace Real ι)
     (hL2 : ∀ k, MemLp (X k) 2 P)
     (hmean : ∀ k (c : ι), ∫ ω, X k ω c ∂P = μ c)
-    (hindep : iIndepFun X P)
+    (hindep : Set.Pairwise (Set.univ : Set (Fin r))
+      fun i j => IndepFun (X i) (X j) P)
     {γ : Real}
     (hbound : ∀ k, ∫ ω, ‖X k ω - μ‖ ^ 2 ∂P ≤ γ) :
     ∫ ω, ‖(r : Real)⁻¹ • (∑ k, X k ω) - μ‖ ^ 2 ∂P ≤ γ / r := by

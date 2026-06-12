@@ -66,23 +66,27 @@ generalization (typically ℝ → `RCLike 𝕜`, restating in Mathlib idiom);
 | 7 | `TendstoInMeasure` constructor from a vanishing high-probability rate | `Acharyya2024/WellKnown.lean:112` | S–M | `MeasureTheory/Function/ConvergenceInMeasure.lean` |
 | 8 | Davis–Kahan cross-block (squared sin-Θ) bound + rank-`d`/floor corollary | `Acharyya2025/DavisKahan.lean:135`, `RankGap.lean:42,78` | M | new `Analysis/InnerProductSpace/DavisKahan.lean` |
 | 9 | Measurability of the continuous functional calculus in the element: `ω ↦ cfc f (a ω)` measurable for fixed continuous `f`, measurable self-adjoint-valued `a` in a C⋆-algebra (continuity of `cfc` on bounded-spectrum sets + countable norm cover) | `ForMathlib/MeasureTheory/CfcMeasurable.lean` (STAGED) | S/M | `Analysis/CStarAlgebra/ContinuousFunctionalCalculus/Continuity.lean` |
-| 10 | Measurability of the spectral `h`-transform `Σₖ h(λₖ) uₖuₖᵀ` of a measurable Hermitian-matrix family, for fixed continuous `h` — via entrywise pointwise limit of matrix *polynomials* (Stone–Weierstrass on a spectral interval); **no cfc, no eigenbasis selection** | `Acharyya2025/SpectralMeasurability.lean` (`measurable_specTransform`) | M | `Analysis/Matrix/Spectrum.lean` or `Analysis/InnerProductSpace/` |
+| 10 | Measurability of the spectral `h`-transform `Σₖ h(λₖ) uₖuₖᵀ` of a measurable Hermitian-matrix family, for fixed continuous `h` — via entrywise pointwise limit of matrix *polynomials* (Stone–Weierstrass on a spectral interval); **no cfc, no eigenbasis selection** | `ForMathlib/Analysis/Matrix/SpectralFunctionMeasurable.lean` (STAGED, `measurable_specTransform`) | M | `Analysis/Matrix/Spectrum.lean` |
 | 11 | Countable restrict-cover measurability: `⋃ₖ sₖ = univ`, each `sₖ` measurable, each `sₖ.restrict g` measurable ⇒ `g` measurable (countable analogue of `measurable_of_restrict_of_restrict_compl`) | `ForMathlib/MeasureTheory/CfcMeasurable.lean` (STAGED, `measurable_of_iUnion_restrict`) | S | `MeasureTheory/MeasurableSpace/Constructions.lean` |
 
 **Update 2026-06-12 (Opus session, `hmeas_spec` discharge):** three new
 measurability candidates (#9–#11) surfaced while discharging the DkpsQuench
 `hmeas_spec` seam.  #9 (`measurable_cfc_comp`) and #11
-(`measurable_of_iUnion_restrict`) are already STAGED in
+(`measurable_of_iUnion_restrict`) are STAGED in
 `ForMathlib/MeasureTheory/CfcMeasurable.lean` (built green, RCLike-where-applicable
-C⋆-algebra generality).  #10 (`measurable_specTransform`) lives in
-`Acharyya2025/SpectralMeasurability.lean` as part of Fable's general spectral-split
-development; it is the most novel of the three — measurability of a *spectral
-function* of a matrix family with no continuous functional calculus and no
-(non-measurable) eigenbasis, obtained purely from polynomial (Stone–Weierstrass)
-approximation — and is the strongest standalone extraction target.  Note: the
-final `hmeas_spec` discharge uses neither #9 nor #10 (it goes through the
-deterministic CMDS-entrywise route); these are kept as general results.  See
-`docs/planning/hmeas-spec-discharge.md`.
+C⋆-algebra generality).  **#10 (`measurable_specTransform`) is now STAGED** in
+`ForMathlib/Analysis/Matrix/SpectralFunctionMeasurable.lean` — the most novel of
+the three: measurability of a *spectral function* of a measurable Hermitian-matrix
+family with no continuous functional calculus and no (non-measurable) eigenbasis,
+obtained purely from polynomial (Stone–Weierstrass) approximation glued over a
+countable entrywise-norm cover.  On extracting it, the dev file
+`Acharyya2025/SpectralMeasurability.lean` was trimmed (740 → 110 lines) to just the
+two facts the bridge uses (`measurable_cmds_matrix`,
+`measurableSet_entrywiseClose_event`); the former general spectral-split assembly
+(`measurableSet_alignExists_inter` etc.) was unused by the discharge — its general
+core is now the staged #10.  Note: the final `hmeas_spec` discharge uses neither #9
+nor #10 (it goes through the deterministic CMDS-entrywise route); these are kept as
+general staged results.  See `docs/planning/hmeas-spec-discharge.md`.
 
 **Future candidate (not yet formalized) — `halign` route:** a
 *sample-covariance / empirical-Gram eigenvalue concentration* result (the

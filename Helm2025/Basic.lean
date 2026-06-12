@@ -98,9 +98,14 @@ abbrev Y (d' : ℕ) := EuclideanSpace ℝ (Fin d')
 
 -- A learning algorithm / decision rule: h, which predicts y for a new ψ using the training set.
 -- learn : (Fin n → (E × Y)) → E → Y
+/-- A learning rule / decision function (paper: `h(·; T_n)`).
+Given a training set `T_n` of `n` labeled embeddings it returns a decision function
+`E d → Y d'` mapping a new embedding to a predicted label. -/
 def LearningRule (n : ℕ) (d d' : ℕ) := (Fin n → E d × Y d') → E d → Y d'
 
 -- Loss ℓ : Y × Y → ℝ≥0.
+/-- A loss function (paper: `ℓ : 𝒴 × 𝒴 → ℝ`), measuring the discrepancy between a
+predicted label and a true label. -/
 def LossFunction (d' : ℕ) := Y d' → Y d' → ℝ
 
 -- Risk (expected loss) under the distribution P_{ψY}:
@@ -110,9 +115,11 @@ def LossFunction (d' : ℕ) := Y d' → Y d' → ℝ
 variable {n : ℕ}
 
 /--
-The risk of a learning rule `learn` under distribution `P` with loss `loss`.
-We integrate over the product measure of `n+1` samples.
-The first `n` samples are the training set, the `n+1`-th is the test point.
+The risk of a learning rule `learn` under distribution `P` with loss `loss`
+(paper: `R_ℓ(P_{ψY}, h(·; T_n)) = E[ℓ(h(ψ; T_n), y)]`, Eq. (risk) in the paper).
+We integrate over the product measure of `n+1` i.i.d. samples.
+The first `n` samples are the training set `T_n`, the `(n+1)`-th is the test point.
+This is the "true embedding" risk; `risk_est` below is the estimated-embedding analogue.
 -/
 def risk (n : ℕ) (d d' : ℕ)
     (P : Measure (E d × Y d'))
@@ -131,10 +138,11 @@ def transform_training (e : E d ≃ᵃⁱ[ℝ] E d) (t : Fin n → E d × Y d') 
 Definition of risk_est, the risk using estimated embeddings.
 -/
 /--
-The risk of a learning rule `learn` using estimated embeddings `psi_hat`.
-`psi_hat` takes the full sample `ω` (training + test) and returns estimated embeddings for all points.
-The learning rule is trained on `(psi_hat_train, y_train)` and evaluated on `psi_hat_test`.
-The loss is computed against the true label `y_test`.
+The risk of a learning rule `learn` using *estimated* embeddings `psi_hat`
+(paper: `R_ℓ(P_{ψY}, ĥ(·; T̂_n))`, the risk based on the estimated training set `T̂_n`).
+`psi_hat` takes the full sample `ω` (training + test) and returns estimated embeddings `ψ̂`
+for all points.  The learning rule is trained on `(psi_hat_train, y_train)` and evaluated on
+the estimated test embedding `psi_hat_test`; the loss is computed against the true label `y_test`.
 -/
 def risk_est (n : ℕ) (d d' : ℕ)
     (P : Measure (E d × Y d'))
@@ -189,9 +197,11 @@ literally, interpret `u` as an encoding of a cofinal schedule `(m(u), r(u))`.
 Assumption A1: The learning rule is invariant to affine isometries.
 -/
 /--
-Assumption A1: The learning rule is invariant to affine isometries.
+Assumption A1 (paper): The learning rule is invariant to affine isometries.
 For any affine isometry `e`, applying `e` to the training embeddings and the test embedding
-does not change the prediction.
+does not change the prediction.  This is what lets the proof factor out the unknown
+alignment between estimated and true embeddings (which is only identified up to such an
+isometry).
 -/
 def InvariantToAffineIsometries (n : ℕ) (d d' : ℕ) (learn : LearningRule n d d') : Prop :=
   ∀ (e : E d ≃ᵃⁱ[ℝ] E d) (t : Fin n → E d × Y d') (ψ : E d),
@@ -201,28 +211,44 @@ def InvariantToAffineIsometries (n : ℕ) (d d' : ℕ) (learn : LearningRule n d
 Definitions of ContinuousLearningRule (A2), BoundedLearningRule (A3), ContinuousLoss (A4), and ConvergesInProbabilityToZero.
 -/
 /--
-Assumption A2: The learning rule is continuous.
-We assume standard continuity with respect to the product topology on inputs.
+Assumption A2 (paper): The learning rule is continuous.
+Here we require *joint* continuity of `(training set, test embedding) ↦ prediction`
+with respect to the product topology on inputs.
+NOTE: this is stronger than / an encoding of the paper's assumption — the paper's
+continuity assumption (in the appendix) is naturally read pointwise/coordinatewise,
+whereas this asks for joint continuity in all arguments simultaneously.
 -/
 def ContinuousLearningRule (n : ℕ) (d d' : ℕ) (learn : LearningRule n d d') : Prop :=
   Continuous (fun (p : (Fin n → E d × Y d') × E d) => learn p.1 p.2)
 
 /--
-Assumption A3: The learning rule has bounded range.
-Specifically, the image of the learning rule is contained in a compact set.
+Assumption A3 (paper): The learning rule has bounded range.
+Specifically, the image of the learning rule is contained in a single compact set `K`
+(uniformly over all training sets and test embeddings).
+NOTE: this is an encoding of the paper's boundedness assumption; in this
+finite-dimensional Euclidean setting requiring a *compact* containing set is equivalent
+to requiring the range to be bounded (closed + bounded), but stating it as
+"contained in a compact `K`" is the form the proofs use (e.g. via tightness /
+uniform continuity on `K`).
 -/
 def BoundedLearningRule (n : ℕ) (d d' : ℕ) (learn : LearningRule n d d') : Prop :=
   ∃ K : Set (Y d'), IsCompact K ∧ ∀ (t : Fin n → E d × Y d') (ψ : E d), learn t ψ ∈ K
 
 /--
-Assumption A4: The loss function is continuous.
+Assumption A4 (paper): The loss function is continuous.
+We require *joint* continuity of `(prediction, label) ↦ loss`.
+NOTE: as with A2, joint continuity is stronger than / an encoding of a
+pointwise/coordinatewise reading of the paper's continuity assumption.
+(The companion condition `BoundedLabelSupport`, in `Internal.lean`, captures the
+paper's accompanying "labels live in a compact set" side-condition.)
 -/
 def ContinuousLoss (d' : ℕ) (loss : LossFunction d') : Prop :=
   Continuous (fun (p : Y d' × Y d') => loss p.1 p.2)
 
 /--
-Convergence in probability to zero for a sequence of random variables `X_u`.
-`∀ ε > 0, P(‖X_u‖ > ε) → 0` as `u → ∞`.
+Convergence in probability to zero for a sequence of real random variables `X_u`
+(standard probabilistic notion, used to phrase the paper's "`ψ̂ → ψ`" statements):
+`∀ ε > 0, P(|X_u| > ε) → 0` as `u → ∞`.
 -/
 def ConvergesInProbabilityToZero {Ω : Type*} [MeasurableSpace Ω] (P : Measure Ω)
     (X : ℕ → Ω → ℝ) : Prop :=
@@ -232,9 +258,13 @@ def ConvergesInProbabilityToZero {Ω : Type*} [MeasurableSpace Ω] (P : Measure 
 Assumption: DKPS alignment consistency. There exists a sequence of affine isometries such that the estimated embeddings converge to the transformed true embeddings in probability.
 -/
 /--
-Assumption: DKPS alignment consistency.
+Assumption: DKPS alignment consistency (paper Eq. (3); the "`ψ̂ → ψ` up to alignment"
+input to both theorems).
 There exists a sequence of affine isometries `e_u` such that the estimated embeddings `psi_hat`
-converge to `e_u(psi_true)` uniformly over the training and test set, in probability.
+converge to `e_u(psi_true)` in probability, uniformly over the `n+1` training and test points
+(the supremum over `i` of the per-point distance tends to 0 in probability).
+The per-stage alignment `e_u` reflects that DKPS embeddings are only identified up to an
+affine isometry; A1 (`InvariantToAffineIsometries`) is what makes this harmless for the risk.
 -/
 def DKPSAlignmentConsistency (n : ℕ) (d d' : ℕ)
     (P : Measure (E d × Y d'))

@@ -117,6 +117,8 @@ theorem highProb_mse_nn_le
   (h_cover_meas :
     ∀ ρ > 0, ∀ n,
       MeasurableSet {ω | ∀ f, ∃ i, ‖ψ Qsub (f_ref n ω i) - ψ Qsub f‖ ≤ ρ}) :
+  -- Conclusion: for every target ε > 0 and confidence δ > 0, some sample size `n` makes
+  -- P( MSE(ŷ_NN) ≤ ε ) ≥ 1 - δ.  (Proof — everything after `:= by` — follows.)
   ∀ ε : ℝ, 0 < ε → ∀ δ : ENNReal, 0 < δ →
     ∃ n : ℕ,
       (μ n) {ω |
@@ -215,6 +217,8 @@ theorem highProb_queryEfficient_nn
       MeasurableSet {ω | ∀ f, ∃ i, ‖ψ Qsub (f_ref n ω i) - ψ Qsub f‖ ≤ ρ})
   (hMSE_Q_pos :
     0 < MSE (Q := Q) (X := X) Pf (yFull score Qstar) (yQ score Qsub)) :
+  -- Conclusion: with high probability (some sample size `n`), MSE(ŷ_NN) ≤ MSE(ŷ_Q); i.e. the
+  -- NN estimator is query-efficient relative to the subset baseline.  (Proof follows `:= by`.)
   ∀ δ : ENNReal, 0 < δ →
     ∃ n : ℕ,
       (μ n) {ω |
@@ -297,19 +301,30 @@ theorem highProb_mse_le_of_subevent
   (f_ref : ∀ n, Ω → Fin n → Model Q X)
   (score : Model Q X → Finset Q → ℝ)
   (Qstar : Finset Q)
+  -- paper Assumption 1 (Lipschitz score): |y(f) - y(f')| ≤ γ·‖ψf - ψf'‖, with γ > 0
   (γ : ℝ)
   (h_lip : LipschitzScore γ (fun _ f => ψ f) (fun f => score f Qstar))
   (h_gamma_pos : 0 < γ)
+  -- embedding-error rate `c n → 0` (this is the paper's Theorem 1 content, *assumed* here)
   (c : ℕ → ℝ) (h_c_tendsto : Filter.Tendsto c Filter.atTop (nhds 0))
   (h_c_nonneg : ∀ n, 0 ≤ c n)
+  -- Measurable high-probability sub-event `E` of the uniform embedding-error event.
+  -- `hE_meas` is a Lean-only measurability device (so the argument also works when `ψHat`
+  -- is built by a nonconstructive alignment): it is NOT an assumption stated in the paper.
+  -- `hE_sub` says `E` lies inside the error event; `hE` says `E` holds with high probability.
   (E : ℕ → Set Ω)
   (hE_meas : ∀ n, MeasurableSet (E n))
   (hE_sub : ∀ n, E n ⊆ {ω | ∀ f, ‖ψHat n ω f - ψ f‖ ≤ c n})
   (hE : HighProbAtTop μ hμ E)
+  -- paper Assumption 2 (reference-model coverage): every model is within ρ of some reference
+  -- model, with high probability.  `h_cover_meas` (measurability of that event) is implicit /
+  -- beyond the paper.
   (h_cover : ∀ ρ > 0, HighProbAtTop μ hμ (fun n => {ω | ∀ f, ∃ i, ‖ψ (f_ref n ω i) - ψ f‖ ≤ ρ}))
   (h_cover_meas : ∀ ρ > 0, ∀ n, MeasurableSet {ω | ∀ f, ∃ i, ‖ψ (f_ref n ω i) - ψ f‖ ≤ ρ})
+  -- the estimator under test (`hNN`), pinned by `h_hNN_def` to the NN rule in estimated space
   (hNN : ℕ → Ω → Model Q X → ℝ)
   (h_hNN_def : ∀ n ω f, (hn : n > 0) → hNN n ω f = hNN_estimator hn (fun i => ψHat n ω (f_ref n ω i)) (ψHat n ω f) (fun i => score (f_ref n ω i) Qstar)) :
+  -- Conclusion: for every target ε > 0, with high probability (eventually in n) MSE(ŷ_NN) ≤ ε.
   ∀ ε : ℝ, 0 < ε →
     HighProbAtTop μ hμ (fun n => {ω | MSE Pf (fun f => score f Qstar) (fun f => hNN n ω f) ≤ ε}) := by
       have h_mse_bound : ∀ ε > 0, ∃ N : ℕ, ∀ n > N, ∀ ω ∈ {ω | ∀ f, ‖ψHat n ω f - ψ f‖ ≤ c n} ∩ {ω | ∀ f, ∃ i : Fin n, ‖ψ (f_ref n ω i) - ψ f‖ ≤ Real.sqrt ε / (2 * γ)}, MSE Pf (fun f => score f Qstar) (fun f => hNN n ω f) ≤ ε := by
@@ -353,22 +368,28 @@ theorem highProb_mse_nn_le_of_subevent
   (f_ref : ∀ n, Ω → Fin n → Model Q X)
   (score : Model Q X → Finset Q → ℝ)
   (Qstar Qsub : Finset Q)
+  -- paper Assumption 1 (Lipschitz score), specialized to the fixed query subset `Qsub`
   (γ : ℝ)
   (h_lipQ : ∀ (f f' : Model Q X),
     |score f Qstar - score f' Qstar| ≤ γ * ‖ψ Qsub f - ψ Qsub f'‖)
   (h_gamma_pos : 0 < γ)
+  -- embedding-error rate `c n → 0` (paper's Theorem 1 content, assumed here)
   (c : ℕ → ℝ) (h_c_tendsto : Tendsto c atTop (nhds 0))
   (h_c_nonneg : ∀ n, 0 ≤ c n)
+  -- measurable high-probability sub-event `E` of the embedding-error event
+  -- (`hE_meas` is a Lean-only measurability device, not an assumption in the paper)
   (E : ℕ → Set Ω)
   (hE_meas : ∀ n, MeasurableSet (E n))
   (hE_sub : ∀ n, E n ⊆ {ω | ∀ f, ‖ψHat n ω Qsub f - ψ Qsub f‖ ≤ c n})
   (hE : HighProbAtTop μ hμ E)
+  -- paper Assumption 2 (coverage) for this `Qsub`; `h_cover_meas` is implicit / beyond the paper
   (h_cover :
     ∀ ρ > 0,
       HighProbAtTop μ hμ (fun n => {ω | ∀ f, ∃ i, ‖ψ Qsub (f_ref n ω i) - ψ Qsub f‖ ≤ ρ}))
   (h_cover_meas :
     ∀ ρ > 0, ∀ n,
       MeasurableSet {ω | ∀ f, ∃ i, ‖ψ Qsub (f_ref n ω i) - ψ Qsub f‖ ≤ ρ}) :
+  -- Conclusion: for every ε > 0 and confidence δ > 0, some sample size `n` gives P(MSE(ŷ_NN) ≤ ε) ≥ 1-δ.
   ∀ ε : ℝ, 0 < ε → ∀ δ : ENNReal, 0 < δ →
     ∃ n : ℕ,
       (μ n) {ω |
@@ -422,25 +443,34 @@ theorem highProb_queryEfficient_nn_of_subevent
   (f_ref : ∀ n, Ω → Fin n → Model Q X)
   (score : Model Q X → Finset Q → ℝ)
   (Qstar Qsub : Finset Q)
+  -- paper condition m < M (recorded for fidelity; not used by the formal argument)
   (hm : Qsub.card < Qstar.card)
+  -- paper Assumption 1 (Lipschitz score) for this `Qsub`
   (γ : ℝ)
   (h_lipQ : ∀ (f f' : Model Q X),
     |score f Qstar - score f' Qstar| ≤ γ * ‖ψ Qsub f - ψ Qsub f'‖)
   (h_gamma_pos : 0 < γ)
+  -- embedding-error rate `c n → 0` (paper's Theorem 1 content, assumed here)
   (c : ℕ → ℝ) (h_c_tendsto : Tendsto c atTop (nhds 0))
   (h_c_nonneg : ∀ n, 0 ≤ c n)
+  -- measurable high-probability sub-event `E` of the embedding-error event
+  -- (`hE_meas` is a Lean-only measurability device, not an assumption in the paper)
   (E : ℕ → Set Ω)
   (hE_meas : ∀ n, MeasurableSet (E n))
   (hE_sub : ∀ n, E n ⊆ {ω | ∀ f, ‖ψHat n ω Qsub f - ψ Qsub f‖ ≤ c n})
   (hE : HighProbAtTop μ hμ E)
+  -- paper Assumption 2 (coverage); `h_cover_meas` is implicit / beyond the paper
   (h_cover :
     ∀ ρ > 0,
       HighProbAtTop μ hμ (fun n => {ω | ∀ f, ∃ i, ‖ψ Qsub (f_ref n ω i) - ψ Qsub f‖ ≤ ρ}))
   (h_cover_meas :
     ∀ ρ > 0, ∀ n,
       MeasurableSet {ω | ∀ f, ∃ i, ‖ψ Qsub (f_ref n ω i) - ψ Qsub f‖ ≤ ρ})
+  -- the sole driver of the conclusion: the baseline ŷ_Q has strictly positive MSE
   (hMSE_Q_pos :
     0 < MSE (Q := Q) (X := X) Pf (yFull score Qstar) (yQ score Qsub)) :
+  -- Conclusion: with high probability (some sample size `n`), MSE(ŷ_NN) ≤ MSE(ŷ_Q) — i.e. ŷ_NN
+  -- is query-efficient relative to the subset baseline ŷ_Q.
   ∀ δ : ENNReal, 0 < δ →
     ∃ n : ℕ,
       (μ n) {ω |

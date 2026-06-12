@@ -30,33 +30,60 @@ noncomputable section
 
 universe u v
 
+/-- A probability measure on `X`, packaged as a measure together with a proof
+that it is a probability measure. (Type abbreviation; no paper counterpart.) -/
 abbrev ProbMeasure (X : Type u) [MeasurableSpace X] :=
   { μ : Measure X // IsProbabilityMeasure μ }
 
+/-- A *model* maps each query `q : Q` to a probability distribution over
+responses in `X`. This is the paper's notion of a model `f ∈ 𝓕` as a
+query-conditional response distribution. -/
 abbrev Model (Q : Type u) (X : Type v) [MeasurableSpace X] :=
   Q → ProbMeasure X
 
+/-- A `p`-dimensional real Euclidean (perspective) vector. -/
 abbrev Vec (p : ℕ) := EuclideanSpace ℝ (Fin p)
 
+/-- An `m × p` real matrix. -/
 abbrev Mat (m p : ℕ) := Matrix (Fin m) (Fin p) ℝ
 
+/-- The Frobenius norm of a matrix: the square root of the sum of squared
+entries. -/
 noncomputable def frobNorm {m p : ℕ} (A : Mat m p) : ℝ :=
   Real.sqrt (∑ i, ∑ j, (A i j) ^ (2 : ℕ))
 
+/-- The *mean embedding* of a model's response distribution `μ` under an
+embedding map `g : X → Vec p`: the integral (expected value) of `g x` over
+responses `x ∼ μ`. This is the population analogue of the per-query response
+embedding used to build perspectives. -/
 noncomputable def meanEmbed {p : ℕ} {X : Type v} [MeasurableSpace X] (μ : ProbMeasure X) (g : X → Vec p) : Vec p :=
   ∫ x, g x ∂ μ.1
 
+/-- The `m × p` matrix whose `i`-th row is the mean embedding of model `f` on
+query `Qset i`. This stacks the per-query mean response embeddings into a single
+matrix (the model's "true" representation over the query set). -/
 noncomputable def XbarMat {Q : Type u} {X : Type v} [MeasurableSpace X] {m p : ℕ} (f : Model Q X) (Qset : Fin m → Q) (g : X → Vec p) :
     Mat m p :=
   fun i j => (meanEmbed (μ := f (Qset i)) g) j
 
+/-- The `n × n` inter-model distance matrix: entry `(i, i')` is the Frobenius
+distance between the mean-embedding matrices of models `i` and `i'`. This is the
+target dissimilarity matrix `D` that DKPS embeds. -/
 noncomputable def distMatrix {Q : Type u} {X : Type v} [MeasurableSpace X] {n m p : ℕ} (models : Fin n → Model Q X) (Qset : Fin m → Q)
     (g : X → Vec p) : Matrix (Fin n) (Fin n) ℝ :=
   fun i i' => frobNorm (XbarMat (f := models i) Qset g - XbarMat (f := models i') Qset g)
 
+/-- The DKPS *stress* of a candidate embedding `z` against a target distance
+matrix `D`: the sum over all pairs `(i, i')` of the squared mismatch between the
+embedding distance `‖z i - z i'‖` and the target distance `D i i'`. Minimizing
+this stress is the DKPS / multidimensional-scaling objective. -/
 noncomputable def dkpsStress {n d : ℕ} (D : Matrix (Fin n) (Fin n) ℝ) (z : Fin n → Vec d) : ℝ :=
   ∑ i, ∑ i', (‖z i - z i'‖ - D i i') ^ (2 : ℕ)
 
+/-- `IsDKPS D z` holds when `z` is a stress-minimizing embedding for the target
+distance matrix `D`: no other embedding `z'` achieves strictly smaller stress.
+This characterizes the DKPS embedding (the perspectives) as a minimizer of the
+stress functional. -/
 def IsDKPS {n d : ℕ} (D : Matrix (Fin n) (Fin n) ℝ) (z : Fin n → Vec d) : Prop :=
   ∀ z' : Fin n → Vec d, dkpsStress (D := D) z ≤ dkpsStress (D := D) z'
 
@@ -69,6 +96,9 @@ variable (Qstar : Finset Q)
 variable (score : Model Q X → Finset Q → ℝ)
 
 --def yFull (f : Model Q X) : ℝ := score f Qstar
+/-- The *subset score* baseline: a model's score evaluated only on the query
+subset `Qsub` (rather than the full benchmark `Qstar`). This is the baseline
+predictor `ŷ_Q` that the paper compares the nearest-neighbor estimator against. -/
 def ySubset (Qsub : Finset Q) (f : Model Q X) : ℝ := score f Qsub
 
 end Benchmark_Setup
@@ -78,12 +108,19 @@ section QueryEfficiency
 variable {Q : Type u} [DecidableEq Q]
 variable {X : Type v} [MeasurableSpace X]
 
+/-- The *risk* of a predictor `h` for target `y`: the expected loss
+`∫ ℓ(h f, y f)` over models `f` drawn from the model distribution `Pf`. With the
+squared loss this is the MSE used throughout the paper. -/
 noncomputable def Risk
     (Pf : Measure (Model Q X)) [IsProbabilityMeasure Pf]
     (ℓ : ℝ → ℝ → ℝ)
     (y h : Model Q X → ℝ) : ℝ :=
   ∫ f, ℓ (h f) (y f) ∂ Pf
 
+/-- `QQueryEfficient` is the paper's *Q query-efficiency* predicate (for a fixed
+query subset): the sequence of predictors `h n` eventually (for all `n` beyond
+some `N`) has risk no larger than the baseline sequence `h' n`. Matches the
+paper's definition of Q query-efficiency. -/
 def QQueryEfficient
     (Pf : Measure (Model Q X)) [IsProbabilityMeasure Pf]
     (ℓ : ℝ → ℝ → ℝ)
@@ -92,6 +129,10 @@ def QQueryEfficient
   ∃ N : ℕ, ∀ n > N,
     Risk (Q := Q) (X := X) Pf ℓ y (h n) ≤ Risk (Q := Q) (X := X) Pf ℓ y (h' n)
 
+/-- `mQueryEfficient` is the paper's *m query-efficiency* predicate: for *every*
+query subset `Qsub` of size `m`, the predictor sequence `h Qsub n` is eventually
+no worse than the baseline `h' Qsub n`. This quantifies Q query-efficiency over
+all size-`m` subsets. -/
 def mQueryEfficient
     (Pf : Measure (Model Q X)) [IsProbabilityMeasure Pf]
     (ℓ : ℝ → ℝ → ℝ)
@@ -108,19 +149,34 @@ section Assumptions_And_Theorems
 variable {Q : Type u} [DecidableEq Q]
 variable {X : Type v} [MeasurableSpace X]
 
+/-- `HighProbAtTop` is this development's encoding of "holds with high
+probability, eventually in `n`". For a sequence of probability spaces with
+measures `μ n` and events `E n`, it asserts: for every tolerance `δ > 0` there
+is an `N` such that for all `n > N` the event `E n` has probability at least
+`1 - δ`. This is the formal meaning of the paper's recurring phrase "with high
+probability". -/
 def HighProbAtTop {Ω : Type} [MeasurableSpace Ω]
     (μ : ℕ → Measure Ω) (hμ : ∀ n, IsProbabilityMeasure (μ n)) (E : ℕ → Set Ω) : Prop :=
   ∀ δ : ENNReal, 0 < δ → ∃ N : ℕ, ∀ n > N, (μ n) (E n) ≥ 1 - δ
 
+/-- Dependent-type variant of `HighProbAtTop`, where the sample space `Ω n` may
+itself vary with `n`. Internal generalization; not used by the paper-facing
+statements. -/
 def HighProbAtTopDep (Ω : ℕ → Type) (instΩ : ∀ n, MeasurableSpace (Ω n))
     (μ : ∀ n, Measure (Ω n)) (hμ : ∀ n, IsProbabilityMeasure (μ n))
     (E : ∀ n, Set (Ω n)) : Prop :=
   ∀ δ : ENNReal, 0 < δ → ∃ N : ℕ, ∀ n > N, (μ n) (E n) ≥ 1 - δ
 
+/-- Single-`n` ("non-asymptotic") version: event `E` has probability at least
+`1 - δ`. Internal convenience predicate. -/
 def HighProb {Ω : Type} [MeasurableSpace Ω]
     (μ : Measure Ω) [IsProbabilityMeasure μ] (E : Set Ω) (δ : ENNReal) : Prop :=
   μ E ≥ 1 - δ
 
+/-- `LipschitzScore γ Psi y` is the paper's *Lipschitz Score Function*
+assumption (Assumption 1): the benchmark score `y` is `γ`-Lipschitz with respect
+to the perspective embedding `Psi`, i.e. score differences are bounded by `γ`
+times the embedding (perspective-space) distance. -/
 def LipschitzScore {d : ℕ} (γ : ℝ)
     (Psi : Finset Q → Model Q X → Vec d)
     (y : Model Q X → ℝ) : Prop :=
@@ -131,11 +187,18 @@ end Assumptions_And_Theorems
 
 open scoped Topology
 
+/-- Apply a linear isometry `W` pointwise to a tuple of embedding vectors.
+DKPS embeddings are only determined up to such an isometry; this helper captures
+that rotational/reflective freedom. -/
 noncomputable def applyIso {n d : ℕ} (W : (Vec d) ≃ₗᵢ[ℝ] (Vec d)) (x : Fin n → Vec d) : Fin n → Vec d :=
   fun i => W (x i)
 
+/-- The squared-error loss `(a - b)²`. -/
 def sqLoss (a b : ℝ) : ℝ := (a - b) ^ (2 : ℕ)
 
+/-- The *mean squared error* of an estimator `yHat` for the target `y`: the
+expected squared loss over models `f ∼ Pf`. This is the `MSE(·)` of the paper's
+query-efficiency theorem. -/
 noncomputable def MSE {Q : Type u} {X : Type v} [MeasurableSpace X]
     (Pf : Measure (Model Q X)) [IsProbabilityMeasure Pf]
     (y yHat : Model Q X → ℝ) : ℝ :=
@@ -145,9 +208,16 @@ section NN_Definitions
 
 variable {d : ℕ}
 
+/-- `IsArgmin f i` states that index `i` minimizes the function `f` over
+`Fin n`. Used to characterize the nearest-neighbor index. -/
 def IsArgmin {n : ℕ} (f : Fin n → ℝ) (i : Fin n) : Prop :=
   ∀ j : Fin n, f i ≤ f j
 
+/-- `nnIndex` returns the index of the *nearest neighbor* of `ψHat_target` among
+the reference embeddings `ψHat_ref`, i.e. an index minimizing the distance
+`‖ψHat_ref i - ψHat_target‖`. This is the nearest-neighbor selection in
+perspective space underlying the paper's estimator `ŷ_NN`. (The body also
+discharges existence of a minimizer; that argument is internal plumbing.) -/
 noncomputable def nnIndex {n : ℕ} (hn : n > 0)
     (ψHat_ref : Fin n → Vec d)
     (ψHat_target : Vec d) : Fin n :=
@@ -159,6 +229,9 @@ noncomputable def nnIndex {n : ℕ} (hn : n > 0)
     exact ⟨i, fun j => hi j (Finset.mem_univ j)⟩
   Classical.choose h_exists
 
+/-- The *nearest-neighbor estimator* `ŷ_NN`: predict the target's score as the
+known score `y_ref` of its nearest neighbor in perspective space (found via
+`nnIndex`). This is the estimator whose query-efficiency the paper establishes. -/
 noncomputable def hNN_estimator {n : ℕ} (hn : n > 0)
     (ψHat_ref : Fin n → Vec d)
     (ψHat_target : Vec d)

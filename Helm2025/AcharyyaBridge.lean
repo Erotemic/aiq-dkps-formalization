@@ -165,6 +165,8 @@ theorem sample_alignment_convergesInProbabilityToZero_of_highProb_configError
     (P : Measure (Sample n d d')) [IsProbabilityMeasure P]
     (ψhat : Nat → (Sample n d d') → Fin (n + 1) → E d)
     (rate : Nat → Real)
+    -- extra (implicit) assumption beyond the paper: measurability of the sample
+    -- alignment-error events (needed to pass from events to convergence in probability)
     (hgood_meas :
       ∀ u, MeasurableSet
         {ω : Sample n d d' |
@@ -175,6 +177,7 @@ theorem sample_alignment_convergesInProbabilityToZero_of_highProb_configError
         (fun u =>
           {ω : Sample n d d' |
             ConfigError (ψhat u ω) (fun i : Fin (n + 1) => (ω i).1) ≤ rate u})) :
+    -- Conclusion: the finite-sample alignment error → 0 in probability.
     ConvergesInProbabilityToZero P
       (fun u ω => (⨆ i : Fin (n + 1), dist (ψhat u ω i) ((ω i).1))) := by
   exact tendsto_measure_abs_gt_zero_of_highProb_abs_le_rate P
@@ -198,6 +201,8 @@ theorem alignmentConsistency_of_highProb_configError
     (P : Measure (Z d d')) [IsProbabilityMeasure P]
     (ψhat : Nat → (Sample n d d') → Fin (n + 1) → E d)
     (rate : Nat → Real)
+    -- extra (implicit) assumption beyond the paper: measurability of the sample
+    -- alignment-error events (needed to pass from events to convergence in probability)
     (hgood_meas :
       ∀ u, MeasurableSet
         {ω : Sample n d d' |
@@ -208,6 +213,7 @@ theorem alignmentConsistency_of_highProb_configError
         (fun u =>
           {ω : Sample n d d' |
             ConfigError (ψhat u ω) (fun i : Fin (n + 1) => (ω i).1) ≤ rate u})) :
+    -- Conclusion: the estimator ψhat satisfies Helm's alignment consistency (paper Eq. (3)).
     DKPSAlignmentConsistency n d d' P ψhat := by
   refine ⟨fun _u => AffineIsometryEquiv.refl Real (E d), ?_⟩
   simpa using
@@ -258,6 +264,8 @@ theorem alignmentConsistency_of_aligned_spectral
       (Acharyya2025.MathlibBridge.disMatToMatrix
         (Acharyya2025.Deterministic.classicalMDSMatrix (Dhat u ω))).IsHermitian)
     (rate : Nat → Real)
+    -- extra (implicit) assumption beyond the paper: measurability of the sample
+    -- alignment-error events (needed to pass from events to convergence in probability)
     (hgood_meas :
       ∀ u, MeasurableSet
         {ω : Sample n d d' |
@@ -273,6 +281,8 @@ theorem alignmentConsistency_of_aligned_spectral
           {ω : Sample n d d' |
             Acharyya2025.AlignedPipeline.AlignExists hd Dhat hsym
               (fun i : Fin (n + 1) => (ω i).1) rate u ω})) :
+    -- Conclusion: the aligned CMDS spectral estimator satisfies Helm's alignment consistency
+    -- (paper Eq. (3)) — reduced to the assumed per-ω alignment event `halign` (see HONEST SEAM).
     DKPSAlignmentConsistency n d d' P
       (fun u ω => Acharyya2025.AlignedPipeline.alignedSpectralConfig hd Dhat hsym
         (fun i : Fin (n + 1) => (ω i).1) rate u ω) := by

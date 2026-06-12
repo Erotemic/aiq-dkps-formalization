@@ -51,6 +51,8 @@ theorem quench_uniform_embedding_error_of_finite_configError
     (hfinite :
       Acharyya2024.HighProbAtTop μ
         (fun u => {ω | ConfigError (ψhatFinite u ω) ψFinite ≤ c u})) :
+    -- Conclusion: Quench's uniform model-space embedding-error event holds with high
+    -- probability (lifted from the finite Acharyya configuration via the index map).
     _root_.HighProbAtTop μ hμ
       (fun u => {ω | ∀ f, ‖ψHat u ω f - ψ f‖ ≤ c u}) := by
   intro δ hδ
@@ -120,6 +122,8 @@ theorem quench_uniform_embedding_error_of_aligned_spectral
       Acharyya2025.AlignedPipeline.alignedSpectralConfig hd Dhat hsym ψFinite
         (fun u => Acharyya2025.ConfigPerturbation.configBound n d α Λ
           ((n : Real) * rate u)) u ω (indexOf f)) :
+    -- Conclusion: Quench's uniform model-space embedding-error event holds with high
+    -- probability (lifted from the finite Acharyya configuration via the index map).
     _root_.HighProbAtTop μ hμ
       (fun u => {ω | ∀ f, ‖ψHat u ω f - ψ f‖ ≤
         Acharyya2025.ConfigPerturbation.configBound n d α Λ
@@ -198,6 +202,9 @@ theorem quench_part2_from_aligned_configError_hp
     (hMSE_Q_pos :
       0 < MSE (Q := Q) (X := X) Pf (yFull score Qstar)
         (yQ (Q := Q) (X := X) score Qsub)) :
+    -- Conclusion: with high probability, MSE(ŷ_NN) ≤ MSE(ŷ_Q) — the NN estimator is
+    -- query-efficient relative to the subset baseline ŷ_Q.  (Here the embedding-error
+    -- event is *derived* from the spectral / statistical inputs, not assumed.)
     ∀ δ : ENNReal, 0 < δ →
       ∃ k : ℕ,
         (μ k) {ω |
@@ -343,6 +350,9 @@ theorem queryEfficient_nn_of_aligned_spectral
     (hMSE_Q_pos :
       0 < MSE (Q := Q) (X := X) Pf (yFull score Qstar)
         (yQ (Q := Q) (X := X) score Qsub)) :
+    -- Conclusion: with high probability, MSE(ŷ_NN) ≤ MSE(ŷ_Q) — the NN estimator is
+    -- query-efficient relative to the subset baseline ŷ_Q.  (Here the embedding-error
+    -- event is *derived* from the spectral / statistical inputs, not assumed.)
     ∀ δ : ENNReal, 0 < δ →
       ∃ k : ℕ,
         (μ k) {ω |
@@ -462,6 +472,9 @@ theorem queryEfficient_nn_of_response_mean
     (hMSE_Q_pos :
       0 < MSE (Q := Q) (X := X) Pf (yFull score Qstar)
         (yQ (Q := Q) (X := X) score Qsub)) :
+    -- Conclusion: with high probability, MSE(ŷ_NN) ≤ MSE(ŷ_Q) — the NN estimator is
+    -- query-efficient relative to the subset baseline ŷ_Q.  (Here the embedding-error
+    -- event is *derived* from the spectral / statistical inputs, not assumed.)
     ∀ δ : ENNReal, 0 < δ →
       ∃ k : ℕ,
         (μ k) {ω |
@@ -589,6 +602,9 @@ theorem queryEfficient_nn_of_second_moment
     (hMSE_Q_pos :
       0 < MSE (Q := Q) (X := X) Pf (yFull score Qstar)
         (yQ (Q := Q) (X := X) score Qsub)) :
+    -- Conclusion: with high probability, MSE(ŷ_NN) ≤ MSE(ŷ_Q) — the NN estimator is
+    -- query-efficient relative to the subset baseline ŷ_Q.  (Here the embedding-error
+    -- event is *derived* from the spectral / statistical inputs, not assumed.)
     ∀ δ : ENNReal, 0 < δ →
       ∃ k : ℕ,
         (μ k) {ω |

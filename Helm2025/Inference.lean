@@ -175,14 +175,19 @@ theorem consistency_transfer_dkps_bayes (d d' : ℕ)
     (loss : LossFunction d')
     (psi_hat : (n : ℕ) → ℕ → (Fin (n + 1) → E d × Y d') → Fin (n + 1) → E d)
     (H : Set (DecisionFunction d d'))
+    -- extra (implicit) assumption beyond the paper: every embedding estimator is measurable
     (h_meas_psi : ∀ n u, Measurable (psi_hat n u))
+    -- the paper's per-`n` hypotheses: Eq. (3) alignment consistency, then A1-A4
     (h_align : ∀ n, DKPSAlignmentConsistency n d d' P (psi_hat n))
-    (h_inv : ∀ n, InvariantToAffineIsometries n d d' (learn n))
-    (h_cont_learn : ∀ n, ContinuousLearningRule n d d' (learn n))
-    (h_bound_learn : ∀ n, BoundedLearningRule n d d' (learn n))
-    (h_cont_loss : ContinuousLoss d' loss)
+    (h_inv : ∀ n, InvariantToAffineIsometries n d d' (learn n))        -- A1
+    (h_cont_learn : ∀ n, ContinuousLearningRule n d d' (learn n))      -- A2
+    (h_bound_learn : ∀ n, BoundedLearningRule n d d' (learn n))        -- A3 (compact-range encoding)
+    (h_cont_loss : ContinuousLoss d' loss)                            -- A4 (strengthened)
     (h_bound_label : BoundedLabelSupport d d' P)
+    -- the input being transferred: the rule is consistent under TRUE embeddings (risk → Bayes risk)
     (h_consistent : ConsistentExpected d d' P loss learn H) :
+    -- Conclusion: there is a budget schedule φ(n) → ∞ along which the ESTIMATED-embedding risk
+    -- also converges to the Bayes risk — i.e. consistency transfers to estimated embeddings.
     ∃ phi : ℕ → ℕ, Tendsto phi atTop atTop ∧
       Tendsto (fun n => risk_est n d d' P (learn n) loss (psi_hat n (phi n))) atTop
         (𝓝 (bayesRisk d d' P loss H)) := by
@@ -288,13 +293,19 @@ theorem Theorem1 (n d d' : ℕ)
     (learn : LearningRule n d d')
     (loss : LossFunction d')
     (psi_hat : ℕ → (Sample n d d') → Fin (n + 1) → E d)
+    -- extra (implicit) assumption beyond the paper: the embedding estimators are measurable
     (h_meas_psi : ∀ u, Measurable (psi_hat u))
+    -- paper Eq. (3): the estimated embeddings are alignment-consistent
     (h_align : AlignmentConsistency (n:=n) (d:=d) (d':=d') (P:=P) psi_hat)
-    (h_inv : Assumption1 (n:=n) (d:=d) (d':=d') learn)
-    (h_cont_learn : Assumption2 (n:=n) (d:=d) (d':=d') learn)
-    (h_bound_learn : Assumption3' (n:=n) (d:=d) (d':=d') learn)
-    (h_cont_loss : ContinuousLoss d' loss)
+    -- paper Assumptions A1-A4 on the learning rule / loss:
+    (h_inv : Assumption1 (n:=n) (d:=d) (d':=d') learn)          -- A1: affine-isometry invariance
+    (h_cont_learn : Assumption2 (n:=n) (d:=d) (d':=d') learn)   -- A2: learning rule continuous
+    (h_bound_learn : Assumption3' (n:=n) (d:=d) (d':=d') learn) -- A3 (compact-range encoding)
+    (h_cont_loss : ContinuousLoss d' loss)                     -- A4 (strengthened: joint continuity)
+    -- paper Theorem 1 condition: labels have compact (bounded) support
     (h_bound_label : LabelCompactSupport (d:=d) (d':=d') P) :
+    -- Conclusion: as the estimation budget u → ∞, the estimated-embedding risk Rhatℓ converges
+    -- to the true-embedding risk Rℓ (for fixed sample size n).  Proof (`:= by`) follows.
     Tendsto (fun u => Rhatℓ n d d' P learn loss (psi_hat u)) atTop (𝓝 (Rℓ n d d' P learn loss)) := by
   simpa [Rhatℓ, Rℓ, AlignmentConsistency, Assumption1, Assumption2, Assumption3', LabelCompactSupport] using
     (risk_converges_fixed_n (n:=n) (d:=d) (d':=d') (P:=P) (learn:=learn) (loss:=loss)
@@ -308,14 +319,19 @@ theorem Theorem2_bayes (d d' : ℕ)
     (loss : LossFunction d')
     (psi_hat : (n : ℕ) → ℕ → (Sample n d d') → Fin (n + 1) → E d)
     (H : Set (E d → Y d'))
+    -- extra (implicit) assumption beyond the paper: every embedding estimator is measurable
     (h_meas_psi : ∀ n u, Measurable (psi_hat n u))
+    -- per-`n` paper hypotheses: Eq. (3) alignment consistency, then Assumptions A1-A4
     (h_align : ∀ n, DKPSAlignmentConsistency n d d' P (psi_hat n))
-    (h_inv : ∀ n, InvariantToAffineIsometries n d d' (learn n))
-    (h_cont_learn : ∀ n, ContinuousLearningRule n d d' (learn n))
-    (h_bound_learn : ∀ n, BoundedLearningRule n d d' (learn n))
-    (h_cont_loss : ContinuousLoss d' loss)
+    (h_inv : ∀ n, InvariantToAffineIsometries n d d' (learn n))        -- A1
+    (h_cont_learn : ∀ n, ContinuousLearningRule n d d' (learn n))      -- A2
+    (h_bound_learn : ∀ n, BoundedLearningRule n d d' (learn n))        -- A3 (compact-range encoding)
+    (h_cont_loss : ContinuousLoss d' loss)                            -- A4 (strengthened)
     (h_bound_label : BoundedLabelSupport d d' P)
+    -- consistency under TRUE embeddings (the hypothesis the theorem transfers)
     (h_consistent : ConsistentExpected d d' P loss learn H) :
+    -- Conclusion: along some budget schedule φ(n) → ∞, the estimated-embedding risk Rhatℓ
+    -- converges to the Bayes risk over H — consistency transfers to estimated embeddings.
     ∃ phi : ℕ → ℕ, Tendsto phi atTop atTop ∧
       Tendsto (fun n => Rhatℓ n d d' P (learn n) loss (psi_hat n (phi n))) atTop
         (𝓝 (bayesRisk d d' P loss H)) := by

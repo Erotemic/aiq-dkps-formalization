@@ -33,15 +33,19 @@ variable {Q : Type u} [DecidableEq Q]
 variable {X : Type v} [MeasurableSpace X]
 variable {d : ℕ}
 
-/-- Step 1: Lipschitz reduces score error to true embedding distance. -/
+/-- Step 1: the Lipschitz score assumption reduces the score-prediction error to
+the *true* embedding (perspective-space) distance between the two models.
+Internal helper corresponding to the first step of the paper's proof of the
+query-efficiency theorem (its Theorem 2): the application of Assumption 1. -/
 lemma step1_lipschitz_bound
     (γ : ℝ)
     (Psi : Finset Q → Model Q X → Vec d)
     (y : Model Q X → ℝ)
-    (hLip : LipschitzScore γ Psi y)
+    (hLip : LipschitzScore γ Psi y)   -- the Lipschitz-score assumption (Assumption 1)
     (Qstar : Finset Q)
     (f_target : Model Q X)
     (f_ref : Model Q X) :
+    -- Conclusion: the score error is at most γ times the true perspective distance.
     |y f_ref - y f_target| ≤ γ * ‖Psi Qstar f_ref - Psi Qstar f_target‖ := by
   specialize hLip Qstar f_ref f_target
   exact hLip
@@ -54,14 +58,18 @@ variable {Q : Type u} [DecidableEq Q]
 variable {X : Type v} [MeasurableSpace X]
 variable {d : ℕ}
 
-/-- Step 2: Triangle inequality splits true distance into concentration terms + NN distance. -/
+/-- Step 2: a triangle-inequality split of the true perspective distance
+`‖ψ i_star - ψ_target‖` into (i) the estimation errors at the reference and
+target (`ψ` vs `ψHat`), and (ii) the *estimated* nearest-neighbor distance
+`‖ψHat i_star - ψHat_target‖`. Internal helper for the paper's Theorem 2 proof. -/
 lemma step2_triangle_inequality
     (n : ℕ)
-    (ψ : Fin n → Vec d)
-    (ψHat : Fin n → Vec d)
-    (ψ_target : Vec d)
-    (ψHat_target : Vec d)
+    (ψ : Fin n → Vec d)          -- true reference perspectives
+    (ψHat : Fin n → Vec d)       -- estimated reference perspectives
+    (ψ_target : Vec d)           -- true target perspective
+    (ψHat_target : Vec d)        -- estimated target perspective
     (i_star : Fin n) :
+    -- Conclusion: triangle bound on the true distance via the estimated quantities.
     ‖ψ i_star - ψ_target‖ ≤
       ‖ψ i_star - ψHat i_star‖ + ‖ψHat i_star - ψHat_target‖ + ‖ψHat_target - ψ_target‖ := by
         -- Apply the triangle inequality to the vectors ψ i_star - ψHat i_star, ψHat i_star - ψHat_target, and ψHat_target - ψ_target.
@@ -78,11 +86,16 @@ section HighProb_Lemmas
 
 variable {Ω : Type} [MeasurableSpace Ω]
 
+/-- Monotonicity of `HighProbAtTop`: if a smaller event sequence `E` holds with
+high probability and `E n ⊆ F n` for every `n`, then `F` also holds with high
+probability. Internal helper lemma about the "high probability" encoding; not a
+statement from the paper. -/
 lemma HighProbAtTop.mono
     {μ : ℕ → Measure Ω} {hμ : ∀ n, IsProbabilityMeasure (μ n)}
     {E F : ℕ → Set Ω}
-    (hE : HighProbAtTop μ hμ E)
-    (h_subset : ∀ n, E n ⊆ F n) :
+    (hE : HighProbAtTop μ hμ E)        -- E holds with high probability
+    (h_subset : ∀ n, E n ⊆ F n) :      -- F always contains E
+    -- Conclusion: F also holds with high probability.
     HighProbAtTop μ hμ F := by
   intro δ hδ
   obtain ⟨N, hN⟩ := hE δ hδ
@@ -94,9 +107,13 @@ lemma HighProbAtTop.mono
 
 end HighProb_Lemmas
 
+/-- Arithmetic helper in `ENNReal`: if two probabilities each exceed `1 - δ/2`,
+then `p + q - 1 ≥ 1 - δ` (the Bonferroni/union-bound arithmetic used to combine
+two high-probability events). Internal helper; no paper counterpart. -/
 lemma ennreal_inter_bound {δ p q : ENNReal}
     (hp : 1 - δ / 2 ≤ p)
     (hq : 1 - δ / 2 ≤ q) :
+    -- Conclusion: the combined lower bound 1 - δ on p + q - 1.
     1 - δ ≤ p + q - 1 := by
       rcases le_or_gt 1 δ with hδ | hδ
       · -- If δ ≥ 1, then 1 - δ = 0 and the inequality is trivial.
@@ -121,13 +138,19 @@ section HighProb_Lemmas
 
 variable {Ω : Type} [MeasurableSpace Ω]
 
+/-- Intersection of high-probability events: if `E` and `F` each hold with high
+probability, so does their intersection `E ∩ F` (a union-bound argument).
+Internal helper lemma about the "high probability" encoding; not from the paper. -/
 lemma HighProbAtTop.inter
     {μ : ℕ → Measure Ω} {hμ : ∀ n, IsProbabilityMeasure (μ n)}
     {E F : ℕ → Set Ω}
-    (hE : HighProbAtTop μ hμ E)
-    (hF : HighProbAtTop μ hμ F)
+    (hE : HighProbAtTop μ hμ E)             -- E holds with high probability
+    (hF : HighProbAtTop μ hμ F)             -- F holds with high probability
+    -- extra (implicit) assumptions beyond the paper: measurability of the events,
+    -- needed so the measure of the intersection is controlled by a union bound.
     (hE_meas : ∀ n, MeasurableSet (E n))
     (hF_meas : ∀ n, MeasurableSet (F n)) :
+    -- Conclusion: the intersection E ∩ F also holds with high probability.
     HighProbAtTop μ hμ (fun n => E n ∩ F n) := by
       -- By definition of HighProbAtTop, we know that for any δ > 0, there exist N1 and N2 such that for all n > N1, μ n (E n) ≥ 1 - δ/2, and for all n > N2, μ n (F n) ≥ 1 - δ/2.
       have hN1N2 : ∀ δ > 0, ∃ N1 N2 : ℕ, ∀ n > N1, (μ n) (E n) ≥ 1 - δ / 2 ∧ ∀ n > N2, (μ n) (F n) ≥ 1 - δ / 2 := by
@@ -172,7 +195,10 @@ variable {Q : Type u} [DecidableEq Q]
 variable {X : Type v} [MeasurableSpace X]
 variable {d : ℕ}
 
-/-- Step 3: On the concentration event, bound the true distance by 2c + δ*. -/
+/-- Step 3: on the *concentration event* (estimated perspectives within `c` of
+the truth), the true distance is bounded by `2c + δ*`, where `δ*` is the
+estimated nearest-neighbor distance `‖ψHat i_star - ψHat_target‖`. Internal
+helper corresponding to the concentration step of the paper's Theorem 2 proof. -/
 lemma step3_concentration_bound
     (n : ℕ)
     (ψ : Fin n → Vec d)
@@ -181,8 +207,10 @@ lemma step3_concentration_bound
     (ψHat_target : Vec d)
     (i_star : Fin n)
     (c : ℝ)
+    -- concentration of the estimated embeddings: each estimate within c of the truth
     (h_conc_ref : ∀ i, ‖ψHat i - ψ i‖ ≤ c)
     (h_conc_target : ‖ψHat_target - ψ_target‖ ≤ c) :
+    -- Conclusion: true distance ≤ 2c plus the estimated nearest-neighbor distance δ*.
     ‖ψ i_star - ψ_target‖ ≤ 2 * c + ‖ψHat i_star - ψHat_target‖ := by
   calc ‖ψ i_star - ψ_target‖
     _ ≤ ‖ψ i_star - ψHat i_star‖ + ‖ψHat i_star - ψHat_target‖ + ‖ψHat_target - ψ_target‖ :=
@@ -203,7 +231,11 @@ variable {Q : Type u} [DecidableEq Q]
 variable {X : Type v} [MeasurableSpace X]
 variable {d : ℕ}
 
-/-- Step 4: Use support to bound δ* and the total distance. -/
+/-- Step 4: combining nearest-neighbor optimality with the *support/coverage*
+assumption (some reference model is within `ρ` of the target in true perspective
+space), the true distance from the selected neighbor `i_star` to the target is
+bounded by `ρ + 4c`. Internal helper corresponding to the model-support step of
+the paper's Theorem 2 proof (its Assumption 2). -/
 lemma step4_support_bound
     (n : ℕ)
     (ψ : Fin n → Vec d)
@@ -211,11 +243,15 @@ lemma step4_support_bound
     (ψ_target : Vec d)
     (ψHat_target : Vec d)
     (i_star : Fin n)
+    -- i_star is the estimated nearest neighbor (argmin of estimated distance)
     (h_i_star : IsArgmin (fun i => ‖ψHat i - ψHat_target‖) i_star)
     (c ρ : ℝ)
+    -- concentration of the estimated embeddings (each estimate within c of truth)
     (h_conc_ref : ∀ i, ‖ψHat i - ψ i‖ ≤ c)
     (h_conc_target : ‖ψHat_target - ψ_target‖ ≤ c)
+    -- coverage/support: some reference model lands within ρ of the target (Assumption 2)
     (h_supp : ∃ j : Fin n, ‖ψ j - ψ_target‖ ≤ ρ) :
+    -- Conclusion: the selected neighbor's true distance to the target is ≤ ρ + 4c.
     ‖ψ i_star - ψ_target‖ ≤ ρ + 4 * c := by
       -- By the triangle inequality, we have ‖ψ i_star - ψ_target‖ ≤ ‖ψ i_star - ψ_hat i_star‖ + ‖ψ_hat i_star - ψ_hat_target‖ + ‖ψ_hat_target - ψ_target‖.
       have h_triangle : ‖ψ i_star - ψ_target‖ ≤ ‖ψ i_star - ψHat i_star‖ + ‖ψHat i_star - ψHat_target‖ + ‖ψHat_target - ψ_target‖ := by
@@ -245,7 +281,10 @@ variable {Q : Type u} [DecidableEq Q]
 variable {X : Type v} [MeasurableSpace X]
 variable {d : ℕ}
 
-/-- Step 5: Final pointwise error bound. -/
+/-- Step 5: the final *pointwise* (per-model) score-prediction error bound:
+combining the Lipschitz bound (Step 1) with the distance bound (Step 4), the
+nearest-neighbor prediction error is at most `γ·(ρ + 4c)`. Internal helper
+assembling the per-model error bound in the paper's Theorem 2 proof. -/
 lemma step5_pointwise_error
     (n : ℕ)
     (ψ : Fin n → Vec d)
@@ -253,17 +292,23 @@ lemma step5_pointwise_error
     (ψ_target : Vec d)
     (ψHat_target : Vec d)
     (i_star : Fin n)
+    -- i_star is the estimated nearest neighbor (argmin of estimated distance)
     (h_i_star : IsArgmin (fun i => ‖ψHat i - ψHat_target‖) i_star)
     (c ρ γ : ℝ)
+    -- concentration of the estimated embeddings (each estimate within c of truth)
     (h_conc_ref : ∀ i, ‖ψHat i - ψ i‖ ≤ c)
     (h_conc_target : ‖ψHat_target - ψ_target‖ ≤ c)
+    -- coverage/support: some reference model is within ρ of the target (Assumption 2)
     (h_supp : ∃ j : Fin n, ‖ψ j - ψ_target‖ ≤ ρ)
     (y_ref : Fin n → ℝ)
     (y_target : ℝ)
+    -- Lipschitz score bound applied pointwise (Assumption 1)
     (h_lip : ∀ i, |y_ref i - y_target| ≤ γ * ‖ψ i - ψ_target‖)
+    -- nonnegativity side-conditions on the constants (not separate paper assumptions)
     (h_gamma_nonneg : 0 ≤ γ)
     (h_rho_nonneg : 0 ≤ ρ)
     (h_c_nonneg : 0 ≤ c) :
+    -- Conclusion: the nearest-neighbor prediction error is at most γ·(ρ + 4c).
     |y_ref i_star - y_target| ≤ γ * (ρ + 4 * c) := by
   calc |y_ref i_star - y_target|
     _ ≤ γ * ‖ψ i_star - ψ_target‖ := h_lip i_star
@@ -279,13 +324,19 @@ variable {Q : Type u} [DecidableEq Q]
 variable {X : Type v} [MeasurableSpace X]
 variable {d : ℕ}
 
-/-- Step 6: Choose parameters to meet ε. -/
+/-- Step 6: the explicit *parameter choice*. Taking the coverage radius
+`ρ = √ε/(2γ)` and requiring the concentration constant `c ≤ √ε/(8γ)` makes the
+squared pointwise error `(γ·(ρ + 4c))²` at most `ε`. Internal helper realizing
+the parameter-tuning step of the paper's Theorem 2 proof that drives the squared
+error below the target `ε`. -/
 lemma step6_parameter_choice
     (ε γ : ℝ)
     (h_eps_pos : 0 < ε)
     (h_gamma_pos : 0 < γ) :
+    -- ρ (coverage radius) and c_bound (concentration budget) chosen in terms of ε, γ
     let ρ := Real.sqrt ε / (2 * γ)
     let c_bound := Real.sqrt ε / (8 * γ)
+    -- Conclusion: for any concentration constant c within budget, the squared error ≤ ε.
     ∀ c, 0 ≤ c → c ≤ c_bound →
       (γ * (ρ + 4 * c)) ^ 2 ≤ ε := by
         -- Substitute the values of ρ and c_bound into the inequality.
@@ -305,11 +356,16 @@ section HighProb_Lemmas
 
 variable {Ω : Type} [MeasurableSpace Ω]
 
+/-- "Eventual" monotonicity of `HighProbAtTop`: it suffices that `E n ⊆ F n`
+holds *eventually* (for all large `n`), rather than for every `n`, to transfer
+the high-probability property from `E` to `F`. Internal helper lemma about the
+"high probability" encoding; not from the paper. -/
 lemma HighProbAtTop.mono_eventually
     {μ : ℕ → Measure Ω} {hμ : ∀ n, IsProbabilityMeasure (μ n)}
     {E F : ℕ → Set Ω}
-    (hE : HighProbAtTop μ hμ E)
-    (h_subset : ∀ᶠ n in atTop, E n ⊆ F n) :
+    (hE : HighProbAtTop μ hμ E)                  -- E holds with high probability
+    (h_subset : ∀ᶠ n in atTop, E n ⊆ F n) :      -- F eventually contains E
+    -- Conclusion: F also holds with high probability.
     HighProbAtTop μ hμ F := by
       -- Since $E_n \subseteq F_n$ for sufficiently large $n$, we have $\mu_n(F_n) \geq \mu_n(E_n)$.
       have h_measure_ge : ∀ᶠ n in Filter.atTop, (μ n) (F n) ≥ (μ n) (E n) := by
@@ -333,9 +389,13 @@ section NN_Definitions_Properties
 
 variable {d : ℕ}
 
+/-- The index returned by `nnIndex` really is a nearest neighbor: it minimizes
+the estimated distance `‖ψHat_ref i - ψHat_target‖`. Internal correctness lemma
+for the nearest-neighbor selection. -/
 lemma nnIndex_isArgmin {n : ℕ} (hn : n > 0)
     (ψHat_ref : Fin n → Vec d)
     (ψHat_target : Vec d) :
+    -- Conclusion: nnIndex selects a minimizer of the estimated distance.
     IsArgmin (fun i => ‖ψHat_ref i - ψHat_target‖) (nnIndex hn ψHat_ref ψHat_target) := by
   unfold nnIndex
   apply Classical.choose_spec
@@ -349,25 +409,45 @@ variable {X : Type v} [MeasurableSpace X]
 variable {d : ℕ}
 variable {Ω : Type} [MeasurableSpace Ω]
 
+/-- **Abstract engine theorem — Theorem 2, Part 1 (MSE ≤ ε with high
+probability).** This is the abstract (arbitrary-embedding) form of the paper's
+query-efficiency Theorem 2, Part 1: under a Lipschitz score, a vanishing
+concentration rate, and a coverage assumption, the nearest-neighbor estimator's
+MSE is at most any target `ε > 0` with high probability (eventually in `n`).
+It is stated over an *arbitrary* embedding estimator `ψHat` and reference-sampler
+`f_ref` (not the specific DKPS perspective estimator of the paper), which is the
+abstractness flagged below. -/
 theorem highProb_mse_le_of_concentration
   (Pf : Measure (Model Q X)) [IsProbabilityMeasure Pf]
   (μ : ℕ → Measure Ω) (hμ : ∀ n, IsProbabilityMeasure (μ n))
+  -- ψ : the true perspective embedding; ψHat : an ARBITRARY estimator of it.
+  -- extra abstractness beyond the paper: ψHat / f_ref are generic, not the DKPS estimator.
   (ψ : Model Q X → Vec d)
   (ψHat : ℕ → Ω → Model Q X → Vec d)
-  (f_ref : ∀ n, Ω → Fin n → Model Q X)
+  (f_ref : ∀ n, Ω → Fin n → Model Q X)        -- the n sampled reference models
   (score : Model Q X → Finset Q → ℝ)
   (Qstar : Finset Q)
   (γ : ℝ)
+  -- Lipschitz score assumption (Assumption 1), here for the true embedding ψ
   (h_lip : LipschitzScore γ (fun _ f => ψ f) (fun f => score f Qstar))
   (h_gamma_pos : 0 < γ)
+  -- concentration rate c n → 0 (the abstract analogue of the paper's concentration
+  -- constant c(n,m,r,d)); tendsto/nonneg are extra side-conditions on the rate.
   (c : ℕ → ℝ) (h_c_tendsto : Filter.Tendsto c Filter.atTop (nhds 0))
   (h_c_nonneg : ∀ n, 0 ≤ c n)
+  -- concentration event holds with high probability: all estimates within c n of truth
   (h_conc : HighProbAtTop μ hμ (fun n => {ω | ∀ f, ‖ψHat n ω f - ψ f‖ ≤ c n}))
+  -- extra (implicit) assumption beyond the paper: measurability of the concentration event
   (h_conc_meas : ∀ n, MeasurableSet {ω | ∀ f, ‖ψHat n ω f - ψ f‖ ≤ c n})
+  -- coverage/support assumption (Assumption 2): for every radius ρ, with high
+  -- probability every target is within ρ of some sampled reference model
   (h_cover : ∀ ρ > 0, HighProbAtTop μ hμ (fun n => {ω | ∀ f, ∃ i, ‖ψ (f_ref n ω i) - ψ f‖ ≤ ρ}))
+  -- extra (implicit) assumption beyond the paper: measurability of the coverage event
   (h_cover_meas : ∀ ρ > 0, ∀ n, MeasurableSet {ω | ∀ f, ∃ i, ‖ψ (f_ref n ω i) - ψ f‖ ≤ ρ})
   (hNN : ℕ → Ω → Model Q X → ℝ)
+  -- hNN is the nearest-neighbor estimator built from the estimated embeddings
   (h_hNN_def : ∀ n ω f, (hn : n > 0) → hNN n ω f = hNN_estimator hn (fun i => ψHat n ω (f_ref n ω i)) (ψHat n ω f) (fun i => score (f_ref n ω i) Qstar)) :
+  -- Conclusion: for every ε > 0, MSE(ŷ_NN) ≤ ε with high probability (eventually in n).
   ∀ ε : ℝ, 0 < ε →
     HighProbAtTop μ hμ (fun n => {ω | MSE Pf (fun f => score f Qstar) (fun f => hNN n ω f) ≤ ε}) := by
       -- Apply the Lipschitz condition to bound the mean squared error.
@@ -411,27 +491,46 @@ variable {X : Type v} [MeasurableSpace X]
 variable {d : ℕ}
 variable {Ω : Type} [MeasurableSpace Ω]
 
+/-- **Abstract engine theorem — Theorem 2, Part 2 (query-efficiency).** This is
+the abstract (arbitrary-embedding) form of the paper's query-efficiency
+Theorem 2, Part 2: since the nearest-neighbor MSE can be driven below any `ε`
+(Part 1, `highProb_mse_le_of_concentration`), and the subset baseline `hQ` has
+MSE bounded below by a positive constant, the nearest-neighbor estimator
+eventually has MSE no larger than the baseline — i.e. it is query-efficient — with
+high probability. Like Part 1 it is stated over an arbitrary embedding estimator
+`ψHat` rather than the specific DKPS estimator. -/
 theorem highProb_queryEfficient_of_concentration
   (Pf : Measure (Model Q X)) [IsProbabilityMeasure Pf]
   (μ : ℕ → Measure Ω) (hμ : ∀ n, IsProbabilityMeasure (μ n))
+  -- ψ : true embedding; ψHat : ARBITRARY estimator (abstractness beyond the paper)
   (ψ : Model Q X → Vec d)
   (ψHat : ℕ → Ω → Model Q X → Vec d)
-  (f_ref : ∀ n, Ω → Fin n → Model Q X)
+  (f_ref : ∀ n, Ω → Fin n → Model Q X)        -- the n sampled reference models
   (score : Model Q X → Finset Q → ℝ)
   (Qstar : Finset Q)
   (γ : ℝ)
+  -- Lipschitz score assumption (Assumption 1)
   (h_lip : LipschitzScore γ (fun _ f => ψ f) (fun f => score f Qstar))
   (h_gamma_pos : 0 < γ)
+  -- vanishing concentration rate c n → 0 (extra tendsto/nonneg side-conditions on the rate)
   (c : ℕ → ℝ) (h_c_tendsto : Filter.Tendsto c Filter.atTop (nhds 0))
   (h_c_nonneg : ∀ n, 0 ≤ c n)
+  -- concentration event holds with high probability
   (h_conc : HighProbAtTop μ hμ (fun n => {ω | ∀ f, ‖ψHat n ω f - ψ f‖ ≤ c n}))
+  -- extra (implicit) assumption beyond the paper: measurability of the concentration event
   (h_conc_meas : ∀ n, MeasurableSet {ω | ∀ f, ‖ψHat n ω f - ψ f‖ ≤ c n})
+  -- coverage/support assumption (Assumption 2) holding with high probability
   (h_cover : ∀ ρ > 0, HighProbAtTop μ hμ (fun n => {ω | ∀ f, ∃ i, ‖ψ (f_ref n ω i) - ψ f‖ ≤ ρ}))
+  -- extra (implicit) assumption beyond the paper: measurability of the coverage event
   (h_cover_meas : ∀ ρ > 0, ∀ n, MeasurableSet {ω | ∀ f, ∃ i, ‖ψ (f_ref n ω i) - ψ f‖ ≤ ρ})
   (hNN hQ : ℕ → Ω → Model Q X → ℝ)
+  -- hNN is the nearest-neighbor estimator; hQ is the subset-score baseline ŷ_Q
   (h_hNN_def : ∀ n ω f, (hn : n > 0) → hNN n ω f = hNN_estimator hn (fun i => ψHat n ω (f_ref n ω i)) (ψHat n ω f) (fun i => score (f_ref n ω i) Qstar))
+  -- baseline has strictly positive MSE bounded below by c_base (paper's MSE(ŷ_Q) > 0)
   (hQ_pos : ∃ c_base : ℝ, 0 < c_base ∧ ∃ N : ℕ, ∀ n > N, ∀ ω : Ω,
       c_base ≤ MSE (Q := Q) (X := X) Pf (fun f => score f Qstar) (fun f => hQ n ω f)) :
+  -- Conclusion: with high probability the NN estimator's MSE ≤ the baseline's MSE
+  -- (i.e. ŷ_NN is query-efficient relative to ŷ_Q).
   HighProbAtTop (μ := μ) (hμ := hμ)
     (E := fun n => {ω : Ω |
       MSE (Q := Q) (X := X) Pf (fun f => score f Qstar) (fun f => hNN n ω f)

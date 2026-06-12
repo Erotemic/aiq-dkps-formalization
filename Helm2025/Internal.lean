@@ -41,14 +41,21 @@ variable {d d' : ℕ}
 Lemma: If a sequence of random variables converges in probability to zero and is uniformly bounded, then their expectations converge to zero.
 -/
 /--
-Lemma: Convergence in probability to zero plus uniform boundedness implies convergence of expectations to zero.
+Internal helper (a bounded-convergence / dominated-convergence step used in the proof
+of Theorem 1): convergence in probability to zero plus uniform boundedness implies
+convergence of the expectations `E|X_u|` to zero. Not stated separately in the paper.
 -/
 lemma expectation_converges_of_prob_converges_bounded {Ω : Type*} [MeasurableSpace Ω]
     (P : Measure Ω) [IsProbabilityMeasure P]
     (X : ℕ → Ω → ℝ) (M : ℝ)
+    -- `h_meas`: measurability of each `X u` — an extra (implicit) measurability assumption
+    -- beyond the paper, needed to integrate.
     (h_meas : ∀ u, Measurable (X u))
+    -- `h_bound`: uniform (in `u`) a.e. bound `|X u| ≤ M` (the dominating constant).
     (h_bound : ∀ u, ∀ᵐ ω ∂P, |X u ω| ≤ M)
+    -- `h_conv`: the in-probability convergence to 0.
     (h_conv : ConvergesInProbabilityToZero P X) :
+    -- Conclusion: the expectations of `|X_u|` tend to 0.
     Tendsto (fun u => ∫ ω, |X u ω| ∂P) atTop (𝓝 0) := by
       -- By the dominated convergence theorem, it suffices to show that $|X_u|$ converges to $0$ in measure.
       have h_conv_in_measure : Filter.Tendsto (fun u => ∫ ω, |X u ω| ∂P) Filter.atTop (𝓝 0) := by
@@ -86,14 +93,20 @@ lemma expectation_converges_of_prob_converges_bounded {Ω : Type*} [MeasurableSp
 Lemma: Tightness of probability measures on second-countable locally compact spaces. For any epsilon > 0, there exists a compact set K such that the probability of Y not being in K is less than epsilon.
 -/
 /--
-Lemma: Tightness of probability measures on second-countable locally compact spaces.
-For any `ε > 0`, there exists a compact set `K` such that `P(Kᶜ) < ε`.
+Internal helper (tightness): on a second-countable, locally compact, Hausdorff target
+space, the law of a measurable random variable `Y` is tight — for any `ε > 0` there is a
+compact `K` with `P(Y ∉ K) < ε`. Standard measure theory, not stated in the paper; used to
+turn "continuity" into "uniform continuity on a high-probability compact set".
 -/
 lemma tightness_helper {Ω : Type*} [MeasurableSpace Ω]
     (P : Measure Ω) [IsProbabilityMeasure P]
+    -- Topological side-conditions on the target space `S` (extra structural assumptions
+    -- beyond the paper; all satisfied by the Euclidean label/embedding spaces here).
     {S : Type*} [MeasurableSpace S] [TopologicalSpace S] [BorelSpace S]
     [T2Space S] [LocallyCompactSpace S] [SecondCountableTopology S]
+    -- `h_meas_Y`: measurability of `Y` — an extra (implicit) measurability assumption.
     (Y : Ω → S) (h_meas_Y : Measurable Y) :
+    -- Conclusion: the law of `Y` is tight (compact `K` capturing all but `ε` of the mass).
     ∀ ε : ENNReal, 0 < ε → ∃ K : Set S, IsCompact K ∧ P {ω | Y ω ∉ K} < ε := by
   classical
   intro ε ε_pos
@@ -174,16 +187,20 @@ lemma tightness_helper {Ω : Type*} [MeasurableSpace Ω]
 Lemma: If f is uniformly continuous on K with parameters delta and epsilon, then the probability that f(X) and f(Y) are more than epsilon apart is bounded by the probability that X and Y are more than delta apart plus the probability that Y is not in K.
 -/
 /--
-Lemma: Probability bound from uniform continuity on a set.
-If `f` maps `δ`-close points to `ε`-close points when the second point is in `K`,
-then `P(dist (f X) (f Y) > ε) ≤ P(dist X Y ≥ δ) + P(Y ∉ K)`.
+Internal helper: probability bound from uniform continuity on a set.
+If `f` maps `δ`-close points to `ε`-close points whenever the second point is in `K`,
+then `P(dist(f X, f Y) > ε) ≤ P(dist(X, Y) ≥ δ) + P(Y ∉ K)`. A union-bound step combining
+the tightness helper with uniform continuity; not stated in the paper.
 -/
 lemma prob_bound_of_uniform_continuity {Ω : Type*} [MeasurableSpace Ω]
     (P : Measure Ω)
     {S S' : Type*} [PseudoMetricSpace S] [PseudoMetricSpace S']
     (X Y : Ω → S) (f : S → S') (K : Set S)
     (ε δ : ℝ)
+    -- `h_unif`: the (uniform-continuity) modulus relating `δ`-closeness of inputs to
+    -- `ε`-closeness of outputs, valid when the reference point lies in `K`.
     (h_unif : ∀ x y, y ∈ K → dist x y < δ → dist (f x) (f y) ≤ ε) :
+    -- Conclusion: the "outputs far apart" event is bounded by "inputs far apart" plus "Y ∉ K".
     P {ω | dist (f (X ω)) (f (Y ω)) > ε} ≤ P {ω | dist (X ω) (Y ω) ≥ δ} + P {ω | Y ω ∉ K} := by
       refine' le_trans ( MeasureTheory.measure_mono _ ) ( MeasureTheory.measure_union_le _ _ );
       intro ω hω; contrapose! hω; aesop;
@@ -192,20 +209,27 @@ lemma prob_bound_of_uniform_continuity {Ω : Type*} [MeasurableSpace Ω]
 Lemma: Continuous mapping theorem for convergence in probability. If X_u converges to Y in probability and f is continuous, then f(X_u) converges to f(Y) in probability.
 -/
 /--
-Lemma: Continuous mapping theorem for convergence in probability.
-If `X_u → Y` in probability and `f` is continuous, then `f(X_u) → f(Y)` in probability.
+Internal helper — continuous mapping theorem for convergence in probability:
+if `X_u → Y` in probability and `f` is continuous, then `f(X_u) → f(Y)` in probability.
+This is the engine that pushes the in-probability convergence of embeddings through the
+(continuous) loss∘learning-rule map in the proof of Theorem 1; not a separate paper result.
 -/
 lemma continuous_prob_convergence {Ω : Type*} [MeasurableSpace Ω]
     (P : Measure Ω) [IsProbabilityMeasure P]
+    -- Topological/measurability side-conditions on source `S` and target `S'`
+    -- (extra structural assumptions beyond the paper; met by the Euclidean spaces here).
     {S S' : Type*}
     [PseudoMetricSpace S] [MeasurableSpace S] [OpensMeasurableSpace S] [SecondCountableTopology S]
     [T2Space S] [LocallyCompactSpace S] [BorelSpace S]
     [PseudoMetricSpace S'] [MeasurableSpace S'] [OpensMeasurableSpace S']
     (X : ℕ → Ω → S) (Y : Ω → S) (f : S → S')
+    -- `_h_meas_X` / `h_meas_Y`: measurability of the random variables (extra implicit
+    -- measurability assumptions beyond the paper; `_h_meas_X` is currently unused).
     (_h_meas_X : ∀ u, Measurable (X u))
     (h_meas_Y : Measurable Y)
-    (h_cont : Continuous f)
-    (h_conv : ConvergesInProbabilityToZero P (fun u ω => dist (X u ω) (Y ω))) :
+    (h_cont : Continuous f)                                                  -- continuity of the map
+    (h_conv : ConvergesInProbabilityToZero P (fun u ω => dist (X u ω) (Y ω))) :  -- `X_u → Y` in prob.
+    -- Conclusion: `f(X_u) → f(Y)` in probability.
     ConvergesInProbabilityToZero P (fun u ω => dist (f (X u ω)) (f (Y ω))) := by
       intro ε hε_pos
       have h_tight : ∀ η > 0, ∃ K : Set S, IsCompact K ∧ P {ω | Y ω∉K} < η := by
@@ -258,13 +282,15 @@ lemma continuous_prob_convergence {Ω : Type*} [MeasurableSpace Ω]
 Lemma: If f is continuous and K is compact, then for any epsilon > 0, there exists delta > 0 such that if y is in K and x is within delta of y, then f(x) is within epsilon of f(y).
 -/
 /--
-Lemma: A continuous function behaves uniformly continuously near a compact set.
-If `f` is continuous and `K` is compact, then for any `ε > 0`, there exists `δ > 0`
-such that for all `y ∈ K` and any `x`, `dist x y < δ → dist (f x) (f y) < ε`.
+Internal helper: a continuous function is "uniformly continuous near a compact set".
+If `f` is continuous and `K` is compact, then for any `ε > 0` there is `δ > 0` such that for
+all `y ∈ K` and any `x`, `dist x y < δ → dist (f x) (f y) < ε`. Standard analysis lemma
+supporting the continuous-mapping step; not stated in the paper.
 -/
 lemma uniform_continuity_on_compact_approx {S S' : Type*}
     [PseudoMetricSpace S] [PseudoMetricSpace S']
     (f : S → S') (K : Set S) (h_cont : Continuous f) (h_compact : IsCompact K) :
+    -- Conclusion: a uniform-continuity modulus `δ(ε)` valid for reference points `y ∈ K`.
     ∀ ε > 0, ∃ δ > 0, ∀ y ∈ K, ∀ x, dist x y < δ → dist (f x) (f y) < ε := by
       intro ε εpos;
       by_contra! h_contra;
@@ -329,8 +355,9 @@ lemma uniform_continuity_on_compact_approx {S S' : Type*}
 Lemma: Continuous mapping theorem for convergence in probability. If X_u converges to Y in probability and f is continuous, then f(X_u) converges to f(Y) in probability.
 -/
 /--
-Lemma: Continuous mapping theorem for convergence in probability.
-If `X_u → Y` in probability and `f` is continuous, then `f(X_u) → f(Y)` in probability.
+Internal helper — thin restatement/wrapper of `continuous_prob_convergence` (same
+continuous-mapping-theorem statement), provided for convenient application elsewhere in the
+proof of Theorem 1. Same extra structural/measurability side-conditions as that lemma.
 -/
 lemma continuous_prob_convergence_lemma {Ω : Type*} [MeasurableSpace Ω]
     (P : Measure Ω) [IsProbabilityMeasure P]
@@ -339,10 +366,11 @@ lemma continuous_prob_convergence_lemma {Ω : Type*} [MeasurableSpace Ω]
     [T2Space S] [LocallyCompactSpace S] [BorelSpace S]
     [PseudoMetricSpace S'] [MeasurableSpace S'] [OpensMeasurableSpace S']
     (X : ℕ → Ω → S) (Y : Ω → S) (f : S → S')
-    (_h_meas_X : ∀ u, Measurable (X u))
+    (_h_meas_X : ∀ u, Measurable (X u))            -- extra implicit measurability assumptions
     (h_meas_Y : Measurable Y)
     (h_cont : Continuous f)
     (h_conv : ConvergesInProbabilityToZero P (fun u ω => dist (X u ω) (Y ω))) :
+    -- Conclusion: `f(X_u) → f(Y)` in probability.
     ConvergesInProbabilityToZero P (fun u ω => dist (f (X u ω)) (f (Y ω))) := by
       exact continuous_prob_convergence P X Y f _h_meas_X h_meas_Y h_cont h_conv
 
@@ -350,7 +378,10 @@ lemma continuous_prob_convergence_lemma {Ω : Type*} [MeasurableSpace Ω]
 Lemma: The risk using estimated embeddings is invariant under affine isometries of the embeddings.
 -/
 /--
-Lemma: The risk using estimated embeddings is invariant under affine isometries of the embeddings.
+Internal helper: the estimated-embedding risk is invariant under applying a single affine
+isometry `e` to all estimated embeddings — a direct consequence of A1
+(`InvariantToAffineIsometries`). This is the mechanism by which the unknown per-stage
+alignment in `DKPSAlignmentConsistency` can be cancelled in the proof of Theorem 1.
 -/
 lemma risk_est_invariant (n d d' : ℕ)
     (P : Measure (E d × Y d'))
@@ -358,7 +389,8 @@ lemma risk_est_invariant (n d d' : ℕ)
     (loss : LossFunction d')
     (psi_hat : (Fin (n + 1) → E d × Y d') → Fin (n + 1) → E d)
     (e : E d ≃ᵃⁱ[ℝ] E d)
-    (h_inv : InvariantToAffineIsometries n d d' learn) :
+    (h_inv : InvariantToAffineIsometries n d d' learn) :  -- Assumption A1 for `learn`
+    -- Conclusion: composing the estimated embeddings with `e` leaves the estimated risk unchanged.
     risk_est n d d' P learn loss (fun ω i => e (psi_hat ω i)) = risk_est n d d' P learn loss psi_hat := by
       unfold risk_est;
       simp +decide;
@@ -377,7 +409,9 @@ in probability.  (The existential over the per-stage alignments is load-bearing.
 lemma transformed_embeddings_converge (n d d' : ℕ)
     (P : Measure (E d × Y d'))
     (psi_hat : ℕ → (Fin (n + 1) → E d × Y d') → Fin (n + 1) → E d)
-    (h_align : DKPSAlignmentConsistency n d d' P psi_hat) :
+    (h_align : DKPSAlignmentConsistency n d d' P psi_hat) :  -- alignment consistency (paper Eq. (3))
+    -- Conclusion: re-expressing Eq. (3) by pulling the alignment back onto `ψ̂` (using that
+    -- `eᵤ` is an isometry), so `eᵤ⁻¹ ψ̂ᵤ → ψ` in probability uniformly over the sample.
     ∃ (e : ℕ → E d ≃ᵃⁱ[ℝ] E d),
       ConvergesInProbabilityToZero (Measure.pi (fun _ : Fin (n + 1) => P))
         (fun u ω => ⨆ i : Fin (n + 1), dist ((e u).symm (psi_hat u ω i)) ((ω i).1)) := by
@@ -389,36 +423,48 @@ lemma transformed_embeddings_converge (n d d' : ℕ)
             rw [ ← ( e u ).isometry.dist_eq ] ; aesop;);
           simpa [ h_dist_eq ] using he ε hε
 
-/-
-Assumption that the labels y are almost surely contained in a compact set.
+/--
+Companion to Assumption A4 (paper): the label marginal has compact support — the labels `y`
+lie almost surely in a single compact set `K`. Together with `ContinuousLoss` (A4) this makes
+the loss almost surely bounded. NOTE: stating support as *compact* is the encoding used here;
+it captures the paper's accompanying boundedness side-condition on labels.
 -/
 def BoundedLabelSupport (d d' : ℕ) (P : Measure (E d × Y d')) : Prop :=
   ∃ K : Set (Y d'), IsCompact K ∧ ∀ᵐ p ∂P, p.2 ∈ K
 
-/-
-Lemma: If random variables X and Y are almost surely in compact sets K_A and K_B, and loss is continuous on K_A × K_B, then loss(X, Y) is almost surely bounded.
+/--
+Internal helper: if `X, Y` lie a.e. in compact sets `K_A, K_B` and `loss` is continuous on
+`K_A × K_B`, then `loss(X, Y)` is a.e. bounded (a continuous function on a compact set is
+bounded). Supplies the dominating constant for the convergence-of-expectations step; not
+stated in the paper.
 -/
 lemma ae_bounded_of_compact_support {Ω A B : Type*} [MeasurableSpace Ω] [TopologicalSpace A] [TopologicalSpace B]
     (P : Measure Ω)
     (X : Ω → A) (Y : Ω → B)
     (K_A : Set A) (K_B : Set B)
     (loss : A → B → ℝ)
+    -- `h_X`, `h_Y`: the two random variables almost surely lie in their compact sets;
     (h_X : ∀ᵐ ω ∂P, X ω ∈ K_A)
     (h_Y : ∀ᵐ ω ∂P, Y ω ∈ K_B)
+    -- `h_compact_A`, `h_compact_B`, `h_cont`: compactness and continuity giving boundedness.
     (h_compact_A : IsCompact K_A)
     (h_compact_B : IsCompact K_B)
     (h_cont : ContinuousOn (fun p : A × B => loss p.1 p.2) (K_A ×ˢ K_B)) :
+    -- Conclusion: `loss(X, Y)` is almost surely bounded by some constant `M`.
     ∃ M : ℝ, ∀ᵐ ω ∂P, |loss (X ω) (Y ω)| ≤ M := by
       obtain ⟨ M, hM ⟩ := IsCompact.exists_bound_of_continuousOn ( h_compact_A.prod h_compact_B ) h_cont;
       exact ⟨ M, by filter_upwards [ h_X, h_Y ] with ω hω₁ hω₂ using hM ( X ω, Y ω ) ⟨ hω₁, hω₂ ⟩ ⟩
 
-/-
-Lemma: If a property holds almost everywhere for a component measure, it holds almost everywhere for the product measure at that component.
+/--
+Internal helper (product-measure bookkeeping): if a property holds a.e. for the `i`-th factor
+measure, then it holds a.e. (in the `i`-th coordinate) for the product measure. Used to lift
+"labels live in `K`" from a single factor to the full `(n+1)`-fold product. Not in the paper.
 -/
 lemma ae_mem_of_ae_mem_pi {ι : Type*} [Fintype ι] {α : ι → Type*}
     [∀ i, MeasurableSpace (α i)]
-    (μ : (i : ι) → Measure (α i)) [∀ i, SigmaFinite (μ i)]
+    (μ : (i : ι) → Measure (α i)) [∀ i, SigmaFinite (μ i)]  -- σ-finiteness: extra side-condition
     (i : ι) (S : Set (α i)) (hS : ∀ᵐ x ∂(μ i), x ∈ S) :
+    -- Conclusion: the coordinate-`i` event holds a.e. under the product measure.
     ∀ᵐ ω ∂(Measure.pi μ), ω i ∈ S := by
       convert hS using 1;
       constructor;
@@ -431,17 +477,22 @@ lemma ae_mem_of_ae_mem_pi {ι : Type*} [Fintype ι] {α : ι → Type*}
         rw [ h_preimage ];
         (expose_names; exact Measure.pi_eval_preimage_null μ hS_1)
 
-/-
-Lemma: The loss is uniformly bounded almost surely by a constant M independent of u.
+/--
+Internal helper: the per-sample loss is almost surely bounded by a constant `M` that is
+*uniform in the stage `u`*. Combines A3 (`BoundedLearningRule`, predictions in a compact set),
+A4 (`ContinuousLoss`), and `BoundedLabelSupport` (labels in a compact set). Provides the
+dominating constant used in the convergence-of-expectations step of Theorem 1.
 -/
 lemma loss_uniformly_bounded (n d d' : ℕ)
     (P : Measure (E d × Y d')) [IsProbabilityMeasure P]
     (learn : LearningRule n d d')
     (loss : LossFunction d')
     (psi_hat : ℕ → (Fin (n + 1) → E d × Y d') → Fin (n + 1) → E d)
-    (h_bound_learn : BoundedLearningRule n d d' learn)
-    (h_cont_loss : ContinuousLoss d' loss)
-    (h_bound_label : BoundedLabelSupport d d' P) :
+    -- Hypotheses A3 + A4 + label compactness, which together force a uniform bound:
+    (h_bound_learn : BoundedLearningRule n d d' learn)   -- A3: predictions in a compact set
+    (h_cont_loss : ContinuousLoss d' loss)               -- A4: loss continuous
+    (h_bound_label : BoundedLabelSupport d d' P) :        -- labels in a compact set
+    -- Conclusion: a single `M` a.e.-bounds the loss for every stage `u`.
     ∃ M : ℝ, ∀ u, ∀ᵐ ω ∂(Measure.pi (fun _ : Fin (n + 1) => P)),
       |loss (learn (fun i => (psi_hat u ω (Fin.castSucc i), (ω (Fin.castSucc i)).2)) (psi_hat u ω (Fin.last n))) (ω (Fin.last n)).2| ≤ M := by
         obtain ⟨ K_pred, hK_pred, hK_pred' ⟩ := h_bound_learn;
@@ -462,8 +513,11 @@ lemma loss_uniformly_bounded (n d d' : ℕ)
         have h_pred : X u ω ∈ K_pred := hK_pred' _ _;
         simpa [Real.norm_eq_abs] using (hM (X u ω, Y ω) ⟨h_pred, hω_label⟩)
 
-/-
-Definition of the loss as a function of all embeddings and labels, and proof of its continuity.
+/--
+Internal helper definition: the end-to-end loss as a single function of all embeddings and
+all labels in an `(n+1)`-sample. It splits the embeddings/labels into a training part (first
+`n`) and a test part (last one), trains `learn`, evaluates on the test embedding, and scores
+against the test label. This is the composite map through which continuity is propagated.
 -/
 def combined_loss_fn (n d d' : ℕ)
     (learn : LearningRule n d d')
@@ -477,48 +531,56 @@ def combined_loss_fn (n d d' : ℕ)
     let test_y := ys (Fin.last n)
     loss (learn train test_psi) test_y
 
+/-- Internal helper: the combined loss map is continuous, given A2
+(`ContinuousLearningRule`) and A4 (`ContinuousLoss`). -/
 lemma combined_loss_continuous (n d d' : ℕ)
     (learn : LearningRule n d d')
     (loss : LossFunction d')
-    (h_cont_learn : ContinuousLearningRule n d d' learn)
-    (h_cont_loss : ContinuousLoss d' loss) :
+    (h_cont_learn : ContinuousLearningRule n d d' learn)  -- A2
+    (h_cont_loss : ContinuousLoss d' loss) :              -- A4
+    -- Conclusion: the end-to-end `combined_loss_fn` is continuous.
     Continuous (combined_loss_fn n d d' learn loss) := by
       unfold combined_loss_fn;
       unfold ContinuousLearningRule ContinuousLoss at *;
       fun_prop
 
-/-
-Lemma: The distance between two pairs with the same second component is the distance between their first components.
--/
+/-- Internal helper (metric bookkeeping): the distance between two pairs sharing the same
+second component equals the distance between their first components. -/
 lemma dist_prod_same_snd {α β : Type*} [PseudoMetricSpace α] [PseudoMetricSpace β] (x x' : α) (y : β) :
     dist (x, y) (x', y) = dist x x' := by
       simp +zetaDelta at *
 
-/-
-Lemma: If X_u converges to X_true in probability, then (X_u, Y) converges to (X_true, Y) in probability.
--/
+/-- Internal helper: if `X_u → X_true` in probability, then pairing with a fixed `Y` preserves
+this, i.e. `(X_u, Y) → (X_true, Y)` in probability (the second coordinate contributes no
+distance). Used to feed embedding convergence into the combined-loss map. -/
 lemma pair_convergence_in_prob {Ω A B : Type*} [MeasurableSpace Ω]
     (P : Measure Ω)
     [PseudoMetricSpace A] [PseudoMetricSpace B]
     (X : ℕ → Ω → A) (X_true : Ω → A)
     (Y : Ω → B)
     (h_conv : ConvergesInProbabilityToZero P (fun u ω => dist (X u ω) (X_true ω))) :
+    -- Conclusion: pairing with the fixed `Y` preserves in-probability convergence.
     ConvergesInProbabilityToZero P (fun u ω => dist (X u ω, Y ω) (X_true ω, Y ω)) := by
       simp_all +decide
 
-/-
-Lemma: The loss using estimated embeddings converges in probability to the loss using true embeddings.
+/--
+Internal helper (core continuous-mapping step of Theorem 1): if the estimated embeddings
+converge to the true embeddings in probability (uniformly over the sample), then the
+end-to-end loss computed from estimated embeddings converges in probability to the loss
+computed from true embeddings.
 -/
 lemma loss_converges_in_prob (n d d' : ℕ)
     (P : Measure (E d × Y d')) [IsProbabilityMeasure P]
     (learn : LearningRule n d d')
     (loss : LossFunction d')
     (psi_hat : ℕ → (Fin (n + 1) → E d × Y d') → Fin (n + 1) → E d)
-    (h_meas_psi : ∀ u, Measurable (psi_hat u))
+    (h_meas_psi : ∀ u, Measurable (psi_hat u))           -- extra implicit measurability assumption
+    -- `h_conv`: estimated embeddings → true embeddings in probability (sup over the sample);
     (h_conv : ConvergesInProbabilityToZero (Measure.pi (fun _ : Fin (n + 1) => P))
       (fun u ω => ⨆ i : Fin (n + 1), dist (psi_hat u ω i) ((ω i).1)))
-    (h_cont_learn : ContinuousLearningRule n d d' learn)
-    (h_cont_loss : ContinuousLoss d' loss) :
+    (h_cont_learn : ContinuousLearningRule n d d' learn)  -- A2
+    (h_cont_loss : ContinuousLoss d' loss) :              -- A4
+    -- Conclusion: the estimated-embedding loss → true-embedding loss in probability.
     ConvergesInProbabilityToZero (Measure.pi (fun _ : Fin (n + 1) => P))
       (fun u ω => dist
         (combined_loss_fn n d d' learn loss (psi_hat u ω, fun i => (ω i).2))
@@ -537,19 +599,19 @@ lemma loss_converges_in_prob (n d d' : ℕ)
               contrapose! hw;
               exact pi_norm_le_iff_of_nonneg ( by linarith [ show 0 ≤ w by exact le_trans ( norm_nonneg _ ) ( hw 0 ) ] ) |>.2 hw
 
-/-
-Lemma: The risk is equal to the estimated risk when the estimated embeddings are the true embeddings.
--/
+/-- Internal helper: when the "estimated" embeddings are taken to be the true embeddings, the
+estimated risk reduces to the true risk (definitional sanity check / base case). -/
 lemma risk_eq_risk_est_true (n d d' : ℕ)
     (P : Measure (E d × Y d'))
     (learn : LearningRule n d d')
     (loss : LossFunction d') :
+    -- Conclusion: `risk` equals `risk_est` evaluated at the identity (true) embeddings.
     risk n d d' P learn loss = risk_est n d d' P learn loss (fun ω i => (ω i).1) := by
       exact Real.ext_cauchy rfl
 
-/-
-Definitions of the loss functions for estimated and true embeddings.
--/
+/-- Internal helper definition: the per-sample loss at stage `u` using the *estimated*
+embeddings `psi_hat u` (with the true labels). Integrating this over the sample gives the
+estimated risk. -/
 def loss_est_fn (n d d' : ℕ)
     (learn : LearningRule n d d')
     (loss : LossFunction d')
@@ -557,27 +619,36 @@ def loss_est_fn (n d d' : ℕ)
     (u : ℕ) : (Fin (n + 1) → E d × Y d') → ℝ :=
   fun ω => combined_loss_fn n d d' learn loss (psi_hat u ω, fun i => (ω i).2)
 
+/-- Internal helper definition: the per-sample loss using the *true* embeddings (the first
+component of each sample point). Integrating this gives the true risk. -/
 def loss_true_fn (n d d' : ℕ)
     (learn : LearningRule n d d')
     (loss : LossFunction d') :
     (Fin (n + 1) → E d × Y d') → ℝ :=
   fun ω => combined_loss_fn n d d' learn loss (fun i => (ω i).1, fun i => (ω i).2)
 
-/-
-Lemma: If estimated embeddings converge to true embeddings in probability, then the risk converges.
+/--
+Internal workhorse for Theorem 1: if the estimated embeddings converge *directly* to the true
+embeddings in probability (no alignment isometry left to remove), then the estimated risk
+converges to the true risk. This packages the whole "continuous mapping (loss converges in
+probability) + uniform boundedness (dominating constant) + convergence of expectations"
+argument. `risk_converges_fixed_n` reduces to this lemma after using A1 to absorb the alignment.
 -/
 lemma risk_convergence_of_aligned_embeddings (n d d' : ℕ)
     (P : Measure (E d × Y d')) [IsProbabilityMeasure P]
     (learn : LearningRule n d d')
     (loss : LossFunction d')
     (psi_hat : ℕ → (Fin (n + 1) → E d × Y d') → Fin (n + 1) → E d)
-    (h_meas_psi : ∀ u, Measurable (psi_hat u))
+    (h_meas_psi : ∀ u, Measurable (psi_hat u))           -- extra implicit measurability assumption
+    -- `h_conv`: estimated embeddings → true embeddings in probability (already aligned);
     (h_conv : ConvergesInProbabilityToZero (Measure.pi (fun _ : Fin (n + 1) => P))
       (fun u ω => ⨆ i : Fin (n + 1), dist (psi_hat u ω i) ((ω i).1)))
-    (h_cont_learn : ContinuousLearningRule n d d' learn)
-    (h_bound_learn : BoundedLearningRule n d d' learn)
-    (h_cont_loss : ContinuousLoss d' loss)
-    (h_bound_label : BoundedLabelSupport d d' P) :
+    -- Assumptions A2 / A3 / A4 / label-support, supplying continuity and the uniform bound:
+    (h_cont_learn : ContinuousLearningRule n d d' learn)  -- A2
+    (h_bound_learn : BoundedLearningRule n d d' learn)    -- A3
+    (h_cont_loss : ContinuousLoss d' loss)                -- A4
+    (h_bound_label : BoundedLabelSupport d d' P) :         -- labels in a compact set
+    -- Conclusion: the estimated risk converges to the true risk as the budget `u → ∞`.
     Tendsto (fun u => risk_est n d d' P learn loss (psi_hat u)) atTop (𝓝 (risk n d d' P learn loss)) := by
       -- Apply the lemma that states if the loss difference converges in probability to zero, then the risk converges.
       have h_risk_conv : Tendsto (fun u => ∫ ω, loss_est_fn n d d' learn loss psi_hat u ω ∂(Measure.pi (fun _ : Fin (n + 1) => P))) atTop (𝓝 (∫ ω, loss_true_fn n d d' learn loss ω ∂(Measure.pi (fun _ : Fin (n + 1) => P)))) := by
@@ -631,27 +702,32 @@ lemma risk_convergence_of_aligned_embeddings (n d d' : ℕ)
           exact h_integrable.neg;
       exact h_risk_conv
 
-/-
-Theorem 1: The risk using estimated embeddings converges to the risk using true
-embeddings — UNDER the alignment-consistency hypothesis `h_align`
-(`DKPSAlignmentConsistency`, the paper's Eq. 3).  This matches the paper's
-theorem structure: alignment consistency is a legitimately-assumed input, not
-derived here; the genuinely-proved content is the transfer (continuous mapping +
-tightness + dominated convergence) from in-probability embedding convergence to
-risk convergence.
+/--
+**Theorem 1 (paper, fixed-`n` risk convergence).**
+For a fixed sample size `n`, as the embedding-estimation budget `u → ∞`, the risk computed
+from *estimated* embeddings `ψ̂_u` converges to the risk computed from the *true* embeddings
+`ψ`. The substantive input is alignment consistency (`h_align`, paper Eq. (3)); the proved
+content is the transfer — via the continuous-mapping theorem, tightness, and a
+dominated/bounded-convergence argument — from in-probability convergence of the embeddings to
+convergence of the (integrated) risk. A1 (`h_inv`) removes the unknown per-stage alignment.
+For situations where `ψ̂` are good proxies, this says that increasing queries/replicates
+improves the performance of decision functions trained on the estimated training set.
 -/
 theorem risk_converges_fixed_n (n d d' : ℕ)
     (P : Measure (E d × Y d')) [IsProbabilityMeasure P]
     (learn : LearningRule n d d')
     (loss : LossFunction d')
     (psi_hat : ℕ → (Fin (n + 1) → E d × Y d') → Fin (n + 1) → E d)
-    (h_meas_psi : ∀ u, Measurable (psi_hat u))
-    (h_align : DKPSAlignmentConsistency n d d' P psi_hat)
-    (h_inv : InvariantToAffineIsometries n d d' learn)
-    (h_cont_learn : ContinuousLearningRule n d d' learn)
-    (h_bound_learn : BoundedLearningRule n d d' learn)
-    (h_cont_loss : ContinuousLoss d' loss)
-    (h_bound_label : BoundedLabelSupport d d' P) :
+    (h_meas_psi : ∀ u, Measurable (psi_hat u))            -- extra implicit measurability assumption
+    -- The substantive statistical input (paper Eq. (3)):
+    (h_align : DKPSAlignmentConsistency n d d' P psi_hat)  -- `ψ̂_u → ψ` up to alignment, in probability
+    -- The paper's regularity assumptions A1–A4 (+ label support):
+    (h_inv : InvariantToAffineIsometries n d d' learn)    -- A1 (cancels the alignment isometry)
+    (h_cont_learn : ContinuousLearningRule n d d' learn)  -- A2
+    (h_bound_learn : BoundedLearningRule n d d' learn)    -- A3
+    (h_cont_loss : ContinuousLoss d' loss)                -- A4
+    (h_bound_label : BoundedLabelSupport d d' P) :         -- labels in a compact set
+    -- Conclusion: estimated risk → true risk as the estimation budget `u → ∞`.
     Tendsto (fun u => risk_est n d d' P learn loss (psi_hat u)) atTop (𝓝 (risk n d d' P learn loss)) := by
       obtain ⟨ e, he ⟩ := h_align;
       convert risk_convergence_of_aligned_embeddings n d d' P learn loss ( fun u ω i => ( e u ).symm ( psi_hat u ω i ) ) _ _ using 1;
@@ -673,13 +749,18 @@ theorem risk_converges_fixed_n (n d d' : ℕ)
         swap;
         exacts [ ‹ℕ›, by simp +decide ]
 
-/-
-Diagonal sequence lemma: If a(n, u) -> b(n) as u -> infinity for each n, and b(n) -> L as n -> infinity, then there exists a diagonal sequence phi(n) -> infinity such that a(n, phi(n)) -> L.
+/--
+Diagonal sequence lemma (the analytic device underlying Theorem 2). If, for each fixed `n`,
+`a(n, u) → b(n)` as `u → ∞`, and `b(n) → L` as `n → ∞`, then there is a diagonal schedule
+`phi : ℕ → ℕ` with `phi → ∞` along which `a(n, phi(n)) → L`. In Theorem 2, `a(n, u)` is the
+estimated risk at sample size `n` and budget `u`, `b(n)` the true risk, and `L` the
+consistency limit; the schedule `phi` is exactly the "budget schedule" the paper invokes.
 -/
 lemma diagonal_convergence {α : Type*} [TopologicalSpace α] [FirstCountableTopology α]
     (a : ℕ → ℕ → α) (b : ℕ → α) (L : α)
-    (h_lim_u : ∀ n, Tendsto (fun u => a n u) atTop (𝓝 (b n)))
-    (h_lim_n : Tendsto b atTop (𝓝 L)) :
+    (h_lim_u : ∀ n, Tendsto (fun u => a n u) atTop (𝓝 (b n)))  -- inner limits (each `n`): `a(n,·) → b(n)`
+    (h_lim_n : Tendsto b atTop (𝓝 L)) :                        -- outer limit: `b(n) → L`
+    -- Conclusion: a diverging diagonal schedule `phi` along which `a(n, phi(n)) → L`.
     ∃ phi : ℕ → ℕ, Tendsto phi atTop atTop ∧ Tendsto (fun n => a n (phi n)) atTop (𝓝 L) := by
       -- By the first-countability of α, there exists a countable neighborhood basis at L.
       obtain ⟨U, hU⟩ : ∃ U : ℕ → Set α, (∀ k, IsOpen (U k)) ∧ (∀ k, L ∈ U k) ∧ (∀ k, U (k + 1) ⊆ U k) ∧ ∀ S ∈ nhds L, ∃ k, U k ⊆ S := by
@@ -716,23 +797,34 @@ lemma diagonal_convergence {α : Type*} [TopologicalSpace α] [FirstCountableTop
       generalize_proofs at *; (
       exact fun S hS => by rcases hU.2.2.2 S hS with ⟨ k, hk ⟩ ; rcases hphi.2 k with ⟨ N, hN ⟩ ; exact Filter.eventually_atTop.2 ⟨ N, fun n hn => hk ( hN n hn ) ⟩ ;)))
 
-/-
-Theorem 2: Consistency transfer. If the learning rule is consistent with true embeddings, there exists a schedule of estimation budgets such that it is consistent with estimated embeddings.
+/--
+**Theorem 2 (paper, consistency transfer).**
+If the sequence of decision rules is *consistent* using the true embeddings — i.e. the true
+risk `R(n)` converges to a limit `L` as the number of models `n → ∞` (`h_consistent`) — then
+there exists a schedule of estimation budgets `phi(n) → ∞` along which the *estimated*-embedding
+risk also converges to the same `L`. In other words, consistency transfers from the
+true training sets `T_n` to the estimated training sets `T̂_n`. The proof applies Theorem 1
+(`risk_converges_fixed_n`) at each fixed `n` to get the inner limits, then `diagonal_convergence`
+to build the budget schedule. The assumptions A1–A4 (+ alignment, label support) are imposed
+uniformly over all `n`.
 -/
 theorem consistency_transfer_dkps (d d' : ℕ)
     (P : Measure (E d × Y d')) [IsProbabilityMeasure P]
-    (learn : (n : ℕ) → LearningRule n d d')
+    (learn : (n : ℕ) → LearningRule n d d')               -- a learning rule for every sample size `n`
     (loss : LossFunction d')
     (psi_hat : (n : ℕ) → ℕ → (Fin (n + 1) → E d × Y d') → Fin (n + 1) → E d)
-    (L : ℝ)
-    (h_meas_psi : ∀ n u, Measurable (psi_hat n u))
-    (h_align : ∀ n, DKPSAlignmentConsistency n d d' P (psi_hat n))
-    (h_inv : ∀ n, InvariantToAffineIsometries n d d' (learn n))
-    (h_cont_learn : ∀ n, ContinuousLearningRule n d d' (learn n))
-    (h_bound_learn : ∀ n, BoundedLearningRule n d d' (learn n))
-    (h_cont_loss : ContinuousLoss d' loss)
-    (h_bound_label : BoundedLabelSupport d d' P)
+    (L : ℝ)                                                -- the consistency limit
+    (h_meas_psi : ∀ n u, Measurable (psi_hat n u))         -- extra implicit measurability assumption
+    -- The paper's assumptions, imposed uniformly over the sample size `n`:
+    (h_align : ∀ n, DKPSAlignmentConsistency n d d' P (psi_hat n))  -- alignment consistency (Eq. (3))
+    (h_inv : ∀ n, InvariantToAffineIsometries n d d' (learn n))     -- A1
+    (h_cont_learn : ∀ n, ContinuousLearningRule n d d' (learn n))   -- A2
+    (h_bound_learn : ∀ n, BoundedLearningRule n d d' (learn n))     -- A3
+    (h_cont_loss : ContinuousLoss d' loss)                         -- A4
+    (h_bound_label : BoundedLabelSupport d d' P)                    -- labels in a compact set
+    -- The hypothesis being transferred: consistency under the *true* embeddings.
     (h_consistent : Tendsto (fun n => risk n d d' P (learn n) loss) atTop (𝓝 L)) :
+    -- Conclusion: a diverging budget schedule `phi` along which the *estimated*-embedding risk → `L`.
     ∃ phi : ℕ → ℕ, Tendsto phi atTop atTop ∧
       Tendsto (fun n => risk_est n d d' P (learn n) loss (psi_hat n (phi n))) atTop (𝓝 L) := by
         -- Apply the diagonal sequence lemma to the sequences $a(n, u)$ and $b(n)$.

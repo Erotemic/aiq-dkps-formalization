@@ -42,3 +42,9 @@ name = "ChallengeConformance"
 
 [[lean_lib]]
 name = "ChallengeLeaderboard"
+
+[[lean_lib]]
+name = "ChallengeInventoryConformance"
+
+[[lean_lib]]
+name = "ChallengeInventoryLeaderboard"

@@ -1,12 +1,13 @@
 # Comparator tool setup
 
-This repository includes a challenge package for the AI-authored Mathlib-candidate
+This repository includes challenge packages for AI-authored Mathlib-candidate
 lemmas:
 
-- `ChallengeConformance.lean` imports only Mathlib and states the challenge claims
-  with `sorry`.
-- `ChallengeLeaderboard.lean` imports this project and fills those claims.
-- `comparator/aiq-mathlib-candidates.json` configures the comparator run.
+- `ChallengeConformance.lean` / `ChallengeLeaderboard.lean` provide a four-claim
+  headline sampler.
+- `ChallengeInventoryConformance.lean` / `ChallengeInventoryLeaderboard.lean`
+  provide a broader inventory of the current `ForMathlib` theorem surface.
+- `comparator/*.json` configures comparator runs.
 - `formalization.yaml` records provenance and AI usage notes.
 
 The comparator check needs external tools: `landrun`, `comparator`, and
@@ -42,16 +43,20 @@ From the repository root:
 bash scripts/run_challenge_comparator.sh
 ```
 
-This performs:
+This performs Lean checks, builds the solution modules, and runs comparator for
+both comparator configs:
 
-```bash
-lake env lean ChallengeConformance.lean
-lake env lean ChallengeLeaderboard.lean
-lake build ChallengeLeaderboard
-lake env comparator comparator/aiq-mathlib-candidates.json
+```text
+comparator/aiq-mathlib-candidates.json
+comparator/aiq-mathlib-inventory.json
 ```
 
-using explicit `COMPARATOR_LANDRUN` and `COMPARATOR_LEAN4EXPORT` paths.
+Run a single config with:
+
+```bash
+bash scripts/run_challenge_comparator.sh --config comparator/aiq-mathlib-candidates.json
+bash scripts/run_challenge_comparator.sh --config comparator/aiq-mathlib-inventory.json
+```
 
 ## Development fallback
 

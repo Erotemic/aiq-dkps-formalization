@@ -46,13 +46,19 @@ status:
     challenge_commands:
       - "lake env lean ChallengeConformance.lean"
       - "lake env lean ChallengeLeaderboard.lean"
-    comparator_config: "comparator/aiq-mathlib-candidates.json"
+      - "lake env lean ChallengeInventoryConformance.lean"
+      - "lake env lean ChallengeInventoryLeaderboard.lean"
+      - "bash scripts/run_challenge_comparator.sh"
+    comparator_configs:
+      - "comparator/aiq-mathlib-candidates.json"
+      - "comparator/aiq-mathlib-inventory.json"
   scope: >
     The repository formalizes several DKPS-related paper layers and stages
     paper-agnostic infrastructure in ForMathlib for potential upstreaming.
-    This metadata file and the challenge files initially expose a small subset
-    of the most Mathlib-relevant claims, rather than the entire downstream DKPS
-    theorem stack.
+    This metadata file and the challenge files expose both a small headline
+    sampler of the most visible Mathlib-facing claims and a broader inventory
+    of the current ForMathlib theorem surface. The inventory is for calibration
+    and comparator checking, not a proposal to upstream everything in one PR.
   main_results:
     - declaration: "AIQChallenge.procrustes_rigidity_of_inner_eq"
       challenge_file: "ChallengeConformance.lean"
@@ -90,6 +96,13 @@ status:
       sorry_count_in_solution: 0
       expected_axioms: ["propext", "Classical.choice", "Quot.sound"]
       comparator_config: "comparator/aiq-mathlib-candidates.json"
+  inventory_challenge:
+    challenge_file: "ChallengeInventoryConformance.lean"
+    solution_file: "ChallengeInventoryLeaderboard.lean"
+    comparator_config: "comparator/aiq-mathlib-inventory.json"
+    scope: "Full current public theorem surface of ForMathlib, generated as a comparator inventory."
+    theorem_count: 61
+    expected_axioms: ["propext", "Classical.choice", "Quot.sound"]
   additional_upstream_candidates:
     - "Davis-Kahan / sin-theta perturbation bounds"
     - "Entrywise-to-operator-norm and entrywise-to-eigenvalue perturbation"
@@ -109,7 +122,7 @@ fidelity:
   known_limitations:
     - "The challenge package has not yet been reviewed for Mathlib style, naming, minimal imports, or ideal statement shape."
     - "The Lean code was AI-authored; the human coordinator is still learning Lean and requests expert review before PR submission."
-    - "The assistant-generated overlay was not Lean-built in this sandbox because Lean/Lake are not installed."
+    - "The assistant-generated overlay was not Lean-built in this sandbox because Lean/Lake are not installed; run scripts/run_challenge_comparator.sh locally after applying."
 
 alignment:
   statements:
@@ -163,7 +176,8 @@ automation:
       soundness_gate: >
         Claimed theorem closes are trusted only insofar as they are accepted by
         Lean's kernel and use only allowed axioms. The challenge package exposes
-        a small set of claims for comparator-style validation.
+        a small headline sampler and a broader ForMathlib inventory for
+        comparator-style validation.
       cost:
         wall_time: "multi-session effort from early 2026 through 2026-06-12"
         spend_usd: "not fully reconstructed"

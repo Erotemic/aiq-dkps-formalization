@@ -6,20 +6,29 @@
 #
 # Usage:
 #   bash scripts/run_challenge_comparator.sh
+#   bash scripts/run_challenge_comparator.sh --all
 #   bash scripts/run_challenge_comparator.sh --fake-landrun
 #   bash scripts/run_challenge_comparator.sh --config comparator/aiq-mathlib-candidates.json
+#   bash scripts/run_challenge_comparator.sh --config comparator/aiq-mathlib-inventory.json
 #
 set -euo pipefail
 
-CONFIG="comparator/aiq-mathlib-candidates.json"
+CONFIGS=()
 USE_FAKE_LANDRUN=0
 ONLY_COMPARATOR=0
 
 while [ "$#" -gt 0 ]; do
     case "$1" in
         --config)
-            CONFIG="$2"
+            CONFIGS+=("$2")
             shift 2
+            ;;
+        --all)
+            CONFIGS=()
+            while IFS= read -r cfg; do
+                CONFIGS+=("$cfg")
+            done < <(find comparator -maxdepth 1 -type f -name '*.json' | sort)
+            shift
             ;;
         --fake-landrun)
             USE_FAKE_LANDRUN=1
@@ -30,7 +39,7 @@ while [ "$#" -gt 0 ]; do
             shift
             ;;
         -h|--help)
-            sed -n '1,40p' "$0"
+            sed -n '1,60p' "$0"
             exit 0
             ;;
         *)
@@ -42,6 +51,13 @@ done
 
 if git_root="$(git rev-parse --show-toplevel 2>/dev/null)"; then
     cd "$git_root"
+fi
+
+if [ "${#CONFIGS[@]}" -eq 0 ]; then
+    CONFIGS=(
+        "comparator/aiq-mathlib-candidates.json"
+        "comparator/aiq-mathlib-inventory.json"
+    )
 fi
 
 TOOL_ROOT="${AIQ_COMPARATOR_TOOL_ROOT:-$HOME/code/lean-tools}"
@@ -69,23 +85,62 @@ for exe in "$COMPARATOR_BIN" "$COMPARATOR_LEAN4EXPORT" "$COMPARATOR_LANDRUN"; do
     fi
 done
 
-if [ ! -f "$CONFIG" ]; then
-    echo "error: comparator config not found: $CONFIG" >&2
-    exit 1
-fi
+json_field() {
+    local config="$1"
+    local field="$2"
+    python - "$config" "$field" <<'PY'
+import json
+import sys
+with open(sys.argv[1]) as f:
+    data = json.load(f)
+print(data[sys.argv[2]])
+PY
+}
 
-if [ "$ONLY_COMPARATOR" -eq 0 ]; then
-    echo "Checking ChallengeConformance.lean"
-    lake env lean ChallengeConformance.lean
+module_to_file() {
+    local module="$1"
+    printf '%s.lean\n' "${module//./\/}"
+}
 
-    echo "Checking ChallengeLeaderboard.lean"
-    lake env lean ChallengeLeaderboard.lean
+for CONFIG in "${CONFIGS[@]}"; do
+    if [ ! -f "$CONFIG" ]; then
+        echo "error: comparator config not found: $CONFIG" >&2
+        exit 1
+    fi
 
-    echo "Building ChallengeLeaderboard"
-    lake build ChallengeLeaderboard
-fi
+    CHALLENGE_MODULE="$(json_field "$CONFIG" challenge_module)"
+    SOLUTION_MODULE="$(json_field "$CONFIG" solution_module)"
+    CHALLENGE_FILE="$(module_to_file "$CHALLENGE_MODULE")"
+    SOLUTION_FILE="$(module_to_file "$SOLUTION_MODULE")"
 
-echo "Running comparator with config: $CONFIG"
-echo "COMPARATOR_LANDRUN=$COMPARATOR_LANDRUN"
-echo "COMPARATOR_LEAN4EXPORT=$COMPARATOR_LEAN4EXPORT"
-lake env "$COMPARATOR_BIN" "$CONFIG"
+    echo
+    echo "======================================================================"
+    echo "Comparator config: $CONFIG"
+    echo "Challenge module:  $CHALLENGE_MODULE"
+    echo "Solution module:   $SOLUTION_MODULE"
+    echo "======================================================================"
+
+    if [ "$ONLY_COMPARATOR" -eq 0 ]; then
+        if [ -f "$CHALLENGE_FILE" ]; then
+            echo "Checking $CHALLENGE_FILE"
+            lake env lean "$CHALLENGE_FILE"
+        else
+            echo "warning: challenge file not found for direct lean check: $CHALLENGE_FILE" >&2
+        fi
+
+        if [ -f "$SOLUTION_FILE" ]; then
+            echo "Checking $SOLUTION_FILE"
+            lake env lean "$SOLUTION_FILE"
+        else
+            echo "warning: solution file not found for direct lean check: $SOLUTION_FILE" >&2
+        fi
+
+        echo "Building $SOLUTION_MODULE"
+        lake build "$SOLUTION_MODULE"
+    fi
+
+    echo "Running comparator with config: $CONFIG"
+    echo "COMPARATOR_LANDRUN=$COMPARATOR_LANDRUN"
+    echo "COMPARATOR_LEAN4EXPORT=$COMPARATOR_LEAN4EXPORT"
+    lake env "$COMPARATOR_BIN" "$CONFIG"
+done

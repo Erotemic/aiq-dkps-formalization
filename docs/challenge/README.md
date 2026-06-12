@@ -1,8 +1,7 @@
 # AIQ DKPS ForMathlib challenge package
 
 This directory documents the root-level challenge files added for community
-review of a first small subset of reusable Mathlib-facing claims from the AIQ
-DKPS formalization.
+review of reusable Mathlib-facing claims from the AIQ DKPS formalization.
 
 Validated against source archive:
 
@@ -12,29 +11,37 @@ Validated against source archive:
 - commit date: `2026-06-12 19:04:40 +0000`
 - commit subject: `B2b: Berge value-function continuity + finite-family closeness modulus`
 
-## Files
+## Challenge files
 
-- `ChallengeConformance.lean` imports only `Mathlib` and states the challenge
-  claims with `sorry`.
+There are two challenge layers.
+
+### Headline sampler
+
+- `ChallengeConformance.lean` imports only `Mathlib` and states four selected
+  high-value claims with `sorry`.
 - `ChallengeLeaderboard.lean` imports the staged `ForMathlib` declarations and
   fills those claims.
-- `comparator/aiq-mathlib-candidates.json` is a comparator configuration for
-  the four initial challenge theorems.
-- `formalization.yaml` records project metadata and AI-use provenance.
+- `comparator/aiq-mathlib-candidates.json` checks the four selected claims.
 
-## Initial challenge claims
-
-The first challenge intentionally covers only four theorem wrappers from three
-high-value Mathlib candidate areas:
+The headline sampler is meant for quick calibration. It covers:
 
 1. Procrustes rigidity from equality of pairwise inner products.
 2. Procrustes rigidity in `Matrix.gram` form.
 3. Rank-controlled PSD Gram realization.
 4. Weyl eigenvalue perturbation for symmetric operators.
 
-This is not intended to exhaust the `ForMathlib` staging library. It is a
-small starting point for calibrating significance, statement shape, and the
-appropriate review path for AI-authored Lean code.
+### Full inventory
+
+- `ChallengeInventoryConformance.lean` imports only `Mathlib` and mirrors the
+  public theorem surface of the current `ForMathlib` staging library, with each
+  theorem body replaced by `sorry`.
+- `ChallengeInventoryLeaderboard.lean` imports the project `ForMathlib` modules.
+- `comparator/aiq-mathlib-inventory.json` checks the full inventory of staged
+  declarations.
+
+The inventory challenge is not a proposed single Mathlib PR. It is a mechanical
+claim inventory: it records which reusable staged declarations the current
+project can certify under comparator.
 
 ## Suggested local commands
 
@@ -43,14 +50,24 @@ From the repository root:
 ```bash
 lake env lean ChallengeConformance.lean
 lake env lean ChallengeLeaderboard.lean
+lake env lean ChallengeInventoryConformance.lean
+lake env lean ChallengeInventoryLeaderboard.lean
 ```
 
-If comparator and its sandbox/export dependencies are available, run it with:
+If comparator and its sandbox/export dependencies are available, run all checks:
 
 ```bash
-lake env comparator comparator/aiq-mathlib-candidates.json
+bash scripts/run_challenge_comparator.sh
 ```
 
-Depending on local installation, the comparator binary may need to be invoked by
-absolute path or through the `systemd-run` wrapper recommended by comparator's
-README.
+Run only the headline sampler:
+
+```bash
+bash scripts/run_challenge_comparator.sh --config comparator/aiq-mathlib-candidates.json
+```
+
+Run only the full inventory:
+
+```bash
+bash scripts/run_challenge_comparator.sh --config comparator/aiq-mathlib-inventory.json
+```

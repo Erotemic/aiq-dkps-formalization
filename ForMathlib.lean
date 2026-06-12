@@ -13,12 +13,14 @@ import ForMathlib.Analysis.InnerProductSpace.NearIsometry
 import ForMathlib.Analysis.InnerProductSpace.Spectrum
 import ForMathlib.Analysis.Matrix.EntrywiseOpNorm
 import ForMathlib.Analysis.Matrix.SpectralFunctionMeasurable
+import ForMathlib.Analysis.Matrix.EntrywiseEigenvalue
 import ForMathlib.Analysis.Matrix.Spectrum
 import ForMathlib.LinearAlgebra.Matrix.PosDef
 import ForMathlib.MeasureTheory.CfcMeasurable
 import ForMathlib.MeasureTheory.CompactExists
 import ForMathlib.MeasureTheory.Function.ConvergenceInMeasure
 import ForMathlib.MeasureTheory.Measure.Typeclasses.Probability
+import ForMathlib.Probability.Moments.MatrixConcentration
 import ForMathlib.Probability.Moments.SampleMean
 import ForMathlib.Probability.Moments.Variance
 import ForMathlib.Topology.ApproxMinimizer

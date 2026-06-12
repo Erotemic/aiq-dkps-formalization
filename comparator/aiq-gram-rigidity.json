@@ -2,8 +2,10 @@
   "challenge_module": "Challenge.Gram.Conformance",
   "solution_module": "Challenge.Gram.Leaderboard",
   "theorem_names": [
-    "ForMathlib.exists_linearIsometryEquiv_of_inner_eq",
-    "ForMathlib.Matrix.gram_eq_gram_iff_exists_linearIsometryEquiv"
+    "ForMathlib.inner_linearCombination_linearCombination",
+    "ForMathlib.exists_linearIsometry_map_eq_of_inner_eq",
+    "ForMathlib.exists_linearIsometryEquiv_map_eq_of_inner_eq",
+    "ForMathlib.Matrix.gram_eq_gram_iff_exists_linearIsometryEquiv_map_eq"
   ],
   "permitted_axioms": [
     "propext",

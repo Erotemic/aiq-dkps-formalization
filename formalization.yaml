@@ -39,8 +39,8 @@ sources:
 
 status:
   repository_build:
-    last_user_reported_build: "Earlier state: lake build completed successfully on 8626 jobs. Latest challenge state: local scripts/run_challenge_comparator.sh summary reported all requested challenge configs passed."
-    last_user_reported_challenge_summary: "2026-06-12: scripts/run_challenge_comparator.sh reported PASS for comparator/aiq-gram-rigidity.json, comparator/aiq-psd-gram-realization.json, comparator/aiq-spectral-perturbation.json, and comparator/aiq-inventory.json."
+    last_user_reported_build: "Earlier state: lake build completed successfully on 8626 jobs. Latest challenge state must be re-run after the Fable Gram/Davis-Kahan refactor and metadata sync."
+    last_user_reported_challenge_summary: "Before the Fable Gram/Davis-Kahan refactor, scripts/run_challenge_comparator.sh reported PASS for all requested challenge configs. Re-run after this metadata sync before citing the new state."
     challenge_commands:
       - "lake env lean Challenge/Gram/Conformance.lean"
       - "lake env lean Challenge/Gram/Leaderboard.lean"
@@ -60,27 +60,27 @@ status:
     of the current ForMathlib theorem surface. The inventory is for calibration
     and comparator checking, not a proposal to upstream everything in one PR.
   main_results:
-    - declaration: "ForMathlib.exists_linearIsometryEquiv_of_inner_eq"
+    - declaration: "ForMathlib.exists_linearIsometryEquiv_map_eq_of_inner_eq"
       file: "ForMathlib/Analysis/InnerProductSpace/GramMatrix.lean"
       sorry_count: 0
       axioms: ["propext", "Classical.choice", "Quot.sound"]
       challenge_file: "Challenge/Gram/Conformance.lean"
       solution_file: "Challenge/Gram/Leaderboard.lean"
-      challenge_declaration: "AIQChallenge.procrustes_rigidity_of_inner_eq"
-      source_declaration: "ForMathlib.exists_linearIsometryEquiv_of_inner_eq"
+      challenge_declaration: "ForMathlib.exists_linearIsometryEquiv_map_eq_of_inner_eq"
+      source_declaration: "ForMathlib.exists_linearIsometryEquiv_map_eq_of_inner_eq"
       source_file: "ForMathlib/Analysis/InnerProductSpace/GramMatrix.lean"
       category: "Procrustes / Gram-matrix rigidity"
       sorry_count_in_solution: 0
       expected_axioms: ["propext", "Classical.choice", "Quot.sound"]
       comparator_config: "comparator/aiq-gram-rigidity.json"
-    - declaration: "ForMathlib.Matrix.gram_eq_gram_iff_exists_linearIsometryEquiv"
+    - declaration: "ForMathlib.Matrix.gram_eq_gram_iff_exists_linearIsometryEquiv_map_eq"
       file: "ForMathlib/Analysis/InnerProductSpace/GramMatrix.lean"
       sorry_count: 0
       axioms: ["propext", "Classical.choice", "Quot.sound"]
       challenge_file: "Challenge/Gram/Conformance.lean"
       solution_file: "Challenge/Gram/Leaderboard.lean"
-      challenge_declaration: "AIQChallenge.gram_eq_gram_iff_exists_linearIsometryEquiv"
-      source_declaration: "ForMathlib.Matrix.gram_eq_gram_iff_exists_linearIsometryEquiv"
+      challenge_declaration: "ForMathlib.Matrix.gram_eq_gram_iff_exists_linearIsometryEquiv_map_eq"
+      source_declaration: "ForMathlib.Matrix.gram_eq_gram_iff_exists_linearIsometryEquiv_map_eq"
       source_file: "ForMathlib/Analysis/InnerProductSpace/GramMatrix.lean"
       category: "Procrustes / Gram-matrix rigidity"
       sorry_count_in_solution: 0
@@ -117,7 +117,7 @@ status:
     solution_file: "Challenge/Inventory/Leaderboard.lean"
     comparator_config: "comparator/aiq-inventory.json"
     scope: "Current public theorem surface of ForMathlib selected for comparator inventory; excludes the staged spectral-transform measurability and sample-covariance Hermitian/sorted-eigenvalue theorems pending API review."
-    theorem_count: 58
+    theorem_count: 67
     expected_axioms: ["propext", "Classical.choice", "Quot.sound"]
     excluded_for_now:
       - declaration: "ForMathlib.Matrix.measurable_specTransform"
@@ -160,10 +160,10 @@ review:
 alignment:
   statements:
     - informal: "Finite configurations with equal pairwise inner products are equivalent up to a linear isometry."
-      lean: "ForMathlib.exists_linearIsometryEquiv_of_inner_eq"
+      lean: "ForMathlib.exists_linearIsometryEquiv_map_eq_of_inner_eq"
       status: "proved by the downstream ForMathlib staging library"
     - informal: "Equal Gram matrices characterize equality up to linear isometry."
-      lean: "ForMathlib.Matrix.gram_eq_gram_iff_exists_linearIsometryEquiv"
+      lean: "ForMathlib.Matrix.gram_eq_gram_iff_exists_linearIsometryEquiv_map_eq"
       status: "proved by the downstream ForMathlib staging library"
     - informal: "A PSD matrix of rank at most d is a Gram matrix of d-dimensional vectors."
       lean: "ForMathlib.Matrix.posSemidef_and_rank_le_iff_exists_conjTranspose_mul_self"

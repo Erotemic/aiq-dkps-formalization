@@ -411,6 +411,11 @@ theorem abs_eigenvalues_sub_le
     {ε : ℝ} (hε : ∀ x : E, ‖(T - S) x‖ ≤ ε * ‖x‖) (k : Fin n) :
     |hT.eigenvalues hn k - hS.eigenvalues hn k| ≤ ε := by
   sorry
+theorem abs_eigenvalues_sub_le_opNorm (hT : T.IsSymmetric) (hS : S.IsSymmetric)
+    (hn : finrank 𝕜 E = n) (k : Fin n) :
+    |hT.eigenvalues hn k - hS.eigenvalues hn k|
+      ≤ ‖LinearMap.toContinuousLinearMap (T - S)‖ := by
+  sorry
 end ForMathlib
 
 /-!
@@ -616,48 +621,40 @@ namespace ForMathlib
 
 open scoped InnerProductSpace
 
-variable {𝕜 E ι : Type*} [RCLike 𝕜] [NormedAddCommGroup E] [InnerProductSpace 𝕜 E]
-  [FiniteDimensional 𝕜 E]
+variable {𝕜 E F ι : Type*} [RCLike 𝕜] [NormedAddCommGroup E] [InnerProductSpace 𝕜 E]
+  [NormedAddCommGroup F] [InnerProductSpace 𝕜 F]
 
-/--
-**Gram rigidity.** If two families `φ ψ : ι → E` of vectors in a
-finite-dimensional inner product space have equal pairwise inner products,
-i.e. `⟪φ i, φ j⟫ = ⟪ψ i, ψ j⟫` for all `i, j`, then there is a linear isometry
-equivalence `W` of `E` with `W (φ i) = ψ i` for every `i`.
-
-The index type `ι` is arbitrary (no finiteness needed).  The proof builds the
-map `φ i ↦ ψ i` on the span of the `φ i` (the range of the linear-combination
-map of `φ`), shows it is an isometry there using the equal inner products,
-extends it to all of `E` by `LinearIsometry.extend`, and upgrades the result to
-an equivalence by finite dimensionality.
--/
-theorem exists_linearIsometryEquiv_map_eq_of_inner_eq {φ ψ : ι → E}
-    (h : ∀ i j, ⟪φ i, φ j⟫_𝕜 = ⟪ψ i, ψ j⟫_𝕜) :
-    ∃ W : E ≃ₗᵢ[𝕜] E, ∀ i, W (φ i) = ψ i := by
-  sorry
-
-omit [FiniteDimensional 𝕜 E] in
 /--
 The inner product of two finite linear combinations of a vector family, expanded
-over its Gram data.  (Reusable; no finiteness, single ambient space.)
+over the family's Gram data.
 -/
 theorem inner_linearCombination_linearCombination (v : ι → E) (a b : ι →₀ 𝕜) :
     ⟪Finsupp.linearCombination 𝕜 v a, Finsupp.linearCombination 𝕜 v b⟫_𝕜
       = a.sum fun i s => b.sum fun j t => starRingEnd 𝕜 s * t * ⟪v i, v j⟫_𝕜 := by
   sorry
 
-omit [FiniteDimensional 𝕜 E] in
 /--
-**Gram rigidity, span-level core.** For families `φ : ι → E`, `ψ : ι → F` in two
-possibly-different inner product spaces over `𝕜` with equal pairwise inner
-products, a linear isometry from `span 𝕜 (range φ)` into `F` sends `φ i ↦ ψ i`.
-No finiteness of `ι`, `E`, or `F` is required.
+**Gram rigidity, span-level core.** If two families in possibly different inner
+product spaces have equal pairwise inner products, then the map sending one
+family to the other extends to a linear isometry out of the first span.
 -/
-theorem exists_linearIsometry_map_eq_of_inner_eq {F : Type*} [NormedAddCommGroup F]
-    [InnerProductSpace 𝕜 F] {φ : ι → E} {ψ : ι → F}
+theorem exists_linearIsometry_map_eq_of_inner_eq {φ : ι → E} {ψ : ι → F}
     (h : ∀ i j, ⟪φ i, φ j⟫_𝕜 = ⟪ψ i, ψ j⟫_𝕜) :
     ∃ L : (Submodule.span 𝕜 (Set.range φ)) →ₗᵢ[𝕜] F,
       ∀ i, L ⟨φ i, Submodule.subset_span ⟨i, rfl⟩⟩ = ψ i := by
+  sorry
+
+variable [FiniteDimensional 𝕜 E]
+
+/--
+**Gram rigidity.** If two families `φ ψ : ι → E` of vectors in a
+finite-dimensional inner product space have equal pairwise inner products,
+then there is a linear isometry equivalence `W` of `E` with `W (φ i) = ψ i`
+for every `i`.
+-/
+theorem exists_linearIsometryEquiv_map_eq_of_inner_eq {φ ψ : ι → E}
+    (h : ∀ i j, ⟪φ i, φ j⟫_𝕜 = ⟪ψ i, ψ j⟫_𝕜) :
+    ∃ W : E ≃ₗᵢ[𝕜] E, ∀ i, W (φ i) = ψ i := by
   sorry
 
 namespace Matrix
@@ -667,8 +664,7 @@ open _root_.Matrix
 /--
 **Gram rigidity, `Matrix.gram` form.** Two families of vectors in a
 finite-dimensional inner product space have equal Gram matrices if and only if
-a linear isometry equivalence of the ambient space maps one family to the
-other.
+a linear isometry equivalence of the ambient space maps one family to the other.
 -/
 theorem gram_eq_gram_iff_exists_linearIsometryEquiv_map_eq {φ ψ : ι → E} :
     gram 𝕜 φ = gram 𝕜 ψ ↔ ∃ W : E ≃ₗᵢ[𝕜] E, ∀ i, W (φ i) = ψ i := by
@@ -890,6 +886,11 @@ theorem isHermitian_entry_eq_sum_eigenvalues
 theorem PosSemidef.exists_eq_conjTranspose_mul_self
     {B : Matrix (Fin n) (Fin n) 𝕜} (hB : B.PosSemidef) :
     ∃ A : Matrix (Fin n) (Fin n) 𝕜, B = Aᴴ * A := by
+  sorry
+theorem PosSemidef.exists_conjTranspose_mul_self_of_rank_le
+    {d : ℕ} {B : Matrix (Fin n) (Fin n) 𝕜} (hB : B.PosSemidef)
+    (hrank : B.rank ≤ d) :
+    ∃ A : Matrix (Fin d) (Fin n) 𝕜, B = Aᴴ * A := by
   sorry
 theorem posSemidef_and_rank_le_iff_exists_conjTranspose_mul_self
     {d : ℕ} (B : Matrix (Fin n) (Fin n) 𝕜) :

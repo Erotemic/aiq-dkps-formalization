@@ -66,8 +66,8 @@ Current file:
 
 Current declarations:
 
-- `ForMathlib.exists_linearIsometryEquiv_of_inner_eq`
-- `ForMathlib.Matrix.gram_eq_gram_iff_exists_linearIsometryEquiv`
+- `ForMathlib.exists_linearIsometryEquiv_map_eq_of_inner_eq`
+- `ForMathlib.Matrix.gram_eq_gram_iff_exists_linearIsometryEquiv_map_eq`
 
 ### What the theorem says
 
@@ -116,7 +116,7 @@ determined up to linear isometry by their Gram matrix.
 
 3. **The theorem name should be adjusted.**
 
-   `exists_linearIsometryEquiv_of_inner_eq` is understandable but very broad.
+   `exists_linearIsometryEquiv_map_eq_of_inner_eq` is understandable but very broad.
    A name such as
    `exists_linearIsometryEquiv_map_eq_of_inner_eq` or a `Matrix.gram`-scoped
    name may be easier to find and less likely to collide conceptually with other
@@ -349,9 +349,9 @@ Relevant declarations:
 - `ForMathlib.sum_cross_norm_inner_eigenvectorBasis_sq_le`
 - `ForMathlib.gap_of_rank_floor`
 - `ForMathlib.sum_cross_norm_inner_eigenvectorBasis_sq_le_of_rank_floor`
-- `ForMathlib.RealProjector.spectralProjection`
-- `ForMathlib.RealProjector.sum_norm_sub_spectralProjection_sq_eq`
-- `ForMathlib.RealProjector.sum_norm_sub_spectralProjection_sq_le`
+- `ForMathlib.Orthonormal.starProjection_span_image_apply`
+- `ForMathlib.sum_norm_sub_starProjection_span_sq_eq`
+- `ForMathlib.sum_norm_sub_starProjection_span_sq_le`
 
 ### What this material says
 

@@ -19,8 +19,30 @@ namespace ForMathlib
 
 open scoped InnerProductSpace
 
-variable {𝕜 E ι : Type*} [RCLike 𝕜] [NormedAddCommGroup E] [InnerProductSpace 𝕜 E]
-  [FiniteDimensional 𝕜 E]
+variable {𝕜 E F ι : Type*} [RCLike 𝕜] [NormedAddCommGroup E] [InnerProductSpace 𝕜 E]
+  [NormedAddCommGroup F] [InnerProductSpace 𝕜 F]
+
+/--
+The inner product of two finite linear combinations of a vector family, expanded
+over the family's Gram data.
+-/
+theorem inner_linearCombination_linearCombination (v : ι → E) (a b : ι →₀ 𝕜) :
+    ⟪Finsupp.linearCombination 𝕜 v a, Finsupp.linearCombination 𝕜 v b⟫_𝕜
+      = a.sum fun i s => b.sum fun j t => starRingEnd 𝕜 s * t * ⟪v i, v j⟫_𝕜 := by
+  sorry
+
+/--
+**Gram rigidity, span-level core.** If two families in possibly different inner
+product spaces have equal pairwise inner products, then the map sending one
+family to the other extends to a linear isometry out of the first span.
+-/
+theorem exists_linearIsometry_map_eq_of_inner_eq {φ : ι → E} {ψ : ι → F}
+    (h : ∀ i j, ⟪φ i, φ j⟫_𝕜 = ⟪ψ i, ψ j⟫_𝕜) :
+    ∃ L : (Submodule.span 𝕜 (Set.range φ)) →ₗᵢ[𝕜] F,
+      ∀ i, L ⟨φ i, Submodule.subset_span ⟨i, rfl⟩⟩ = ψ i := by
+  sorry
+
+variable [FiniteDimensional 𝕜 E]
 
 /--
 **Gram rigidity.** If two families `φ ψ : ι → E` of vectors in a

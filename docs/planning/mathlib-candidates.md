@@ -128,15 +128,27 @@ approximate-minimizer engine:
 - `upperHemicontinuousAt_isMinOn` — the closed-graph statement on Mathlib's own
   `UpperHemicontinuousAt` predicate for `p ↦ {x ∈ K | IsMinOn (g p) K x}`, via
   `UpperHemicontinuousAt.of_sequences` (needs `X` Hausdorff so `K` is closed).
-- `exists_modulus_isMinOn` — the uniform `ε`–`δ` modulus form (metric `P`, `X`):
-  the general shape of the MDS-stability modulus `exists_modulus_pairDist`.
+- `continuous_iInf_of_isCompact` — the **value-function-continuity** half of
+  Berge (`p ↦ ⨅ x ∈ K, g p x` continuous), via a squeeze using
+  `tendsto_eval_sub_of_isCompact`.
+- `exists_modulus_isMinOn_family` — the uniform `ε`–`δ` modulus measured by a
+  **finite family of jointly-continuous closeness invariants** `ρ i` with
+  `ρ i x x = 0` (captures the affine-invariant `pairDistErr` of MDS, where the
+  ambient metric is the wrong notion); `exists_modulus_isMinOn` is its `ι = Unit`,
+  `ρ = dist` corollary.
 
 Engine generalization (in `ForMathlib/Topology/ApproxMinimizer.lean`):
 `exists_subseq_tendsto_isMinOn_of_approxMinOn`, the `K`-constrained sibling of
 `exists_subseq_tendsto_forall_le_of_approxMin` (concludes `IsMinOn F K` rather
-than a global minimizer).  Remaining for a complete Berge contribution: the
-value-function-continuity half (`p ↦ ⨅ x ∈ K, g p x` continuous).  Resolves
-for-fable F3 without Fable.
+than a global minimizer).  Both halves of Berge (upper hemicontinuity + value
+continuity) are now staged.  Resolves for-fable F3 without Fable.
+
+Note on the MDS modulus `exists_modulus_pairDist`: the family-modulus form closes
+the *metric* gap (the `pairDistErr` family is exactly a family of continuous
+invariants), but a literal re-derivation is NOT possible from the fixed-`K`
+theorem — MDS minimizes over the non-compact config space and recovers
+compactness only via coercive centering into a `Δ`-dependent box, an MDS-specific
+ingredient.  Documented at `exists_modulus_pairDist`; bespoke proof kept.
 
 **Update 2026-06-12 (Opus session):** candidate #8 (Davis–Kahan cross-block
 bound) is now STAGED, RCLike-general, in

@@ -682,6 +682,19 @@ without measurable selection of minimizers (a gap the paper does not address
 explicitly). Distances are compared, matching the affine-invariant viewpoint of
 Remark 1.
 
+Relation to the abstract Berge modulus (`ForMathlib.Topology.Berge`,
+`exists_modulus_isMinOn_family`): the abstract upper-hemicontinuity modulus over a
+*fixed compact* feasible set, with closeness measured by a finite family of
+continuous invariants, captures the metric side of this statement exactly — the
+`pairDistErr` family is such a family of continuous invariants (a deliberate
+generalization away from the ambient metric, since MDS minimizers differ by rigid
+motions). It does NOT, however, subsume this theorem outright: here the feasible
+set is the *non-compact* full configuration space, and compactness is recovered
+only after centering minimizers into a `Δ`-dependent box (coercivity, via
+`center_mem_mds` / `pairDist_center` / `norm_le_of_centered`). That coercive,
+parameter-dependent compactification is the genuinely MDS-specific ingredient the
+fixed-`K` Berge theorem leaves to the caller; hence this proof is kept bespoke.
+
 Formalized by Claude Fable 5 (claude-fable-5[1m]).
 -/
 theorem exists_modulus_pairDist (Δ : DisMat n) {ε : ℝ} (hε : 0 < ε) :  -- Δ : limit matrix; ε : target distance tolerance

@@ -70,18 +70,24 @@ theorem (fixed compact constraint) is now staged in
 * `upperHemicontinuousAt_isMinOn` — the same on Mathlib's own
   `UpperHemicontinuousAt` predicate for `p ↦ {x ∈ K | IsMinOn (g p) K x}`, via
   `UpperHemicontinuousAt.of_sequences` (needs `X` Hausdorff).
-* `exists_modulus_isMinOn` — the uniform `ε`–`δ` modulus form (metric `P`, `X`):
-  exactly the shape of `exists_modulus_pairDist`, generalized to an arbitrary
-  jointly-continuous objective.
+* `continuous_iInf_of_isCompact` — the value-function-continuity half of Berge
+  (`p ↦ ⨅ x ∈ K, g p x` continuous).
+* `exists_modulus_isMinOn_family` — the uniform `ε`–`δ` modulus measured by a
+  finite family of jointly-continuous closeness invariants (captures the
+  affine-invariant `pairDistErr` of MDS); `exists_modulus_isMinOn` is its
+  `ρ = dist` corollary.
 
 Engine generalization added: `ForMathlib.exists_subseq_tendsto_isMinOn_of_approxMinOn`
 (the `K`-constrained sibling of `exists_subseq_tendsto_forall_le_of_approxMin`,
 concluding `IsMinOn F K` instead of a global minimizer).
 
-Remaining (optional, NOT blocking): the value-function-continuity half of Berge
-(`p ↦ ⨅ x ∈ K, g p x` continuous) and instantiating `exists_modulus_isMinOn` at
-the raw-stress objective to literally re-derive `exists_modulus_pairDist` (the MDS
-version compares `pairDistErr`, a different pseudometric — a wiring exercise). See
+Both halves of Berge (upper hemicontinuity + value continuity) are staged.
+On re-deriving `exists_modulus_pairDist`: the family-modulus form closes the
+*metric* gap, but a literal re-derivation is NOT a clean instantiation — MDS
+minimizes over the non-compact config space and recovers compactness only via
+coercive centering into a `Δ`-dependent box (an MDS-specific ingredient the
+fixed-`K` theorem does not subsume).  This is documented honestly at
+`exists_modulus_pairDist` and in `Berge.lean`; the bespoke MDS proof is kept. See
 `mathlib-candidates.md` candidate #13.
 
 ## F4. Davis–Kahan: projector-form sin-Θ — ✅ DONE 2026-06-12 (Opus)

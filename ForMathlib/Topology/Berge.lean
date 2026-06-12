@@ -40,17 +40,22 @@ usable forms, building on the approximate-minimizer stability engine
   own `UpperHemicontinuousAt` predicate for the argmin correspondence
   `p ↦ {x ∈ K | IsMinOn (g p) K x}` (requires `X` Hausdorff so the compact `K` is
   closed and limits of feasible points stay feasible).
-* `exists_modulus_isMinOn` — the **uniform `ε`–`δ` modulus** form (metric `P`,
-  `X`): for every `ε > 0` there is a `δ > 0` such that whenever `dist p p₀ < δ`,
-  *every* minimizer of `g p` over `K` is within `ε` of *some* minimizer of `g p₀`
-  over `K`.  This is the form that, instantiated at the raw-stress objective,
-  yields the MDS-stability modulus `exists_modulus_pairDist`.
+* `exists_modulus_isMinOn_family` / `exists_modulus_isMinOn` — the **uniform
+  `ε`–`δ` modulus** form (metric `P`): for every `ε > 0` there is a `δ > 0` such
+  that whenever `dist p p₀ ≤ δ`, *every* minimizer of `g p` over `K` is `ε`-close
+  (in the ambient metric, or in any finite family of continuous invariants) to
+  *some* minimizer of `g p₀` over `K`.  The family form captures the
+  affine-invariant `pairDistErr` closeness of MDS; it is the general core of the
+  raw-stress modulus `Acharyya2024.exists_modulus_pairDist`, which additionally
+  needs the MDS-specific coercive compactness (centering into a parameter-
+  dependent box) that the fixed-`K` theorem here does not subsume.
 
 ## Main results
 
 * `ForMathlib.tendsto_subseq_isMinOn_of_isMinOn`
 * `ForMathlib.upperHemicontinuousAt_isMinOn`
-* `ForMathlib.exists_modulus_isMinOn`
+* `ForMathlib.continuous_iInf_of_isCompact` — value-function continuity.
+* `ForMathlib.exists_modulus_isMinOn_family` / `ForMathlib.exists_modulus_isMinOn`
 -/
 
 namespace ForMathlib
@@ -161,27 +166,94 @@ theorem upperHemicontinuousAt_isMinOn {X : Type*} [TopologicalSpace X]
   exact le_of_tendsto_of_tendsto hL hR
     (Eventually.of_forall fun n => (isMinOn_iff.mp (hc n).2) y hy)
 
+/-- **Berge's maximum theorem, value-function continuity.**
+For jointly continuous `g`, a fixed nonempty compact `K`, and `P` first-countable,
+the value function `p ↦ ⨅ x ∈ K, g p x` is continuous.
+
+This is the second half of Berge's theorem (alongside the upper hemicontinuity of
+the argmin correspondence above).  The proof is the standard squeeze: with `xₖ` a
+minimizer of `g (p k)` and `x₀` a minimizer of `g p₀`,
+`V p₀ + (g (p k) xₖ − g p₀ xₖ) ≤ V (p k) ≤ g (p k) x₀`,
+where the lower bound tends to `V p₀` via `tendsto_eval_sub_of_isCompact` and the
+upper bound via joint continuity at the fixed `x₀`. -/
+theorem continuous_iInf_of_isCompact [FirstCountableTopology P]
+    {K : Set X} (hK : IsCompact K) (hKne : K.Nonempty)
+    {g : P → X → ℝ} (hg : Continuous (Function.uncurry g)) :
+    Continuous (fun p => ⨅ x : ↥K, g p ↑x) := by
+  haveI : Nonempty ↥K := hKne.to_subtype
+  -- `g q` is continuous for each parameter, and bounded below on the compact `K`.
+  have hgcont : ∀ q : P, Continuous (g q) :=
+    fun q => hg.comp (continuous_const.prodMk continuous_id)
+  have hbdd : ∀ q : P, BddBelow (Set.range fun x : ↥K => g q ↑x) := by
+    intro q
+    refine (hK.bddBelow_image (hgcont q).continuousOn).mono ?_
+    rintro _ ⟨x, rfl⟩
+    exact ⟨↑x, x.2, rfl⟩
+  -- The value `⨅ x ∈ K, g q x` is a lower bound, attained at any minimizer.
+  have hVle : ∀ (q : P) (y : X), y ∈ K → (⨅ x : ↥K, g q ↑x) ≤ g q y :=
+    fun q y hy => ciInf_le (hbdd q) ⟨y, hy⟩
+  have hval : ∀ (q : P) (xq : X), xq ∈ K → IsMinOn (g q) K xq →
+      (⨅ x : ↥K, g q ↑x) = g q xq := by
+    intro q xq hxqK hmin
+    exact le_antisymm (hVle q xq hxqK) (le_ciInf fun x => (isMinOn_iff.mp hmin) ↑x x.2)
+  -- Sequential continuity (`P` is a sequential space).
+  rw [continuous_iff_seqContinuous]
+  intro p p₀ hp
+  obtain ⟨x₀, hx₀K, hx₀min⟩ := hK.exists_isMinOn hKne (hgcont p₀).continuousOn
+  choose xseq hxseqK hxseqmin using fun k => hK.exists_isMinOn hKne (hgcont (p k)).continuousOn
+  have hVp0 : (⨅ x : ↥K, g p₀ ↑x) = g p₀ x₀ := hval p₀ x₀ hx₀K hx₀min
+  -- Upper bound: `V (p k) ≤ g (p k) x₀ → g p₀ x₀ = V p₀`.
+  have hi : Tendsto (fun k => g (p k) x₀) atTop (𝓝 (⨅ x : ↥K, g p₀ ↑x)) := by
+    rw [hVp0]
+    exact (hg.tendsto (p₀, x₀)).comp (hp.prodMk_nhds tendsto_const_nhds)
+  -- Lower bound: `V p₀ + (g (p k) xₖ − g p₀ xₖ) ≤ V (p k)`, with the increment → 0.
+  have hlo : Tendsto (fun k => (⨅ x : ↥K, g p₀ ↑x) +
+      (g (p k) (xseq k) - g p₀ (xseq k))) atTop (𝓝 (⨅ x : ↥K, g p₀ ↑x)) := by
+    have := tendsto_eval_sub_of_isCompact hK hg hp hxseqK
+    simpa using tendsto_const_nhds.add this
+  refine tendsto_of_tendsto_of_tendsto_of_le_of_le hlo hi (fun k => ?_) (fun k => ?_)
+  · -- `V p₀ + (g (p k) xₖ − g p₀ xₖ) ≤ V (p k) = g (p k) xₖ`
+    simp only [Function.comp_apply]
+    have hV : (⨅ x : ↥K, g (p k) ↑x) = g (p k) (xseq k) :=
+      hval (p k) (xseq k) (hxseqK k) (hxseqmin k)
+    have := hVle p₀ (xseq k) (hxseqK k)
+    rw [hV]; linarith
+  · -- `V (p k) ≤ g (p k) x₀`
+    simp only [Function.comp_apply]
+    exact hVle (p k) x₀ hx₀K
+
 /-- **Berge's maximum theorem, uniform `ε`–`δ` modulus form.**
-With `P`, `X` (pseudo)metric spaces, `g` jointly continuous, and `K` a fixed
-compact set: for every `ε > 0` there is `δ > 0` such that whenever
+With `P` a (pseudo)metric space, `g` jointly continuous, `K` a fixed compact set,
+and closeness measured by a *finite family* of jointly-continuous functionals
+`ρ i : X → X → ℝ` with `ρ i x x = 0` (a family of continuous invariants, not
+necessarily a metric): for every `ε > 0` there is `δ > 0` such that whenever
 `dist p p₀ ≤ δ`, *every* feasible minimizer `x` of `g p` over `K` (i.e. `x ∈ K`
-with `IsMinOn (g p) K x`) is within `ε` of *some* feasible minimizer `x₀` of
-`g p₀` over `K`.
+with `IsMinOn (g p) K x`) is `ρ`-within `ε` of *some* feasible minimizer `x₀` of
+`g p₀` over `K` (`∀ i, ρ i x x₀ < ε`).
 
 The `δ` depends only on `p₀` and `ε` (a genuine modulus of upper hemicontinuity),
 exactly the shape needed downstream to avoid measurable selection of minimizers.
-Instantiated at the raw-stress objective this is the MDS-stability modulus
-`Acharyya2024.exists_modulus_pairDist`. -/
-theorem exists_modulus_isMinOn {P X : Type*} [PseudoMetricSpace P] [PseudoMetricSpace X]
+The closeness family captures *invariant* closeness measures such as the
+affine-invariant per-pair distance error `pairDistErr` of MDS (indexed by
+`(i,j) : Fin n × Fin n`), for which the ambient metric is *not* the right notion
+(MDS minimizers differ by rigid motions).  This is the metric-side generalization
+of the raw-stress modulus `Acharyya2024.exists_modulus_pairDist`; see the note
+there on the remaining MDS-specific ingredient (coercive, parameter-dependent
+compactness via centering), which the abstract fixed-`K` theorem does not subsume. -/
+theorem exists_modulus_isMinOn_family {P X : Type*} [PseudoMetricSpace P]
+    [TopologicalSpace X] [FirstCountableTopology X]
+    {ι : Type*} [Finite ι]
     {K : Set X} (hK : IsCompact K)
     {g : P → X → ℝ} (hg : Continuous (Function.uncurry g))
+    {ρ : ι → X → X → ℝ} (hρ : ∀ i, Continuous (Function.uncurry (ρ i)))
+    (hρ0 : ∀ i x, ρ i x x = 0)
     (p₀ : P) {ε : ℝ} (hε : 0 < ε) :
     ∃ δ : ℝ, 0 < δ ∧ ∀ (p : P) (x : X), x ∈ K → IsMinOn (g p) K x → dist p p₀ ≤ δ →
-      ∃ x₀ ∈ K, IsMinOn (g p₀) K x₀ ∧ dist x x₀ < ε := by
+      ∃ x₀ ∈ K, IsMinOn (g p₀) K x₀ ∧ ∀ i, ρ i x x₀ < ε := by
   by_contra hcon
   push Not at hcon
   -- Counterexamples at `δ = 1/(k+1)`: feasible minimizers `x k` for parameters
-  -- `p k → p₀`, none of which is `ε`-close to any minimizer of `g p₀`.
+  -- `p k → p₀`, none `ρ`-`ε`-close (in some coordinate) to any minimizer of `g p₀`.
   have hex := fun k : ℕ => hcon (1 / ((k : ℝ) + 1)) (by positivity)
   choose p x hxK hxmin hpδ hbad using hex
   -- The parameters converge to `p₀` (squeeze `0 ≤ dist (p k) p₀ ≤ 1/(k+1)`).
@@ -191,10 +263,34 @@ theorem exists_modulus_isMinOn {P X : Type*} [PseudoMetricSpace P] [PseudoMetric
   -- Berge: a subsequence of the minimizers converges to a minimizer of `g p₀`.
   obtain ⟨φ, _hφ, x₀, hx₀K, hx₀min, htend⟩ :=
     tendsto_subseq_isMinOn_of_isMinOn hK hg hp hxK hxmin
-  -- That limit is eventually within `ε`, contradicting the counterexample bound.
-  have hd : Tendsto (fun t => dist (x (φ t)) x₀) atTop (𝓝 0) :=
-    tendsto_iff_dist_tendsto_zero.mp htend
-  obtain ⟨t, ht⟩ := (hd.eventually (eventually_lt_nhds hε)).exists
-  exact absurd ht (not_lt.mpr (hbad (φ t) x₀ hx₀K hx₀min))
+  -- Each closeness coordinate is eventually `< ε` along the subsequence (`ρ i · x₀`
+  -- is continuous and vanishes at `x₀`); over the finite family, simultaneously so.
+  have hev : ∀ i, ∀ᶠ t in atTop, ρ i (x (φ t)) x₀ < ε := by
+    intro i
+    have hcont : Tendsto (fun t => ρ i (x (φ t)) x₀) atTop (𝓝 0) := by
+      have := (hρ i).tendsto (x₀, x₀) |>.comp (htend.prodMk_nhds tendsto_const_nhds)
+      rwa [show Function.uncurry (ρ i) (x₀, x₀) = 0 from hρ0 i x₀] at this
+    exact hcont.eventually (eventually_lt_nhds hε)
+  obtain ⟨t, ht⟩ := (eventually_all.mpr hev).exists
+  -- ... contradicting that some coordinate of `x (φ t)` stays `≥ ε`-far.
+  obtain ⟨i, hi⟩ := hbad (φ t) x₀ hx₀K hx₀min
+  exact absurd (ht i) (not_lt.mpr hi)
+
+/-- **Berge's maximum theorem, uniform `ε`–`δ` modulus form (metric closeness).**
+The single-functional special case of `exists_modulus_isMinOn_family` where
+closeness is the ambient metric `dist`: for every `ε > 0` there is `δ > 0` with,
+for every feasible minimizer `x` of `g p` over `K` with `dist p p₀ ≤ δ`, some
+feasible minimizer `x₀` of `g p₀` over `K` with `dist x x₀ < ε`. -/
+theorem exists_modulus_isMinOn {P X : Type*} [PseudoMetricSpace P] [PseudoMetricSpace X]
+    {K : Set X} (hK : IsCompact K)
+    {g : P → X → ℝ} (hg : Continuous (Function.uncurry g))
+    (p₀ : P) {ε : ℝ} (hε : 0 < ε) :
+    ∃ δ : ℝ, 0 < δ ∧ ∀ (p : P) (x : X), x ∈ K → IsMinOn (g p) K x → dist p p₀ ≤ δ →
+      ∃ x₀ ∈ K, IsMinOn (g p₀) K x₀ ∧ dist x x₀ < ε := by
+  obtain ⟨δ, hδ, h⟩ := exists_modulus_isMinOn_family hK hg
+    (ρ := fun _ : Unit => dist) (fun _ => continuous_dist) (fun _ => dist_self) p₀ hε
+  refine ⟨δ, hδ, fun p x hxK hxmin hpd => ?_⟩
+  obtain ⟨x₀, hx₀K, hx₀min, hclose⟩ := h p x hxK hxmin hpd
+  exact ⟨x₀, hx₀K, hx₀min, hclose ()⟩
 
 end ForMathlib

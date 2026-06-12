@@ -7,9 +7,9 @@ paper's nearest-neighbor estimator `ŷ_NN` (`yNN_paper`) and its query-efficienc
 relative to the subset baseline `ŷ_Q` (`yQ`), wrapping the abstract engine in
 `DkpsQuench.Internal`.
 
-* `Theorem2_part1_paper` — `MSE(ŷ_NN) ≤ ε` with high probability (Part 1);
-* `Theorem2_part2_paper` — query efficiency relative to `ŷ_Q` (Part 2);
-* `Theorem2_part1_paper_subevent` / `Theorem2_part2_paper_subevent` — the same
+* `highProb_mse_nn_le` — `MSE(ŷ_NN) ≤ ε` with high probability (Part 1);
+* `highProb_queryEfficient_nn` — query efficiency relative to `ŷ_Q` (Part 2);
+* `highProb_mse_nn_le_of_subevent` / `highProb_queryEfficient_nn_of_subevent` — the same
   from a measurable high-probability sub-event of the embedding-error event.
 
 The concentration event is *assumed* here; it is discharged from the Acharyya2025
@@ -87,11 +87,11 @@ Theorem 1 content) and its rate `c n` are *assumed here, not derived* — togeth
 with the coverage event `h_cover` (Assumption 2) and their measurability.  For
 the version that DISCHARGES `h_conc`/`h_conc_meas` from the actual spectral
 concentration chain, see
-`DkpsQuench.AcharyyaBridge.Theorem2_part2_of_aligned_spectral`; for the variant
+`DkpsQuench.AcharyyaBridge.queryEfficient_nn_of_aligned_spectral`; for the variant
 that only needs a measurable high-probability sub-event of the error event, see
-`Theorem2_part1_paper_subevent`.
+`highProb_mse_nn_le_of_subevent`.
 -/
-theorem Theorem2_part1_paper
+theorem highProb_mse_nn_le
   (Pf : Measure (Model Q X)) [IsProbabilityMeasure Pf]
   (μ : ℕ → Measure Ω) (hμ : ∀ n, IsProbabilityMeasure (μ n))
   (ψ : Finset Q → Model Q X → Vec d)
@@ -127,7 +127,7 @@ theorem Theorem2_part1_paper
   intro ε hε δ hδ
   classical
 
-  -- Package the fixed-Qsub Lipschitz hypothesis into `LipschitzScore` expected by `Theorem2_part1_v2`.
+  -- Package the fixed-Qsub Lipschitz hypothesis into `LipschitzScore` expected by `highProb_mse_le_of_concentration`.
   have h_lip_const :
       LipschitzScore (Q := Q) (X := X) (d := d) γ
         (fun (_ : Finset Q) (f : Model Q X) => ψ Qsub f)
@@ -152,7 +152,7 @@ theorem Theorem2_part1_paper
 
   -- Apply your already-proved asymptotic theorem (stronger than paper), then pick one large `n`.
   have hp_atTop :=
-    Theorem2_part1_v2 (Q := Q) (X := X) (d := d) (Ω := Ω)
+    highProb_mse_le_of_concentration (Q := Q) (X := X) (d := d) (Ω := Ω)
       (Pf := Pf) (μ := μ) (hμ := hμ)
       (ψ := fun f => ψ Qsub f)
       (ψHat := fun n ω f => ψHat n ω Qsub f)
@@ -183,12 +183,12 @@ ASSUMPTION DISCLOSURE.  As in Part 1, the concentration event `h_conc` and rate
 `c n` are *assumed*, not derived.  Only `hMSE_Q_pos` (the `MSE(ŷ_Q) > 0`
 condition) drives the proof; the paper's `m < M` condition `hm` is recorded for
 fidelity but is not used by the formal argument.  This theorem is SUPERSEDED by
-`Theorem2_part2_paper_subevent` (measurable HP sub-event instead of
+`highProb_queryEfficient_nn_of_subevent` (measurable HP sub-event instead of
 `h_conc`/`h_conc_meas`) and by
-`DkpsQuench.AcharyyaBridge.Theorem2_part2_of_aligned_spectral` (which discharges
+`DkpsQuench.AcharyyaBridge.queryEfficient_nn_of_aligned_spectral` (which discharges
 `h_conc` from the spectral chain entirely); prefer those for new work.
 -/
-theorem Theorem2_part2_paper
+theorem highProb_queryEfficient_nn
   (Pf : Measure (Model Q X)) [IsProbabilityMeasure Pf]
   (μ : ℕ → Measure Ω) (hμ : ∀ n, IsProbabilityMeasure (μ n))
   (ψ : Finset Q → Model Q X → Vec d)
@@ -234,7 +234,7 @@ theorem Theorem2_part2_paper
 
   -- Apply Part 1 with ε = base/2 to get MSE(NN) ≤ base/2 with high probability.
   obtain ⟨n, hn⟩ :=
-    Theorem2_part1_paper (Q := Q) (X := X) (d := d) (Ω := Ω)
+    highProb_mse_nn_le (Q := Q) (X := X) (d := d) (Ω := Ω)
       (Pf := Pf) (μ := μ) (hμ := hμ)
       (ψ := ψ) (ψHat := ψHat) (f_ref := f_ref)
       (score := score) (Qstar := Qstar) (Qsub := Qsub)
@@ -285,11 +285,11 @@ variable {X : Type v} [MeasurableSpace X]
 variable {d : ℕ}
 variable {Ω : Type} [MeasurableSpace Ω]
 
-/-- `Theorem2_part1` with the concentration event replaced by a measurable
+/-- `highProb_mse_le_of_concentration` with the concentration event replaced by a measurable
 high-probability **sub-event** `E`.  Identical proof; the intersection step uses
 `E`, and one extra monotonicity step upgrades membership in `E` to membership in
 the embedding-error event via `hE_sub`. -/
-theorem Theorem2_part1_subevent
+theorem highProb_mse_le_of_subevent
   (Pf : Measure (Model Q X)) [IsProbabilityMeasure Pf]
   (μ : ℕ → Measure Ω) (hμ : ∀ n, IsProbabilityMeasure (μ n))
   (ψ : Model Q X → Vec d)
@@ -338,40 +338,14 @@ theorem Theorem2_part1_subevent
       intro ε hε_pos
       obtain ⟨N, hN⟩ := h_mse_bound ε hε_pos
       have h_inter : HighProbAtTop μ hμ (fun n => E n ∩ {ω | ∀ f, ∃ i : Fin n, ‖ψ (f_ref n ω i) - ψ f‖ ≤ Real.sqrt ε / (2 * γ)}) := by
-        apply HighProbAtTop.inter_v3 hE (h_cover (Real.sqrt ε / (2 * γ)) (by
+        apply HighProbAtTop.inter hE (h_cover (Real.sqrt ε / (2 * γ)) (by
         positivity)) (fun n => hE_meas n) (fun n => h_cover_meas (Real.sqrt ε / (2 * γ)) (by
         positivity) n);
       exact h_inter.mono_eventually ( Filter.eventually_atTop.mpr ⟨ N + 1, fun n hn => by intro ω hω; exact hN n ( by linarith ) ω ⟨hE_sub n hω.1, hω.2⟩ ⟩ )
 
-/-- `Theorem2_part1_v2` with a measurable high-probability sub-event. -/
-theorem Theorem2_part1_v2_subevent
-  (Pf : Measure (Model Q X)) [IsProbabilityMeasure Pf]
-  (μ : ℕ → Measure Ω) (hμ : ∀ n, IsProbabilityMeasure (μ n))
-  (ψ : Model Q X → Vec d)
-  (ψHat : ℕ → Ω → Model Q X → Vec d)
-  (f_ref : ∀ n, Ω → Fin n → Model Q X)
-  (score : Model Q X → Finset Q → ℝ)
-  (Qstar : Finset Q)
-  (γ : ℝ)
-  (h_lip : LipschitzScore γ (fun _ f => ψ f) (fun f => score f Qstar))
-  (h_gamma_pos : 0 < γ)
-  (c : ℕ → ℝ) (h_c_tendsto : Filter.Tendsto c Filter.atTop (nhds 0))
-  (h_c_nonneg : ∀ n, 0 ≤ c n)
-  (E : ℕ → Set Ω)
-  (hE_meas : ∀ n, MeasurableSet (E n))
-  (hE_sub : ∀ n, E n ⊆ {ω | ∀ f, ‖ψHat n ω f - ψ f‖ ≤ c n})
-  (hE : HighProbAtTop μ hμ E)
-  (h_cover : ∀ ρ > 0, HighProbAtTop μ hμ (fun n => {ω | ∀ f, ∃ i, ‖ψ (f_ref n ω i) - ψ f‖ ≤ ρ}))
-  (h_cover_meas : ∀ ρ > 0, ∀ n, MeasurableSet {ω | ∀ f, ∃ i, ‖ψ (f_ref n ω i) - ψ f‖ ≤ ρ})
-  (hNN : ℕ → Ω → Model Q X → ℝ)
-  (h_hNN_def : ∀ n ω f, (hn : n > 0) → hNN n ω f = hNN_estimator hn (fun i => ψHat n ω (f_ref n ω i)) (ψHat n ω f) (fun i => score (f_ref n ω i) Qstar)) :
-  ∀ ε : ℝ, 0 < ε →
-    HighProbAtTop μ hμ (fun n => {ω | MSE Pf (fun f => score f Qstar) (fun f => hNN n ω f) ≤ ε}) := by
-      apply Theorem2_part1_subevent Pf μ hμ ψ ψHat f_ref score Qstar γ h_lip h_gamma_pos c h_c_tendsto h_c_nonneg E hE_meas hE_sub hE h_cover h_cover_meas hNN h_hNN_def
-
-/-- `Theorem2_part1_paper` with a measurable high-probability sub-event in place
+/-- `highProb_mse_nn_le` with a measurable high-probability sub-event in place
 of `h_conc`/`h_conc_meas`. -/
-theorem Theorem2_part1_paper_subevent
+theorem highProb_mse_nn_le_of_subevent
   (Pf : Measure (Model Q X)) [IsProbabilityMeasure Pf]
   (μ : ℕ → Measure Ω) (hμ : ∀ n, IsProbabilityMeasure (μ n))
   (ψ : Finset Q → Model Q X → Vec d)
@@ -422,7 +396,7 @@ theorem Theorem2_part1_paper_subevent
     intro n ω f hn
     simp [hNN, yNN_paper, hn, hNN_estimator, nnIndex]
   have hp_atTop :=
-    Theorem2_part1_v2_subevent (Q := Q) (X := X) (d := d) (Ω := Ω)
+    highProb_mse_le_of_subevent (Q := Q) (X := X) (d := d) (Ω := Ω)
       (Pf := Pf) (μ := μ) (hμ := hμ)
       (ψ := fun f => ψ Qsub f)
       (ψHat := fun n ω f => ψHat n ω Qsub f)
@@ -438,9 +412,9 @@ theorem Theorem2_part1_paper_subevent
   refine ⟨N+1, ?_⟩
   exact hN (N+1) (Nat.lt_succ_self N)
 
-/-- `Theorem2_part2_paper` (query efficiency) with a measurable
+/-- `highProb_queryEfficient_nn` (query efficiency) with a measurable
 high-probability sub-event in place of `h_conc`/`h_conc_meas`. -/
-theorem Theorem2_part2_paper_subevent
+theorem highProb_queryEfficient_nn_of_subevent
   (Pf : Measure (Model Q X)) [IsProbabilityMeasure Pf]
   (μ : ℕ → Measure Ω) (hμ : ∀ n, IsProbabilityMeasure (μ n))
   (ψ : Finset Q → Model Q X → Vec d)
@@ -482,7 +456,7 @@ theorem Theorem2_part2_paper_subevent
   have hε_pos : 0 < ε := by
     dsimp [ε]; linarith
   obtain ⟨n, hn⟩ :=
-    Theorem2_part1_paper_subevent (Q := Q) (X := X) (d := d) (Ω := Ω)
+    highProb_mse_nn_le_of_subevent (Q := Q) (X := X) (d := d) (Ω := Ω)
       (Pf := Pf) (μ := μ) (hμ := hμ)
       (ψ := ψ) (ψHat := ψHat) (f_ref := f_ref)
       (score := score) (Qstar := Qstar) (Qsub := Qsub)

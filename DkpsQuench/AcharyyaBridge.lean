@@ -151,7 +151,7 @@ positivity), conclude Theorem 2 Part 2.  The measurability of the embedding-erro
 event is obtained — with no measurable selection — by routing through the
 choice-free `AlignExists` existential (`…_le_iff_alignExists` +
 `measurableSet_setOf_alignExists`) and the sub-event form
-`Theorem2_part2_paper_subevent`.  Both capstones below feed their
+`highProb_queryEfficient_nn_of_subevent`.  Both capstones below feed their
 aligned-`ConfigError` event into this lemma.
 
 Formalized by Claude Opus 4.8 (claude-opus-4-8[1m]).
@@ -240,7 +240,7 @@ theorem quench_part2_from_aligned_configError_hp
         ≥ 1 - δ
     rw [← hset]
     exact hN k hk
-  exact Theorem2_part2_paper_subevent (Q := Q) (X := X) (d := d) Pf μ hμ
+  exact highProb_queryEfficient_nn_of_subevent (Q := Q) (X := X) (d := d) Pf μ hμ
     (fun _ f => ψ f) (fun u ω (_ : Finset Q) f => ψHat u ω f) f_ref score Qstar Qsub
     hm γ h_lipQ h_gamma_pos _ h_c_tendsto h_c_nonneg
     (fun k => {ω | Acharyya2025.AlignedPipeline.AlignExists hd Dhat hsym ψFinite c k ω})
@@ -250,7 +250,7 @@ theorem quench_part2_from_aligned_configError_hp
 **Query efficiency from the spectral concentration chain (Theorem 2 Part 2,
 `h_conc` discharged).**
 
-This is `DkpsQuench.Theorem2_part2_paper` with the abstract uniform
+This is `DkpsQuench.highProb_queryEfficient_nn` with the abstract uniform
 embedding-error event `h_conc` (and the rate side-conditions `h_c_tendsto`,
 `h_c_nonneg`) no longer *assumed* but *derived* from the actual statistical /
 spectral inputs, via `quench_uniform_embedding_error_of_aligned_spectral` and
@@ -270,7 +270,7 @@ existential over the **compact** set of inner-product-preserving maps is
 measurable by `ForMathlib.measurableSet_exists_mem_le` (countable dense
 approximation; no selection of the optimal alignment).  This measurable
 high-probability event is contained in the embedding-error event, which is
-exactly what the sub-event form `Theorem2_part2_paper_subevent` consumes.
+exactly what the sub-event form `highProb_queryEfficient_nn_of_subevent` consumes.
 
 The one remaining measurability primitive is `hmeas_spec`: the **raw**
 (unaligned) spectral embedding `ω ↦ spectralConfig …(Dhat k ω)…` is measurable.
@@ -282,7 +282,7 @@ score Lipschitz / MSE-positivity assumptions remain, as they should.
 Formalized by Claude Opus 4.8 (claude-opus-4-8[1m]); measurability seam
 discharged by Claude Fable 5 (claude-fable-5[1m]).
 -/
-theorem Theorem2_part2_of_aligned_spectral
+theorem queryEfficient_nn_of_aligned_spectral
     [DecidableEq Q]
     (Pf : Measure (Model Q X)) [IsProbabilityMeasure Pf]
     (μ : Nat → Measure Ω) (hμ : ∀ k, IsProbabilityMeasure (μ k))
@@ -375,7 +375,7 @@ theorem Theorem2_part2_of_aligned_spectral
 /--
 **Query efficiency from response-mean concentration (Theorem 2 Part 2, deeper).**
 
-Like `Theorem2_part2_of_aligned_spectral`, but one level deeper in the
+Like `queryEfficient_nn_of_aligned_spectral`, but one level deeper in the
 concentration chain: instead of the packaged entrywise CMDS-closeness event
 `hcenter`, this takes the paper's actual upstream input — the **uniform
 response-mean closeness** high-probability event
@@ -391,7 +391,7 @@ raw response-based spectral embedding) and the model coverage `h_cover`.
 
 Formalized by Claude Opus 4.8 (claude-opus-4-8[1m]).
 -/
-theorem Theorem2_part2_of_response_mean
+theorem queryEfficient_nn_of_response_mean
     [DecidableEq Q]
     (Pf : Measure (Model Q X)) [IsProbabilityMeasure Pf]
     (μ : Nat → Measure Ω) (hμ : ∀ k, IsProbabilityMeasure (μ k))
@@ -500,7 +500,7 @@ theorem Theorem2_part2_of_response_mean
 **Query efficiency from iid second moments (Theorem 2 Part 2, fully grounded).**
 
 The literal bottom of the paper's concentration chain.  This is
-`Theorem2_part2_of_response_mean` with the response-mean closeness event
+`queryEfficient_nn_of_response_mean` with the response-mean closeness event
 `hmean` itself *derived* — via Chebyshev + a union bound
 (`Acharyya2025.RateChain.highProb_uniformResponseMeanClose_of_secondMoment`) —
 from per-model second-moment bounds `∫ ‖X̄ᵤ ᵢ − μᵢ‖² ≤ σ2 u` with vanishing
@@ -514,7 +514,7 @@ embedding measurability) and the model coverage `h_cover`.
 
 Formalized by Claude Opus 4.8 (claude-opus-4-8[1m]).
 -/
-theorem Theorem2_part2_of_second_moment
+theorem queryEfficient_nn_of_second_moment
     [DecidableEq Q]
     (Pf : Measure (Model Q X)) [IsProbabilityMeasure Pf]
     (μ : Nat → Measure Ω) (hμ : ∀ k, IsProbabilityMeasure (μ k))
@@ -602,7 +602,7 @@ theorem Theorem2_part2_of_second_moment
   have hmean :=
     Acharyya2025.RateChain.highProb_uniformResponseMeanClose_of_secondMoment
       μ Xbar μvec σ2 η hint hσ2 hη_pos hratio
-  exact Theorem2_part2_of_response_mean Pf μ hμ hn hd Xbar μvec hB hrank hα_pos hfloor hΛ
+  exact queryEfficient_nn_of_response_mean Pf μ hμ hn hd Xbar μvec hB hrank hα_pos hfloor hΛ
     ψFinite hψFinite η R hrate_nonneg hsmall hpolar hrate_zero hmean hsample_bound
     hpopulation_bound indexOf ψ ψHat hψ hψHat f_ref score Qstar Qsub hm γ h_lipQ
     h_gamma_pos hmeas_spec h_cover h_cover_meas hMSE_Q_pos

@@ -4,7 +4,7 @@ DKPS / Quench query-efficiency formalization — internal machinery.
 The high-probability-event helper lemmas (`HighProbAtTop.{mono,inter,
 mono_eventually}`), the per-model error-analysis steps (`step1`–`step6`,
 `nnIndex_isArgmin`), and the abstract concentration→MSE engine theorems
-(`Theorem2_part1`, `Theorem2_part2`) over an arbitrary embedding estimator.
+(`highProb_mse_le_of_concentration`, `highProb_queryEfficient_of_concentration`) over an arbitrary embedding estimator.
 The paper-facing theorems live in `DkpsQuench.Theorem2`.
 -/
 import DkpsQuench.Basic
@@ -163,24 +163,6 @@ lemma HighProbAtTop.inter
         refine le_trans ?_ h3;
         exact ennreal_inter_bound h1 h2
       exact h3
-
-end HighProb_Lemmas
-
-
-section HighProb_Lemmas
-
-variable {Ω : Type} [MeasurableSpace Ω]
-
-lemma HighProbAtTop.inter_v3
-    {μ : ℕ → Measure Ω} {hμ : ∀ n, IsProbabilityMeasure (μ n)}
-    {E F : ℕ → Set Ω}
-    (hE : HighProbAtTop μ hμ E)
-    (hF : HighProbAtTop μ hμ F)
-    (hE_meas : ∀ n, MeasurableSet (E n))
-    (hF_meas : ∀ n, MeasurableSet (F n)) :
-    HighProbAtTop μ hμ (fun n => E n ∩ F n) := by
-      -- Apply the intersection lemma with the given hypotheses.
-      apply HighProbAtTop.inter hE hF hE_meas hF_meas
 
 end HighProb_Lemmas
 
@@ -367,7 +349,7 @@ variable {X : Type v} [MeasurableSpace X]
 variable {d : ℕ}
 variable {Ω : Type} [MeasurableSpace Ω]
 
-theorem Theorem2_part1
+theorem highProb_mse_le_of_concentration
   (Pf : Measure (Model Q X)) [IsProbabilityMeasure Pf]
   (μ : ℕ → Measure Ω) (hμ : ∀ n, IsProbabilityMeasure (μ n))
   (ψ : Model Q X → Vec d)
@@ -415,43 +397,10 @@ theorem Theorem2_part1
       intro ε hε_pos
       obtain ⟨N, hN⟩ := h_mse_bound ε hε_pos
       have h_inter : HighProbAtTop μ hμ (fun n => {ω | ∀ f, ‖ψHat n ω f - ψ f‖ ≤ c n} ∩ {ω | ∀ f, ∃ i : Fin n, ‖ψ (f_ref n ω i) - ψ f‖ ≤ Real.sqrt ε / (2 * γ)}) := by
-        apply HighProbAtTop.inter_v3 h_conc (h_cover (Real.sqrt ε / (2 * γ)) (by
+        apply HighProbAtTop.inter h_conc (h_cover (Real.sqrt ε / (2 * γ)) (by
         positivity)) (fun n => h_conc_meas n) (fun n => h_cover_meas (Real.sqrt ε / (2 * γ)) (by
         positivity) n);
       exact h_inter.mono_eventually ( Filter.eventually_atTop.mpr ⟨ N + 1, fun n hn => by intro ω hω; exact hN n ( by linarith ) ω hω ⟩ )
-
-end Theorem2_Part1_Proof
-
-section Theorem2_Part1_Proof
-
-variable {Q : Type u} [DecidableEq Q]
-variable {X : Type v} [MeasurableSpace X]
-variable {d : ℕ}
-variable {Ω : Type} [MeasurableSpace Ω]
-
-theorem Theorem2_part1_v2
-  (Pf : Measure (Model Q X)) [IsProbabilityMeasure Pf]
-  (μ : ℕ → Measure Ω) (hμ : ∀ n, IsProbabilityMeasure (μ n))
-  (ψ : Model Q X → Vec d)
-  (ψHat : ℕ → Ω → Model Q X → Vec d)
-  (f_ref : ∀ n, Ω → Fin n → Model Q X)
-  (score : Model Q X → Finset Q → ℝ)
-  (Qstar : Finset Q)
-  (γ : ℝ)
-  (h_lip : LipschitzScore γ (fun _ f => ψ f) (fun f => score f Qstar))
-  (h_gamma_pos : 0 < γ)
-  (c : ℕ → ℝ) (h_c_tendsto : Filter.Tendsto c Filter.atTop (nhds 0))
-  (h_c_nonneg : ∀ n, 0 ≤ c n)
-  (h_conc : HighProbAtTop μ hμ (fun n => {ω | ∀ f, ‖ψHat n ω f - ψ f‖ ≤ c n}))
-  (h_conc_meas : ∀ n, MeasurableSet {ω | ∀ f, ‖ψHat n ω f - ψ f‖ ≤ c n})
-  (h_cover : ∀ ρ > 0, HighProbAtTop μ hμ (fun n => {ω | ∀ f, ∃ i, ‖ψ (f_ref n ω i) - ψ f‖ ≤ ρ}))
-  (h_cover_meas : ∀ ρ > 0, ∀ n, MeasurableSet {ω | ∀ f, ∃ i, ‖ψ (f_ref n ω i) - ψ f‖ ≤ ρ})
-  (hNN : ℕ → Ω → Model Q X → ℝ)
-  (h_hNN_def : ∀ n ω f, (hn : n > 0) → hNN n ω f = hNN_estimator hn (fun i => ψHat n ω (f_ref n ω i)) (ψHat n ω f) (fun i => score (f_ref n ω i) Qstar)) :
-  ∀ ε : ℝ, 0 < ε →
-    HighProbAtTop μ hμ (fun n => {ω | MSE Pf (fun f => score f Qstar) (fun f => hNN n ω f) ≤ ε}) := by
-      -- Apply the concentration result to bound the MSE using the steps outlined in the proof of Theorem 2 part 1. Use the hypothesis h_conc.
-      apply Theorem2_part1 Pf μ hμ ψ ψHat f_ref score Qstar γ h_lip h_gamma_pos c h_c_tendsto h_c_nonneg h_conc h_conc_meas h_cover h_cover_meas hNN h_hNN_def
 
 end Theorem2_Part1_Proof
 
@@ -462,7 +411,7 @@ variable {X : Type v} [MeasurableSpace X]
 variable {d : ℕ}
 variable {Ω : Type} [MeasurableSpace Ω]
 
-theorem Theorem2_part2
+theorem highProb_queryEfficient_of_concentration
   (Pf : Measure (Model Q X)) [IsProbabilityMeasure Pf]
   (μ : ℕ → Measure Ω) (hμ : ∀ n, IsProbabilityMeasure (μ n))
   (ψ : Model Q X → Vec d)
@@ -490,9 +439,9 @@ theorem Theorem2_part2
     }) := by
       obtain ⟨ c_base, hc_base_pos, N, hN ⟩ := hQ_pos;
       intro δ hδ_pos;
-      -- By choosing ε = c_base, we can apply Theorem2_part1 to get the desired result.
+      -- By choosing ε = c_base, we can apply highProb_mse_le_of_concentration to get the desired result.
       obtain ⟨N', hN'⟩ : ∃ N', ∀ n > N', (μ n) {ω | MSE Pf (fun f => score f Qstar) (fun f => hNN n ω f) ≤ c_base} ≥ 1 - δ := by
-        apply Theorem2_part1_v2 Pf μ hμ ψ ψHat f_ref score Qstar γ h_lip h_gamma_pos c h_c_tendsto h_c_nonneg h_conc h_conc_meas h_cover h_cover_meas hNN h_hNN_def c_base hc_base_pos |> fun h => h δ hδ_pos |> fun ⟨ N', hN' ⟩ => ⟨ N', fun n hn => hN' n hn ⟩;
+        apply highProb_mse_le_of_concentration Pf μ hμ ψ ψHat f_ref score Qstar γ h_lip h_gamma_pos c h_c_tendsto h_c_nonneg h_conc h_conc_meas h_cover h_cover_meas hNN h_hNN_def c_base hc_base_pos |> fun h => h δ hδ_pos |> fun ⟨ N', hN' ⟩ => ⟨ N', fun n hn => hN' n hn ⟩;
       exact ⟨ Max.max N N', fun n hn => le_trans ( hN' n ( lt_of_le_of_lt ( le_max_right _ _ ) hn ) ) ( MeasureTheory.measure_mono fun ω hω => le_trans hω.out ( hN n ( lt_of_le_of_lt ( le_max_left _ _ ) hn ) ω ) ) ⟩
 
 end Theorem2_Part2_Proof

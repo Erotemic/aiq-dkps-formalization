@@ -44,14 +44,14 @@ status:
   repository_build:
     last_user_reported_build: "lake build completed successfully on 8626 jobs for an earlier state; latest overlay not Lean-built in the assistant sandbox because Lean/Lake are not installed there."
     challenge_commands:
-      - "lake env lean ChallengeConformance.lean"
-      - "lake env lean ChallengeLeaderboard.lean"
-      - "lake env lean ChallengeInventoryConformance.lean"
-      - "lake env lean ChallengeInventoryLeaderboard.lean"
+      - "lake env lean Challenge/Gram/Conformance.lean"
+      - "lake env lean Challenge/Gram/Leaderboard.lean"
+      - "lake env lean Challenge/Inventory/Conformance.lean"
+      - "lake env lean Challenge/Inventory/Leaderboard.lean"
       - "bash scripts/run_challenge_comparator.sh"
     comparator_configs:
-      - "comparator/aiq-mathlib-candidates.json"
-      - "comparator/aiq-mathlib-inventory.json"
+      - "comparator/aiq-gram-rigidity.json"
+      - "comparator/aiq-inventory.json"
   scope: >
     The repository formalizes several DKPS-related paper layers and stages
     paper-agnostic infrastructure in ForMathlib for potential upstreaming.
@@ -61,45 +61,45 @@ status:
     and comparator checking, not a proposal to upstream everything in one PR.
   main_results:
     - declaration: "AIQChallenge.procrustes_rigidity_of_inner_eq"
-      challenge_file: "ChallengeConformance.lean"
-      solution_file: "ChallengeLeaderboard.lean"
+      challenge_file: "Challenge/Gram/Conformance.lean"
+      solution_file: "Challenge/Gram/Leaderboard.lean"
       source_declaration: "ForMathlib.exists_linearIsometryEquiv_of_inner_eq"
       source_file: "ForMathlib/Analysis/InnerProductSpace/GramMatrix.lean"
       category: "Procrustes / Gram-matrix rigidity"
       sorry_count_in_solution: 0
       expected_axioms: ["propext", "Classical.choice", "Quot.sound"]
-      comparator_config: "comparator/aiq-mathlib-candidates.json"
+      comparator_config: "comparator/aiq-gram-rigidity.json"
     - declaration: "AIQChallenge.gram_eq_gram_iff_exists_linearIsometryEquiv"
-      challenge_file: "ChallengeConformance.lean"
-      solution_file: "ChallengeLeaderboard.lean"
+      challenge_file: "Challenge/Gram/Conformance.lean"
+      solution_file: "Challenge/Gram/Leaderboard.lean"
       source_declaration: "ForMathlib.Matrix.gram_eq_gram_iff_exists_linearIsometryEquiv"
       source_file: "ForMathlib/Analysis/InnerProductSpace/GramMatrix.lean"
       category: "Procrustes / Gram-matrix rigidity"
       sorry_count_in_solution: 0
       expected_axioms: ["propext", "Classical.choice", "Quot.sound"]
-      comparator_config: "comparator/aiq-mathlib-candidates.json"
+      comparator_config: "comparator/aiq-gram-rigidity.json"
     - declaration: "AIQChallenge.psd_rank_le_iff_exists_conjTranspose_mul_self"
-      challenge_file: "ChallengeConformance.lean"
-      solution_file: "ChallengeLeaderboard.lean"
+      challenge_file: "Challenge/Gram/Conformance.lean"
+      solution_file: "Challenge/Gram/Leaderboard.lean"
       source_declaration: "ForMathlib.Matrix.posSemidef_and_rank_le_iff_exists_conjTranspose_mul_self"
       source_file: "ForMathlib/LinearAlgebra/Matrix/PosDef.lean"
       category: "Rank-controlled PSD Gram realization"
       sorry_count_in_solution: 0
       expected_axioms: ["propext", "Classical.choice", "Quot.sound"]
-      comparator_config: "comparator/aiq-mathlib-candidates.json"
+      comparator_config: "comparator/aiq-gram-rigidity.json"
     - declaration: "AIQChallenge.weyl_abs_eigenvalues_sub_le"
-      challenge_file: "ChallengeConformance.lean"
-      solution_file: "ChallengeLeaderboard.lean"
+      challenge_file: "Challenge/Gram/Conformance.lean"
+      solution_file: "Challenge/Gram/Leaderboard.lean"
       source_declaration: "ForMathlib.abs_eigenvalues_sub_le"
       source_file: "ForMathlib/Analysis/InnerProductSpace/CourantFischer.lean"
       category: "Weyl / Courant-Fischer spectral perturbation"
       sorry_count_in_solution: 0
       expected_axioms: ["propext", "Classical.choice", "Quot.sound"]
-      comparator_config: "comparator/aiq-mathlib-candidates.json"
+      comparator_config: "comparator/aiq-gram-rigidity.json"
   inventory_challenge:
-    challenge_file: "ChallengeInventoryConformance.lean"
-    solution_file: "ChallengeInventoryLeaderboard.lean"
-    comparator_config: "comparator/aiq-mathlib-inventory.json"
+    challenge_file: "Challenge/Inventory/Conformance.lean"
+    solution_file: "Challenge/Inventory/Leaderboard.lean"
+    comparator_config: "comparator/aiq-inventory.json"
     scope: "Current public theorem surface of ForMathlib selected for comparator inventory; excludes the staged spectral-transform measurability theorem pending API review."
     theorem_count: 60
     expected_axioms: ["propext", "Classical.choice", "Quot.sound"]
@@ -185,3 +185,15 @@ automation:
         wall_time: "multi-session effort from early 2026 through 2026-06-12"
         spend_usd: "not fully reconstructed"
         hardware: "local development machine plus hosted model access"
+
+
+challenge_packages:
+  dedicated_configs:
+    - comparator/aiq-gram-rigidity.json
+    - comparator/aiq-psd-gram-realization.json
+    - comparator/aiq-spectral-perturbation.json
+    - comparator/aiq-inventory.json
+  note: >-
+    Dedicated challenge families are separated so Mathlib reviewers can inspect
+    and run the Gram/Procrustes, PSD Gram realization, spectral perturbation,
+    and broader inventory claims independently.

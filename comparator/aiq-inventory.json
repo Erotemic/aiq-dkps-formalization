@@ -1,6 +1,6 @@
 {
-  "challenge_module": "ChallengeInventoryConformance",
-  "solution_module": "ChallengeInventoryLeaderboard",
+  "challenge_module": "Challenge.Inventory.Conformance",
+  "solution_module": "Challenge.Inventory.Leaderboard",
   "theorem_names": [
     "ForMathlib.one_sub_measure_compl_le",
     "ForMathlib.meas_gt_le_ofReal_integral_sq_div_sq",
@@ -30,7 +30,7 @@
     "ForMathlib.Real.abs_one_sub_inv_sqrt_le",
     "ForMathlib.LinearMap.exists_linearIsometryEquiv_norm_sub_le",
     "ForMathlib.ContinuousLinearMap.exists_linearIsometryEquiv_norm_sub_le",
-    "ForMathlib.Matrix.PosSemidef.eigenvalues\u2080_eq_zero_of_le",
+    "ForMathlib.Matrix.PosSemidef.eigenvalues₀_eq_zero_of_le",
     "ForMathlib.Matrix.isHermitian_entry_eq_sum_eigenvalues",
     "ForMathlib.Matrix.posSemidef_and_rank_le_iff_exists_conjTranspose_mul_self",
     "ForMathlib.measurable_of_iUnion_restrict",

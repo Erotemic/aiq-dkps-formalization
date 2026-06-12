@@ -72,7 +72,7 @@ import ForMathlib.Topology.Berge
 #print axioms ForMathlib.Matrix.aeval_entry_eq_sum
 #print axioms ForMathlib.Matrix.abs_specTransform_sub_aeval_le
 /- `ForMathlib.Matrix.measurable_specTransform` is intentionally excluded from
-   the inventory challenge for now; see `ChallengeInventoryConformance.lean`. -/
+   the inventory challenge for now; see `Challenge/Inventory/Conformance.lean`. -/
 #print axioms ForMathlib.Matrix.abs_sortedEig_sub_le_of_entry_le
 #print axioms ForMathlib.measure_exists_entry_gt_le
 #print axioms ForMathlib.measure_forall_abs_sortedEig_sub_le_ge

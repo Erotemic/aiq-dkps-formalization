@@ -1,0 +1,14 @@
+{
+  "challenge_module": "Challenge.Gram.Conformance",
+  "solution_module": "Challenge.Gram.Leaderboard",
+  "theorem_names": [
+    "ForMathlib.exists_linearIsometryEquiv_of_inner_eq",
+    "ForMathlib.Matrix.gram_eq_gram_iff_exists_linearIsometryEquiv"
+  ],
+  "permitted_axioms": [
+    "propext",
+    "Quot.sound",
+    "Classical.choice"
+  ],
+  "enable_nanoda": false
+}

@@ -1,77 +1,59 @@
-# AIQ DKPS ForMathlib challenge package
+# AIQ challenge package
 
-This directory documents the root-level challenge files added for community
-review of reusable Mathlib-facing claims from the AIQ DKPS formalization.
+This directory contains comparator challenge files for Mathlib-facing results
+extracted from the AIQ DKPS formalization.
 
-Validated against source archive:
+The challenge files follow the pattern requested by the Mathlib community:
 
-- archive: `aiq-dkps-formalization-source-2026-06-12T140903-5-b3b2569cd4ff.tar.gz`
-- git commit: `b3b2569cd4ffaab896d7ee183c673170a09773d8`
-- short commit: `b3b2569`
-- commit date: `2026-06-12 19:04:40 +0000`
-- commit subject: `B2b: Berge value-function continuity + finite-family closeness modulus`
+* `Challenge/*/Conformance.lean` imports only `Mathlib` and states claims with
+  `sorry`.
+* `Challenge/*/Leaderboard.lean` imports the AIQ project code and supplies the
+  corresponding declarations/proofs.
+* `comparator/*.json` tells `comparator` which challenge module, solution
+  module, theorem names, and permitted axioms to check.
 
-## Challenge files
+## Challenge families
 
-There are two challenge layers.
+* `Challenge/Gram` — Procrustes / Gram-matrix rigidity.
+* `Challenge/PsdGram` — rank-controlled PSD Gram realization.
+* `Challenge/Spectral` — a compact spectral-perturbation stack: cross-term
+  identity, Courant--Fischer/Weyl, and Davis--Kahan cross-block estimates.
+* `Challenge/Inventory` — broader experimental inventory of the current
+  `ForMathlib` theorem surface. This inventory is not a proposed single PR;
+  it is a mechanical audit of what the project can currently certify.
 
-### Headline sampler
+`ForMathlib.Matrix.measurable_specTransform` is intentionally excluded from the
+inventory for now. It comes from the newest spectral-transform / CFC
+measurability work and still needs statement/API review before it should be
+claimed as ready.
 
-- `ChallengeConformance.lean` imports only `Mathlib` and states four selected
-  high-value claims with `sorry`.
-- `ChallengeLeaderboard.lean` imports the staged `ForMathlib` declarations and
-  fills those claims.
-- `comparator/aiq-mathlib-candidates.json` checks the four selected claims.
+## Running checks
 
-The headline sampler is meant for quick calibration. It covers:
-
-1. Procrustes rigidity from equality of pairwise inner products.
-2. Procrustes rigidity in `Matrix.gram` form.
-3. Rank-controlled PSD Gram realization.
-4. Weyl eigenvalue perturbation for symmetric operators.
-
-### Full inventory
-
-- `ChallengeInventoryConformance.lean` imports only `Mathlib` and mirrors the
-  public theorem surface of the current `ForMathlib` staging library, with each
-  theorem body replaced by `sorry`.
-- `ChallengeInventoryLeaderboard.lean` imports the project `ForMathlib` modules.
-- `comparator/aiq-mathlib-inventory.json` checks the current staged
-  declaration inventory, excluding `ForMathlib.Matrix.measurable_specTransform`
-  for now.
-
-The inventory challenge is not a proposed single Mathlib PR. It is a mechanical
-claim inventory: it records which reusable staged declarations the current
-project can certify under comparator.  `ForMathlib.Matrix.measurable_specTransform`
-is intentionally excluded for now because it comes from the newest
-spectral-transform / CFC measurability work and still needs statement/API review
-before it should be treated as part of the claim set.
-
-## Suggested local commands
-
-From the repository root:
+Install comparator tools once:
 
 ```bash
-lake env lean ChallengeConformance.lean
-lake env lean ChallengeLeaderboard.lean
-lake env lean ChallengeInventoryConformance.lean
-lake env lean ChallengeInventoryLeaderboard.lean
+bash scripts/install_comparator_tools.sh
 ```
 
-If comparator and its sandbox/export dependencies are available, run all checks:
+Run all challenge families:
 
 ```bash
 bash scripts/run_challenge_comparator.sh
 ```
 
-Run only the headline sampler:
+Run one family:
 
 ```bash
-bash scripts/run_challenge_comparator.sh --config comparator/aiq-mathlib-candidates.json
+bash scripts/run_challenge_comparator.sh --config comparator/aiq-gram-rigidity.json
+bash scripts/run_challenge_comparator.sh --config comparator/aiq-psd-gram-realization.json
+bash scripts/run_challenge_comparator.sh --config comparator/aiq-spectral-perturbation.json
+bash scripts/run_challenge_comparator.sh --config comparator/aiq-inventory.json
 ```
 
-Run only the full inventory:
+If real `landrun` is unavailable while debugging, use:
 
 ```bash
-bash scripts/run_challenge_comparator.sh --config comparator/aiq-mathlib-inventory.json
+bash scripts/run_challenge_comparator.sh --fake-landrun
 ```
+
+A real result should use real `landrun`, not fake-landrun.

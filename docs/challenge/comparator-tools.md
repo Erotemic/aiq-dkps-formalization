@@ -1,13 +1,12 @@
 # Comparator tool setup
 
-This repository includes challenge packages for AI-authored Mathlib-candidate
+This repository includes a challenge package for the AI-authored Mathlib-candidate
 lemmas:
 
-- `ChallengeConformance.lean` / `ChallengeLeaderboard.lean` provide a four-claim
-  headline sampler.
-- `ChallengeInventoryConformance.lean` / `ChallengeInventoryLeaderboard.lean`
-  provide a broader inventory of the current `ForMathlib` theorem surface.
-- `comparator/*.json` configures comparator runs.
+- `ChallengeConformance.lean` imports only Mathlib and states the challenge claims
+  with `sorry`.
+- `ChallengeLeaderboard.lean` imports this project and fills those claims.
+- `comparator/aiq-mathlib-candidates.json` configures the comparator run.
 - `formalization.yaml` records provenance and AI usage notes.
 
 The comparator check needs external tools: `landrun`, `comparator`, and
@@ -43,20 +42,16 @@ From the repository root:
 bash scripts/run_challenge_comparator.sh
 ```
 
-This performs Lean checks, builds the solution modules, and runs comparator for
-both comparator configs:
-
-```text
-comparator/aiq-mathlib-candidates.json
-comparator/aiq-mathlib-inventory.json
-```
-
-Run a single config with:
+This performs:
 
 ```bash
-bash scripts/run_challenge_comparator.sh --config comparator/aiq-mathlib-candidates.json
-bash scripts/run_challenge_comparator.sh --config comparator/aiq-mathlib-inventory.json
+lake env lean ChallengeConformance.lean
+lake env lean ChallengeLeaderboard.lean
+lake build ChallengeLeaderboard
+lake env comparator comparator/aiq-mathlib-candidates.json
 ```
+
+using explicit `COMPARATOR_LANDRUN` and `COMPARATOR_LEAN4EXPORT` paths.
 
 ## Development fallback
 
@@ -74,3 +69,17 @@ sandboxed check. The real check should end with:
 Lean default kernel accepts the solution
 Your solution is okay!
 ```
+
+
+## Current challenge layout
+
+The challenge files now live under `Challenge/` rather than at repository root.
+The runner reads the module names from each comparator JSON file and derives the
+corresponding paths automatically.
+
+Default configs run by `scripts/run_challenge_comparator.sh`:
+
+* `comparator/aiq-gram-rigidity.json`
+* `comparator/aiq-psd-gram-realization.json`
+* `comparator/aiq-spectral-perturbation.json`
+* `comparator/aiq-inventory.json`

@@ -28,6 +28,9 @@ together with `rank_conjTranspose_mul_self` and `rank_le_height`.
 
 ## Main results
 
+* `ForMathlib.Matrix.exists_conjTranspose_mul_self_of_posSemidef_of_rank_le`: the
+  spectral forward direction (PSD of rank `≤ d` factors as `Aᴴ * A` with `A` a
+  `d × n` matrix).
 * `ForMathlib.Matrix.posSemidef_and_rank_le_iff_exists_conjTranspose_mul_self`:
   the rank-`≤ d` PSD factorization characterization, over `RCLike 𝕜`.
 
@@ -81,108 +84,122 @@ theorem isHermitian_entry_eq_sum_eigenvalues
   rw [hdiag]; ring
 
 /--
+**Rank-constrained PSD factorization, forward direction.** A positive
+semidefinite matrix `B` of rank `≤ d` is the Gram matrix of `n` points in
+`𝕜^d`: it factors as `B = Aᴴ * A` for some `A : Matrix (Fin d) (Fin n) 𝕜`.
+
+The construction is spectral: `B = Σ_k λ_k uₖ uₖᴴ` with `λ_k ≥ 0` and `rank B`
+nonzero eigenvalues; scaling each nonzero eigenvector by `√λ_k` and packing the
+`rank B ≤ d` resulting coordinates into `d` rows yields `A`.
+-/
+theorem exists_conjTranspose_mul_self_of_posSemidef_of_rank_le
+    {d : ℕ} {B : Matrix (Fin n) (Fin n) 𝕜} (hB : B.PosSemidef) (hrank : B.rank ≤ d) :
+    ∃ A : Matrix (Fin d) (Fin n) 𝕜, B = Aᴴ * A := by
+  classical
+  have hHerm : B.IsHermitian := hB.isHermitian
+  -- card {nonzero eigenvalues} = rank B ≤ d, giving an embedding into `Fin d`.
+  have hcardS : Fintype.card {k : Fin n // hHerm.eigenvalues k ≠ 0} = B.rank :=
+    hHerm.rank_eq_card_non_zero_eigs.symm
+  have hcard_le :
+      Fintype.card {k : Fin n // hHerm.eigenvalues k ≠ 0} ≤ Fintype.card (Fin d) := by
+    simpa [Fintype.card_fin, hcardS] using hrank
+  obtain ⟨e⟩ := Function.Embedding.nonempty_of_card_le hcard_le
+  -- Coordinate weight `√λ_k · conj (U i k)`.
+  set w : Fin n → Fin n → 𝕜 := fun i k =>
+    (Real.sqrt (hHerm.eigenvalues k) : 𝕜) * conj (hHerm.eigenvectorUnitary i k) with hw
+  -- The factor `A`: row `a`, column `i` carries `w i k` when `a = e k`.
+  set A : Matrix (Fin d) (Fin n) 𝕜 := fun a i =>
+    if h : ∃ k : {k : Fin n // hHerm.eigenvalues k ≠ 0}, e k = a then
+      w i (Classical.choose h).1 else 0 with hA
+  refine ⟨A, ?_⟩
+  have hA_at : ∀ (i : Fin n) (k : {k : Fin n // hHerm.eigenvalues k ≠ 0}),
+      A (e k) i = w i k.1 := by
+    intro i k
+    have hex : ∃ k' : {k : Fin n // hHerm.eigenvalues k ≠ 0}, e k' = e k := ⟨k, rfl⟩
+    have hval : A (e k) i = w i (Classical.choose hex).1 := by
+      simp only [hA, dif_pos hex]
+    rw [hval, e.injective (Classical.choose_spec hex)]
+  have hA_off : ∀ (i : Fin n) (a : Fin d),
+      (∀ k : {k : Fin n // hHerm.eigenvalues k ≠ 0}, e k ≠ a) → A a i = 0 := by
+    intro i a ha
+    have : ¬ ∃ k : {k : Fin n // hHerm.eigenvalues k ≠ 0}, e k = a := by
+      rintro ⟨k, hk⟩; exact ha k hk
+    simp only [hA, dif_neg this]
+  -- Entrywise: `(Aᴴ * A) i j = Σ_a conj (A a i) * A a j = B i j`.
+  ext i j
+  rw [Matrix.mul_apply]
+  have hconj : ∀ a, (Aᴴ) i a * A a j = conj (A a i) * A a j := by
+    intro a; rw [Matrix.conjTranspose_apply, RCLike.star_def]
+  rw [Finset.sum_congr rfl (fun a _ => hconj a)]
+  symm
+  calc
+    (∑ a : Fin d, conj (A a i) * A a j)
+        = ∑ k : {k : Fin n // hHerm.eigenvalues k ≠ 0}, conj (w i k.1) * w j k.1 := by
+          have hstep : (∑ k : {k : Fin n // hHerm.eigenvalues k ≠ 0},
+                conj (w i k.1) * w j k.1)
+              = ∑ k : {k : Fin n // hHerm.eigenvalues k ≠ 0},
+                  conj (A (e k) i) * A (e k) j :=
+            Finset.sum_congr rfl fun k _ => by rw [hA_at i k, hA_at j k]
+          rw [hstep,
+            ← Finset.sum_map (Finset.univ : Finset {k : Fin n // hHerm.eigenvalues k ≠ 0}) e
+              (fun a => conj (A a i) * A a j)]
+          refine (Finset.sum_subset (Finset.subset_univ _) ?_).symm
+          intro a _ ha
+          have hnotrange : ∀ k : {k : Fin n // hHerm.eigenvalues k ≠ 0}, e k ≠ a := by
+            intro k hk; apply ha
+            simp only [Finset.mem_map, Finset.mem_univ, true_and]; exact ⟨k, hk⟩
+          rw [hA_off i a hnotrange, map_zero, zero_mul]
+      _ = ∑ k : {k : Fin n // hHerm.eigenvalues k ≠ 0},
+            (hHerm.eigenvalues k.1 : 𝕜) * hHerm.eigenvectorUnitary i k.1 *
+              conj (hHerm.eigenvectorUnitary j k.1) := by
+          refine Finset.sum_congr rfl fun k _ => ?_
+          have hnn : 0 ≤ hHerm.eigenvalues k.1 := hB.eigenvalues_nonneg k.1
+          simp only [hw, map_mul, RCLike.conj_ofReal, RCLike.conj_conj]
+          rw [show
+              (Real.sqrt (hHerm.eigenvalues k.1) : 𝕜) * hHerm.eigenvectorUnitary i k.1 *
+                  ((Real.sqrt (hHerm.eigenvalues k.1) : 𝕜)
+                    * conj (hHerm.eigenvectorUnitary j k.1))
+                = ((Real.sqrt (hHerm.eigenvalues k.1) : 𝕜)
+                    * (Real.sqrt (hHerm.eigenvalues k.1) : 𝕜))
+                    * (hHerm.eigenvectorUnitary i k.1
+                        * conj (hHerm.eigenvectorUnitary j k.1)) from by ring]
+          rw [← RCLike.ofReal_mul, Real.mul_self_sqrt hnn]
+          ring
+      _ = ∑ k : Fin n,
+            (hHerm.eigenvalues k : 𝕜) * hHerm.eigenvectorUnitary i k *
+              conj (hHerm.eigenvectorUnitary j k) := by
+          have hsubtype :
+              (∑ k : {k : Fin n // hHerm.eigenvalues k ≠ 0},
+                (hHerm.eigenvalues k.1 : 𝕜) * hHerm.eigenvectorUnitary i k.1 *
+                  conj (hHerm.eigenvectorUnitary j k.1))
+                = ∑ k ∈ Finset.univ.filter (fun k => hHerm.eigenvalues k ≠ 0),
+                    (hHerm.eigenvalues k : 𝕜) * hHerm.eigenvectorUnitary i k *
+                      conj (hHerm.eigenvectorUnitary j k) :=
+            (Finset.sum_subtype (p := fun k => hHerm.eigenvalues k ≠ 0)
+              (Finset.univ.filter (fun k => hHerm.eigenvalues k ≠ 0)) (fun x => by simp)
+              (fun k => (hHerm.eigenvalues k : 𝕜) * hHerm.eigenvectorUnitary i k *
+                conj (hHerm.eigenvectorUnitary j k))).symm
+          rw [hsubtype]
+          apply Finset.sum_filter_of_ne
+          intro k _ hne hzero
+          exact hne (by rw [hzero]; push_cast; rw [zero_mul, zero_mul])
+      _ = B i j := (isHermitian_entry_eq_sum_eigenvalues B hHerm i j).symm
+
+/--
 **Rank-constrained PSD factorization.** A matrix `B` over `𝕜 = ℝ, ℂ` is positive
 semidefinite with rank at most `d` if and only if `B = Aᴴ * A` for some
 `A : Matrix (Fin d) (Fin n) 𝕜` (equivalently, `B` is the Gram matrix of `n`
-points in `𝕜^d`).
+points in `𝕜^d`).  Splits into the spectral forward direction
+`exists_conjTranspose_mul_self_of_posSemidef_of_rank_le` and the elementary
+converse (`posSemidef_conjTranspose_mul_self` + `rank_conjTranspose_mul_self`).
 -/
 theorem posSemidef_and_rank_le_iff_exists_conjTranspose_mul_self
     {d : ℕ} (B : Matrix (Fin n) (Fin n) 𝕜) :
     (B.PosSemidef ∧ B.rank ≤ d) ↔ ∃ A : Matrix (Fin d) (Fin n) 𝕜, B = Aᴴ * A := by
-  classical
-  constructor
-  · rintro ⟨hB, hrank⟩
-    have hHerm : B.IsHermitian := hB.isHermitian
-    -- card {nonzero eigenvalues} = rank B ≤ d, giving an embedding into `Fin d`.
-    have hcardS : Fintype.card {k : Fin n // hHerm.eigenvalues k ≠ 0} = B.rank :=
-      hHerm.rank_eq_card_non_zero_eigs.symm
-    have hcard_le :
-        Fintype.card {k : Fin n // hHerm.eigenvalues k ≠ 0} ≤ Fintype.card (Fin d) := by
-      simpa [Fintype.card_fin, hcardS] using hrank
-    obtain ⟨e⟩ := Function.Embedding.nonempty_of_card_le hcard_le
-    -- Coordinate weight `√λ_k · conj (U i k)`.
-    set w : Fin n → Fin n → 𝕜 := fun i k =>
-      (Real.sqrt (hHerm.eigenvalues k) : 𝕜) * conj (hHerm.eigenvectorUnitary i k) with hw
-    -- The factor `A`: row `a`, column `i` carries `w i k` when `a = e k`.
-    set A : Matrix (Fin d) (Fin n) 𝕜 := fun a i =>
-      if h : ∃ k : {k : Fin n // hHerm.eigenvalues k ≠ 0}, e k = a then
-        w i (Classical.choose h).1 else 0 with hA
-    refine ⟨A, ?_⟩
-    have hA_at : ∀ (i : Fin n) (k : {k : Fin n // hHerm.eigenvalues k ≠ 0}),
-        A (e k) i = w i k.1 := by
-      intro i k
-      have hex : ∃ k' : {k : Fin n // hHerm.eigenvalues k ≠ 0}, e k' = e k := ⟨k, rfl⟩
-      have hval : A (e k) i = w i (Classical.choose hex).1 := by
-        simp only [hA, dif_pos hex]
-      rw [hval, e.injective (Classical.choose_spec hex)]
-    have hA_off : ∀ (i : Fin n) (a : Fin d),
-        (∀ k : {k : Fin n // hHerm.eigenvalues k ≠ 0}, e k ≠ a) → A a i = 0 := by
-      intro i a ha
-      have : ¬ ∃ k : {k : Fin n // hHerm.eigenvalues k ≠ 0}, e k = a := by
-        rintro ⟨k, hk⟩; exact ha k hk
-      simp only [hA, dif_neg this]
-    -- Entrywise: `(Aᴴ * A) i j = Σ_a conj (A a i) * A a j = B i j`.
-    ext i j
-    rw [Matrix.mul_apply]
-    have hconj : ∀ a, (Aᴴ) i a * A a j = conj (A a i) * A a j := by
-      intro a; rw [Matrix.conjTranspose_apply, RCLike.star_def]
-    rw [Finset.sum_congr rfl (fun a _ => hconj a)]
-    symm
-    calc
-      (∑ a : Fin d, conj (A a i) * A a j)
-          = ∑ k : {k : Fin n // hHerm.eigenvalues k ≠ 0}, conj (w i k.1) * w j k.1 := by
-            have hstep : (∑ k : {k : Fin n // hHerm.eigenvalues k ≠ 0},
-                  conj (w i k.1) * w j k.1)
-                = ∑ k : {k : Fin n // hHerm.eigenvalues k ≠ 0},
-                    conj (A (e k) i) * A (e k) j :=
-              Finset.sum_congr rfl fun k _ => by rw [hA_at i k, hA_at j k]
-            rw [hstep,
-              ← Finset.sum_map (Finset.univ : Finset {k : Fin n // hHerm.eigenvalues k ≠ 0}) e
-                (fun a => conj (A a i) * A a j)]
-            refine (Finset.sum_subset (Finset.subset_univ _) ?_).symm
-            intro a _ ha
-            have hnotrange : ∀ k : {k : Fin n // hHerm.eigenvalues k ≠ 0}, e k ≠ a := by
-              intro k hk; apply ha
-              simp only [Finset.mem_map, Finset.mem_univ, true_and]; exact ⟨k, hk⟩
-            rw [hA_off i a hnotrange, map_zero, zero_mul]
-        _ = ∑ k : {k : Fin n // hHerm.eigenvalues k ≠ 0},
-              (hHerm.eigenvalues k.1 : 𝕜) * hHerm.eigenvectorUnitary i k.1 *
-                conj (hHerm.eigenvectorUnitary j k.1) := by
-            refine Finset.sum_congr rfl fun k _ => ?_
-            have hnn : 0 ≤ hHerm.eigenvalues k.1 := hB.eigenvalues_nonneg k.1
-            simp only [hw, map_mul, RCLike.conj_ofReal, RCLike.conj_conj]
-            rw [show
-                (Real.sqrt (hHerm.eigenvalues k.1) : 𝕜) * hHerm.eigenvectorUnitary i k.1 *
-                    ((Real.sqrt (hHerm.eigenvalues k.1) : 𝕜)
-                      * conj (hHerm.eigenvectorUnitary j k.1))
-                  = ((Real.sqrt (hHerm.eigenvalues k.1) : 𝕜)
-                      * (Real.sqrt (hHerm.eigenvalues k.1) : 𝕜))
-                      * (hHerm.eigenvectorUnitary i k.1
-                          * conj (hHerm.eigenvectorUnitary j k.1)) from by ring]
-            rw [← RCLike.ofReal_mul, Real.mul_self_sqrt hnn]
-            ring
-        _ = ∑ k : Fin n,
-              (hHerm.eigenvalues k : 𝕜) * hHerm.eigenvectorUnitary i k *
-                conj (hHerm.eigenvectorUnitary j k) := by
-            have hsubtype :
-                (∑ k : {k : Fin n // hHerm.eigenvalues k ≠ 0},
-                  (hHerm.eigenvalues k.1 : 𝕜) * hHerm.eigenvectorUnitary i k.1 *
-                    conj (hHerm.eigenvectorUnitary j k.1))
-                  = ∑ k ∈ Finset.univ.filter (fun k => hHerm.eigenvalues k ≠ 0),
-                      (hHerm.eigenvalues k : 𝕜) * hHerm.eigenvectorUnitary i k *
-                        conj (hHerm.eigenvectorUnitary j k) :=
-              (Finset.sum_subtype (p := fun k => hHerm.eigenvalues k ≠ 0)
-                (Finset.univ.filter (fun k => hHerm.eigenvalues k ≠ 0)) (fun x => by simp)
-                (fun k => (hHerm.eigenvalues k : 𝕜) * hHerm.eigenvectorUnitary i k *
-                  conj (hHerm.eigenvectorUnitary j k))).symm
-            rw [hsubtype]
-            apply Finset.sum_filter_of_ne
-            intro k _ hne hzero
-            exact hne (by rw [hzero]; push_cast; rw [zero_mul, zero_mul])
-        _ = B i j := (isHermitian_entry_eq_sum_eigenvalues B hHerm i j).symm
-  · rintro ⟨A, rfl⟩
-    refine ⟨posSemidef_conjTranspose_mul_self A, ?_⟩
-    rw [rank_conjTranspose_mul_self]
-    exact A.rank_le_height
+  refine ⟨fun h => exists_conjTranspose_mul_self_of_posSemidef_of_rank_le h.1 h.2, ?_⟩
+  rintro ⟨A, rfl⟩
+  refine ⟨posSemidef_conjTranspose_mul_self A, ?_⟩
+  rw [rank_conjTranspose_mul_self]
+  exact A.rank_le_height
 
 end ForMathlib.Matrix

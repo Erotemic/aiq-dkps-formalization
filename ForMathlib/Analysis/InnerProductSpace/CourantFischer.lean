@@ -33,7 +33,9 @@ it Weyl's eigenvalue perturbation inequality
   `λₖ(T) ≤ re ⟪T x, x⟫` for all unit vectors `x` in it.
 * `ForMathlib.abs_eigenvalues_sub_le`: **Weyl's inequality** — the `k`-th
   sorted eigenvalues of two symmetric operators differ by at most an operator
-  norm bound on their difference.
+  norm bound `ε` on their difference (`∀ x, ‖(T − S) x‖ ≤ ε * ‖x‖`).
+* `ForMathlib.abs_eigenvalues_sub_le_opNorm`: Weyl's inequality phrased directly
+  with the continuous-linear-map operator norm `‖T − S‖`.
 
 ## References
 
@@ -295,5 +297,18 @@ theorem abs_eigenvalues_sub_le
     linarith
   · have := eigenvalues_sub_le hS hT hn hε k
     linarith
+
+/-- **Weyl's inequality**, operator-norm form.  The `k`-th sorted eigenvalues of
+two symmetric operators `T`, `S` on a finite-dimensional inner product space
+differ by at most the (continuous-linear-map) operator norm `‖T − S‖` of their
+difference.  This is `abs_eigenvalues_sub_le` with the bound supplied by
+`ContinuousLinearMap.le_opNorm`. -/
+theorem abs_eigenvalues_sub_le_opNorm (hT : T.IsSymmetric) (hS : S.IsSymmetric)
+    (hn : finrank 𝕜 E = n) (k : Fin n) :
+    |hT.eigenvalues hn k - hS.eigenvalues hn k|
+      ≤ ‖LinearMap.toContinuousLinearMap (T - S)‖ := by
+  refine abs_eigenvalues_sub_le hT hS hn (fun x => ?_) k
+  have hx := (LinearMap.toContinuousLinearMap (T - S)).le_opNorm x
+  rwa [LinearMap.coe_toContinuousLinearMap'] at hx
 
 end ForMathlib

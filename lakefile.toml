@@ -33,3 +33,12 @@ name = "DkpsQuench"
 
 [[lean_lib]]
 name = "Helm2025"
+
+
+# Comparator/challenge modules for community calibration of AI-authored
+# ForMathlib candidates. These are intentionally not default targets.
+[[lean_lib]]
+name = "ChallengeConformance"
+
+[[lean_lib]]
+name = "ChallengeLeaderboard"

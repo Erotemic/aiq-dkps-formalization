@@ -21,6 +21,7 @@ import ForMathlib.MeasureTheory.CompactExists
 import ForMathlib.MeasureTheory.Function.ConvergenceInMeasure
 import ForMathlib.MeasureTheory.Measure.Typeclasses.Probability
 import ForMathlib.Probability.Moments.MatrixConcentration
+import ForMathlib.Probability.Moments.SampleCovariance
 import ForMathlib.Probability.Moments.SampleMean
 import ForMathlib.Probability.Moments.Variance
 import ForMathlib.Topology.ApproxMinimizer

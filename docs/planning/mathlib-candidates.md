@@ -88,13 +88,29 @@ core is now the staged #10.  Note: the final `hmeas_spec` discharge uses neither
 nor #10 (it goes through the deterministic CMDS-entrywise route); these are kept as
 general staged results.  See `docs/planning/hmeas-spec-discharge.md`.
 
-**Future candidate (not yet formalized) — `halign` route:** a
-*sample-covariance / empirical-Gram eigenvalue concentration* result (the
-`d`-th eigenvalue of the centred Gram of `n` iid sub-Gaussian latents is
-`≥ α` with high probability) would be needed to fully derive Helm's `halign`
-from a latent-distribution model.  Mathlib has no sample-covariance eigenvalue
-concentration; this is a substantial, broadly-useful extraction target if that
-route is pursued (see the `halign` discussion).
+**Candidate #12 — sample-covariance / empirical-Gram eigenvalue concentration
+(`halign` route): NOW STAGED.**  Mathlib has no sample-covariance eigenvalue
+concentration; this is the elementary, no-matrix-Bernstein route (entrywise
+Chebyshev + union bound, then entrywise → operator-norm → Weyl), staged in two
+layers:
+- `ForMathlib/Analysis/Matrix/EntrywiseEigenvalue.lean` —
+  `abs_sortedEig_sub_le_of_entry_le` (entrywise `ε`-close ⇒ eigenvalues within
+  `n·ε`, Weyl through the entrywise→operator comparison).
+- `ForMathlib/Probability/Moments/MatrixConcentration.lean` — the random-matrix
+  engine: `measure_exists_entry_gt_le` (entrywise union bound),
+  `measure_forall_abs_sortedEig_sub_le_ge` (eigenvalue concentration),
+  `measure_forall_sortedEig_ge_ge` (eigenvalue **lower bound**, take
+  `η = c/(2n)`).  Takes per-entry second-moment bounds as hypotheses.
+- `ForMathlib/Probability/Moments/SampleCovariance.lean` — the iid → per-entry
+  specialization to the actual empirical covariance
+  `Σ̂_{kl} = n⁻¹ Σᵢ Vᵢ(k)Vᵢ(l)`: `sampleCovariance`,
+  `integral_sq_sampleCovariance_entry_le` (coordinate products fed through the
+  scalar `integral_norm_sq_average_sub_of_iid`), `isHermitian_sampleCovariance`,
+  and the capstone `measure_forall_sampleCovariance_sortedEig_ge_ge`.
+
+This furnishes the eigengap Helm's `halign` needs (a population eigenvalue
+floored at `c` stays above `c/2` w.h.p.).  Loose `n`/`n²` constants (the price
+of the elementary route); a matrix-Bernstein sharpening is possible future work.
 
 **Update 2026-06-12 (Opus session):** candidate #8 (Davis–Kahan cross-block
 bound) is now STAGED, RCLike-general, in

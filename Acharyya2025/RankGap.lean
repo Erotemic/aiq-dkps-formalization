@@ -16,7 +16,7 @@ References:
 * Acharyya, Agterberg, Park, Priebe, arXiv:2511.08307, Assumptions 1–2 and
   Theorem 2 (rank-`d`, eigenvalue floor `C₁`).
 
-Formalized by Claude Fable 5, per user-observed model label (claude-fable-5[1m]).
+Formalized by Claude Fable 5 (claude-fable-5[1m]).
 -/
 
 import Acharyya2025.DavisKahan
@@ -37,7 +37,7 @@ population eigenvalue is separated from every trailing sample eigenvalue by
 `α/2`.  This is exactly the `hgap` hypothesis of
 `Acharyya2025.DavisKahan.sum_cross_inner_sq_le`.
 
-Formalized by Claude Fable 5, per user-observed model label (claude-fable-5[1m]).
+Formalized by Claude Fable 5 (claude-fable-5[1m]).
 -/
 theorem gap_of_rank_floor
     (hT : T.IsSymmetric) (hS : S.IsSymmetric) (hn : finrank ℝ E = n)
@@ -73,7 +73,7 @@ Composition of `gap_of_rank_floor` with
 `ε ≤ α/2`), the squared overlap between leading population eigenvectors and
 trailing sample eigenvectors is at most `4 n ε² / α²`.
 
-Formalized by Claude Fable 5, per user-observed model label (claude-fable-5[1m]).
+Formalized by Claude Fable 5 (claude-fable-5[1m]).
 -/
 theorem sum_cross_inner_sq_le_of_rank_floor
     (hT : T.IsSymmetric) (hS : S.IsSymmetric) (hn : finrank ℝ E = n)

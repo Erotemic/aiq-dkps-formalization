@@ -36,7 +36,7 @@ Frobenius triangle inequality (`norm_add_le` on `EuclideanSpace ℝ (Fin n × Fi
 combines the three, and `ConfigError ≤ √n · ‖·‖_F` (Cauchy–Schwarz) converts the
 Frobenius bound to the `ℓ¹`-over-points `ConfigError`.
 
-Formalized by Claude Fable 5, per user-observed model label (claude-fable-5[1m]).
+Formalized by Claude Fable 5 (claude-fable-5[1m]).
 -/
 
 import Mathlib
@@ -830,7 +830,7 @@ three-term decomposition `ψ̂W − ψ = Term1 + Term2 + Term3` (polar / commuta
 Davis–Kahan), combined by the Minkowski inequality on
 `EuclideanSpace ℝ (Fin n × Fin d)` and `ConfigError ≤ √n · ‖·‖_F`.
 
-Formalized by Claude Fable 5, per user-observed model label (claude-fable-5[1m]).
+Formalized by Claude Fable 5 (claude-fable-5[1m]).
 -/
 theorem exists_isometry_configError_spectralConfig_le
     {n d : ℕ} (hd : d ≤ n)

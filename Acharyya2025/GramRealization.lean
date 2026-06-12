@@ -20,7 +20,7 @@ Mathematical source/citation:
 - Horn and Johnson, *Matrix Analysis*, 2nd ed., spectral theorem for real
   symmetric matrices and positive-semidefinite Gram factorizations.
 
-Formalized by Claude Fable 5, per user-observed model label (claude-fable-5[1m]).
+Formalized by Claude Fable 5 (claude-fable-5[1m]).
 -/
 
 import Acharyya2024.Common
@@ -39,7 +39,7 @@ Entrywise spectral expansion of a real Hermitian (symmetric) matrix:
 unitary.  This is the entrywise form of `Matrix.IsHermitian.spectral_theorem`
 specialized to `ℝ`, where the conjugate transpose is just the transpose.
 
-Formalized by Claude Fable 5, per user-observed model label (claude-fable-5[1m]).
+Formalized by Claude Fable 5 (claude-fable-5[1m]).
 -/
 theorem isHermitian_entry_eq_sum_eigenvalues {n : Nat}
     (B : Matrix (Fin n) (Fin n) Real) (hB : B.IsHermitian) (i j : Fin n) :
@@ -92,7 +92,7 @@ spectral decomposition, scale each eigenvector with a nonzero eigenvalue by the
 square root of that eigenvalue, and embed those `rank B ≤ d` coordinates into the
 `d` available dimensions.
 
-Formalized by Claude Fable 5, per user-observed model label (claude-fable-5[1m]).
+Formalized by Claude Fable 5 (claude-fable-5[1m]).
 -/
 theorem exists_config_gram_eq_of_posSemidef_rank_le
     {n d : Nat} (B : Matrix (Fin n) (Fin n) Real)

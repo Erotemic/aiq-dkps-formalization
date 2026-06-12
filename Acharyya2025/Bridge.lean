@@ -273,7 +273,7 @@ whose conclusion carries the alignment isometry baked into
 `alignedSpectralConfig` and whose hypotheses are genuine PSD/rank/eigengap
 floor/cap data with the explicit `configBound` rate.
 
-Retired by Claude Fable 5, per user-observed model label (claude-fable-5[1m]);
+Retired by Claude Fable 5 (claude-fable-5[1m]);
 retained as prose for the formalization case-study record. The original
 statement is in git history (see commits noted in planning/acharyya-plan.md).
 -/
@@ -297,7 +297,7 @@ replacement:
 which composes exactly those live bridges with the proved aligned spectral
 capstone.
 
-Retired by Claude Fable 5, per user-observed model label (claude-fable-5[1m]);
+Retired by Claude Fable 5 (claude-fable-5[1m]);
 retained as prose for the formalization case-study record. The original
 statement is in git history (see commits noted in planning/acharyya-plan.md).
 -/

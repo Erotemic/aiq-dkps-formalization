@@ -21,7 +21,7 @@ spectral API for symmetric operators (no Mathlib CFC):
   `|1 − (√μ_k)⁻¹| ≤ δ` (Parseval), and `‖M z‖ ≤ √(1+δ) ‖z‖`, giving the
   constant `√(1+δ) · δ ≤ √(3/2) · δ ≤ 2 δ`.
 
-Formalized by Claude Fable 5, per user-observed model label (claude-fable-5[1m]).
+Formalized by Claude Fable 5 (claude-fable-5[1m]).
 -/
 
 import Mathlib
@@ -57,7 +57,7 @@ genuine linear isometry `W` by an operator of norm at most `2 δ`:
 from the sorted eigenbasis of `G`.  The constant `2 δ` is not sharp (the
 construction gives `√(1+δ) · δ ≤ √(3/2) · δ`), but suffices.
 
-Formalized by Claude Fable 5, per user-observed model label (claude-fable-5[1m]). -/
+Formalized by Claude Fable 5 (claude-fable-5[1m]). -/
 theorem exists_isometry_close_of_self_adjoint_comp_close
     {d : ℕ} (_hd : finrank ℝ F = d)
     (M : F →ₗ[ℝ] F)

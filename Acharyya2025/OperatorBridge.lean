@@ -17,7 +17,7 @@ provides the conversion layer:
 * `isSymmetric_toEuclideanLin_of_isHermitian` — transport of symmetry, so that
   matrix-world events can invoke the operator-world spectral theorems.
 
-Formalized by Claude Fable 5, per user-observed model label (claude-fable-5[1m]).
+Formalized by Claude Fable 5 (claude-fable-5[1m]).
 -/
 
 import Acharyya2025.MathlibBridge
@@ -35,7 +35,7 @@ Honest `ℓ² → ℓ²` operator-norm closeness for square real matrices:
 `‖(A − B) x‖₂ ≤ ε‖x‖₂` for every Euclidean vector `x`, where the matrix acts
 via `Matrix.toEuclideanLin`.
 
-Formalized by Claude Fable 5, per user-observed model label (claude-fable-5[1m]).
+Formalized by Claude Fable 5 (claude-fable-5[1m]).
 -/
 def MatrixL2OperatorClose {n : Nat} (A B : SqMat n) (ε : Real) : Prop :=
   ∀ x : EuclideanSpace Real (Fin n),
@@ -44,7 +44,7 @@ def MatrixL2OperatorClose {n : Nat} (A B : SqMat n) (ε : Real) : Prop :=
 /--
 The `ℓ¹`–`ℓ²` comparison on Euclidean coordinates: `∑ |xⱼ| ≤ √n · ‖x‖₂`.
 
-Formalized by Claude Fable 5, per user-observed model label (claude-fable-5[1m]).
+Formalized by Claude Fable 5 (claude-fable-5[1m]).
 -/
 theorem sum_abs_le_sqrt_card_mul_norm {n : Nat} (x : EuclideanSpace Real (Fin n)) :
     ∑ j : Fin n, |x j| ≤ Real.sqrt n * ‖x‖ := by
@@ -79,7 +79,7 @@ operator-world spectral perturbation theorems (Weyl, Davis–Kahan).
 Mathematical source: Horn and Johnson, *Matrix Analysis*, 2nd ed., §5.6
 (norm equivalence).
 
-Formalized by Claude Fable 5, per user-observed model label (claude-fable-5[1m]).
+Formalized by Claude Fable 5 (claude-fable-5[1m]).
 -/
 theorem matrixL2OperatorClose_of_entrywise
     {n : Nat} {A B : SqMat n} {ε : Real}
@@ -149,7 +149,7 @@ theorem matrixL2OperatorClose_of_entrywise
 A Hermitian (over `ℝ`: symmetric) matrix induces a symmetric operator on
 Euclidean space.  Thin wrapper around `Matrix.isSymmetric_toEuclideanLin_iff`.
 
-Formalized by Claude Fable 5, per user-observed model label (claude-fable-5[1m]).
+Formalized by Claude Fable 5 (claude-fable-5[1m]).
 -/
 theorem isSymmetric_toEuclideanLin_of_isHermitian
     {n : Nat} {A : SqMat n} (hA : A.IsHermitian) :
@@ -159,7 +159,7 @@ theorem isSymmetric_toEuclideanLin_of_isHermitian
 /--
 A symmetric curried dissimilarity matrix induces a symmetric Euclidean operator.
 
-Formalized by Claude Fable 5, per user-observed model label (claude-fable-5[1m]).
+Formalized by Claude Fable 5 (claude-fable-5[1m]).
 -/
 theorem isSymmetric_toEuclideanLin_of_symmetricDisMat
     {n : Nat} {D : DisMat n} (hD : SymmetricDisMat D) :

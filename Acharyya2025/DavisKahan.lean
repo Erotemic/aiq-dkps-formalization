@@ -32,7 +32,7 @@ References:
   theorem for statisticians*, Biometrika 102 (2015), no. 2, 315–323.
 * R. Bhatia, *Matrix Analysis*, Chapter VII (Sin Θ theorems).
 
-Formalized by Claude Fable 5, per user-observed model label (claude-fable-5[1m]).
+Formalized by Claude Fable 5 (claude-fable-5[1m]).
 -/
 
 import Mathlib

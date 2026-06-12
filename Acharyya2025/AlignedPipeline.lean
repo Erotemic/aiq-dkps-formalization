@@ -26,7 +26,7 @@ Contents:
   response-mean → aligned `ConfigError` theorem, composing `Bridge.lean`'s HP
   chain with the capstone.
 
-Formalized by Claude Fable 5, per user-observed model label (claude-fable-5[1m]).
+Formalized by Claude Fable 5 (claude-fable-5[1m]).
 -/
 
 import Mathlib
@@ -55,7 +55,7 @@ open Acharyya2025.MatrixPerturbation
 The response-distance dissimilarity matrix is symmetric: its entries are
 normalized norms `‖Xbar i - Xbar j‖`, symmetric in `i, j` via `norm_sub_rev`.
 
-Formalized by Claude Fable 5, per user-observed model label (claude-fable-5[1m]).
+Formalized by Claude Fable 5 (claude-fable-5[1m]).
 -/
 theorem symmetricDisMat_responseDist {n m p : Nat} (Xbar : Fin n → Mat m p) :
     SymmetricDisMat (responseDist Xbar) := by
@@ -72,7 +72,7 @@ symmetric.
 squared matrix `A i j = (D i j)²`, symmetry of `D` gives `A i j = A j i`, so the
 row means and column means swap, making `doubleCenter A` symmetric.
 
-Formalized by Claude Fable 5, per user-observed model label (claude-fable-5[1m]).
+Formalized by Claude Fable 5 (claude-fable-5[1m]).
 -/
 theorem symmetricDisMat_classicalMDSMatrix {n : Nat} {D : DisMat n}
     (hD : SymmetricDisMat D) : SymmetricDisMat (classicalMDSMatrix D) := by
@@ -121,7 +121,7 @@ The aligned CMDS spectral estimator.  When the alignment isometry exists (with
 bound `c u`), apply the chosen isometry to the raw sample spectral embedding;
 otherwise fall back to the raw embedding.
 
-Formalized by Claude Fable 5, per user-observed model label (claude-fable-5[1m]).
+Formalized by Claude Fable 5 (claude-fable-5[1m]).
 -/
 noncomputable def alignedSpectralConfig {n d : Nat} (hd : d ≤ n)
     {Ω : Type} (Dhat : Nat → Ω → DisMat n)
@@ -140,7 +140,7 @@ noncomputable def alignedSpectralConfig {n d : Nat} (hd : d ≤ n)
 Defining property of the aligned estimator: when the alignment exists with bound
 `c u`, the aligned estimator achieves `ConfigError ≤ c u`.
 
-Formalized by Claude Fable 5, per user-observed model label (claude-fable-5[1m]).
+Formalized by Claude Fable 5 (claude-fable-5[1m]).
 -/
 theorem configError_alignedSpectralConfig_le {n d : Nat} (hd : d ≤ n)
     {Ω : Type} (Dhat : Nat → Ω → DisMat n)
@@ -174,7 +174,7 @@ This is the honest, TRUE replacement for the legacy unaligned
 carries the alignment isometry (baked into `alignedSpectralConfig`), and every
 hypothesis matches the matrix-world capstone exactly.
 
-Formalized by Claude Fable 5, per user-observed model label (claude-fable-5[1m]).
+Formalized by Claude Fable 5 (claude-fable-5[1m]).
 -/
 theorem highProb_aligned_configError_of_entrywise_close
     {Ω : Type} [MeasurableSpace Ω]
@@ -232,7 +232,7 @@ theorem highProb_aligned_configError_of_entrywise_close
 A symmetric curried dissimilarity matrix induces a Hermitian Mathlib matrix
 (over `ℝ`, Hermitian = symmetric).
 
-Formalized by Claude Fable 5, per user-observed model label (claude-fable-5[1m]).
+Formalized by Claude Fable 5 (claude-fable-5[1m]).
 -/
 theorem isHermitian_disMatToMatrix_of_symmetricDisMat {n : Nat} {D : DisMat n}
     (hD : SymmetricDisMat D) : (disMatToMatrix D).IsHermitian := by
@@ -243,7 +243,7 @@ theorem isHermitian_disMatToMatrix_of_symmetricDisMat {n : Nat} {D : DisMat n}
 /--
 The CMDS matrix of a response-distance matrix induces a Hermitian Mathlib matrix.
 
-Formalized by Claude Fable 5, per user-observed model label (claude-fable-5[1m]).
+Formalized by Claude Fable 5 (claude-fable-5[1m]).
 -/
 theorem isHermitian_disMatToMatrix_classicalMDSMatrix_responseDist
     {n m p : Nat} (Xbar : Fin n → Mat m p) :
@@ -266,7 +266,7 @@ ness of every sample CMDS matrix is supplied automatically (symmetry plumbing);
 the remaining spectral hypotheses (PSD, rank, floor, cap, smallness, polar) are
 exactly those of the capstone.
 
-Formalized by Claude Fable 5, per user-observed model label (claude-fable-5[1m]).
+Formalized by Claude Fable 5 (claude-fable-5[1m]).
 -/
 theorem highProb_aligned_configError_of_response_mean
     {Ω : Type} [MeasurableSpace Ω]

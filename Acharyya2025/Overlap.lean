@@ -35,7 +35,7 @@ This file reuses the eigenbasis Parseval machinery of `Acharyya2025.Weyl`
 cross-term identity of `Acharyya2025.DavisKahan`
 (`inner_eigenvector_map_sub_eq`).
 
-Formalized by Claude Fable 5, per user-observed model label (claude-fable-5[1m]).
+Formalized by Claude Fable 5 (claude-fable-5[1m]).
 -/
 
 import Mathlib

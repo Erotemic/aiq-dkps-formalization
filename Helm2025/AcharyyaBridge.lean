@@ -240,7 +240,7 @@ population blocks a single capstone call, so it is taken as a hypothesis — thi
 is the documented per-`ω`-population seam), the measurability of the sample
 alignment events, and the rate convergence.
 
-Formalized by Claude Fable 5, per user-observed model label (claude-fable-5[1m]).
+Formalized by Claude Fable 5 (claude-fable-5[1m]).
 -/
 theorem alignmentConsistency_of_aligned_spectral
     {n d d' : Nat} (hd : d ≤ n + 1)

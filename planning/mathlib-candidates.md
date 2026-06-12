@@ -44,7 +44,7 @@ Two documented follow-ups (not blocking; not yet staged):
   bijection that upstream does not provide.  `Acharyya2025/MatrixPerturbation.lean`
   keeps its local `sortedEigenvalues` proof untouched, as the handoff permitted.
 
-Formalized by Claude Fable 5, per user-observed model label (claude-fable-5[1m]).
+Formalized by Claude Fable 5 (claude-fable-5[1m]).
 
 Effort grades: **S** = statement+proof port nearly verbatim; **M** = moderate
 generalization (typically ℝ → `RCLike 𝕜`, restating in Mathlib idiom);

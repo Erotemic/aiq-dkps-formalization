@@ -19,7 +19,7 @@ Status (2026-06-11): COMPLETE — no `sorry` remains in this file.
   (`hsample`/`hlimit`/`huniq`) and is proved.  The repair history is recorded
   in planning/acharyya-plan.md and in git.
 
-Formalized by Claude Fable 5, per user-observed model label (claude-fable-5[1m]).
+Formalized by Claude Fable 5 (claude-fable-5[1m]).
 -/
 
 import Acharyya2024.Common
@@ -52,7 +52,7 @@ Mathematical source/citation:
 - Trosset and Priebe, "Continuous multidimensional scaling", cited as Theorem 2
   in Acharyya et al. 2024, Appendix A.1/A.2.
 
-Formalized by Claude Fable 5, per user-observed model label (claude-fable-5[1m]).
+Formalized by Claude Fable 5 (claude-fable-5[1m]).
 -/
 theorem rawStress_mds_stability_set
   (P : Measure Ω)
@@ -87,7 +87,7 @@ Mathematical source/citation:
 - Trosset and Priebe, "Continuous multidimensional scaling", cited as Theorem 2
   in Acharyya et al. 2024, Appendix A.1/A.2.
 
-Formalized by Claude Fable 5, per user-observed model label (claude-fable-5[1m]).
+Formalized by Claude Fable 5 (claude-fable-5[1m]).
 -/
 theorem rawStress_mds_stability
   (P : Measure Ω)
@@ -112,7 +112,7 @@ theorem rawStress_mds_stability
 Fixed `n,m` consistency theorem: paper Theorem 1 shape, with the repaired
 profile-uniqueness hypothesis threaded through.
 
-Formalized by Claude Fable 5, per user-observed model label (claude-fable-5[1m]).
+Formalized by Claude Fable 5 (claude-fable-5[1m]).
 -/
 theorem fixed_models_fixed_queries_consistency
   (P : Measure Ω)
@@ -142,7 +142,7 @@ This is the triangle-inequality layer of the paper's Theorem 2: it splits the
 empirical-to-limit error into the sampling error (handled by
 `Acharyya2024.Probability`) and the deterministic Assumption-1 error.
 
-Formalized by Claude Fable 5, per user-observed model label (claude-fable-5[1m]).
+Formalized by Claude Fable 5 (claude-fable-5[1m]).
 -/
 theorem convergesInProbabilityZero_of_le_add
     (P : Measure Ω)
@@ -197,7 +197,7 @@ Mathematical source/citation:
 - Acharyya, Trosset, Priebe, Helm, arXiv:2409.17308, Theorem 2 and Appendix
   A.2 (the final triangle-inequality step invoking Assumption 1).
 
-Formalized by Claude Fable 5, per user-observed model label (claude-fable-5[1m]).
+Formalized by Claude Fable 5 (claude-fable-5[1m]).
 -/
 theorem growing_queries_dissimilarity_converges
   (P : Measure Ω)
@@ -246,7 +246,7 @@ theorem growing_queries_dissimilarity_converges
 Fixed `n`, growing-query consistency: paper Theorem 3 shape, with the repaired
 probability-step hypotheses threaded through.
 
-Formalized by Claude Fable 5, per user-observed model label (claude-fable-5[1m]).
+Formalized by Claude Fable 5 (claude-fable-5[1m]).
 -/
 theorem fixed_models_growing_queries_consistency
   (P : Measure Ω)
@@ -293,7 +293,7 @@ Mathematical source/citation:
   representations in the data kernel perspective space", Theorem 4 and Appendix
   A.3.
 
-Formalized by Claude Fable 5, per user-observed model label (claude-fable-5[1m]).
+Formalized by Claude Fable 5 (claude-fable-5[1m]).
 -/
 theorem growing_models_growing_queries_consistency
   (P : Measure Ω)
@@ -327,7 +327,7 @@ dissimilarity convergence is split into a per-stage sampling error against a
 stage-and-budget population `Delta r k` plus a deterministic per-stage
 Assumption-1 error, mirroring `fixed_models_growing_queries_consistency`.
 
-Formalized by Claude Fable 5, per user-observed model label (claude-fable-5[1m]).
+Formalized by Claude Fable 5 (claude-fable-5[1m]).
 -/
 theorem growing_models_growing_queries_consistency_of_sample_limit
   (P : Measure Ω)

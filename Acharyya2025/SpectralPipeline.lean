@@ -76,7 +76,7 @@ is implied by positive semidefiniteness.  Quantitative eigengap/floor data is
 deliberately NOT part of this structure — perturbation statements take it as
 explicit hypotheses (see `Acharyya2025.ConfigPerturbation`).
 
-Formalized by Claude Fable 5, per user-observed model label (claude-fable-5[1m]).
+Formalized by Claude Fable 5 (claude-fable-5[1m]).
 -/
 structure CMDSpectralAssumptions (n d : Nat) (B : SqMat n) where
   posSemidef : B.PosSemidef
@@ -223,7 +223,7 @@ decomposition was carried out exactly as planned —
 high-probability form by
 `Acharyya2025.AlignedPipeline.highProb_aligned_configError_of_entrywise_close`.
 
-Retired by Claude Fable 5, per user-observed model label (claude-fable-5[1m]);
+Retired by Claude Fable 5 (claude-fable-5[1m]);
 retained as prose for the formalization case-study record. The original
 statement is in git history (see commits noted in planning/acharyya-plan.md).
 -/
@@ -243,7 +243,7 @@ the high-probability aligned perturbation theorem over the concrete estimator
 `alignedSpectralConfig`, and its end-to-end response-mean form
 `Acharyya2025.AlignedPipeline.highProb_aligned_configError_of_response_mean`.
 
-Retired by Claude Fable 5, per user-observed model label (claude-fable-5[1m]);
+Retired by Claude Fable 5 (claude-fable-5[1m]);
 retained as prose for the formalization case-study record. The original
 statement is in git history (see commits noted in planning/acharyya-plan.md).
 -/

@@ -30,7 +30,7 @@ The capstone assembles the operator bound (via `OperatorBridge`), the rank/PSD
 eigenvalue transport, the Gram identity, and Procrustes rigidity
 (`Acharyya2025.Procrustes`).
 
-Formalized by Claude Fable 5, per user-observed model label (claude-fable-5[1m]).
+Formalized by Claude Fable 5 (claude-fable-5[1m]).
 -/
 
 import Mathlib
@@ -328,7 +328,7 @@ external configuration `ψ` realizing `B` as its Gram matrix, the sample spectra
 embedding `spectralConfig (toEuclideanLin Bhat)`, transported by a single linear
 isometry `W`, is `configBound n d α Λ (n·η)`-close to `ψ`.
 
-Formalized by Claude Fable 5, per user-observed model label (claude-fable-5[1m]). -/
+Formalized by Claude Fable 5 (claude-fable-5[1m]). -/
 theorem exists_isometry_configError_le_of_entrywise_close
     {n d : ℕ} (hd : d ≤ n)
     (B Bhat : Matrix (Fin n) (Fin n) ℝ)

@@ -47,7 +47,7 @@ real hypotheses now appear explicitly in
 closeness events) fed by `Acharyya2024.Probability` and
 `Acharyya2024.SecondMoment` (genuine Markov/variance bounds).
 
-Retired by Claude Fable 5, per user-observed model label (claude-fable-5[1m]);
+Retired by Claude Fable 5 (claude-fable-5[1m]);
 retained as prose for the formalization case-study record. The original
 statement is in git history (see commits noted in planning/acharyya-plan.md).
 -/
@@ -65,7 +65,7 @@ works directly with `responseDist (Xbar u ω)` versus `responseDist μ` in
 `dkps`-facing consumers in `Acharyya2025.AlignedPipeline`), where the estimator
 is the concrete one induced by response means.
 
-Retired by Claude Fable 5, per user-observed model label (claude-fable-5[1m]);
+Retired by Claude Fable 5 (claude-fable-5[1m]);
 retained as prose for the formalization case-study record. The original
 statement is in git history (see commits noted in planning/acharyya-plan.md).
 -/
@@ -86,7 +86,7 @@ eigengap/floor hypotheses (`α`, `Λ`) taken directly by
 `Acharyya2025.ConfigPerturbation` and
 `Acharyya2025.AlignedPipeline.highProb_aligned_configError_of_entrywise_close`.
 
-Retired by Claude Fable 5, per user-observed model label (claude-fable-5[1m]);
+Retired by Claude Fable 5 (claude-fable-5[1m]);
 retained as prose for the formalization case-study record. The original
 statement is in git history (see commits noted in planning/acharyya-plan.md).
 -/
@@ -108,7 +108,7 @@ propagation with the explicit `responseFrobRate`) fed by
 `Acharyya2024.Probability` + `Acharyya2024.SecondMoment` (the Markov/variance
 concentration step).
 
-Retired by Claude Fable 5, per user-observed model label (claude-fable-5[1m]);
+Retired by Claude Fable 5 (claude-fable-5[1m]);
 retained as prose for the formalization case-study record. The original
 statement is in git history (see commits noted in planning/acharyya-plan.md).
 -/
@@ -137,7 +137,7 @@ and `Acharyya2025.ConfigPerturbation.exists_isometry_configError_spectralConfig_
 with explicit `∃ W` isometry alignment baked into `alignedSpectralConfig`,
 genuine eigengap/floor hypotheses, and the explicit `configBound` rate.
 
-Retired by Claude Fable 5, per user-observed model label (claude-fable-5[1m]);
+Retired by Claude Fable 5 (claude-fable-5[1m]);
 retained as prose for the formalization case-study record. The original
 statement is in git history (see commits noted in planning/acharyya-plan.md).
 -/
@@ -156,7 +156,7 @@ unaligned `ConfigError`.  Proved TRUE replacement:
 `Acharyya2025.AlignedPipeline.highProb_aligned_configError_of_response_mean`,
 the end-to-end response-mean-to-aligned-configuration concentration theorem.
 
-Retired by Claude Fable 5, per user-observed model label (claude-fable-5[1m]);
+Retired by Claude Fable 5 (claude-fable-5[1m]);
 retained as prose for the formalization case-study record. The original
 statement is in git history (see commits noted in planning/acharyya-plan.md).
 -/
@@ -175,7 +175,7 @@ error).  Proved TRUE replacement:
 which composes the proved aligned spectral capstone with the index-map
 factorization lift `quench_uniform_embedding_error_of_finite_configError`.
 
-Retired by Claude Fable 5, per user-observed model label (claude-fable-5[1m]);
+Retired by Claude Fable 5 (claude-fable-5[1m]);
 retained as prose for the formalization case-study record. The original
 statement is in git history (see commits noted in planning/acharyya-plan.md).
 -/

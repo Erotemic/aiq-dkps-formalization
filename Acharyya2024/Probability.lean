@@ -45,7 +45,7 @@ Thin wrapper around the Mathlib-staged
 `ForMathlib.meas_gt_le_ofReal_integral_sq_div_sq`; kept under its original
 name for downstream call-sites.
 
-Formalized by Claude Fable 5, per user-observed model label (claude-fable-5[1m]).
+Formalized by Claude Fable 5 (claude-fable-5[1m]).
 -/
 theorem meas_gt_le_ofReal_secondMoment_div_sq
     (P : Measure Ω) [IsProbabilityMeasure P]
@@ -69,7 +69,7 @@ paper it is established by the iid variance/trace computation `v r = (1/r)·Σγ
 We take it as a hypothesis to separate the concentration step from the variance
 algebra.
 
-Formalized by Claude Fable 5, per user-observed model label (claude-fable-5[1m]).
+Formalized by Claude Fable 5 (claude-fable-5[1m]).
 -/
 theorem dissimilarity_convergesInProbability_of_secondMoment
     (P : Measure Ω) [IsProbabilityMeasure P]

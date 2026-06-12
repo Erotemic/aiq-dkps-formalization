@@ -2,7 +2,7 @@
 Staged for Mathlib: additions to
 `Mathlib/MeasureTheory/Function/ConvergenceInMeasure.lean`.
 
-Formalized by Claude Fable 5, per user-observed model label (claude-fable-5[1m]);
+Formalized by Claude Fable 5 (claude-fable-5[1m]);
 to be re-authored per Mathlib's AI-contribution policy at PR time.
 -/
 

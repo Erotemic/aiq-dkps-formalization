@@ -83,7 +83,7 @@ the factorization data (`indexOf`, `hψ`, `hψHat`), the spectral hypotheses of 
 capstone (PSD/rank/floor/cap/smallness/polar), the Gram realization of `ψ`, and
 the entrywise-closeness HP event `hcenter`.
 
-Formalized by Claude Fable 5, per user-observed model label (claude-fable-5[1m]).
+Formalized by Claude Fable 5 (claude-fable-5[1m]).
 -/
 theorem quench_uniform_embedding_error_of_aligned_spectral
     (μ : Nat → Measure Ω)

@@ -57,7 +57,7 @@ Mathlib's `variance` (which absorbs the centring) and
 This is now a thin wrapper around the Mathlib-staged
 `ForMathlib.integral_sq_scaledSum_sub_of_pairwise_indep`.
 
-Formalized by Claude Fable 5, per user-observed model label (claude-fable-5[1m]).
+Formalized by Claude Fable 5 (claude-fable-5[1m]).
 -/
 theorem integral_sq_scaled_sum_sub_of_pairwise_indep
     (P : Measure Ω) [IsProbabilityMeasure P]
@@ -76,7 +76,7 @@ theorem integral_sq_scaled_sum_sub_of_pairwise_indep
 Per-coordinate independence of `EuclideanSpace`-valued samples follows from joint
 independence by composing with the coordinate projection.
 
-Formalized by Claude Fable 5, per user-observed model label (claude-fable-5[1m]).
+Formalized by Claude Fable 5 (claude-fable-5[1m]).
 -/
 theorem pairwise_indep_coord
     (P : Measure Ω)
@@ -119,7 +119,7 @@ This needs only pairwise independence and identical centring (not identical
 distribution); the cross terms vanish by independence.  The proof reduces
 coordinatewise to `integral_sq_scaled_sum_sub_of_pairwise_indep`.
 
-Formalized by Claude Fable 5, per user-observed model label (claude-fable-5[1m]).
+Formalized by Claude Fable 5 (claude-fable-5[1m]).
 -/
 theorem integral_norm_sq_sampleMean_sub_mean_eq_sum
     (P : Measure Ω) [IsProbabilityMeasure P]
@@ -153,7 +153,7 @@ additive identity collapses to the paper's `trace(Σ)/r` rate:
 
 Requires `0 < r` (the scaling collapses the `r⁻²·r` to `r⁻¹`).
 
-Formalized by Claude Fable 5, per user-observed model label (claude-fable-5[1m]).
+Formalized by Claude Fable 5 (claude-fable-5[1m]).
 -/
 theorem integral_norm_sq_sampleMean_sub_mean
     (P : Measure Ω) [IsProbabilityMeasure P]
@@ -186,7 +186,7 @@ This is exactly the `v r = γ/r → 0` hypothesis of
 `Acharyya2024.Probability.dissimilarity_convergesInProbability_of_secondMoment`.
 Requires `0 < r`.
 
-Formalized by Claude Fable 5, per user-observed model label (claude-fable-5[1m]).
+Formalized by Claude Fable 5 (claude-fable-5[1m]).
 -/
 theorem integral_norm_sq_sampleMean_sub_mean_le_of_bound
     (P : Measure Ω) [IsProbabilityMeasure P]

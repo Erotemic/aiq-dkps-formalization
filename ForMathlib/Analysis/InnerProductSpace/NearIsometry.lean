@@ -1,7 +1,7 @@
 /-
 Staged for Mathlib: a proposed new file `Mathlib/Analysis/InnerProductSpace/NearIsometry.lean`.
 
-Formalized by Claude Fable 5, per user-observed model label (claude-fable-5[1m]);
+Formalized by Claude Fable 5 (claude-fable-5[1m]);
 to be re-authored per Mathlib's AI-contribution policy at PR time.
 -/
 

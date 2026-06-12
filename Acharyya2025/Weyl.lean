@@ -20,7 +20,7 @@ We work in the operator world using Mathlib's sorted spectral API from
 `LinearMap.IsSymmetric.eigenvalues` (decreasing, `eigenvalues_antitone`) and
 `LinearMap.IsSymmetric.eigenvectorBasis` (orthonormal eigenbasis).
 
-Formalized by Claude Fable 5, per user-observed model label (claude-fable-5[1m]).
+Formalized by Claude Fable 5 (claude-fable-5[1m]).
 -/
 
 import Mathlib

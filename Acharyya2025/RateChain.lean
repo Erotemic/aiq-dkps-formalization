@@ -41,7 +41,7 @@ optimized `Poly₃(n³)` aggregation, and the formal statement quantifies the
 spectral hypotheses (floor `α`, cap `Λ`, rank ≤ `d`, smallness, polar) as
 explicit per-`u` side conditions rather than absorbing them asymptotically.
 
-Formalized by Claude Fable 5, per user-observed model label (claude-fable-5[1m]).
+Formalized by Claude Fable 5 (claude-fable-5[1m]).
 -/
 
 import Mathlib
@@ -71,7 +71,7 @@ No measurability of `E u` is needed: subadditivity gives
 `1 = P u (E u ∪ (E u)ᶜ) ≤ P u (E u) + P u ((E u)ᶜ)`, hence
 `P u (E u) ≥ 1 − P u ((E u)ᶜ)` by `ENNReal` truncated-subtraction arithmetic.
 
-Formalized by Claude Fable 5, per user-observed model label (claude-fable-5[1m]).
+Formalized by Claude Fable 5 (claude-fable-5[1m]).
 -/
 theorem highProbAtTop_of_tendsto_compl_zero
     {Ω : Type} [MeasurableSpace Ω]
@@ -105,7 +105,7 @@ hypothesis is the integrability `hint` of the squared errors (which carries
 `MeasurableSet` hypothesis is needed because the `HighProbAtTop` conversion is
 measurability-free.
 
-Formalized by Claude Fable 5, per user-observed model label (claude-fable-5[1m]).
+Formalized by Claude Fable 5 (claude-fable-5[1m]).
 -/
 theorem highProb_uniformResponseMeanClose_of_secondMoment
     {Ω : Type} [MeasurableSpace Ω]
@@ -167,7 +167,7 @@ The capstone spectral bound `configBound n d α Λ ε` is continuous in `ε`
 (for any fixed `n, d, α, Λ`): it is built from `√`, `+`, `*`, `^2` and division
 by the constants `α²` and `√(α/2)`, all continuous.
 
-Formalized by Claude Fable 5, per user-observed model label (claude-fable-5[1m]).
+Formalized by Claude Fable 5 (claude-fable-5[1m]).
 -/
 theorem continuous_configBound (n d : Nat) (α Λ : Real) :
     Continuous (fun ε : Real => configBound n d α Λ ε) := by
@@ -178,7 +178,7 @@ theorem continuous_configBound (n d : Nat) (α Λ : Real) :
 The capstone spectral bound vanishes at `ε = 0`: every summand of
 `configBound n d α Λ ε` carries a factor of `ε` or `ε²`.
 
-Formalized by Claude Fable 5, per user-observed model label (claude-fable-5[1m]).
+Formalized by Claude Fable 5 (claude-fable-5[1m]).
 -/
 theorem configBound_zero (n d : Nat) (α Λ : Real) :
     configBound n d α Λ 0 = 0 := by
@@ -190,7 +190,7 @@ theorem configBound_zero (n d : Nat) (α Λ : Real) :
 because Lean's division-by-zero and `Real.sqrt`-of-negative conventions keep
 the formula continuous and zero at `ε = 0` unconditionally).
 
-Formalized by Claude Fable 5, per user-observed model label (claude-fable-5[1m]).
+Formalized by Claude Fable 5 (claude-fable-5[1m]).
 -/
 theorem tendsto_configBound_zero (n d : Nat) (α Λ : Real) :
     Tendsto (fun ε => configBound n d α Λ ε) (𝓝 0) (𝓝 0) := by
@@ -201,7 +201,7 @@ theorem tendsto_configBound_zero (n d : Nat) (α Λ : Real) :
 Sequence corollary: along any vanishing rate sequence `e u → 0`, the capstone
 spectral bound vanishes: `configBound n d α Λ (e u) → 0`.
 
-Formalized by Claude Fable 5, per user-observed model label (claude-fable-5[1m]).
+Formalized by Claude Fable 5 (claude-fable-5[1m]).
 -/
 theorem tendsto_configBound_comp_zero (n d : Nat) (α Λ : Real)
     {e : Nat → Real} (he : Tendsto e atTop (𝓝 0)) :
@@ -220,7 +220,7 @@ CMDS-matrix rate.  This is literally the bound produced by
 `Acharyya2025.AlignedPipeline.highProb_aligned_configError_of_response_mean`
 specialized to a constant dissimilarity bound `R`.
 
-Formalized by Claude Fable 5, per user-observed model label (claude-fable-5[1m]).
+Formalized by Claude Fable 5 (claude-fable-5[1m]).
 -/
 noncomputable def endToEndRate (n m d : Nat) (α Λ R : Real) (t : Nat → Real) :
     Nat → Real :=
@@ -242,7 +242,7 @@ pipeline (`highProb_aligned_configError_of_response_mean`); the spectral
 hypotheses are threaded through verbatim with the dissimilarity bound
 specialized to the constant `R`.
 
-Formalized by Claude Fable 5, per user-observed model label (claude-fable-5[1m]).
+Formalized by Claude Fable 5 (claude-fable-5[1m]).
 -/
 theorem highProb_aligned_configError_endToEndRate
     {Ω : Type} [MeasurableSpace Ω]
@@ -301,7 +301,7 @@ The inner rate `n · cmdsEntrywiseRate n m R (t u)` is linear in `t u` (constant
 `tendsto_configBound_comp_zero` finishes.  No sign conditions on `R, Λ, α` are
 needed (the bound is continuous and zero-at-zero unconditionally).
 
-Formalized by Claude Fable 5, per user-observed model label (claude-fable-5[1m]).
+Formalized by Claude Fable 5 (claude-fable-5[1m]).
 -/
 theorem tendsto_endToEndRate_zero (n m d : Nat) (α Λ R : Real)
     {t : Nat → Real} (ht : Tendsto t atTop (𝓝 0)) :

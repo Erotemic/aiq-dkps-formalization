@@ -22,7 +22,7 @@ Mathematical sources / citations:
 - Borg and Groenen, *Modern Multidimensional Scaling*, 2nd ed., Ch. 3 (raw
   stress).
 
-Formalized by Claude Fable 5, per user-observed model label (claude-fable-5[1m]).
+Formalized by Claude Fable 5 (claude-fable-5[1m]).
 -/
 
 import Acharyya2024.Common
@@ -41,7 +41,7 @@ variable {n d : Nat}
 /--
 Raw stress is a sum of squares, hence nonnegative.
 
-Formalized by Claude Fable 5, per user-observed model label (claude-fable-5[1m]).
+Formalized by Claude Fable 5 (claude-fable-5[1m]).
 -/
 theorem rawStress_nonneg (Δ : DisMat n) (z : Config n d) :
     0 ≤ rawStress n d Δ z := by
@@ -53,7 +53,7 @@ theorem rawStress_nonneg (Δ : DisMat n) (z : Config n d) :
 Raw stress packaged as the squared `ℓ²` norm of the residual family over the set
 of index pairs `Fin n × Fin n`.
 
-Formalized by Claude Fable 5, per user-observed model label (claude-fable-5[1m]).
+Formalized by Claude Fable 5 (claude-fable-5[1m]).
 -/
 theorem sqrt_rawStress_eq_norm (Δ : DisMat n) (z : Config n d) :
     Real.sqrt (rawStress n d Δ z)
@@ -76,7 +76,7 @@ The square root of raw stress is `1`-Lipschitz in the dissimilarity matrix:
 Viewing raw stress as a squared distance in `ℓ²(Fin n × Fin n)`, this is the
 reverse triangle inequality `abs_norm_sub_norm_le`.
 
-Formalized by Claude Fable 5, per user-observed model label (claude-fable-5[1m]).
+Formalized by Claude Fable 5 (claude-fable-5[1m]).
 -/
 theorem abs_sqrt_rawStress_sub_le (Δ Δ' : DisMat n) (z : Config n d) :
     |Real.sqrt (rawStress n d Δ z) - Real.sqrt (rawStress n d Δ' z)|
@@ -121,7 +121,7 @@ theorem frobSub_comm (A B : DisMat n) : frobSub A B = frobSub B A := by
 Raw stress depends only on the pairwise differences of a configuration, so it is
 invariant under translating every point by a constant vector.
 
-Formalized by Claude Fable 5, per user-observed model label (claude-fable-5[1m]).
+Formalized by Claude Fable 5 (claude-fable-5[1m]).
 -/
 theorem rawStress_translate (Δ : DisMat n) (z : Config n d)
     (c : EuclideanSpace ℝ (Fin d)) :
@@ -243,7 +243,7 @@ Strategy: minimize over the compact box `K = {w | ∀ i, ‖w i‖ ≤ R₀}` of
 configurations (`R₀ = coRadius Δ`), where raw stress is continuous; translation
 invariance and coercivity upgrade the local minimizer over `K` to a global one.
 
-Formalized by Claude Fable 5, per user-observed model label (claude-fable-5[1m]).
+Formalized by Claude Fable 5 (claude-fable-5[1m]).
 -/
 theorem mds_nonempty : ∀ Δ : DisMat n, (MDS n d Δ).Nonempty := by
   intro Δ
@@ -303,7 +303,7 @@ The square root of raw stress, evaluated at a fixed configuration `z`, is
 `1`-Lipschitz in the dissimilarity matrix, in the directed form used for the
 stability chain.
 
-Formalized by Claude Fable 5, per user-observed model label (claude-fable-5[1m]).
+Formalized by Claude Fable 5 (claude-fable-5[1m]).
 -/
 private theorem sqrt_rawStress_le_add (Δ Δ' : DisMat n) (z : Config n d) :
     Real.sqrt (rawStress n d Δ z)
@@ -332,7 +332,7 @@ Mathematical source/citation: Trosset & Priebe, "Continuous multidimensional
 scaling" (cited as Theorem 2 in Acharyya et al., arXiv:2409.17308, Appendix
 A.1–A.2).
 
-Formalized by Claude Fable 5, per user-observed model label (claude-fable-5[1m]).
+Formalized by Claude Fable 5 (claude-fable-5[1m]).
 -/
 theorem exists_subseq_tendsto_mds
     (D : Nat → DisMat n) (Δ : DisMat n)
@@ -491,7 +491,7 @@ This is the direct geometric consequence of `exists_subseq_tendsto_mds`: the
 paper works with pairwise dissimilarities, and these converge along the extracted
 subsequence.
 
-Formalized by Claude Fable 5, per user-observed model label (claude-fable-5[1m]).
+Formalized by Claude Fable 5 (claude-fable-5[1m]).
 -/
 theorem pairDist_tendsto
     (D : Nat → DisMat n) (Δ : DisMat n)
@@ -532,7 +532,7 @@ Centering preserves all pairwise distances: `center` subtracts the same mean
 vector from every point of a configuration, so differences of points — and
 hence their norms — are unchanged.
 
-Formalized by Claude Fable 5, per user-observed model label (claude-fable-5[1m]).
+Formalized by Claude Fable 5 (claude-fable-5[1m]).
 -/
 theorem pairDist_center (z : Config n d) (i j : Fin n) :
     pairDist (center z) i j = pairDist z i j := by
@@ -545,7 +545,7 @@ Centering a raw-stress minimizer yields a raw-stress minimizer: raw stress is
 translation invariant (`rawStress_center`), so subtracting the mean does not
 change the objective value, and global minimality is preserved.
 
-Formalized by Claude Fable 5, per user-observed model label (claude-fable-5[1m]).
+Formalized by Claude Fable 5 (claude-fable-5[1m]).
 -/
 theorem center_mem_mds {Δ : DisMat n} {z : Config n d} (hz : z ∈ MDS n d Δ) :
     center z ∈ MDS n d Δ := by
@@ -577,7 +577,7 @@ Mathematical source/citation: Trosset & Priebe, "Continuous multidimensional
 scaling" (cited as Theorem 2 in Acharyya et al., arXiv:2409.17308, Appendix
 A.1–A.2).
 
-Formalized by Claude Fable 5, per user-observed model label (claude-fable-5[1m]).
+Formalized by Claude Fable 5 (claude-fable-5[1m]).
 -/
 theorem exists_modulus_pairDist (Δ : DisMat n) {ε : ℝ} (hε : 0 < ε) :
     ∃ δ : ℝ, 0 < δ ∧ ∀ (D' : DisMat n) (z : Config n d),
@@ -640,7 +640,7 @@ event inclusion `{bad} ⊆ {frobSub > δ}`, and `MeasureTheory.measure_mono` hol
 for *arbitrary* sets (Mathlib measures are outer measures), so no measurability
 of the bad event — and no measurable choice of minimizer — is required.
 
-Formalized by Claude Fable 5, per user-observed model label (claude-fable-5[1m]).
+Formalized by Claude Fable 5 (claude-fable-5[1m]).
 -/
 theorem mds_stability_inProbability_set
     {Ω : Type} [MeasurableSpace Ω] (P : Measure Ω)
@@ -675,7 +675,7 @@ hypothesis the paper's Theorem 1 implicitly needs in order to speak of "the"
 embedding distances of the limit; without it only the set version
 (`mds_stability_inProbability_set`) is true.
 
-Formalized by Claude Fable 5, per user-observed model label (claude-fable-5[1m]).
+Formalized by Claude Fable 5 (claude-fable-5[1m]).
 -/
 def UniquePairProfile (n d : Nat) (Δ : DisMat n) : Prop :=
   ∀ ψ₁ ∈ MDS n d Δ, ∀ ψ₂ ∈ MDS n d Δ, ∀ i j : Fin n, pairDist ψ₁ i j = pairDist ψ₂ i j
@@ -696,7 +696,7 @@ inclusion (any witness `ψ'` from the modulus event has the same distance
 profile as `ψ`, by uniqueness) followed by outer-measure monotonicity, so no
 measurability of events or of a minimizer selection is required.
 
-Formalized by Claude Fable 5, per user-observed model label (claude-fable-5[1m]).
+Formalized by Claude Fable 5 (claude-fable-5[1m]).
 -/
 theorem mds_stability_inProbability_of_uniqueProfile
     {Ω : Type} [MeasurableSpace Ω] (P : Measure Ω)

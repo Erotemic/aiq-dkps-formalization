@@ -12,6 +12,7 @@ import ForMathlib.Analysis.InnerProductSpace.GramMatrix
 import ForMathlib.Analysis.InnerProductSpace.NearIsometry
 import ForMathlib.Analysis.InnerProductSpace.Spectrum
 import ForMathlib.Analysis.Matrix.EntrywiseOpNorm
+import ForMathlib.Analysis.Matrix.Spectrum
 import ForMathlib.LinearAlgebra.Matrix.PosDef
 import ForMathlib.MeasureTheory.CompactExists
 import ForMathlib.MeasureTheory.Function.ConvergenceInMeasure

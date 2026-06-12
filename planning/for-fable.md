@@ -22,49 +22,34 @@ a substantial new proof/redesign. Each entry says which.
 
 ---
 
-## F1. #5 Gram factorization over `RCLike` (currently ℝ-only) — MEDIUM
+## F1. #5 Gram factorization over `RCLike` — ✅ DONE 2026-06-12 (Opus)
 
-File: `ForMathlib/LinearAlgebra/Matrix/PosDef.lean`, theorem
-`posSemidef_and_rank_le_iff_exists_conjTranspose_mul_self` (carries an in-file
-`TODO(RCLike)`). The reverse direction is already field-general; only the
-forward spectral construction is ℝ-specialized.
+`ForMathlib/LinearAlgebra/Matrix/PosDef.lean`
+`posSemidef_and_rank_le_iff_exists_conjTranspose_mul_self` is now stated and
+proved over `{𝕜} [RCLike 𝕜]`.  Construction
+`A k i = (√λ_k : 𝕜) * conj (eigenvectorUnitary i k)`; the entrywise spectral
+expansion helper `isHermitian_entry_eq_sum_eigenvalues` carries the conjugation
+(`B i j = ∑_k (λ_k : 𝕜) · U i k · conj (U j k)`).  `open scoped ComplexOrder`
+supplies `StarOrderedRing 𝕜` for the reverse direction.  The ℝ consumer
+`Acharyya2025/GramRealization.lean` builds unchanged (ℝ is `RCLike`, conj = id).
 
-What to change: generalize `{B : Matrix (Fin n) (Fin n) ℝ}` →
-`{𝕜} [RCLike 𝕜] {B : Matrix (Fin n) (Fin n) 𝕜}`. The construction is
-`A k i = RCLike.ofReal (Real.sqrt (eigenvalues k)) * conj (eigenvectorUnitary i k)`
-(note the `conj` — over ℝ it was absent). The Gram entry becomes
-`(Aᴴ * A) i j = ∑_k conj (A k i) * A k j`; with the above `A`,
-`conj (A k i) * A k j = ofReal (√λ_k) * U i k * (ofReal (√λ_k) * conj (U j k))
-  = ofReal λ_k * U i k * conj (U j k)` (using `ofReal (√λ)² = ofReal λ` for
-`λ ≥ 0`, `RCLike.conj_ofReal`, `RCLike.mul_conj`-style steps), matching the
-RCLike spectral expansion `B i j = ∑_k λ_k U i k conj (U j k)`.
+## F2. #5 ride-along: `eigenvalues₀` tail-vanishing — ✅ DONE 2026-06-12 (Opus)
 
-Watch: the entrywise spectral expansion helper
-`isHermitian_entry_eq_sum_eigenvalues` must also be generalized (it currently
-drops conjugation because over ℝ `star = id`). The `star_trivial` step in
-`hconj` becomes `RCLike.conj_ofReal` / explicit `conj`. Estimate: ~1–2 hours of
-conjugation bookkeeping; no missing upstream API. Keep the ℝ rewire in
-`Acharyya2025/GramRealization.lean` working (instantiate at `𝕜 = ℝ`).
+UNBLOCKED (the "missing bijection" was definitional): current Mathlib *defines*
+`IsHermitian.eigenvalues i = eigenvalues₀ ((Fintype.equivOfCardEq …).symm i)`
+(`Mathlib/Analysis/Matrix/Spectrum.lean`).  Staged
+`ForMathlib/Analysis/Matrix/Spectrum.lean`
+`PosSemidef.eigenvalues₀_eq_zero_of_le : B.PosSemidef → B.rank ≤ d →
+∀ i ≥ d, eigenvalues₀ i = 0`, over `RCLike 𝕜`: nonnegativity (PSD) + antitonicity
+give `> d` nonzero sorted eigenvalues at any nonzero tail index, but their count
+equals `rank ≤ d` via `Equiv.subtypeEquiv` transport of
+`rank_eq_card_non_zero_eigs`; `omega` closes.
 
-## F2. #5 ride-along: `eigenvalues₀` tail-vanishing — BLOCKED on upstream API
-
-Goal: stage `Matrix.PosSemidef.eigenvalues₀_eq_zero_of_le : B.PosSemidef →
-B.rank ≤ d → ∀ i : Fin (card n), d ≤ i → hB.isHermitian.eigenvalues₀ i = 0`
-against Mathlib's SORTED `Matrix.IsHermitian.eigenvalues₀`
-(`Mathlib/Analysis/Matrix/Spectrum.lean`).
-
-Blocker: `eigenvalues₀` exposes essentially only `eigenvalues₀_antitone`. The
-counting proof needs "number of nonzero `eigenvalues₀` = rank", i.e. a bijection
-between the nonzero `eigenvalues₀` (sorted) and the nonzero `eigenvalues`
-(unsorted, where `rank_eq_card_non_zero_eigs` lives). Upstream does NOT provide
-`eigenvalues₀ ≈ eigenvalues` as a permutation/multiset equality. Options for
-Fable: (a) prove that bijection first (a real sub-lemma — `eigenvalues₀` is
-defined via `Tuple.sort ∘ unsortedEigenvalues`, so relate to `eigenvalues` via
-the sort permutation), then the counting + antitone argument is short; or
-(b) raise it as an upstream feature request and skip. The local
-`Acharyya2025/MatrixPerturbation.lean` `sortedEigenvalues_tail_eq_zero` already
-works (operator-range proof) and is untouched — there is no downstream pressure,
-so this is purely a Mathlib-niceness item. LOW priority.
+NOT rewired into `Acharyya2025/MatrixPerturbation.lean`: retiring the local
+operator-world `sortedEigenvalues` for `eigenvalues₀` is a large refactor
+(RankGap, ConfigPerturbation, AlignedPipeline, the capstone hypotheses all
+thread `sortedEigenvalues`) with NO downstream benefit and high regression risk.
+Deliberately left; the staged lemma stands alone as a Mathlib addition.
 
 ## F3. `exists_modulus_pairDist` general form (Berge maximum theorem) — BLOCKED/REDESIGN
 
@@ -130,22 +115,40 @@ through the (continuous) rank-d spectral truncation `B̂ ↦ Σ_{k<d} λ_k u_k u
 Gram route.  Genuinely Fable-scale; substantially smaller than the original
 selection problem.
 
+**Opus assessment 2026-06-12 (after F1/F2).**  `hmeas_spec` as stated is most
+likely NOT provable as-is, and is the right primitive to leave for the domain
+expert.  Reason: `spectralConfig` is built from `eigenvectorBasis`, which is a
+non-canonical `Classical.choice` eigenbasis and is discontinuous at eigenvalue
+crossings, so `B̂ ↦ eigenvectorBasis(B̂)` is not measurable in general.  Note
+also the capstone does NOT assume `Dhat` itself measurable — `hmeas_spec`
+silently bundles that too.  The only honest discharge routes both require real
+new theory:
+  (a) **O(d)-invariant relocation.**  `AlignExists` is invariant under post-
+      composing `spectralConfig` with any isometry, so it depends on `B̂` only
+      through the rank-`d` weighted spectral projector `P_d(B̂) = Σ_{k<d} λ_k
+      u_k u_kᵀ` (= the truncated `B̂`), which IS measurable (continuous on the
+      open gap-positive set, Borel everywhere).  Re-derive
+      `measurableSet_setOf_alignExists` from `Measurable (B̂ ↦ P_d(B̂))` plus a
+      `ConfigError`-via-Gram reformulation — but `P_d` measurability is itself a
+      genuine theorem (continuous spectral truncation) and the Gram
+      reformulation of `AlignExists` is nontrivial.
+  (b) **Redefine `spectralConfig`** through the (continuous) rank-`d` truncation
+      Gram route so it is manifestly measurable, then re-thread the whole
+      `ConfigPerturbation` capstone.  Larger blast radius.
+Recommendation: leave `hmeas_spec` as the documented honest primitive for the
+review; both routes are a scoped research task, not mechanical work.
+
 ---
 
 ## Priority for spending Fable credits (if any)
 
-1. **F1** (RCLike Gram factorization) — purely mechanical, no blocker, makes #5
-   a clean Mathlib PR. Best credit-per-value. → OPUS work.
-2. **F5 residual** (`hmeas_spec`: Borel measurability of the raw spectral
-   embedding in the matrix argument) — the only remaining load-bearing seam;
-   see the discharged-F5 entry for the two candidate routes. Fable-scale.
-3. **F4** (sharp Davis–Kahan) — only if aiming for a top-tier spectral PR.
-4. **F2** — UNBLOCKED (discovery 2026-06-12): current Mathlib *defines*
-   `IsHermitian.eigenvalues` as `eigenvalues₀ ∘ (Fintype equiv)`
-   (`Mathlib/Analysis/Matrix/Spectrum.lean:65`), so the sorted/unsorted
-   bijection is definitional; the counting proof (equiv transport of
-   `rank_eq_card_non_zero_eigs` + `eigenvalues₀_antitone` + PSD nonnegativity)
-   is mechanical. → OPUS work.
+1. ~~F1 (RCLike Gram factorization)~~ — ✅ DONE 2026-06-12 (Opus).
+2. ~~F2 (eigenvalues₀ tail)~~ — ✅ DONE 2026-06-12 (Opus).
+3. **F4** (sharp / projector-form Davis–Kahan) — the remaining genuine
+   ForMathlib strengthening; medium effort (needs the spectral-projector
+   Frobenius identity `‖P̂−P‖_F² = 2·Σ_cross ⟪uᵢ,v̂ⱼ⟫²`).
+4. **F5 residual** (`hmeas_spec`) — scoped research task (see assessment above),
+   not mechanical; leave documented for the domain expert.
 5. **F3** — skip; raise the Berge maximum theorem upstream instead.
 
 Everything else (the whole spectral-perturbation toolkit, probability lemmas,

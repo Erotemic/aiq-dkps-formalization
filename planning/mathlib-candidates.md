@@ -32,17 +32,18 @@ where applicable, with the paper libraries rewired to consume them
 candidates' gap claims were re-verified against pin `476fb97b621c` before
 porting.
 
-Two documented follow-ups (not blocking; not yet staged):
-* **#5 RCLike generalization.** The factorization is staged over `ℝ` (what the
-  application needs); the reverse direction is already field-general, the
-  forward spectral construction needs `A k i = RCLike.ofReal (√λ_k) · conj (U i k)`
-  with conjugation bookkeeping.  Marked `TODO(RCLike)` in the staged file.
-* **#5 eigenvalue-tail ride-along** (`sortedEigenvalues_tail_eq_zero` →
-  `Matrix.PosSemidef.eigenvalues₀_eq_zero_of_le`) was NOT staged: Mathlib's
-  `eigenvalues₀` (sorted) exposes essentially only antitonicity, and the
-  counting proof needs an `eigenvalues₀ ≈ eigenvalues` (sorted-vs-unsorted)
-  bijection that upstream does not provide.  `Acharyya2025/MatrixPerturbation.lean`
-  keeps its local `sortedEigenvalues` proof untouched, as the handoff permitted.
+Both #5 follow-ups are now resolved (Opus, 2026-06-12):
+* **#5 RCLike generalization** — DONE.
+  `posSemidef_and_rank_le_iff_exists_conjTranspose_mul_self` and the entry helper
+  `isHermitian_entry_eq_sum_eigenvalues` are now over `RCLike 𝕜` (construction
+  `A k i = (√λ_k : 𝕜)·conj (U i k)`).  ℝ consumer unchanged.
+* **#5 eigenvalue-tail ride-along** — DONE, and the "blocker" dissolved:
+  current Mathlib *defines* `eigenvalues = eigenvalues₀ ∘ equiv`, so the
+  sorted/unsorted bijection is definitional.  Staged
+  `ForMathlib/Analysis/Matrix/Spectrum.lean`
+  `PosSemidef.eigenvalues₀_eq_zero_of_le` (`RCLike`).  The local operator-world
+  `Acharyya2025/MatrixPerturbation.lean` `sortedEigenvalues` is deliberately
+  left (retiring it is a large, zero-benefit refactor).
 
 Formalized by Claude Fable 5 (claude-fable-5[1m]).
 

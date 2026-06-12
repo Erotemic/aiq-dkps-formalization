@@ -47,3 +47,4 @@ per-candidate dossiers live in `planning/mathlib-candidates.md`.
 | `MeasureTheory/Measure/Typeclasses/Probability.lean` | `Mathlib/MeasureTheory/Measure/Typeclasses/Probability.lean` | #2a measurability-free `1 − μ sᶜ ≤ μ s` |
 | `Probability/Moments/SampleMean.lean` | new `Mathlib/Probability/Moments/SampleMean.lean` | #4 sample-mean MSE `∫ ‖r⁻¹ Σ Xₖ − μ‖² = r⁻² Σ ∫ ‖Xₖ − μ‖²` on a finite-dim real IPS (pairwise indep, Bochner mean) |
 | `Probability/Moments/Variance.lean` | `Mathlib/Probability/Moments/Variance.lean` | #2b uncentered second-moment Chebyshev |
+| `Topology/ApproxMinimizer.lean` | `Mathlib/Topology/Order/Compact.lean` (companion to `IsCompact.exists_isMinOn`) | approximate-minimizer stability: `z k ∈ K` compact, per-point approx-min of continuous `F` with vanishing error ⇒ subsequence → a global minimizer (elementary Γ-convergence recovery) |

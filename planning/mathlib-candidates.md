@@ -89,6 +89,23 @@ operator bound `‖toEuclideanLin A x‖ ≤ nε‖x‖`, ℝ — Mathlib has th
 the `n` constant is loose (Frobenius gives `√card`), and the matrix bound is
 ℝ-only (`TODO(RCLike)` in-file).
 
+**Update 2026-06-12 (Opus session, cont.):** the genuinely-general core of the
+`Acharyya2024/RawStress.lean` deterministic MDS stability is now STAGED as a
+topology lemma: `ForMathlib/Topology/ApproxMinimizer.lean`
+`exists_subseq_tendsto_forall_le_of_approxMin` (compact-set + per-point
+approximate minimization of a continuous function ⇒ a subsequence converges to a
+global minimizer; the elementary "recovery" half of Γ-convergence).
+`Acharyya2024/RawStress.lean`'s `exists_subseq_tendsto_mds` is rewired to it
+(the MDS-specific coercivity / compact-box construction stays local).  The rest
+of RawStress is wrappers (`abs_sqrt_rawStress_sub_le` = reverse triangle;
+`mds_nonempty` = coercivity + `IsCompact.exists_isMinOn`) or the Berge-maximum
+argmin modulus `exists_modulus_pairDist` — see `planning/for-fable.md` F3.
+
+Remaining non-trivial items are catalogued in `planning/for-fable.md` (RCLike
+Gram factorization, eigenvalues₀ tail, Berge/argmin modulus, sharp Davis–Kahan,
+the `h_conc_meas` measurable-selection seam) — all either blocked on upstream
+API or requiring substantial new proofs.
+
 **Deliberately deferred** (real gaps, but redesign expected):
 argmin-set stability behind `exists_modulus_pairDist` (Mathlib just gained
 `Topology/Semicontinuity/Hemicontinuity.lean` with no Berge maximum theorem —

@@ -26,6 +26,7 @@ Formalized by Claude Fable 5 (claude-fable-5[1m]).
 -/
 
 import Acharyya2024.Common
+import ForMathlib.Topology.ApproxMinimizer
 
 open scoped BigOperators Topology RealInnerProductSpace InnerProductSpace
 open Filter
@@ -418,70 +419,60 @@ theorem exists_subseq_tendsto_mds
       rw [hR, ← hsumAbsΔ] at *
       exact this
     exact norm_le_of_centered hn (y t) hcentk hpair i
-  -- Extract a convergent subsequence of `y` inside `K`.
-  obtain ⟨ψ, hψK, φ, hφ_mono, hφ_tendsto⟩ := hK_compact.tendsto_subseq hyK
-  refine ⟨fun t => φ t + N, ?_, ψ, ?_, ?_⟩
-  · exact fun a b hab => by simpa using Nat.add_lt_add_right (hφ_mono hab) N
-  · -- `ψ` minimizes raw stress for `Δ`.
-    intro z'
-    -- `rawStress Δ ψ = lim rawStress Δ (y (φ t))` by continuity.
-    have hcont_tendsto :
-        Tendsto (fun t => rawStress n d Δ (y (φ t))) atTop
-          (𝓝 (rawStress n d Δ ψ)) :=
-      ((continuous_rawStress Δ).tendsto ψ).comp hφ_tendsto
-    -- The squared upper bound, tending to `rawStress Δ z'`.
-    set g : Nat → ℝ := fun t =>
-      (Real.sqrt (rawStress n d Δ z') + 2 * frobSub (D (φ t + N)) Δ)^2 with hg
-    have hg_tendsto : Tendsto g atTop (𝓝 (rawStress n d Δ z')) := by
-      have hfrob_tendsto :
-          Tendsto (fun t => frobSub (D (φ t + N)) Δ) atTop (𝓝 0) := by
-        have hmono : StrictMono (fun t => φ t + N) :=
-          fun a b hab => by simpa using Nat.add_lt_add_right (hφ_mono hab) N
-        exact hD.comp hmono.tendsto_atTop
-      have hlim :
-          Tendsto (fun t => Real.sqrt (rawStress n d Δ z') + 2 * frobSub (D (φ t + N)) Δ)
-            atTop (𝓝 (Real.sqrt (rawStress n d Δ z') + 2 * 0)) :=
-        tendsto_const_nhds.add ((tendsto_const_nhds.mul hfrob_tendsto))
-      have hsq := hlim.pow 2
-      simpa [hg, mul_zero, add_zero, Real.sq_sqrt (rawStress_nonneg Δ z')] using hsq
-    -- Pointwise: `rawStress Δ (y (φ t)) ≤ g t`.
-    have hpt : ∀ t, rawStress n d Δ (y (φ t)) ≤ g t := by
-      intro t
-      have hmin : rawStress n d (D (φ t + N)) (y (φ t))
-          ≤ rawStress n d (D (φ t + N)) z' := hz (φ t + N) z'
-      have h1 : Real.sqrt (rawStress n d Δ (y (φ t)))
-          ≤ Real.sqrt (rawStress n d (D (φ t + N)) (y (φ t)))
-            + frobSub (D (φ t + N)) Δ := by
-        rw [frobSub_comm (D (φ t + N)) Δ]
-        exact sqrt_rawStress_le_add Δ (D (φ t + N)) (y (φ t))
-      have h2 : Real.sqrt (rawStress n d (D (φ t + N)) (y (φ t)))
-          ≤ Real.sqrt (rawStress n d (D (φ t + N)) z') :=
-        Real.sqrt_le_sqrt hmin
-      have h3 : Real.sqrt (rawStress n d (D (φ t + N)) z')
-          ≤ Real.sqrt (rawStress n d Δ z') + frobSub (D (φ t + N)) Δ :=
-        sqrt_rawStress_le_add (D (φ t + N)) Δ z'
-      have hchain : Real.sqrt (rawStress n d Δ (y (φ t)))
-          ≤ Real.sqrt (rawStress n d Δ z') + 2 * frobSub (D (φ t + N)) Δ := by
-        linarith
-      have hbase_nonneg :
-          0 ≤ Real.sqrt (rawStress n d Δ z') + 2 * frobSub (D (φ t + N)) Δ := by
-        have hfrob_nonneg : 0 ≤ frobSub (D (φ t + N)) Δ := by
-          rw [frobSub, frob]; exact Real.sqrt_nonneg _
-        have := Real.sqrt_nonneg (rawStress n d Δ z'); linarith
-      calc rawStress n d Δ (y (φ t))
-          = (Real.sqrt (rawStress n d Δ (y (φ t))))^2 :=
-            (Real.sq_sqrt (rawStress_nonneg Δ (y (φ t)))).symm
-        _ ≤ g t := by
-            rw [hg]
+  -- Per-point approximate-minimizer bound for `y` against the limit `Δ`:
+  -- minimality of `y t` for `D (t+N)` plus the √-stress Lipschitz bound give
+  -- `rawStress Δ (y t) ≤ (√(rawStress Δ x') + 2·frobSub (D (t+N)) Δ)²`.
+  have happrox : ∀ (x' : Config n d) (t : ℕ),
+      rawStress n d Δ (y t) ≤ rawStress n d Δ x'
+        + ((Real.sqrt (rawStress n d Δ x') + 2 * frobSub (D (t + N)) Δ) ^ 2
+            - rawStress n d Δ x') := by
+    intro x' t
+    have hmin : rawStress n d (D (t + N)) (y t) ≤ rawStress n d (D (t + N)) x' :=
+      hz (t + N) x'
+    have h1 : Real.sqrt (rawStress n d Δ (y t))
+        ≤ Real.sqrt (rawStress n d (D (t + N)) (y t)) + frobSub (D (t + N)) Δ := by
+      rw [frobSub_comm (D (t + N)) Δ]
+      exact sqrt_rawStress_le_add Δ (D (t + N)) (y t)
+    have h2 : Real.sqrt (rawStress n d (D (t + N)) (y t))
+        ≤ Real.sqrt (rawStress n d (D (t + N)) x') := Real.sqrt_le_sqrt hmin
+    have h3 : Real.sqrt (rawStress n d (D (t + N)) x')
+        ≤ Real.sqrt (rawStress n d Δ x') + frobSub (D (t + N)) Δ :=
+      sqrt_rawStress_le_add (D (t + N)) Δ x'
+    have hchain : Real.sqrt (rawStress n d Δ (y t))
+        ≤ Real.sqrt (rawStress n d Δ x') + 2 * frobSub (D (t + N)) Δ := by linarith
+    have hsq : rawStress n d Δ (y t)
+        ≤ (Real.sqrt (rawStress n d Δ x') + 2 * frobSub (D (t + N)) Δ) ^ 2 := by
+      calc rawStress n d Δ (y t)
+          = (Real.sqrt (rawStress n d Δ (y t))) ^ 2 :=
+            (Real.sq_sqrt (rawStress_nonneg Δ (y t))).symm
+        _ ≤ _ := by
             apply sq_le_sq'
-            · linarith [Real.sqrt_nonneg (rawStress n d Δ (y (φ t)))]
+            · linarith [Real.sqrt_nonneg (rawStress n d Δ (y t))]
             · exact hchain
-    -- Pass to the limit.
-    exact le_of_tendsto_of_tendsto hcont_tendsto hg_tendsto
-      (Eventually.of_forall hpt)
-  · -- The subsequence converges to `ψ`.
-    have : (fun t => z (φ t + N)) = (fun t => y (φ t)) := by funext t; rfl
-    rw [this]; exact hφ_tendsto
+    linarith [hsq]
+  -- The per-point error vanishes as `frobSub (D (t+N)) Δ → 0`.
+  have hε : ∀ x' : Config n d,
+      Tendsto (fun t => (Real.sqrt (rawStress n d Δ x') + 2 * frobSub (D (t + N)) Δ) ^ 2
+          - rawStress n d Δ x') atTop (𝓝 0) := by
+    intro x'
+    have hfrob : Tendsto (fun t => frobSub (D (t + N)) Δ) atTop (𝓝 0) :=
+      hD.comp (Filter.tendsto_add_atTop_nat N)
+    have hlim : Tendsto
+        (fun t => (Real.sqrt (rawStress n d Δ x') + 2 * frobSub (D (t + N)) Δ) ^ 2)
+        atTop (𝓝 ((Real.sqrt (rawStress n d Δ x') + 2 * 0) ^ 2)) :=
+      (tendsto_const_nhds.add (tendsto_const_nhds.mul hfrob)).pow 2
+    have hval : (Real.sqrt (rawStress n d Δ x') + 2 * 0) ^ 2 = rawStress n d Δ x' := by
+      rw [mul_zero, add_zero, Real.sq_sqrt (rawStress_nonneg Δ x')]
+    rw [hval] at hlim
+    simpa using hlim.sub_const (rawStress n d Δ x')
+  -- Apply the Mathlib-staged approximate-minimizer stability lemma.
+  obtain ⟨φ, hφ_mono, ψ, hψK, hψmin, hψtendsto⟩ :=
+    ForMathlib.exists_subseq_tendsto_forall_le_of_approxMin hK_compact
+      (continuous_rawStress Δ) hyK hε happrox
+  refine ⟨fun t => φ t + N, ?_, ψ, hψmin, ?_⟩
+  · exact fun a b hab => by simpa using Nat.add_lt_add_right (hφ_mono hab) N
+  · have hreidx : (fun t => z (φ t + N)) = (fun t => y (φ t)) := by funext t; rfl
+    rw [hreidx]; exact hψtendsto
 
 /--
 Pairwise distances of the stable subsequence converge to those of the limiting

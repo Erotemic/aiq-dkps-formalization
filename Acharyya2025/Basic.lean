@@ -22,4 +22,5 @@ import Acharyya2025.PolarFactor
 import Acharyya2025.ConfigPerturbation
 import Acharyya2025.MatrixPerturbation
 import Acharyya2025.AlignedPipeline
+import Acharyya2025.SpectralMeasurability
 import Acharyya2025.RateChain

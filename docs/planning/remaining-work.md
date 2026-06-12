@@ -4,6 +4,7 @@ Fresh as of 2026-06-12 (Opus). The active phase is the **Mathlib-readiness pass*
 getting the strong staged candidates into *mechanically-droppable-into-a-PR*
 shape. Cross-refs: `mathlib-candidates.md` (candidate dossiers),
 `prep_mathlib_review_and_readiness.md` (the readiness audit),
+`pr-decisions.md` (R6 decisions awaiting sign-off, with recommendations),
 `spectral-pr-decomposition.md` (spectral PR plan), `acharyya-plan.md`
 (formalization-phase map — that phase is complete), `historical/` (archived
 completed-phase docs).
@@ -35,6 +36,11 @@ completed-phase docs).
 - **R3b** ✅ Weyl operator-norm corollary `abs_eigenvalues_sub_le_opNorm`.
 - **Trust artifacts synced** — headline Gram challenge kept simple; new public
   lemmas tracked in the `Challenge/Inventory/` conformance + leaderboard.
+- **R2b** ✅ recon verdict: keep the spectral PSD proof (no cleaner route exists;
+  no Fable). **Minimal imports**: one safe trim (`Star.Real` from `PosDef.lean`);
+  shake is unreliable out-of-tree, rest deferred to in-tree PR time.
+- **R6 decisions prepared** with recommendations in `pr-decisions.md` (awaiting
+  sign-off).
 - **F1–F6** ✅ (the old Fable task list — all done; archived to
   `historical/for-fable.md`).
 
@@ -58,11 +64,11 @@ scope now.
 | **Weyl perturbation** | **High** — entirely absent upstream, canonical | done + opNorm form (R3b); decomposition planned (R3) | physically split per plan (PR-1 cross-term, PR-4 Weyl); naming; destination | no |
 | **Rank-controlled PSD factorization** | **Good** — novel rank-controlled refinement | modularized (R2) | **R2b recon** (below); naming; destination | recon only |
 
-### Track 2 — cheap recon that could close an item (DO)
+### Track 2 — cheap recon that could close an item (DONE)
 
 | Item | What | Effort | Fable? | Status |
 |---|---|---|---|---|
-| R2b | **PSD alternate-proof recon.** Survey Mathlib factorization/CFC/rank APIs; verdict on whether a cleaner-than-spectral proof is reachable. Prior: the rank-compression step looks inherent → likely resolves to "keep the spectral proof, justified" and needs **no** Fable. Low risk, high information. | S–M | recon (Opus) | open |
+| R2b | ✅ **DONE — verdict: keep the spectral proof.** Recon confirmed **no cleaner proof exists**: Mathlib has the PSD square root (`CFC.sqrt`, square `n×n` factor) but **no rank-factorization API** (`M = L·R`, `L : m×r`, `R : r×n`), so the rank-`≤d` compression into `Fin d` must be hand-built — the current spectral + `Classical.choose` construction is near-optimal. **No Fable needed.** Discovered upstream gap (deferred, net-new): a general `Matrix.exists_mul_eq_of_rank_le` would be broadly useful — flagged in `pr-decisions.md` D-7, not pursued. | S | no | **✅** |
 
 ### Track 3 — net-new Fable content (DEFER per priority; revisit only if reviewers want it)
 
@@ -71,17 +77,15 @@ scope now.
 | R4 | **Davis–Kahan redesign** onto `orthogonalProjection`/spectral-subspace API (vs. DKPS index-cutoffs). | Net-new statement + proof; audit §4 says it needs human spectral-analysis review and an API decision — reviewers may not converge. Not worth Fable until DK is a confirmed target. | yes |
 | R5 | **Courant–Fischer full min-max** (canonical min-over-subspaces). | Net-new; Mathlib has only the extremal Rayleigh case, and our directional bounds already suffice for Weyl. Pursue only if a reviewer asks. | yes |
 
-### Track 4 — decisions needing human / Zulip input (R6; prepare options, don't finalize)
+### Track 4 — decisions needing human / Zulip input (R6)
 
-- **Gram naming**: audit §1.3 suggests `exists_linearIsometryEquiv_map_eq_of_inner_eq`
-  (the conclusion is a `map_eq`). Kept current name in R1 to avoid churn; decide
-  before PR.
-- **Same-space vs two-space Gram core** as the public face (we have both; core is
-  two-space).
-- **Davis–Kahan formulation** (R4) and **`specSubspace`/`spectralProjection`**
-  public-vs-private (see `spectral-pr-decomposition.md`).
-- **Destination files** for each PR (proposals in the candidate/decomposition docs;
-  confirm via Zulip).
+**Prepared with recommendations in `pr-decisions.md`** (D-1…D-9): Gram public
+face + naming + destination; PSD naming + helper location + destination; spectral
+destinations + helper visibility; import minimization (defer to in-tree PR time).
+All recommendations are low-risk; the only non-trivial mechanical cost is the
+Gram equiv rename (≈6 files). None require Fable. → **Awaiting user/Zulip sign-off**;
+once chosen, application is mechanical (rename + reference updates / file moves)
+and belongs to Task E.
 
 ---
 

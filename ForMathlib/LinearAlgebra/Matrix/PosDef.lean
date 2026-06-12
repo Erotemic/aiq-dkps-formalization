@@ -9,7 +9,6 @@ import Mathlib.LinearAlgebra.Matrix.PosDef
 import Mathlib.LinearAlgebra.Matrix.Rank
 import Mathlib.Analysis.Matrix.Spectrum
 import Mathlib.Analysis.Matrix.PosDef
-import Mathlib.Algebra.Order.Star.Real
 
 /-! # Rank-constrained positive-semidefinite factorization
 

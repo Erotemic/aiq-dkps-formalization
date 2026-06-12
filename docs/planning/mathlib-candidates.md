@@ -44,6 +44,15 @@ Both #5 follow-ups are now resolved (Opus, 2026-06-12):
   `PosSemidef.eigenvalues₀_eq_zero_of_le` (`RCLike`).  The local operator-world
   `Acharyya2025/MatrixPerturbation.lean` `sortedEigenvalues` is deliberately
   left (retiring it is a large, zero-benefit refactor).
+* **#5 proof shape (R2b recon, Opus 2026-06-12)** — VERDICT: keep the spectral
+  proof. The hard direction was modularized (forward lemma
+  `exists_conjTranspose_mul_self_of_posSemidef_of_rank_le` + thin iff). A recon of
+  Mathlib's factorization APIs found **no cleaner route**: Mathlib has the PSD
+  square root (`CFC.sqrt`) but **no rank-factorization** (`M = L·R`, `r = rank`),
+  so the rank-`≤d` compression into `Fin d` is inherently hand-built. The current
+  `Classical.choose`/embedding construction is near-optimal. A general
+  `Matrix.exists_mul_eq_of_rank_le` is a genuine upstream gap but net-new content
+  (see `pr-decisions.md` D-7).
 
 Formalized by Claude Fable 5 (claude-fable-5[1m]).
 

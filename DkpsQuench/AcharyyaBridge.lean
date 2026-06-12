@@ -155,19 +155,27 @@ hypothesis is replaced by the prose assumptions that produce it (population PSD
 high-probability event `hcenter`, the Gram realization of `ψ`, the index-map
 factorization, and the vanishing rate `(n)·rate u → 0`).
 
-**Remaining seam — `h_conc_meas`.**  The measurability of the embedding-error
-event is *not* discharged and stays an explicit hypothesis.  The aligned
-estimator `alignedSpectralConfig` is built by `Classical.choose` (the per-`ω`
-orthogonal alignment `W ∈ O(d)` is selected non-constructively), so it is not
-known to be measurable in `ω`; the probability content `h_conc` survives this
-(it is proved by outer-measure monotonicity), but the `MeasurableSet`
-side-condition required by the `inter_v3` step in
-`Theorem2_part2_paper` does not.  Discharging it needs a measurable-selection
-theorem for the alignment, which the development does not yet have.  The genuine
-model-coverage assumptions `h_cover`/`h_cover_meas` (paper Assumption 2) and the
-score Lipschitz / MSE-positivity assumptions also remain, as they should.
+**Measurability seam discharged (no measurable selection).**  The former
+`h_conc_meas` hypothesis (measurability of the embedding-error event of the
+`Classical.choose`-based aligned estimator) is gone.  The route: the aligned
+estimator's error event *equals* the choice-free alignment existential
+(`configError_alignedSpectralConfig_le_iff_alignExists` — a raw embedding
+satisfying the bound witnesses the existential with `W = id`), and the
+existential over the **compact** set of inner-product-preserving maps is
+measurable by `ForMathlib.measurableSet_exists_mem_le` (countable dense
+approximation; no selection of the optimal alignment).  This measurable
+high-probability event is contained in the embedding-error event, which is
+exactly what the sub-event form `Theorem2_part2_paper_subevent` consumes.
 
-Formalized by Claude Opus 4.8 (claude-opus-4-8[1m]).
+The one remaining measurability primitive is `hmeas_spec`: the **raw**
+(unaligned) spectral embedding `ω ↦ spectralConfig …(Dhat k ω)…` is measurable.
+This is a genuine Borel-measurability question about the fixed eigendecomposition
+map (no `ω`-dependent choice), recorded in `planning/for-fable.md` F5.  The
+model-coverage assumptions `h_cover`/`h_cover_meas` (paper Assumption 2) and the
+score Lipschitz / MSE-positivity assumptions remain, as they should.
+
+Formalized by Claude Opus 4.8 (claude-opus-4-8[1m]); measurability seam
+discharged by Claude Fable 5 (claude-fable-5[1m]).
 -/
 theorem Theorem2_part2_of_aligned_spectral
     [DecidableEq Q]
@@ -214,10 +222,13 @@ theorem Theorem2_part2_of_aligned_spectral
     (h_lipQ : ∀ (f f' : Model Q X),
       |score f Qstar - score f' Qstar| ≤ γ * ‖ψ f - ψ f'‖)
     (h_gamma_pos : 0 < γ)
-    -- Remaining measurable-selection seam (see docstring):
-    (h_conc_meas : ∀ k, MeasurableSet {ω | ∀ f,
-      ‖ψHat k ω f - ψ f‖ ≤ Acharyya2025.ConfigPerturbation.configBound n d α Λ
-        ((n : Real) * rate k)})
+    -- Honest measurability primitive: the RAW spectral embedding is measurable
+    -- in the sample; no measurability of the chosen alignment is needed.
+    (hmeas_spec : ∀ (k : Nat) (i : Fin n), Measurable (fun ω =>
+      Acharyya2025.ConfigPerturbation.spectralConfig
+        (Matrix.toEuclideanLin (Acharyya2025.MathlibBridge.disMatToMatrix
+          (Acharyya2025.Deterministic.classicalMDSMatrix (Dhat k ω))))
+        (Acharyya2025.MatrixPerturbation.opSym (hsym k ω)) hd i))
     -- Genuine model-coverage assumption (paper Assumption 2):
     (h_cover : ∀ ρ > 0,
       _root_.HighProbAtTop μ hμ
@@ -235,14 +246,70 @@ theorem Theorem2_part2_of_aligned_spectral
               (fun u ω (_ : Finset Q) f => ψHat u ω f) f_ref score Qstar Qsub k ω f)
           ≤ MSE (Q := Q) (X := X) Pf (yFull score Qstar)
               (yQ (Q := Q) (X := X) score Qsub)} ≥ 1 - δ := by
-  -- Discharge `h_conc` from the spectral concentration chain.
-  have h_conc :
-      _root_.HighProbAtTop μ hμ (fun k => {ω | ∀ f,
-        ‖ψHat k ω f - ψ f‖ ≤ Acharyya2025.ConfigPerturbation.configBound n d α Λ
-          ((n : Real) * rate k)}) :=
-    quench_uniform_embedding_error_of_aligned_spectral μ hμ hd Dhat D hsym hB hrank
-      hα_pos hfloor hΛ ψFinite hψFinite rate hrate_nonneg hsmall hpolar hcenter
-      indexOf ψ ψHat hψ hψHat
+  -- The measurable high-probability sub-event: the choice-free alignment
+  -- existential at the `configBound` level.
+  have hE_meas : ∀ k, MeasurableSet {ω |
+      Acharyya2025.AlignedPipeline.AlignExists hd Dhat hsym ψFinite
+        (fun u => Acharyya2025.ConfigPerturbation.configBound n d α Λ
+          ((n : Real) * rate u)) k ω} := fun k =>
+    Acharyya2025.AlignedPipeline.measurableSet_setOf_alignExists hd Dhat hsym ψFinite
+      (fun u => Acharyya2025.ConfigPerturbation.configBound n d α Λ
+        ((n : Real) * rate u)) k (hmeas_spec k)
+  -- The sub-event is contained in the uniform embedding-error event.
+  have hE_sub : ∀ k, {ω |
+      Acharyya2025.AlignedPipeline.AlignExists hd Dhat hsym ψFinite
+        (fun u => Acharyya2025.ConfigPerturbation.configBound n d α Λ
+          ((n : Real) * rate u)) k ω}
+      ⊆ {ω | ∀ f, ‖ψHat k ω f - ψ f‖
+          ≤ Acharyya2025.ConfigPerturbation.configBound n d α Λ
+              ((n : Real) * rate k)} := by
+    intro k ω hA f
+    have hcfg := Acharyya2025.AlignedPipeline.configError_alignedSpectralConfig_le
+      hd Dhat hsym ψFinite
+      (fun u => Acharyya2025.ConfigPerturbation.configBound n d α Λ
+        ((n : Real) * rate u)) k ω hA
+    calc ‖ψHat k ω f - ψ f‖
+        = ‖Acharyya2025.AlignedPipeline.alignedSpectralConfig hd Dhat hsym ψFinite
+            (fun u => Acharyya2025.ConfigPerturbation.configBound n d α Λ
+              ((n : Real) * rate u)) k ω (indexOf f) - ψFinite (indexOf f)‖ := by
+          rw [hψHat, hψ]
+      _ ≤ ConfigError
+            (Acharyya2025.AlignedPipeline.alignedSpectralConfig hd Dhat hsym ψFinite
+              (fun u => Acharyya2025.ConfigPerturbation.configBound n d α Λ
+                ((n : Real) * rate u)) k ω) ψFinite :=
+          norm_config_le_ConfigError _ _ _
+      _ ≤ _ := hcfg
+  -- The sub-event is high-probability: it *equals* the aligned-estimator error
+  -- event (the choice-elimination iff), which the spectral chain controls.
+  have hE : _root_.HighProbAtTop μ hμ (fun k => {ω |
+      Acharyya2025.AlignedPipeline.AlignExists hd Dhat hsym ψFinite
+        (fun u => Acharyya2025.ConfigPerturbation.configBound n d α Λ
+          ((n : Real) * rate u)) k ω}) := by
+    have haligned :=
+      Acharyya2025.AlignedPipeline.highProb_aligned_configError_of_entrywise_close
+        μ hd Dhat D hsym hB hrank hα_pos hfloor hΛ ψFinite hψFinite
+        rate hrate_nonneg hsmall hpolar hcenter
+    intro δ hδ
+    obtain ⟨N, hN⟩ := haligned δ hδ
+    refine ⟨N, fun k hk => ?_⟩
+    have hset : {ω | ConfigError
+          (Acharyya2025.AlignedPipeline.alignedSpectralConfig hd Dhat hsym ψFinite
+            (fun u => Acharyya2025.ConfigPerturbation.configBound n d α Λ
+              ((n : Real) * rate u)) k ω) ψFinite
+          ≤ Acharyya2025.ConfigPerturbation.configBound n d α Λ ((n : Real) * rate k)}
+        = {ω | Acharyya2025.AlignedPipeline.AlignExists hd Dhat hsym ψFinite
+            (fun u => Acharyya2025.ConfigPerturbation.configBound n d α Λ
+              ((n : Real) * rate u)) k ω} := by
+      ext ω
+      exact Acharyya2025.AlignedPipeline.configError_alignedSpectralConfig_le_iff_alignExists
+        hd Dhat hsym ψFinite
+        (fun u => Acharyya2025.ConfigPerturbation.configBound n d α Λ
+          ((n : Real) * rate u)) k ω
+    show (μ k) {ω | Acharyya2025.AlignedPipeline.AlignExists hd Dhat hsym ψFinite
+      (fun u => Acharyya2025.ConfigPerturbation.configBound n d α Λ
+        ((n : Real) * rate u)) k ω} ≥ 1 - δ
+    rw [← hset]
+    exact hN k hk
   -- Discharge the rate side-conditions from `RateChain`.
   have h_c_tendsto :
       Filter.Tendsto
@@ -254,10 +321,14 @@ theorem Theorem2_part2_of_aligned_spectral
     intro k
     unfold Acharyya2025.ConfigPerturbation.configBound
     positivity
-  -- Feed into the abstract paper theorem (everything else genuine).
-  exact Theorem2_part2_paper (Q := Q) (X := X) (d := d) Pf μ hμ
+  -- Feed into the sub-event paper theorem (everything else genuine).
+  exact Theorem2_part2_paper_subevent (Q := Q) (X := X) (d := d) Pf μ hμ
     (fun _ f => ψ f) (fun u ω (_ : Finset Q) f => ψHat u ω f) f_ref score Qstar Qsub
-    hm γ h_lipQ h_gamma_pos _ h_c_tendsto h_c_nonneg h_conc h_conc_meas
+    hm γ h_lipQ h_gamma_pos _ h_c_tendsto h_c_nonneg
+    (fun k => {ω | Acharyya2025.AlignedPipeline.AlignExists hd Dhat hsym ψFinite
+      (fun u => Acharyya2025.ConfigPerturbation.configBound n d α Λ
+        ((n : Real) * rate u)) k ω})
+    hE_meas hE_sub hE
     h_cover h_cover_meas hMSE_Q_pos
 
 end DkpsQuench.AcharyyaBridge

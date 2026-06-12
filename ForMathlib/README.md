@@ -43,6 +43,7 @@ per-candidate dossiers live in `planning/mathlib-candidates.md`.
 | `Analysis/InnerProductSpace/Spectrum.lean` | `Mathlib/Analysis/InnerProductSpace/Spectrum.lean` | #3b Davis–Kahan cross-term identity, generalized to `RCLike` |
 | `Analysis/Matrix/EntrywiseOpNorm.lean` | `Mathlib/Analysis/InnerProductSpace/PiL2.lean` + `Mathlib/Analysis/Matrix/Normed.lean` | norm comparisons: `ℓ¹ ≤ √card·ℓ²` (`RCLike`) and entrywise → `ℓ²`-operator-norm `‖toEuclideanLin A x‖ ≤ nε‖x‖` (ℝ) |
 | `LinearAlgebra/Matrix/PosDef.lean` | `Mathlib/LinearAlgebra/Matrix/PosDef.lean` | #5 rank-constrained PSD factorization `PosSemidef ∧ rank ≤ d ↔ ∃ A : Matrix (Fin d) n, B = Aᴴ * A` (ℝ; `TODO(RCLike)`) |
+| `MeasureTheory/CompactExists.lean` | `Mathlib/MeasureTheory/Constructions/BorelSpace/` | measurability of a compactly-quantified existential `{ω | ∃ y ∈ S, F y ω ≤ c}` for Carathéodory `F` (no measurable selection) |
 | `MeasureTheory/Function/ConvergenceInMeasure.lean` | `Mathlib/MeasureTheory/Function/ConvergenceInMeasure.lean` | #7 `TendstoInMeasure` from a vanishing rate (general filter, `EDist`, measurability-free) |
 | `MeasureTheory/Measure/Typeclasses/Probability.lean` | `Mathlib/MeasureTheory/Measure/Typeclasses/Probability.lean` | #2a measurability-free `1 − μ sᶜ ≤ μ s` |
 | `Probability/Moments/SampleMean.lean` | new `Mathlib/Probability/Moments/SampleMean.lean` | #4 sample-mean MSE `∫ ‖r⁻¹ Σ Xₖ − μ‖² = r⁻² Σ ∫ ‖Xₖ − μ‖²` on a finite-dim real IPS (pairwise indep, Bochner mean) |

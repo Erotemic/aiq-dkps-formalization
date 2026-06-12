@@ -37,6 +37,7 @@ import Acharyya2025.OperatorBridge
 import Acharyya2025.ConfigPerturbation
 import Acharyya2025.MatrixPerturbation
 import Acharyya2025.Bridge
+import ForMathlib.MeasureTheory.CompactExists
 
 open scoped BigOperators RealInnerProductSpace InnerProductSpace Matrix Topology
 open Filter MeasureTheory
@@ -157,6 +158,122 @@ theorem configError_alignedSpectralConfig_le {n d : Nat} (hd : d ≤ n)
     simp only [alignedSpectralConfig, dif_pos h]
   rw [heq]
   exact hspec
+
+/--
+**The aligned-estimator error event is exactly the alignment existential.**
+
+The forward direction is the dite analysis: on the positive branch
+`AlignExists` already holds; on the negative branch the estimator is the *raw*
+spectral embedding, and a raw embedding satisfying the bound witnesses
+`AlignExists` with `W = id`.  The backward direction is the defining property
+`configError_alignedSpectralConfig_le`.
+
+This eliminates the `Classical.choose` inside `alignedSpectralConfig` from any
+measurability question about the error event: the event equals a set defined by
+an existential over isometries, with no choice function in sight.
+
+Formalized by Claude Fable 5 (claude-fable-5[1m]).
+-/
+theorem configError_alignedSpectralConfig_le_iff_alignExists {n d : Nat} (hd : d ≤ n)
+    {Ω : Type} (Dhat : Nat → Ω → DisMat n)
+    (hsym : ∀ u ω, (disMatToMatrix (classicalMDSMatrix (Dhat u ω))).IsHermitian)
+    (ψ : Config n d) (c : Nat → Real) (u : Nat) (ω : Ω) :
+    ConfigError (alignedSpectralConfig hd Dhat hsym ψ c u ω) ψ ≤ c u ↔
+      AlignExists hd Dhat hsym ψ c u ω := by
+  constructor
+  · intro hle
+    by_cases h : AlignExists hd Dhat hsym ψ c u ω
+    · exact h
+    · refine ⟨LinearMap.id, fun x y => rfl, ?_⟩
+      have heq : alignedSpectralConfig hd Dhat hsym ψ c u ω
+          = fun i => spectralConfig
+              (Matrix.toEuclideanLin (disMatToMatrix (classicalMDSMatrix (Dhat u ω))))
+              (opSym (hsym u ω)) hd i := by
+        simp only [alignedSpectralConfig, dif_neg h]
+      rw [heq] at hle
+      simpa using hle
+  · exact configError_alignedSpectralConfig_le hd Dhat hsym ψ c u ω
+
+/--
+**Measurability of the alignment existential.**
+
+If the raw spectral embedding `ω ↦ spectralConfig … (Dhat u ω) …` is measurable
+(coordinatewise), then the event `{ω | AlignExists …}` is measurable — with no
+measurable selection of the alignment: the set of inner-product-preserving
+continuous linear maps of `ℝ^d` is compact (closed and bounded in the
+finite-dimensional operator space), so the existential is a compactly-quantified
+constraint and `ForMathlib.measurableSet_exists_mem_le` applies.
+
+Combined with `configError_alignedSpectralConfig_le_iff_alignExists`, this makes
+the aligned-estimator error event measurable from the single honest primitive
+"the raw spectral embedding is measurable in the sample".
+
+Formalized by Claude Fable 5 (claude-fable-5[1m]).
+-/
+theorem measurableSet_setOf_alignExists {n d : Nat} (hd : d ≤ n)
+    {Ω : Type} [MeasurableSpace Ω] (Dhat : Nat → Ω → DisMat n)
+    (hsym : ∀ u ω, (disMatToMatrix (classicalMDSMatrix (Dhat u ω))).IsHermitian)
+    (ψ : Config n d) (c : Nat → Real) (u : Nat)
+    (hmeas : ∀ i : Fin n, Measurable (fun ω =>
+      spectralConfig
+        (Matrix.toEuclideanLin (disMatToMatrix (classicalMDSMatrix (Dhat u ω))))
+        (opSym (hsym u ω)) hd i)) :
+    MeasurableSet {ω | AlignExists hd Dhat hsym ψ c u ω} := by
+  classical
+  set spec : Ω → Fin n → EuclideanSpace ℝ (Fin d) := fun ω i =>
+    spectralConfig
+      (Matrix.toEuclideanLin (disMatToMatrix (classicalMDSMatrix (Dhat u ω))))
+      (opSym (hsym u ω)) hd i with hspec
+  -- The compact parameter set: inner-product-preserving continuous linear maps.
+  set S : Set (EuclideanSpace ℝ (Fin d) →L[ℝ] EuclideanSpace ℝ (Fin d)) :=
+    {W | ∀ x y, ⟪W x, W y⟫_ℝ = ⟪x, y⟫_ℝ} with hSdef
+  -- Rewrite the existential over linear maps as one over `S` (finite dimension:
+  -- every linear map is continuous, and the coercions match pointwise).
+  have hevent : {ω | AlignExists hd Dhat hsym ψ c u ω}
+      = {ω | ∃ W ∈ S, (∑ i : Fin n, ‖W (spec ω i) - ψ i‖) ≤ c u} := by
+    ext ω
+    constructor
+    · rintro ⟨W, hWinner, hWerr⟩
+      refine ⟨LinearMap.toContinuousLinearMap W, fun x y => by simpa using hWinner x y, ?_⟩
+      simpa [ConfigError, hspec] using hWerr
+    · rintro ⟨W, hWS, hWerr⟩
+      refine ⟨(W : EuclideanSpace ℝ (Fin d) →ₗ[ℝ] EuclideanSpace ℝ (Fin d)),
+        fun x y => by simpa using hWS x y, ?_⟩
+      simpa [ConfigError, hspec] using hWerr
+  -- `S` is closed: an intersection of inner-product equation sets.
+  have hSclosed : IsClosed S := by
+    have hrw : S = ⋂ (x : EuclideanSpace ℝ (Fin d)) (y : EuclideanSpace ℝ (Fin d)),
+        {W : EuclideanSpace ℝ (Fin d) →L[ℝ] EuclideanSpace ℝ (Fin d) |
+          ⟪W x, W y⟫_ℝ = ⟪x, y⟫_ℝ} := by
+      ext W; simp only [hSdef, Set.mem_setOf_eq, Set.mem_iInter]
+    rw [hrw]
+    refine isClosed_iInter fun x => isClosed_iInter fun y =>
+      isClosed_eq (Continuous.inner ?_ ?_) continuous_const
+    · exact (ContinuousLinearMap.apply ℝ (EuclideanSpace ℝ (Fin d)) x).continuous
+    · exact (ContinuousLinearMap.apply ℝ (EuclideanSpace ℝ (Fin d)) y).continuous
+  -- `S` is bounded: inner-product preservation forces operator norm `≤ 1`.
+  have hSbounded : Bornology.IsBounded S := by
+    refine (Metric.isBounded_closedBall (x := (0 : EuclideanSpace ℝ (Fin d) →L[ℝ]
+      EuclideanSpace ℝ (Fin d))) (r := 1)).subset ?_
+    intro W hW
+    rw [Metric.mem_closedBall, dist_zero_right]
+    refine ContinuousLinearMap.opNorm_le_bound _ zero_le_one fun x => ?_
+    have hsq : ‖W x‖ ^ 2 = ‖x‖ ^ 2 := by
+      rw [← real_inner_self_eq_norm_sq, ← real_inner_self_eq_norm_sq, hW x x]
+    have hnorm : ‖W x‖ = ‖x‖ := (sq_eq_sq₀ (norm_nonneg _) (norm_nonneg _)).mp hsq
+    rw [hnorm, one_mul]
+  have hScompact : IsCompact S := Metric.isCompact_of_isClosed_isBounded hSclosed hSbounded
+  -- The compactly-quantified existential is measurable.
+  rw [hevent]
+  refine ForMathlib.measurableSet_exists_mem_le hScompact (fun ω => ?_) (fun W _ => ?_) (c u)
+  · -- Continuity in `W` of the error sum.
+    refine Continuous.continuousOn ?_
+    refine continuous_finsetSum _ fun i _ => ?_
+    exact (((ContinuousLinearMap.apply ℝ (EuclideanSpace ℝ (Fin d))
+      (spec ω i)).continuous).sub continuous_const).norm
+  · -- Measurability in `ω` of the error sum, from the raw-embedding measurability.
+    refine Finset.measurable_sum _ fun i _ => ?_
+    exact ((W.continuous.measurable.comp (hmeas i)).sub measurable_const).norm
 
 /-! ### (3) High-probability aligned perturbation (repaired legacy seam) -/
 

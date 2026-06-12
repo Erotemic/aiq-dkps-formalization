@@ -989,3 +989,248 @@ theorem Theorem2_part2_paper
   simpa [base] using this
 
 end Paper_Theorem2_Literal
+
+/-!
+## Sub-event variants of Theorem 2
+
+The `h_conc`/`h_conc_meas` pair in the theorems above demands measurability of
+the *exact* uniform embedding-error event.  When the estimator `ψHat` involves a
+nonconstructive alignment (`Classical.choose`), that event need not be known to
+be measurable — but the concentration chain typically produces a *smaller*
+measurable high-probability event (e.g. the choice-free alignment existential).
+The variants below take such a sub-event `E` instead: `E` measurable,
+high-probability, and contained in the embedding-error event.  The originals
+are recovered by taking `E` to be the event itself.
+
+Formalized by Claude Fable 5 (claude-fable-5[1m]).
+-/
+
+section Theorem2_Subevent
+
+open Filter MeasureTheory
+
+variable {Q : Type u} [DecidableEq Q]
+variable {X : Type v} [MeasurableSpace X]
+variable {d : ℕ}
+variable {Ω : Type} [MeasurableSpace Ω]
+
+/-- `Theorem2_part1` with the concentration event replaced by a measurable
+high-probability **sub-event** `E`.  Identical proof; the intersection step uses
+`E`, and one extra monotonicity step upgrades membership in `E` to membership in
+the embedding-error event via `hE_sub`. -/
+theorem Theorem2_part1_subevent
+  (Pf : Measure (Model Q X)) [IsProbabilityMeasure Pf]
+  (μ : ℕ → Measure Ω) (hμ : ∀ n, IsProbabilityMeasure (μ n))
+  (ψ : Model Q X → Vec d)
+  (ψHat : ℕ → Ω → Model Q X → Vec d)
+  (f_ref : ∀ n, Ω → Fin n → Model Q X)
+  (score : Model Q X → Finset Q → ℝ)
+  (Qstar : Finset Q)
+  (γ : ℝ)
+  (h_lip : LipschitzScore γ (fun _ f => ψ f) (fun f => score f Qstar))
+  (h_gamma_pos : 0 < γ)
+  (c : ℕ → ℝ) (h_c_tendsto : Filter.Tendsto c Filter.atTop (nhds 0))
+  (h_c_nonneg : ∀ n, 0 ≤ c n)
+  (E : ℕ → Set Ω)
+  (hE_meas : ∀ n, MeasurableSet (E n))
+  (hE_sub : ∀ n, E n ⊆ {ω | ∀ f, ‖ψHat n ω f - ψ f‖ ≤ c n})
+  (hE : HighProbAtTop μ hμ E)
+  (h_cover : ∀ ρ > 0, HighProbAtTop μ hμ (fun n => {ω | ∀ f, ∃ i, ‖ψ (f_ref n ω i) - ψ f‖ ≤ ρ}))
+  (h_cover_meas : ∀ ρ > 0, ∀ n, MeasurableSet {ω | ∀ f, ∃ i, ‖ψ (f_ref n ω i) - ψ f‖ ≤ ρ})
+  (hNN : ℕ → Ω → Model Q X → ℝ)
+  (h_hNN_def : ∀ n ω f, (hn : n > 0) → hNN n ω f = hNN_estimator hn (fun i => ψHat n ω (f_ref n ω i)) (ψHat n ω f) (fun i => score (f_ref n ω i) Qstar)) :
+  ∀ ε : ℝ, 0 < ε →
+    HighProbAtTop μ hμ (fun n => {ω | MSE Pf (fun f => score f Qstar) (fun f => hNN n ω f) ≤ ε}) := by
+      have h_mse_bound : ∀ ε > 0, ∃ N : ℕ, ∀ n > N, ∀ ω ∈ {ω | ∀ f, ‖ψHat n ω f - ψ f‖ ≤ c n} ∩ {ω | ∀ f, ∃ i : Fin n, ‖ψ (f_ref n ω i) - ψ f‖ ≤ Real.sqrt ε / (2 * γ)}, MSE Pf (fun f => score f Qstar) (fun f => hNN n ω f) ≤ ε := by
+        intro ε hε_pos
+        obtain ⟨N, hN⟩ : ∃ N : ℕ, ∀ n > N, ∀ ω ∈ {ω | ∀ f, ‖ψHat n ω f - ψ f‖ ≤ c n} ∩ {ω | ∀ f, ∃ i : Fin n, ‖ψ (f_ref n ω i) - ψ f‖ ≤ Real.sqrt ε / (2 * γ)}, ∀ f, |hNN n ω f - score f Qstar| ≤ Real.sqrt ε := by
+          obtain ⟨N, hN⟩ : ∃ N : ℕ, ∀ n > N, ∀ ω ∈ {ω | ∀ f, ‖ψHat n ω f - ψ f‖ ≤ c n} ∩ {ω | ∀ f, ∃ i : Fin n, ‖ψ (f_ref n ω i) - ψ f‖ ≤ Real.sqrt ε / (2 * γ)}, ∀ f, |hNN n ω f - score f Qstar| ≤ γ * (Real.sqrt ε / (2 * γ) + 4 * c n) := by
+            use 1;
+            intro n hn ω hω f;
+            rw [ h_hNN_def n ω f hn.le ];
+            exact step5_pointwise_error n ( fun i => ψ ( f_ref n ω i ) ) ( fun i => ψHat n ω ( f_ref n ω i ) ) ( ψ f ) ( ψHat n ω f ) ( nnIndex ( by linarith ) ( fun i => ψHat n ω ( f_ref n ω i ) ) ( ψHat n ω f ) ) ( nnIndex_isArgmin ( by linarith ) ( fun i => ψHat n ω ( f_ref n ω i ) ) ( ψHat n ω f ) ) ( c n ) ( Real.sqrt ε / ( 2 * γ ) ) γ ( fun i => hω.1 ( f_ref n ω i ) ) ( hω.1 f ) ( by obtain ⟨ i, hi ⟩ := hω.2 f; exact ⟨ i, hi ⟩ ) ( fun i => score ( f_ref n ω i ) Qstar ) ( score f Qstar ) ( fun i => h_lip Qstar ( f_ref n ω i ) f ) h_gamma_pos.le ( by positivity ) ( h_c_nonneg n );
+          obtain ⟨ N', hN' ⟩ := Metric.tendsto_atTop.mp h_c_tendsto ( Real.sqrt ε / ( 8 * γ ) ) ( by positivity );
+          exact ⟨ Max.max N N', fun n hn ω hω f => le_trans ( hN n ( lt_of_le_of_lt ( le_max_left _ _ ) hn ) ω hω f ) ( by nlinarith [ abs_lt.mp ( hN' n ( le_of_lt ( lt_of_le_of_lt ( le_max_right _ _ ) hn ) ) ), Real.sqrt_nonneg ε, Real.sq_sqrt hε_pos.le, mul_div_cancel₀ ( Real.sqrt ε ) ( by positivity : ( 2 * γ ) ≠ 0 ), mul_div_cancel₀ ( Real.sqrt ε ) ( by positivity : ( 8 * γ ) ≠ 0 ), h_c_nonneg n ] ) ⟩;
+        use N;
+        intro n hn ω hω
+        have h_mse_le : ∫ f, (hNN n ω f - score f Qstar) ^ 2 ∂Pf ≤ ∫ f, (Real.sqrt ε) ^ 2 ∂Pf := by
+          refine' MeasureTheory.integral_mono_of_nonneg _ _ _;
+          · exact Filter.Eventually.of_forall fun f => sq_nonneg _;
+          · norm_num;
+          · filter_upwards [ ] with f using by simpa using pow_le_pow_left₀ ( abs_nonneg _ ) ( hN n hn ω hω f ) 2;
+        have h_eq : MSE Pf (fun f => score f Qstar) (fun f => hNN n ω f)
+            = ∫ f, (hNN n ω f - score f Qstar) ^ 2 ∂Pf := by
+          simp only [MSE, sqLoss]
+        rw [h_eq]
+        refine h_mse_le.trans ?_
+        simp [Real.sq_sqrt hε_pos.le]
+      intro ε hε_pos
+      obtain ⟨N, hN⟩ := h_mse_bound ε hε_pos
+      have h_inter : HighProbAtTop μ hμ (fun n => E n ∩ {ω | ∀ f, ∃ i : Fin n, ‖ψ (f_ref n ω i) - ψ f‖ ≤ Real.sqrt ε / (2 * γ)}) := by
+        apply HighProbAtTop.inter_v3 hE (h_cover (Real.sqrt ε / (2 * γ)) (by
+        positivity)) (fun n => hE_meas n) (fun n => h_cover_meas (Real.sqrt ε / (2 * γ)) (by
+        positivity) n);
+      exact h_inter.mono_eventually ( Filter.eventually_atTop.mpr ⟨ N + 1, fun n hn => by intro ω hω; exact hN n ( by linarith ) ω ⟨hE_sub n hω.1, hω.2⟩ ⟩ )
+
+/-- `Theorem2_part1_v2` with a measurable high-probability sub-event. -/
+theorem Theorem2_part1_v2_subevent
+  (Pf : Measure (Model Q X)) [IsProbabilityMeasure Pf]
+  (μ : ℕ → Measure Ω) (hμ : ∀ n, IsProbabilityMeasure (μ n))
+  (ψ : Model Q X → Vec d)
+  (ψHat : ℕ → Ω → Model Q X → Vec d)
+  (f_ref : ∀ n, Ω → Fin n → Model Q X)
+  (score : Model Q X → Finset Q → ℝ)
+  (Qstar : Finset Q)
+  (γ : ℝ)
+  (h_lip : LipschitzScore γ (fun _ f => ψ f) (fun f => score f Qstar))
+  (h_gamma_pos : 0 < γ)
+  (c : ℕ → ℝ) (h_c_tendsto : Filter.Tendsto c Filter.atTop (nhds 0))
+  (h_c_nonneg : ∀ n, 0 ≤ c n)
+  (E : ℕ → Set Ω)
+  (hE_meas : ∀ n, MeasurableSet (E n))
+  (hE_sub : ∀ n, E n ⊆ {ω | ∀ f, ‖ψHat n ω f - ψ f‖ ≤ c n})
+  (hE : HighProbAtTop μ hμ E)
+  (h_cover : ∀ ρ > 0, HighProbAtTop μ hμ (fun n => {ω | ∀ f, ∃ i, ‖ψ (f_ref n ω i) - ψ f‖ ≤ ρ}))
+  (h_cover_meas : ∀ ρ > 0, ∀ n, MeasurableSet {ω | ∀ f, ∃ i, ‖ψ (f_ref n ω i) - ψ f‖ ≤ ρ})
+  (hNN : ℕ → Ω → Model Q X → ℝ)
+  (h_hNN_def : ∀ n ω f, (hn : n > 0) → hNN n ω f = hNN_estimator hn (fun i => ψHat n ω (f_ref n ω i)) (ψHat n ω f) (fun i => score (f_ref n ω i) Qstar)) :
+  ∀ ε : ℝ, 0 < ε →
+    HighProbAtTop μ hμ (fun n => {ω | MSE Pf (fun f => score f Qstar) (fun f => hNN n ω f) ≤ ε}) := by
+      apply Theorem2_part1_subevent Pf μ hμ ψ ψHat f_ref score Qstar γ h_lip h_gamma_pos c h_c_tendsto h_c_nonneg E hE_meas hE_sub hE h_cover h_cover_meas hNN h_hNN_def
+
+/-- `Theorem2_part1_paper` with a measurable high-probability sub-event in place
+of `h_conc`/`h_conc_meas`. -/
+theorem Theorem2_part1_paper_subevent
+  (Pf : Measure (Model Q X)) [IsProbabilityMeasure Pf]
+  (μ : ℕ → Measure Ω) (hμ : ∀ n, IsProbabilityMeasure (μ n))
+  (ψ : Finset Q → Model Q X → Vec d)
+  (ψHat : ℕ → Ω → Finset Q → Model Q X → Vec d)
+  (f_ref : ∀ n, Ω → Fin n → Model Q X)
+  (score : Model Q X → Finset Q → ℝ)
+  (Qstar Qsub : Finset Q)
+  (γ : ℝ)
+  (h_lipQ : ∀ (f f' : Model Q X),
+    |score f Qstar - score f' Qstar| ≤ γ * ‖ψ Qsub f - ψ Qsub f'‖)
+  (h_gamma_pos : 0 < γ)
+  (c : ℕ → ℝ) (h_c_tendsto : Tendsto c atTop (nhds 0))
+  (h_c_nonneg : ∀ n, 0 ≤ c n)
+  (E : ℕ → Set Ω)
+  (hE_meas : ∀ n, MeasurableSet (E n))
+  (hE_sub : ∀ n, E n ⊆ {ω | ∀ f, ‖ψHat n ω Qsub f - ψ Qsub f‖ ≤ c n})
+  (hE : HighProbAtTop μ hμ E)
+  (h_cover :
+    ∀ ρ > 0,
+      HighProbAtTop μ hμ (fun n => {ω | ∀ f, ∃ i, ‖ψ Qsub (f_ref n ω i) - ψ Qsub f‖ ≤ ρ}))
+  (h_cover_meas :
+    ∀ ρ > 0, ∀ n,
+      MeasurableSet {ω | ∀ f, ∃ i, ‖ψ Qsub (f_ref n ω i) - ψ Qsub f‖ ≤ ρ}) :
+  ∀ ε : ℝ, 0 < ε → ∀ δ : ENNReal, 0 < δ →
+    ∃ n : ℕ,
+      (μ n) {ω |
+        MSE (Q := Q) (X := X) Pf
+          (yFull score Qstar)
+          (fun f => yNN_paper (d := d) ψHat f_ref score Qstar Qsub n ω f)
+        ≤ ε} ≥ 1 - δ := by
+  intro ε hε δ hδ
+  classical
+  have h_lip_const :
+      LipschitzScore (Q := Q) (X := X) (d := d) γ
+        (fun (_ : Finset Q) (f : Model Q X) => ψ Qsub f)
+        (fun f => score f Qstar) := by
+    intro _ f f'
+    simpa using h_lipQ f f'
+  let hNN : ℕ → Ω → Model Q X → ℝ :=
+    fun n ω f => yNN_paper (d := d) ψHat f_ref score Qstar Qsub n ω f
+  have h_hNN_def :
+      ∀ n ω f, (hn : n > 0) →
+        hNN n ω f =
+          hNN_estimator (d := d) hn
+            (fun i => ψHat n ω Qsub (f_ref n ω i))
+            (ψHat n ω Qsub f)
+            (fun i => score (f_ref n ω i) Qstar) := by
+    intro n ω f hn
+    simp [hNN, yNN_paper, hn, hNN_estimator, nnIndex]
+  have hp_atTop :=
+    Theorem2_part1_v2_subevent (Q := Q) (X := X) (d := d) (Ω := Ω)
+      (Pf := Pf) (μ := μ) (hμ := hμ)
+      (ψ := fun f => ψ Qsub f)
+      (ψHat := fun n ω f => ψHat n ω Qsub f)
+      (f_ref := f_ref)
+      (score := score) (Qstar := Qstar)
+      (γ := γ) (h_lip := h_lip_const) (h_gamma_pos := h_gamma_pos)
+      (c := c) (h_c_tendsto := h_c_tendsto) (h_c_nonneg := h_c_nonneg)
+      (E := E) (hE_meas := hE_meas) (hE_sub := hE_sub) (hE := hE)
+      (h_cover := h_cover) (h_cover_meas := h_cover_meas)
+      (hNN := hNN) (h_hNN_def := h_hNN_def)
+      ε hε
+  obtain ⟨N, hN⟩ := hp_atTop δ hδ
+  refine ⟨N+1, ?_⟩
+  exact hN (N+1) (Nat.lt_succ_self N)
+
+/-- `Theorem2_part2_paper` (query efficiency) with a measurable
+high-probability sub-event in place of `h_conc`/`h_conc_meas`. -/
+theorem Theorem2_part2_paper_subevent
+  (Pf : Measure (Model Q X)) [IsProbabilityMeasure Pf]
+  (μ : ℕ → Measure Ω) (hμ : ∀ n, IsProbabilityMeasure (μ n))
+  (ψ : Finset Q → Model Q X → Vec d)
+  (ψHat : ℕ → Ω → Finset Q → Model Q X → Vec d)
+  (f_ref : ∀ n, Ω → Fin n → Model Q X)
+  (score : Model Q X → Finset Q → ℝ)
+  (Qstar Qsub : Finset Q)
+  (hm : Qsub.card < Qstar.card)
+  (γ : ℝ)
+  (h_lipQ : ∀ (f f' : Model Q X),
+    |score f Qstar - score f' Qstar| ≤ γ * ‖ψ Qsub f - ψ Qsub f'‖)
+  (h_gamma_pos : 0 < γ)
+  (c : ℕ → ℝ) (h_c_tendsto : Tendsto c atTop (nhds 0))
+  (h_c_nonneg : ∀ n, 0 ≤ c n)
+  (E : ℕ → Set Ω)
+  (hE_meas : ∀ n, MeasurableSet (E n))
+  (hE_sub : ∀ n, E n ⊆ {ω | ∀ f, ‖ψHat n ω Qsub f - ψ Qsub f‖ ≤ c n})
+  (hE : HighProbAtTop μ hμ E)
+  (h_cover :
+    ∀ ρ > 0,
+      HighProbAtTop μ hμ (fun n => {ω | ∀ f, ∃ i, ‖ψ Qsub (f_ref n ω i) - ψ Qsub f‖ ≤ ρ}))
+  (h_cover_meas :
+    ∀ ρ > 0, ∀ n,
+      MeasurableSet {ω | ∀ f, ∃ i, ‖ψ Qsub (f_ref n ω i) - ψ Qsub f‖ ≤ ρ})
+  (hMSE_Q_pos :
+    0 < MSE (Q := Q) (X := X) Pf (yFull score Qstar) (yQ score Qsub)) :
+  ∀ δ : ENNReal, 0 < δ →
+    ∃ n : ℕ,
+      (μ n) {ω |
+        MSE (Q := Q) (X := X) Pf
+          (yFull score Qstar)
+          (fun f => yNN_paper (d := d) ψHat f_ref score Qstar Qsub n ω f)
+        ≤ MSE (Q := Q) (X := X) Pf (yFull score Qstar) (yQ score Qsub)} ≥ 1 - δ := by
+  intro δ hδ
+  let base : ℝ := MSE (Q := Q) (X := X) Pf (yFull score Qstar) (yQ score Qsub)
+  have hbase_pos : 0 < base := hMSE_Q_pos
+  have hbase_nonneg : 0 ≤ base := le_of_lt hbase_pos
+  let ε : ℝ := base / 2
+  have hε_pos : 0 < ε := by
+    dsimp [ε]; linarith
+  obtain ⟨n, hn⟩ :=
+    Theorem2_part1_paper_subevent (Q := Q) (X := X) (d := d) (Ω := Ω)
+      (Pf := Pf) (μ := μ) (hμ := hμ)
+      (ψ := ψ) (ψHat := ψHat) (f_ref := f_ref)
+      (score := score) (Qstar := Qstar) (Qsub := Qsub)
+      (γ := γ) (h_lipQ := h_lipQ) (h_gamma_pos := h_gamma_pos)
+      (c := c) (h_c_tendsto := h_c_tendsto) (h_c_nonneg := h_c_nonneg)
+      (E := E) (hE_meas := hE_meas) (hE_sub := hE_sub) (hE := hE)
+      (h_cover := h_cover) (h_cover_meas := h_cover_meas)
+      ε hε_pos δ hδ
+  refine ⟨n, ?_⟩
+  refine le_trans hn ?_
+  apply MeasureTheory.measure_mono
+  intro ω hω
+  have : MSE (Q := Q) (X := X) Pf
+        (yFull score Qstar)
+        (fun f => yNN_paper (d := d) ψHat f_ref score Qstar Qsub n ω f)
+      ≤ base := by
+    have hε_le : ε ≤ base := by
+      dsimp [ε]; linarith [hbase_nonneg]
+    exact le_trans hω hε_le
+  simpa [base] using this
+
+end Theorem2_Subevent

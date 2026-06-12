@@ -39,57 +39,6 @@ namespace Acharyya2024.SecondMoment
 
 variable {Ω : Type} [MeasurableSpace Ω]
 
-/--
-Scalar variance-of-the-mean identity.
-
-For pairwise-independent, square-integrable real random variables `Z 0, …, Z (r-1)`
-with a *common* mean `μc` (each `∫ Z k = μc`), the second moment of the scaled
-sum about `μc` is `r⁻²` times the sum of the per-variable second moments about
-`μc`:
-
-  ∫ (r⁻¹ Σₖ Zₖ − μc)² = r⁻² Σₖ ∫ (Zₖ − μc)².
-
-The common-mean hypothesis is genuinely needed: without centring each `Z k` at
-`μc` an extra bias term `(E[mean] − μc)²` appears.  The proof routes through
-Mathlib's `variance` (which absorbs the centring) and
-`ProbabilityTheory.IndepFun.variance_sum`.
-
-This is now a thin wrapper around the Mathlib-staged
-`ForMathlib.integral_sq_scaledSum_sub_of_pairwise_indep`.
-
-Formalized by Claude Fable 5 (claude-fable-5[1m]).
--/
-theorem integral_sq_scaled_sum_sub_of_pairwise_indep
-    (P : Measure Ω) [IsProbabilityMeasure P]
-    {r : Nat} (hr : 0 < r)
-    (Z : Fin r → Ω → Real)
-    (μc : Real)
-    (hL2 : ∀ k, MemLp (Z k) 2 P)
-    (hmean : ∀ k, ∫ ω, Z k ω ∂P = μc)
-    (hindep : Set.Pairwise (Set.univ : Set (Fin r))
-      fun i j => IndepFun (Z i) (Z j) P) :
-    ∫ ω, ((r : Real)⁻¹ * (∑ k, Z k ω) - μc) ^ 2 ∂P
-      = (r : Real)⁻¹ ^ 2 * ∑ k, ∫ ω, (Z k ω - μc) ^ 2 ∂P :=
-  ForMathlib.integral_sq_scaledSum_sub_of_pairwise_indep P hr Z μc hL2 hmean hindep
-
-/--
-Per-coordinate independence of `EuclideanSpace`-valued samples follows from joint
-independence by composing with the coordinate projection.
-
-Formalized by Claude Fable 5 (claude-fable-5[1m]).
--/
-theorem pairwise_indep_coord
-    (P : Measure Ω)
-    {ι : Type} [Fintype ι]
-    {r : Nat} (X : Fin r → Ω → EuclideanSpace Real ι)
-    (hindep : iIndepFun X P) (c : ι) :
-    Set.Pairwise (Set.univ : Set (Fin r))
-      fun i j => IndepFun (fun ω => X i ω c) (fun ω => X j ω c) P := by
-  intro i _ j _ hij
-  have hmeas : Measurable (fun x : EuclideanSpace Real ι => x c) :=
-    (EuclideanSpace.proj c : EuclideanSpace Real ι →L[Real] Real).continuous.measurable
-  exact (hindep.indepFun hij).comp hmeas hmeas
-
 /-- Coordinate-wise common mean upgrades to a Bochner common mean for an
 integrable `EuclideanSpace`-valued sample.  Used to feed the coordinate-mean
 paper statements into the Mathlib-staged Bochner-mean theorems. -/

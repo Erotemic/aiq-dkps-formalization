@@ -82,34 +82,6 @@ structure CMDSpectralAssumptions (n d : Nat) (B : SqMat n) where
   posSemidef : B.PosSemidef
   rank_le : B.rank ≤ d
 
-/--
-Configuration-level output of the population CMDS spectral stage.
-
-The intended construction is: take the positive `d`-dimensional eigenspace of the
-centered matrix `B`, scale eigenvectors by square roots of eigenvalues, and use
-the resulting rows as the CMDS configuration.
--/
-structure PopulationCMDSStage (n d : Nat) (D : DisMat n) where
-  ψ : Config n d
-  realizes : GramRealizesCMDS D ψ
-  stable : CMDSpectralAssumptions n d (disMatToMatrix (classicalMDSMatrix D))
-
-/--
-Perturbation output after passing through Weyl/Davis-Kahan and Procrustes
-alignment.
-
-`alignedError ≤ rate` is intentionally configuration-level: this is the shape
-needed by `DkpsQuench` and `Helm2025`.
--/
-structure PerturbedCMDSStage (n d : Nat)
-    (Dhat D : DisMat n) (ψhat ψ : Config n d) (rate : Real) where
-  centeredClose :
-    MatrixEntrywiseClose
-      (disMatToMatrix (classicalMDSMatrix Dhat))
-      (disMatToMatrix (classicalMDSMatrix D))
-      rate
-  alignedError : ConfigError ψhat ψ ≤ rate
-
 /-! ## Mathlib-candidate norm-comparison seam -/
 
 /--
@@ -193,59 +165,5 @@ theorem cited_population_cmds_realization
     Acharyya2025.GramRealization.exists_config_gram_eq_of_posSemidef_rank_le
       (disMatToMatrix (classicalMDSMatrix D)) stable.posSemidef stable.rank_le
   exact ⟨ψ, fun i j => hψ i j⟩
-
-/-! ### Retired seam (2026-06-11): `cited_cmds_spectral_to_config_perturbation`
-
-Original purpose: the central hard bridge from Mathlib matrix perturbation to
-DKPS configuration error — the Davis-Kahan/Weyl/Procrustes perturbation seam
-for CMDS configurations, intended to be decomposed into (1) entrywise/Frobenius
-control to operator-norm control, (2) Weyl eigenvalue perturbation under
-eigengap assumptions, (3) Davis-Kahan invariant-subspace perturbation, and
-(4) Procrustes/alignment conversion from subspace error to row-wise
-configuration error after eigenvalue square-root scaling.  Citations worth
-keeping: Yu, Wang, Samworth (2015), "A useful variant of the Davis-Kahan
-theorem for statisticians", Biometrika 102(2):315-323; Stewart and Sun, *Matrix
-Perturbation Theory*, Academic Press, 1990; Bhatia, *Matrix Analysis*, Graduate
-Texts in Mathematics 169; Agterberg, Lubberts, Arroyo (2022), the decomposition
-strategy cited by Acharyya et al. for CMDS perturbation; Acharyya, Agterberg,
-Park, Priebe, *Concentration bounds on response-based vector embeddings of
-black-box generative models*, Theorem 2 and Appendix A.  Why it was FALSE as
-written: `ψhat` was an arbitrary configuration with no link to the CMDS of
-`Dhat`, the conclusion used unaligned `ConfigError` (CMDS output is only
-defined up to an orthogonal transformation), no quantitative eigengap
-floor/cap entered the statement, and the claimed rate was the raw entrywise
-`rate` rather than a genuine spectral bound.  Proved TRUE replacement: the
-decomposition was carried out exactly as planned —
-`Acharyya2025.MatrixPerturbation.exists_isometry_configError_le_of_entrywise_close`
-(matrix world, `∃ W` isometry alignment, explicit `configBound`) built from
-`Acharyya2025.ConfigPerturbation.exists_isometry_configError_spectralConfig_le`
-(operator world: Weyl + Davis-Kahan + polar-factor alignment), consumed in
-high-probability form by
-`Acharyya2025.AlignedPipeline.highProb_aligned_configError_of_entrywise_close`.
-
-Retired by Claude Fable 5 (claude-fable-5[1m]);
-retained as prose for the formalization case-study record. The original
-statement is in git history (see commits noted in planning/acharyya-plan.md).
--/
-
-/-! ### Retired seam (2026-06-11): `cmds_embedding_perturbation_from_pipeline`
-
-Original purpose: the pipeline-shaped replacement for the old one-step CMDS
-perturbation seam — it lifted `cited_cmds_spectral_to_config_perturbation` to a
-high-probability statement via `HighProbAtTop.mono`, making the world-map
-pipeline explicit while the spectral core remained unproved.  Citation worth
-keeping: Acharyya, Agterberg, Park, Priebe, arXiv:2511.08307, Theorem 2.  Why
-it was FALSE as written: it inherited the defects of
-`cited_cmds_spectral_to_config_perturbation` (arbitrary `ψhat`, unaligned
-`ConfigError`, no quantitative spectral hypotheses).  Proved TRUE replacement:
-`Acharyya2025.AlignedPipeline.highProb_aligned_configError_of_entrywise_close`,
-the high-probability aligned perturbation theorem over the concrete estimator
-`alignedSpectralConfig`, and its end-to-end response-mean form
-`Acharyya2025.AlignedPipeline.highProb_aligned_configError_of_response_mean`.
-
-Retired by Claude Fable 5 (claude-fable-5[1m]);
-retained as prose for the formalization case-study record. The original
-statement is in git history (see commits noted in planning/acharyya-plan.md).
--/
 
 end Acharyya2025.SpectralPipeline

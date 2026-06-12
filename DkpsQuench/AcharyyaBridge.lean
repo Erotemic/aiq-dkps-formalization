@@ -9,7 +9,6 @@ factorization of the Quench embedding maps through a finite Acharyya
 configuration.
 -/
 
-import Acharyya2025.Concentration
 import Acharyya2025.AlignedPipeline
 import Acharyya2025.RateChain
 import DkpsQuench.Basic

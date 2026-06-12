@@ -1,0 +1,535 @@
+\documentclass[11pt]{article}
+
+\usepackage[a4paper,margin=1in]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage{booktabs}
+\usepackage{enumitem}
+\usepackage{microtype}
+\usepackage{xspace}
+\usepackage{hyperref}
+\usepackage{url}
+
+\hypersetup{
+  colorlinks=true,
+  linkcolor=blue,
+  citecolor=blue,
+  urlcolor=blue
+}
+
+\newcommand{\Lean}{Lean~4\xspace}
+\newcommand{\Mathlib}{Mathlib\xspace}
+\newcommand{\DKPS}{DKPS\xspace}
+\newcommand{\CMDS}{CMDS\xspace}
+\newcommand{\repo}{\textsc{aiq-dkps-formalization}\xspace}
+\newcommand{\file}[1]{\path{#1}}
+\newcommand{\decl}[1]{\path{#1}}
+
+\title{Formalizing Spectral Perturbation, MDS, and Alignment\
+for Statistical Embeddings in Lean}
+
+\author{TODO: Authors}
+\date{Draft 3 -- June 2026}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+We describe a \Lean formalization of a connected body of finite-dimensional
+mathematics underlying statistical embedding methods: raw-stress
+multidimensional-scaling consistency, classical multidimensional-scaling
+perturbation, Procrustes alignment, measurable alignment events, and
+probability-to-rate composition.  Data kernel perspective space (DKPS)
+embeddings of black-box generative models provide the motivating application
+and integration test, but the main contribution is the formalization of the
+reusable mathematical infrastructure needed to make this theory kernel-checkable.
+
+The development formalizes results that are standard enough to be used in
+statistical and geometric arguments, but difficult to use in a proof assistant
+without substantial interface design.  The verified statements make explicit
+rank, gap, uniqueness, compactness, alignment, and measurability assumptions
+that are often implicit in paper arguments.  The artifact builds against a
+pinned \Lean and \Mathlib snapshot without proof holes.  We also record the
+model-assisted workflow that produced the development, distinguishing the
+verified mathematical artifact from provenance claims about individual language
+model sessions.
+\end{abstract}
+
+\section{Introduction}
+
+Many statistical embedding arguments combine several familiar ingredients:
+empirical averages concentrate; pairwise dissimilarities inherit this
+concentration; a matrix representation is constructed from those dissimilarities;
+spectral perturbation controls an eigenspace or a truncated embedding; and a
+Procrustes or orthogonal-alignment argument removes the non-identifiability of
+coordinates.  This pattern appears in multidimensional scaling, kernel methods,
+shape analysis, random graph embeddings, and response-based representations of
+black-box models.  It is also the mathematical pattern behind recent work on data
+kernel perspective space (DKPS) embeddings for generative models
+\cite{duderstadt2023datakernels,helm2024tracking,acharyya2024consistent,acharyya2025concentration,helm2025inference,helm2026query}.
+
+In prose, the components of this pattern are usually treated as well known.
+Classical multidimensional scaling (CMDS) is described by double-centering a
+squared dissimilarity matrix and taking a spectral truncation
+\cite{torgerson1952mds,gower1966distance}.  Raw-stress MDS is described as an
+optimization problem whose minimizers are stable under perturbations of the
+input dissimilarities \cite{kruskal1964mds}.  Spectral perturbation and
+Davis--Kahan-style estimates are used to compare eigenspaces
+\cite{davis1970rotation,yu2015davis,chen2021spectral}.  Procrustes alignment is
+used to compare configurations only up to rigid motion \cite{goodall1991procrustes}.
+
+These facts are standard, but standard does not mean directly available in a
+proof assistant in the form required by an applied theorem stack.  The theorem
+prover requires explicit types, hypotheses, and measurable events.  Coordinate
+representations of eigenspaces depend on choices of eigenvectors.  MDS
+configurations are identifiable only up to isometry.  Minimized objectives may
+have nonunique minimizers.  Probability statements cannot quantify over
+nonmeasurable choices.  Downstream theorems can use an upstream result only if
+its quantifiers, error notion, and measurability interface have the right shape.
+
+This paper reports on a \Lean development that formalizes this difficult
+infrastructure in the setting of a DKPS theorem stack.  DKPS is important here
+because it supplies a demanding end-to-end test case: response samples are
+converted to empirical dissimilarities, dissimilarities to MDS configurations,
+MDS perturbation to aligned embedding error, and aligned embedding error to
+query-efficiency and inference-transfer theorems.  The focus of the paper,
+however, is not DKPS as a statistical methodology.  The focus is the successful
+formalization of the mathematical bridges that make such a stack verifiable.
+
+\paragraph{Contributions.}
+The development makes the following contributions.
+\begin{enumerate}[leftmargin=*]
+  \item It formalizes a deterministic CMDS perturbation theorem converting
+  matrix perturbation into aligned configuration error.  This requires formal
+  spectral perturbation, rank-gap bookkeeping, overlap estimates, polar-factor
+  control, Procrustes alignment, and Gram-realization lemmas.
+  \item It formalizes raw-stress MDS stability through minimizer-set arguments,
+  compactness, approximate-minimizer stability, and explicit uniqueness
+  hypotheses for fixed-profile conclusions.
+  \item It provides a proof-assistant-friendly treatment of alignment and
+  measurability, replacing a noncanonical measurable choice of alignments by a
+  choice-free existential event and compact-existential measurability.
+  \item It composes response-level moment assumptions into high-probability
+  aligned embedding-error rates, and demonstrates that the resulting interface
+  supports downstream query-efficiency and inference theorems.
+  \item It stages a collection of reusable lemmas in a \Mathlib-oriented
+  library, including results in spectral theory, finite-dimensional geometry,
+  convergence in measure, and sample-mean variance.
+\end{enumerate}
+
+The artifact was produced by a model-assisted workflow.  The paper therefore
+also records provenance at the level appropriate for a formalization paper: the
+mathematical result is the checked \Lean artifact; the model-assistance claims
+are historical claims about how the artifact was constructed and should be
+supported by repository comments, git history, and author-maintained session
+records.
+
+\section{Artifact Overview}
+
+The repository is organized into five Lean libraries.  Four are paper-facing
+application layers, and one stages reusable mathematical infrastructure.
+Table~\ref{tab:libraries} summarizes their roles.
+
+\begin{table}[t]
+\centering
+\begin{tabular}{@{}ll@{}}
+\toprule
+Library & Formalized role \\
+\midrule
+\file{Acharyya2024} & Raw-stress MDS and asymptotic consistency interfaces. \\
+\file{Acharyya2025} & Finite-sample concentration and CMDS perturbation. \\
+\file{DkpsQuench} & Query-efficiency reduction consuming aligned embedding error. \\
+\file{Helm2025} & Inference-transfer reduction consuming alignment consistency. \\
+\file{ForMathlib} & Reusable spectral, geometric, probability, and measurability lemmas. \\
+\bottomrule
+\end{tabular}
+\caption{Main libraries in the development.  The DKPS layers serve as the
+application stack; the formalization contribution is concentrated in the
+bridges and reusable infrastructure.}
+\label{tab:libraries}
+\end{table}
+
+The draft described here was validated against repository commit
+\texttt{c8cf511fc4c7b7911294279b99fd76b514cbf64c}, dated 2026-06-12
+10:49:10 -0400, with toolchain \texttt{leanprover/lean4:v4.31.0-rc2}.  The
+inspected archive contains 51 Lean source files and 12,888 lines of Lean source.
+A user-observed \texttt{lake build} at this commit completed successfully with
+8,626 build jobs.  The paper directory includes a separate
+\file{claims_to_files.md} index mapping claims in this draft to repository
+files.
+
+\section{Formalizing Standard Mathematics in a Nonstandard Interface}
+
+The main technical work lies in translating familiar mathematical claims into
+interfaces that can be checked and composed.  This section describes the
+principal obstacles.
+
+\subsection{Non-identifiability of configurations}
+
+MDS and spectral embeddings do not produce canonical coordinates.  A centered
+configuration is identifiable from its Gram matrix only up to an orthogonal
+transformation, and eigenspaces are represented by nonunique eigenbases.  A
+paper proof can often write ``after alignment'' and proceed.  A proof assistant
+requires a precise statement: either an explicit isometry must be supplied, or
+the event of existence of such an isometry must be made measurable.
+
+The formalization therefore uses configuration error modulo isometry as a basic
+interface.  The principal deterministic theorem in
+\file{Acharyya2025/ConfigPerturbation.lean},
+\decl{exists_isometry_configError_spectralConfig_le}, states that under explicit
+spectral hypotheses a perturbed CMDS configuration can be aligned to the
+population configuration with a quantitative error bound.  This is the theorem
+that turns matrix perturbation into a statement usable by statistical arguments.
+
+\subsection{Spectral perturbation with rank and gap hypotheses}
+
+The CMDS bridge is not a direct application of a single library theorem.  It
+requires a sequence of finite-dimensional facts.  Entrywise matrix control is
+converted to operator control.  Weyl-type inequalities control eigenvalues.
+Rank and eigenvalue-floor assumptions produce the spectral separation needed for
+Davis--Kahan estimates.  Cross-block overlap estimates control the deviation of
+empirical and population eigenspaces.  A quantitative polar-factor theorem turns
+an approximate isometry into a genuine isometry.  Gram and Procrustes lemmas
+then transfer this information back to configurations.
+
+These pieces are distributed across
+\file{Acharyya2025/Weyl.lean}, \file{DavisKahan.lean},
+\file{RankGap.lean}, \file{Overlap.lean}, \file{PolarFactor.lean},
+\file{Procrustes.lean}, \file{GramRealization.lean},
+\file{OperatorBridge.lean}, and \file{ConfigPerturbation.lean}.  Several of the
+same ideas are also staged in \file{ForMathlib}.  The important point is that
+well-known spectral reasoning had to be decomposed into formally usable lemmas
+with explicit constants, dimensions, and hypotheses.
+
+\subsection{MDS minimizers and uniqueness}
+
+Raw-stress MDS presents a different obstacle: the embedding is defined as a
+minimizer of a nonconvex objective.  The formalized argument must establish the
+right compact or coercive setting for minimizer existence, handle translation
+normalization, reason about approximate minimizers, and state stability in a way
+that does not pretend a nonunique minimizer is canonical.
+
+The \file{Acharyya2024} library separates an unconditional minimizer-set
+stability theorem from fixed-profile conclusions.  The fixed-profile version
+requires an explicit \decl{UniquePairProfile} hypothesis.  This is not merely a
+Lean technicality.  It is the formal version of a mathematical distinction that
+is easy to suppress in prose: without uniqueness, the stable object is a set of
+minimizers, not a chosen target configuration.  The development thereby
+identifies a latent assumption and records it in the theorem interface.
+
+\subsection{Measurability and selection}
+
+Measurability is often where informal alignment arguments fail to translate
+directly.  A deterministic theorem may prove that for each sample point there
+exists an aligning isometry, but probability statements require the event being
+measured to be measurable.  Selecting eigenbases or alignments by classical
+choice does not automatically provide such measurability.
+
+The development resolves a significant alignment-selection problem by changing
+the event.  In \file{Acharyya2025/AlignedPipeline.lean}, the aligned estimator
+error event is related to a choice-free existential predicate,
+\decl{AlignExists}.  Its measurability is then proved using a compact-existential
+measurability result staged in \file{ForMathlib/MeasureTheory/CompactExists.lean}.
+This avoids the need for a measurable choice of an aligning isometry.
+
+The remaining primitive, recorded in the repository as \decl{hmeas_spec}, is
+smaller and more explicit.  It concerns measurability of the raw spectral
+configuration map as a function of the input matrix.  Since the current
+implementation uses a noncanonical eigenbasis, this is a genuine analytic seam.
+The repository documents possible solutions through projector- or Gram-valued
+reformulations, but leaves the primitive explicit in the relevant bridge.
+
+\section{Principal Formalized Results}
+
+\subsection{The deterministic CMDS perturbation theorem}
+
+The central deterministic theorem controls CMDS configurations under matrix
+perturbations.  Informally, let \(B\) be the population centered matrix and
+\(\hat B\) an empirical perturbation.  Suppose \(B\) is positive semidefinite of
+rank at most \(d\), its leading eigenvalues satisfy appropriate lower bounds,
+and \(\hat B\) is sufficiently close to \(B\).  Then there exists an isometry of
+\(\mathbb{R}^d\) aligning the empirical spectral configuration with the
+population configuration, with an explicit configuration-error bound.
+
+The formal statement is represented by declarations such as
+\decl{exists_isometry_configError_spectralConfig_le} and
+\decl{exists_isometry_configError_le_of_entrywise_close}.  These declarations
+are the deterministic core of the concentration layer: all probabilistic
+embedding-error statements eventually route through this bridge.
+
+\subsection{Raw-stress MDS stability}
+
+The raw-stress development includes declarations such as
+\decl{rawStress_mds_stability_set}, \decl{rawStress_mds_stability},
+\decl{mds_stability_inProbability_set}, and
+\decl{mds_stability_inProbability_of_uniqueProfile}.  These theorems verify the
+stability of MDS minimizers and approximate minimizers under perturbations of
+the input dissimilarity structure.  The in-probability versions are organized
+around event inclusions rather than a measurable selection of minimizers.
+
+The result is a more robust formal account than a direct transcription of a
+paper statement.  It distinguishes the unconditional minimizer-set theorem from
+fixed-profile corollaries requiring uniqueness, and it records the probability
+interface needed by later consistency theorems.
+
+\subsection{Probability-to-rate composition}
+
+The probability layer starts from response-level second-moment assumptions and
+proves sample-mean concentration using Chebyshev and union-bound arguments.
+These bounds imply uniform response-mean closeness, which implies closeness of
+empirical dissimilarities and centered CMDS matrices.  The deterministic bridge
+then yields aligned configuration error.  The rate-chain file proves that the
+resulting bound tends to zero under the intended regime.
+
+The relevant files include \file{Acharyya2024/SecondMoment.lean},
+\file{Acharyya2024/Probability.lean}, \file{Acharyya2025/Bridge.lean},
+\file{Acharyya2025/AlignedPipeline.lean}, and \file{Acharyya2025/RateChain.lean}.
+The important formal achievement is compositionality: the downstream theorems do
+not merely assume a black-box concentration event, but can be instantiated from
+more primitive response-level assumptions.
+
+\subsection{Downstream reductions as integration tests}
+
+The \file{DkpsQuench} and \file{Helm2025} libraries are best viewed in this
+paper as integration tests for the mathematical interfaces.  The query-efficiency
+layer consumes a high-probability uniform embedding-error event; the Acharyya
+bridge supplies this event from aligned spectral concentration, and further
+variants push the input down toward response-mean and second-moment assumptions.
+The Helm layer consumes an alignment-consistency condition; its bridge connects
+that condition to the spectral concentration interface subject to a documented
+per-sample alignment assumption.
+
+This kind of theorem plumbing is itself significant.  A formal theorem can be
+correct and still unusable if it quantifies over the wrong object or exposes the
+wrong event.  The downstream reductions demonstrate that the repaired upstream
+interfaces have the shape needed by later statistical theorems.
+
+\subsection{Reusable infrastructure}
+
+The \file{ForMathlib} layer stages general lemmas separated from the DKPS
+application.  These include Courant--Fischer and Weyl lemmas, Davis--Kahan-style
+bounds, Gram-matrix and Procrustes rigidity, quantitative near-isometry and
+polar-factor results, entrywise-to-operator comparisons, compact-existential
+measurability, convergence-in-measure constructors, sample-mean moment identities,
+and approximate-minimizer stability.  Some are thin generalizations of local
+facts; others required substantial restatement to match \Mathlib idioms, such as
+generalization from real scalars to \texttt{RCLike} where appropriate.
+
+This library makes clear that the formalization is not only about one applied
+statistical construction.  It contributes a reusable substrate for future
+formalizations involving spectral statistical methods and finite-dimensional
+Euclidean embeddings.
+
+\section{Model-Assisted Provenance}
+
+The repository was developed with several language-model-assisted sessions.  The
+mathematical guarantee, however, does not come from those models.  It comes from
+the \Lean kernel checking the final repository against the pinned dependencies.
+For that reason, provenance should be reported as an assistance statement rather
+than as a substitute for verification.
+
+The evidence currently available is heterogeneous.  Some files contain explicit
+provenance comments.  For example, \file{Helm2025/Basic.lean} and
+\file{DkpsQuench/Basic.lean} record that their initial scaffolds were generated
+by Harmonic's Aristotle.  Many Acharyya scaffold or bridge files contain comments
+such as ``Formalized by Codex 5.5 High, per user-observed model label.''  The
+Acharyya READMEs record that the spectral bridge, aligned pipeline, rate chain,
+and retirement of false-as-written seams were formalized by Claude Fable 5.
+Several \file{ForMathlib} files and later bridge refinements record Claude Opus
+4.8 as the authoring session, and the git history shows subsequent commits for
+staging, rewiring, moderate generalization, and documentation after the Fable
+work.
+
+The author-supplied provenance notes add that the project began with GPT 5.2 and
+Aristotle sessions, which achieved the downstream Helm2025 and Quench reductions;
+that GPT/Codex 5.5 and Opus 4.8 pushed the Acharyya layers further; that Fable
+completed the most difficult formalizations; and that Opus 4.8 later performed
+plumbing work, staging, and moderate generalizations.  Since GPT-authored commits
+were not consistently identified as GPT-authored in commit metadata, these GPT
+attributions should be checked against inline comments and external session logs
+before final submission.  The accompanying \file{model_provenance.md} file records
+the currently recoverable repository evidence and separates it from
+user-supplied provenance.
+
+For a final venue submission, we recommend a concise assistance statement of the
+following form: the artifact was produced by a human-directed, multi-model
+workflow; Aristotle and GPT-family sessions produced early downstream reductions
+and scaffolds; GPT/Codex 5.5 and Opus 4.8 contributed intermediate Acharyya
+interfaces and subsequent plumbing/generalization; Claude Fable 5 contributed the
+hardest spectral, MDS, rate, and measurability formalizations; and all
+mathematical claims are based on the final build-checked Lean sources, not on the
+claimed competence of any model.  This statement should be refined after the
+authors audit the complete session logs.
+
+\section{Limitations and Honest Seams}
+
+The artifact verifies the Lean statements in the repository, not every possible
+reading of the motivating papers.  Several limitations should be made explicit.
+
+First, the theorem statements are true relative to their stated hypotheses.  Some
+of those hypotheses are stronger or more explicit than the corresponding prose
+in the motivating papers.  This is one of the main outputs of the formalization,
+but it also means that the paper-facing claims should be reviewed by domain
+experts.
+
+Second, the raw-stress MDS layer does not formalize every distributional version
+of the original asymptotic results.  In particular, repository documentation
+notes that an \(L^p\)-over-model-distribution conclusion is outside the current
+scope.
+
+Third, \decl{hmeas_spec} remains a genuine primitive in the relevant bridge.
+The development avoids a measurable choice of alignments, but still assumes
+measurability of the raw spectral embedding map used in the current
+implementation.  Discharging this primitive likely requires a projector- or
+Gram-valued reformulation of the spectral embedding.
+
+Fourth, the Helm bridge contains an explicit assumption connecting the
+fixed-population spectral theorem to the per-sample population setting used by
+the inference layer.  This assumption is documented as an honest seam rather
+than hidden behind a theorem name.
+
+Finally, the model-provenance record is not yet a publication-grade audit trail.
+It is sufficient for a draft assistance statement, but final claims about which
+model completed which component should be checked against session transcripts,
+commit contents, and human review notes.
+
+\section{Related Work}
+
+The formalized mathematics is rooted in multidimensional scaling,
+Procrustes analysis, and spectral perturbation theory
+\cite{torgerson1952mds,gower1966distance,kruskal1964mds,goodall1991procrustes,davis1970rotation,yu2015davis,chen2021spectral}.
+The motivating application comes from DKPS and related response-based
+representations of black-box models
+\cite{duderstadt2023datakernels,helm2024tracking,acharyya2024consistent,acharyya2025concentration,helm2025inference,helm2026query}.
+
+On the formalization side, the development builds on \Lean and \Mathlib
+\cite{demoura2015lean,mathlib2020}.  Its reusable layer is closest in spirit to
+ordinary library development: results are extracted from an applied proof and
+restated in forms suitable for reuse and possible upstreaming.  The distinctive
+feature of the project is the combination of finite-dimensional spectral theory,
+MDS, probability, measurability, and downstream statistical reductions in one
+connected artifact.
+
+\section{Conclusion}
+
+This development formalizes a collection of difficult mathematical bridges
+underlying statistical embedding theory.  DKPS provides the motivating theorem
+stack, but the central contribution is broader: a verified treatment of CMDS
+perturbation, raw-stress MDS stability, Procrustes alignment, measurable
+alignment events, and response-level probability-to-rate composition in \Lean.
+
+The artifact shows that familiar mathematical arguments may require substantial
+redesign before they can be checked and composed.  Hidden uniqueness, rank, gap,
+compactness, alignment, and measurability assumptions must become explicit
+interfaces.  Once made explicit, these interfaces can support downstream
+statistical theorems and can be factored into reusable library-style components.
+
+As a model-assisted formalization case study, the repository is also notable for
+the kind of assistance recorded in its history.  The most important assistance
+was not merely local proof completion, but participation in theorem-interface
+repair, bridge construction, and repository-level integration.  The final
+mathematical claim remains the build-verified Lean artifact.
+
+\begin{thebibliography}{99}
+
+\bibitem{acharyya2024consistent}
+Aranyak Acharyya, Michael W. Trosset, Carey E. Priebe, and Hayden S. Helm.
+\newblock Consistent estimation of generative model representations in the data kernel perspective space.
+\newblock \emph{arXiv preprint arXiv:2409.17308}, 2024.
+
+\bibitem{acharyya2025concentration}
+Aranyak Acharyya, Joshua Agterberg, Youngser Park, and Carey E. Priebe.
+\newblock Concentration bounds on response-based vector embeddings of black-box generative models.
+\newblock \emph{arXiv preprint arXiv:2511.08307}, 2025.
+
+\bibitem{chen2021spectral}
+Yuxin Chen, Yuejie Chi, Jianqing Fan, and Cong Ma.
+\newblock Spectral methods for data science: A statistical perspective.
+\newblock \emph{Foundations and Trends in Machine Learning}, 14(5):566--806, 2021.
+
+\bibitem{davis1970rotation}
+Chandler Davis and W. M. Kahan.
+\newblock The rotation of eigenvectors by a perturbation. III.
+\newblock \emph{SIAM Journal on Numerical Analysis}, 7(1):1--46, 1970.
+
+\bibitem{demoura2015lean}
+Leonardo de Moura, Soonho Kong, Jeremy Avigad, Floris van Doorn, and Jakob von Raumer.
+\newblock The Lean theorem prover.
+\newblock In \emph{Automated Deduction -- CADE-25}, LNCS 9195, pages 378--388. Springer, 2015.
+
+\bibitem{duderstadt2023datakernels}
+Brandon Duderstadt, Hayden S. Helm, and Carey E. Priebe.
+\newblock Comparing foundation models using data kernels.
+\newblock \emph{arXiv preprint arXiv:2305.05126}, 2023.
+
+\bibitem{goodall1991procrustes}
+Colin Goodall.
+\newblock Procrustes methods in the statistical analysis of shape.
+\newblock \emph{Journal of the Royal Statistical Society: Series B}, 53(2):285--321, 1991.
+
+\bibitem{gower1966distance}
+J. C. Gower.
+\newblock Some distance properties of latent root and vector methods used in multivariate analysis.
+\newblock \emph{Biometrika}, 53(3--4):325--338, 1966.
+
+\bibitem{helm2024tracking}
+Hayden Helm, Brandon Duderstadt, Youngser Park, and Carey E. Priebe.
+\newblock Tracking the perspectives of interacting language models.
+\newblock In \emph{Proceedings of the Conference on Empirical Methods in Natural Language Processing}, 2024.
+
+\bibitem{helm2025inference}
+Hayden S. Helm, Aranyak Acharyya, Youngser Park, Brandon Duderstadt, and Carey E. Priebe.
+\newblock Statistical inference on black-box generative models in the data kernel perspective space.
+\newblock In \emph{Findings of the Association for Computational Linguistics}, 2025.
+
+\bibitem{helm2026query}
+Hayden Helm, Ben Johnson, and Carey E. Priebe.
+\newblock Query-efficient model evaluation using cached responses.
+\newblock \emph{arXiv preprint arXiv:2605.07096}, 2026.
+
+\bibitem{kruskal1964mds}
+J. B. Kruskal.
+\newblock Multidimensional scaling by optimizing goodness of fit to a nonmetric hypothesis.
+\newblock \emph{Psychometrika}, 29:1--27, 1964.
+
+\bibitem{mathlib2020}
+The mathlib Community.
+\newblock The Lean mathematical library.
+\newblock In \emph{Proceedings of the 9th ACM SIGPLAN International Conference on Certified Programs and Proofs}, pages 367--381, 2020.
+
+\bibitem{torgerson1952mds}
+Warren S. Torgerson.
+\newblock Multidimensional scaling: I. Theory and method.
+\newblock \emph{Psychometrika}, 17(4):401--419, 1952.
+
+\bibitem{yu2015davis}
+Yi Yu, Tengyao Wang, and Richard J. Samworth.
+\newblock A useful variant of the Davis--Kahan theorem for statisticians.
+\newblock \emph{Biometrika}, 102(2):315--323, 2015.
+
+\end{thebibliography}
+
+\appendix
+
+\section{Selected Lean Declarations}
+
+\begin{itemize}[leftmargin=*]
+  \item Raw-stress MDS stability: \decl{rawStress_mds_stability_set},
+  \decl{rawStress_mds_stability}, \decl{mds_stability_inProbability_set},
+  \decl{mds_stability_inProbability_of_uniqueProfile}.
+  \item Acharyya2024 consistency: \decl{fixed_models_fixed_queries_consistency},
+  \decl{fixed_models_growing_queries_consistency},
+  \decl{growing_models_growing_queries_consistency}.
+  \item Deterministic CMDS perturbation: \decl{exists_isometry_configError_spectralConfig_le},
+  \decl{exists_isometry_configError_le_of_entrywise_close}.
+  \item High-probability concentration: \decl{highProb_aligned_configError_of_entrywise_close},
+  \decl{highProb_aligned_configError_of_response_mean},
+  \decl{highProb_aligned_configError_endToEndRate}.
+  \item Quench bridge: \decl{queryEfficient_nn_of_aligned_spectral},
+  \decl{queryEfficient_nn_of_response_mean}, \decl{queryEfficient_nn_of_second_moment}.
+  \item Helm bridge: \decl{alignmentConsistency_of_highProb_configError},
+  \decl{alignmentConsistency_of_aligned_spectral}.
+\end{itemize}
+
+\end{document}

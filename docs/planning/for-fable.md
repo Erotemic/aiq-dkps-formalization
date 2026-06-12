@@ -144,6 +144,18 @@ through the (continuous) rank-d spectral truncation `B̂ ↦ Σ_{k<d} λ_k u_k u
 Gram route.  Genuinely Fable-scale; substantially smaller than the original
 selection problem.
 
+**UPDATE 2026-06-12 (Opus): obstruction BROKEN — see
+`docs/planning/hmeas-spec-discharge.md`.**  The literal `hmeas_spec` is indeed
+not provable (reason below), but the honest discharge is now tractable and its
+load-bearing lemma is proved and committed: `ForMathlib.measurable_cfc_comp`
+(`ForMathlib/MeasureTheory/CfcMeasurable.lean`) proves `ω ↦ cfc f (B ω)` is
+measurable for a fixed continuous `f` from `Measurable B` alone.  The consuming
+events depend on the embedding only through its Gram = rank-`d` spectral
+truncation = `cfc h B̂`, which that lemma makes measurable from `Measurable Dhat`.
+Route (a) below was the right idea; the cfc formulation is what avoids building
+eigenprojector continuity from scratch.  Remaining = integration only (steps A–D
+in the discharge doc).  Original assessment kept for context.
+
 **Opus assessment 2026-06-12 (after F1/F2).**  `hmeas_spec` as stated is most
 likely NOT provable as-is, and is the right primitive to leave for the domain
 expert.  Reason: `spectralConfig` is built from `eigenvectorBasis`, which is a

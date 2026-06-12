@@ -1,0 +1,170 @@
+# formalization.yaml (v0.3): repo-root metadata for an AI-authored formalization project.
+# Schema reference: https://github.com/mathlib-initiative/formalization.yaml
+
+version: "v0.3"
+
+project:
+  name: "AIQ DKPS formalization: reusable spectral, MDS, and geometry infrastructure"
+  authors:
+    - "Jon Crall"
+  license: "Apache-2.0"
+  repository: "https://github.com/AIQ-Kitware/aiq-dkps-formalization"
+  validated_commit: "b3b2569cd4ffaab896d7ee183c673170a09773d8"
+  validated_commit_short: "b3b2569"
+  validated_commit_date: "2026-06-12 19:04:40 +0000"
+  validated_archive: "aiq-dkps-formalization-source-2026-06-12T140903-5-b3b2569cd4ff.tar.gz"
+
+sources:
+  - title: "Consistent Estimation of Generative Model Representations in the Data Kernel Perspective Space"
+    authors: ["Acharyya", "Trosset", "Priebe", "Helm"]
+    id: "Acharyya et al. 2024"
+    type: "research paper"
+    author_contacted: "yes; ongoing subject-matter discussion"
+    prior_work: "Downstream theorem layer in Acharyya2024/; reusable infrastructure staged in ForMathlib/."
+  - title: "Concentration Bounds on Response-Based Vector Embeddings of Black-Box Generative Models"
+    authors: ["Acharyya", "Agterberg", "Park", "Priebe"]
+    id: "Acharyya et al. 2025"
+    type: "research paper"
+    author_contacted: "yes; ongoing subject-matter discussion"
+    prior_work: "Downstream theorem layer in Acharyya2025/; reusable infrastructure staged in ForMathlib/."
+  - title: "Statistical Inference on Black-Box Generative Models in the Data Kernel Perspective Space"
+    authors: ["Helm", "Acharyya", "Park", "Duderstadt", "Priebe"]
+    id: "Helm et al. 2025"
+    type: "research paper"
+    author_contacted: "yes; ongoing subject-matter discussion"
+    prior_work: "Downstream theorem layer in Helm2025/."
+  - title: "DKPS Quench theorem layer"
+    authors: ["AIQ / Kitware formalization project"]
+    id: "DkpsQuench"
+    type: "downstream formal theorem layer"
+    author_contacted: "n/a"
+    prior_work: "DkpsQuench/ consumes Acharyya2025 concentration interfaces."
+
+status:
+  repository_build:
+    last_user_reported_build: "lake build completed successfully on 8626 jobs for an earlier state; latest overlay not Lean-built in the assistant sandbox because Lean/Lake are not installed there."
+    challenge_commands:
+      - "lake env lean ChallengeConformance.lean"
+      - "lake env lean ChallengeLeaderboard.lean"
+    comparator_config: "comparator/aiq-mathlib-candidates.json"
+  scope: >
+    The repository formalizes several DKPS-related paper layers and stages
+    paper-agnostic infrastructure in ForMathlib for potential upstreaming.
+    This metadata file and the challenge files initially expose a small subset
+    of the most Mathlib-relevant claims, rather than the entire downstream DKPS
+    theorem stack.
+  main_results:
+    - declaration: "AIQChallenge.procrustes_rigidity_of_inner_eq"
+      challenge_file: "ChallengeConformance.lean"
+      solution_file: "ChallengeLeaderboard.lean"
+      source_declaration: "ForMathlib.exists_linearIsometryEquiv_of_inner_eq"
+      source_file: "ForMathlib/Analysis/InnerProductSpace/GramMatrix.lean"
+      category: "Procrustes / Gram-matrix rigidity"
+      sorry_count_in_solution: 0
+      expected_axioms: ["propext", "Classical.choice", "Quot.sound"]
+      comparator_config: "comparator/aiq-mathlib-candidates.json"
+    - declaration: "AIQChallenge.gram_eq_gram_iff_exists_linearIsometryEquiv"
+      challenge_file: "ChallengeConformance.lean"
+      solution_file: "ChallengeLeaderboard.lean"
+      source_declaration: "ForMathlib.Matrix.gram_eq_gram_iff_exists_linearIsometryEquiv"
+      source_file: "ForMathlib/Analysis/InnerProductSpace/GramMatrix.lean"
+      category: "Procrustes / Gram-matrix rigidity"
+      sorry_count_in_solution: 0
+      expected_axioms: ["propext", "Classical.choice", "Quot.sound"]
+      comparator_config: "comparator/aiq-mathlib-candidates.json"
+    - declaration: "AIQChallenge.psd_rank_le_iff_exists_conjTranspose_mul_self"
+      challenge_file: "ChallengeConformance.lean"
+      solution_file: "ChallengeLeaderboard.lean"
+      source_declaration: "ForMathlib.Matrix.posSemidef_and_rank_le_iff_exists_conjTranspose_mul_self"
+      source_file: "ForMathlib/LinearAlgebra/Matrix/PosDef.lean"
+      category: "Rank-controlled PSD Gram realization"
+      sorry_count_in_solution: 0
+      expected_axioms: ["propext", "Classical.choice", "Quot.sound"]
+      comparator_config: "comparator/aiq-mathlib-candidates.json"
+    - declaration: "AIQChallenge.weyl_abs_eigenvalues_sub_le"
+      challenge_file: "ChallengeConformance.lean"
+      solution_file: "ChallengeLeaderboard.lean"
+      source_declaration: "ForMathlib.abs_eigenvalues_sub_le"
+      source_file: "ForMathlib/Analysis/InnerProductSpace/CourantFischer.lean"
+      category: "Weyl / Courant-Fischer spectral perturbation"
+      sorry_count_in_solution: 0
+      expected_axioms: ["propext", "Classical.choice", "Quot.sound"]
+      comparator_config: "comparator/aiq-mathlib-candidates.json"
+  additional_upstream_candidates:
+    - "Davis-Kahan / sin-theta perturbation bounds"
+    - "Entrywise-to-operator-norm and entrywise-to-eigenvalue perturbation"
+    - "Elementary eigenvalue concentration from entrywise second moments"
+    - "Continuous functional calculus / spectral-transform measurability"
+    - "Quantitative polar-factor / near-isometry theorem"
+    - "Compact-existential measurability"
+    - "Approximate-minimizer stability and Berge maximum-theorem fragments"
+    - "Convergence-in-measure constructors and probability helper lemmas"
+
+fidelity:
+  summary: >
+    The challenge files intentionally isolate reusable, paper-agnostic theorems
+    from the downstream DKPS formalization. They are not intended to state the
+    DKPS paper theorems themselves. The theorem statements are high-level
+    Mathlib candidates extracted from ForMathlib staging files.
+  known_limitations:
+    - "The challenge package has not yet been reviewed for Mathlib style, naming, minimal imports, or ideal statement shape."
+    - "The Lean code was AI-authored; the human coordinator is still learning Lean and requests expert review before PR submission."
+    - "The assistant-generated overlay was not Lean-built in this sandbox because Lean/Lake are not installed."
+
+alignment:
+  statements:
+    - informal: "Finite configurations with equal pairwise inner products are equivalent up to a linear isometry."
+      lean: "AIQChallenge.procrustes_rigidity_of_inner_eq"
+      status: "proved by the downstream ForMathlib staging library"
+    - informal: "Equal Gram matrices characterize equality up to linear isometry."
+      lean: "AIQChallenge.gram_eq_gram_iff_exists_linearIsometryEquiv"
+      status: "proved by the downstream ForMathlib staging library"
+    - informal: "A PSD matrix of rank at most d is a Gram matrix of d-dimensional vectors."
+      lean: "AIQChallenge.psd_rank_le_iff_exists_conjTranspose_mul_self"
+      status: "proved by the downstream ForMathlib staging library"
+    - informal: "Weyl's eigenvalue perturbation inequality for symmetric finite-dimensional operators."
+      lean: "AIQChallenge.weyl_abs_eigenvalues_sub_le"
+      status: "proved by the downstream ForMathlib staging library"
+
+automation:
+  methods:
+    - method: "AI-authored Lean formalization with human coordination"
+      models:
+        - "GPT-5.2 / ChatGPT 5.2 (reported by human coordinator; GPT commits are often not marked in git metadata)"
+        - "Harmonic Aristotle (repo comments identify Aristotle-generated Helm scaffolding)"
+        - "Codex 5.5 High / GPT-5.5 family labels in repository comments"
+        - "Claude Opus 4.8 (repo comments and git history mark staging/plumbing/generalization work; Opus 4.7/5.7 mentions were typos)"
+        - "Claude Fable 5 (repo comments identify many difficult Acharyya and ForMathlib proofs)"
+      framework: >
+        Multiple interactive and agentic LLM sessions coordinated by Jon Crall,
+        with repeated local lake build checks, git-history inspection, and
+        progressive removal of downstream theorem assumptions.
+      human_role: >
+        The human coordinator is an experienced software engineer and computer
+        vision researcher who directed the project, ran builds, inspected
+        theorem interfaces, coordinated with subject-matter experts, and is
+        learning Lean. The human coordinator does not claim to have personally
+        authored the Lean proofs.
+      review_status: >
+        The code builds in the source repository per user-observed reports and
+        repository history, but the proposed Mathlib candidates have not yet
+        undergone independent mathematical review, Mathlib-style review, or PR
+        minimization.
+      prompting_notes: >
+        Early GPT-5.2, Aristotle, GPT-5.5, and Opus 4.8 sessions established
+        much of the downstream DKPS theorem scaffold and reductions, often with
+        heavy assumptions. Claude Fable 5 removed several difficult assumptions
+        by proving formalization-resistant spectral, MDS, measurability, and
+        alignment infrastructure. Later Opus 4.8 sessions performed additional
+        plumbing, staging, and moderate generalization into the ForMathlib
+        library. This summary combines repository comments/history with
+        human-supplied provenance and should be refined as session logs are
+        audited.
+      soundness_gate: >
+        Claimed theorem closes are trusted only insofar as they are accepted by
+        Lean's kernel and use only allowed axioms. The challenge package exposes
+        a small set of claims for comparator-style validation.
+      cost:
+        wall_time: "multi-session effort from early 2026 through 2026-06-12"
+        spend_usd: "not fully reconstructed"
+        hardware: "local development machine plus hosted model access"

@@ -1,0 +1,16 @@
+{
+  "challenge_module": "ChallengeConformance",
+  "solution_module": "ChallengeLeaderboard",
+  "theorem_names": [
+    "AIQChallenge.procrustes_rigidity_of_inner_eq",
+    "AIQChallenge.gram_eq_gram_iff_exists_linearIsometryEquiv",
+    "AIQChallenge.psd_rank_le_iff_exists_conjTranspose_mul_self",
+    "AIQChallenge.weyl_abs_eigenvalues_sub_le"
+  ],
+  "permitted_axioms": [
+    "propext",
+    "Quot.sound",
+    "Classical.choice"
+  ],
+  "enable_nanoda": false
+}

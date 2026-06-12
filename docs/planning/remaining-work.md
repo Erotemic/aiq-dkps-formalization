@@ -10,6 +10,17 @@ Legend — **Fable?**: whether the item is expected to need a Fable session (dee
 new proof / large refactor) vs. doable by Opus. Most items below are
 Opus-doable; Fable is flagged only where genuinely uncertain.
 
+> **PIVOT 2026-06-12 (user-directed):** the new-contribution track below
+> (sections **A**, **B2b-MDS-rederivation**, **C**) is **SHELVED — explicitly NOT
+> complete.** Work pivots to a **Mathlib-readiness pass** (section **R**):
+> bringing the staged headline candidates to a quality/API standard that would
+> survive human expert review. This is **distinct from Task E** (the actual PR
+> submission / AI-provenance re-authoring, still gated): R covers proof-quality,
+> statement-shape, lemma decomposition, naming, and destination decisions — not
+> namespace-unwrapping, copyright headers, or provenance stripping. Anchored to
+> the AI audit `prep_mathlib_review_and_readiness.md` (commit b3b2569), verified
+> independently (none of the headline results duplicate existing Mathlib).
+
 ---
 
 ## A. Generalizations of already-staged candidates (existing → stronger)
@@ -48,20 +59,39 @@ These make a staged candidate more PR-worthy; low/medium effort, Opus-doable.
 
 ---
 
+## R. Mathlib-readiness pass (ACTIVE TRACK — quality for expert review, NOT Task E)
+
+Goal: bring the four **headline** candidates to a standard a Mathlib reviewer
+would accept on quality grounds (statement shape, lemma decomposition, naming,
+API fit, destination). Stops short of PR mechanics (D1/Task E). Independent
+Mathlib check confirms all four are non-duplicative.
+
+| Item | What | Effort | Fable? | Status |
+|---|---|---|---|---|
+| R1 | **Gram/Procrustes rigidity** (`ForMathlib/Analysis/InnerProductSpace/GramMatrix.lean`). Extract the well-phased `have` blocks into named lemmas (inner-product of linear combinations; kernel inclusion; **span-level isometry core**); add the same-ambient corollary + `Matrix.gram` iff as wrappers; rename for discoverability. Proof is already clean and phased. | M | **no** (extraction is mechanical) | open — **first target** |
+| R1b | Gram **two-ambient-space** generalization (`φ : ι → E`, `ψ : ι → F`). The core machinery is space-agnostic; the span-level isometry into `F` is Opus-doable. The equiv-level corollary needs a `finrank E = finrank F` (or same-space) hypothesis. | M | attempt Opus, Fable fallback | open |
+| R2 | **Rank-controlled PSD factorization** (`ForMathlib/LinearAlgebra/Matrix/PosDef.lean`). Split forward/backward into named one-direction lemmas; relocate the entrywise spectral helper `isHermitian_entry_eq_sum_eigenvalues` to a spectrum-focused home; rename. | M | no | open |
+| R2b | PSD **alternate proof exploration** through existing Mathlib factorization/CFC APIs (vs. the hand-rolled embedding+`Classical.choose`). **Uncertain payoff** — the rank-compression step looks largely inherent; may end up justifying the spectral proof instead. | M–L | **likely** (exploratory) | open |
+| R3 | **Spectral stack PR decomposition** (`CourantFischer.lean` 299 / `Spectrum.lean` 53 / `DavisKahan.lean` 418): split into PR-sized files + dependency graph: (1) cross-term identity, (2) quadratic-form diagonalization, (3) Courant–Fischer directional bounds, (4) Weyl, (5) Davis–Kahan corollaries. Mechanical file surgery + naming. | M | no | open |
+| R3b | **Weyl operator-norm corollary**: a statement using `ContinuousLinearMap.opNorm` alongside the current `∀ x, ‖(T−S)x‖ ≤ ε‖x‖` form. Likely a thin wrap. | S | no (assess) | open |
+| R4 | **Davis–Kahan redesign** to a reusable statement in terms of spectral subspaces / `orthogonalProjection` rather than DKPS index-cutoffs (audit §4). Genuine new statement + proof; clearest Fable item. | L | **yes** | open |
+| R5 | **Courant–Fischer full min-max** (intermediate eigenvalues, canonical min-over-subspaces form) if reviewers want the variational statement vs. our directional bounds. Mathlib has only the extremal (iSup/iInf Rayleigh) case. | L | **yes** | open (defer; decide via Zulip) |
+| R6 | **Statement-shape decisions needing human/Zulip input** (NOT auto-resolvable): same-space vs two-space Gram core; Davis–Kahan formulation; destination files for each. Prepare drafted alternatives, don't unilaterally finalize. | — | — | prepare options |
+
+---
+
 ## D. Gated / out of scope
 
 | Item | Note |
 |---|---|
-| D1 | **Task E — submit the Mathlib PRs** (re-author the staged ForMathlib candidates #1–#13 per the AI-contribution policy). **Gated:** hold until a domain expert reviews the repo (user instruction). |
-| D2 | `for-fable.md` F1/F2/F4/F5/F6 — DONE. F3 = B2 above. |
+| D1 | **Task E — submit the Mathlib PRs** (re-author candidates #1–#13 per the AI-contribution policy: unwrap `ForMathlib` namespace, copyright headers, strip AI-provenance comments, PR mechanics). **Gated:** hold until a domain expert reviews the repo. Distinct from the R track above. |
+| D2 | `for-fable.md` F1/F2/F4/F5/F6 — DONE. F3 = B2. |
 
 ---
 
-## Working order (user-directed 2026-06-12)
+## Working order
 
-1. ✅ **B1 — sample-covariance eigenvalue concentration** (done: B1a engine + B1b iid layer).
-2. ✅ **B2 — Berge maximum theorem** (done: upper-hemicontinuity half + value-function half (B2b) + finite-family modulus generalization + engine sibling).
-
-"Note if we need to bring in Fable at any point, but we can probably get very far
-without it." — flagged per-item in the Fable? column; reassess B1 after the
-entrywise route is in.
+1. ✅ **B1 — sample-covariance eigenvalue concentration** (B1a engine + B1b iid layer).
+2. ✅ **B2 — Berge maximum theorem** (UHC half + value-function half + finite-family modulus + engine sibling).
+3. ⏸ **A / C / B2b-MDS-rederivation — SHELVED, not complete** (see PIVOT banner).
+4. ▶ **R — Mathlib-readiness pass** (active). Suggested order R1 → R2 → R3 → R3b, with R1b/R2b/R4/R5 as the Fable-leaning follow-ups and R6 decisions surfaced to the user before finalizing.

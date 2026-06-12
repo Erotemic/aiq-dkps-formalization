@@ -41,11 +41,17 @@ variable {Ω : Type} [MeasurableSpace Ω]
 
 /-- Coordinate-wise common mean upgrades to a Bochner common mean for an
 integrable `EuclideanSpace`-valued sample.  Used to feed the coordinate-mean
-paper statements into the Mathlib-staged Bochner-mean theorems. -/
+paper statements into the Mathlib-staged Bochner-mean theorems.
+
+Internal helper, not stated in the paper: it merely says that if every
+coordinate of the (vector-valued) expectation equals `μ c`, then the
+vector-valued expectation equals `μ`. -/
 private theorem bochner_mean_of_coord
     (P : Measure Ω) {ι : Type} [Fintype ι]
     (Y : Ω → EuclideanSpace Real ι) (μ : EuclideanSpace Real ι)
-    (hint : Integrable Y P) (hmean : ∀ c, ∫ ω, Y ω c ∂P = μ c) :
+    (hint : Integrable Y P)                      -- integrability (extra, implicit in paper)
+    (hmean : ∀ c, ∫ ω, Y ω c ∂P = μ c) :         -- each coordinate mean equals μ c
+    -- Conclusion: the vector-valued (Bochner) expectation of Y equals μ.
     ∫ ω, Y ω ∂P = μ := by
   ext c
   have h : (EuclideanSpace.proj c : EuclideanSpace Real ι →L[Real] Real) (∫ ω, Y ω ∂P)
@@ -69,18 +75,24 @@ distribution); the cross terms vanish by independence.  The proof upgrades the
 coordinate means to a Bochner mean (`bochner_mean_of_coord`) and applies the
 Mathlib-staged `ForMathlib.integral_norm_sq_average_sub_eq_sum`.
 
+PAPER CORRESPONDENCE: the additive form behind the paper's variance computation
+`E‖(X̄_i)_j· − (μ_i)_j·‖² = trace(cov[(X̄_i)_j·]) = γ_ij/r` (Appendix A.2). This
+generalizes the paper, which assumes iid, to merely pairwise independence with a
+common mean.
+
 Formalized by Claude Fable 5 (claude-fable-5[1m]).
 -/
 theorem integral_norm_sq_sampleMean_sub_mean_eq_sum
-    (P : Measure Ω) [IsProbabilityMeasure P]
-    {ι : Type} [Fintype ι]
-    {r : Nat} (hr : 0 < r)
-    (X : Fin r → Ω → EuclideanSpace Real ι)
-    (μ : EuclideanSpace Real ι)
-    (hL2 : ∀ k, MemLp (X k) 2 P)
-    (hmean : ∀ k (c : ι), ∫ ω, X k ω c ∂P = μ c)
+    (P : Measure Ω) [IsProbabilityMeasure P]   -- probability measure (total mass 1)
+    {ι : Type} [Fintype ι]                      -- finite coordinate index (response dimension)
+    {r : Nat} (hr : 0 < r)                      -- positive sample size r
+    (X : Fin r → Ω → EuclideanSpace Real ι)     -- iid-style sample X₀,…,X_{r-1}
+    (μ : EuclideanSpace Real ι)                 -- common mean
+    (hL2 : ∀ k, MemLp (X k) 2 P)                -- finite second moment (square-integrable); extra, implicit in paper
+    (hmean : ∀ k (c : ι), ∫ ω, X k ω c ∂P = μ c)  -- identical centring: each sample has mean μ
     (hindep : Set.Pairwise (Set.univ : Set (Fin r))
-      fun i j => IndepFun (X i) (X j) P) :
+      fun i j => IndepFun (X i) (X j) P) :       -- pairwise independence (paper assumes iid)
+    -- Conclusion: mean-squared error of the sample mean = r⁻² · Σₖ (per-sample mean-squared error).
     ∫ ω, ‖(r : Real)⁻¹ • (∑ k, X k ω) - μ‖ ^ 2 ∂P
       = (r : Real)⁻¹ ^ 2 * ∑ k, ∫ ω, ‖X k ω - μ‖ ^ 2 ∂P := by
   -- Bridge the paper's coordinate-mean hypotheses to the Mathlib-staged abstract
@@ -101,20 +113,24 @@ additive identity collapses to the paper's `trace(Σ)/r` rate:
 
 Requires `0 < r` (the scaling collapses the `r⁻²·r` to `r⁻¹`).
 
+PAPER CORRESPONDENCE: this is exactly the paper's `trace(Σ)/r` rate, i.e. the iid
+identity `E‖(X̄_i)_j· − (μ_i)_j·‖² = γ_ij/r` of Appendix A.2.
+
 Formalized by Claude Fable 5 (claude-fable-5[1m]).
 -/
 theorem integral_norm_sq_sampleMean_sub_mean
-    (P : Measure Ω) [IsProbabilityMeasure P]
-    {ι : Type} [Fintype ι]
-    {r : Nat} (hr : 0 < r)
-    (X : Fin r → Ω → EuclideanSpace Real ι)
-    (μ : EuclideanSpace Real ι)
-    (hL2 : ∀ k, MemLp (X k) 2 P)
-    (hmean : ∀ k (c : ι), ∫ ω, X k ω c ∂P = μ c)
+    (P : Measure Ω) [IsProbabilityMeasure P]   -- probability measure (total mass 1)
+    {ι : Type} [Fintype ι]                      -- finite coordinate index (response dimension)
+    {r : Nat} (hr : 0 < r)                      -- positive sample size r
+    (X : Fin r → Ω → EuclideanSpace Real ι)     -- iid-style sample
+    (μ : EuclideanSpace Real ι)                 -- common mean
+    (hL2 : ∀ k, MemLp (X k) 2 P)                -- finite second moment; extra, implicit in paper
+    (hmean : ∀ k (c : ι), ∫ ω, X k ω c ∂P = μ c)  -- identical centring (mean μ)
     (hindep : Set.Pairwise (Set.univ : Set (Fin r))
-      fun i j => IndepFun (X i) (X j) P)
+      fun i j => IndepFun (X i) (X j) P)         -- pairwise independence
     (hident : ∀ k, ∫ ω, ‖X k ω - μ‖ ^ 2 ∂P
-      = ∫ ω, ‖X ⟨0, hr⟩ ω - μ‖ ^ 2 ∂P) :
+      = ∫ ω, ‖X ⟨0, hr⟩ ω - μ‖ ^ 2 ∂P) :         -- identically distributed second moment (the "id" of iid)
+    -- Conclusion: sample-mean mean-squared error = r⁻¹ · (single-sample second moment) — the trace(Σ)/r rate.
     ∫ ω, ‖(r : Real)⁻¹ • (∑ k, X k ω) - μ‖ ^ 2 ∂P
       = (r : Real)⁻¹ * ∫ ω, ‖X ⟨0, hr⟩ ω - μ‖ ^ 2 ∂P := by
   rw [integral_norm_sq_sampleMean_sub_mean_eq_sum P hr X μ hL2 hmean hindep]
@@ -135,20 +151,25 @@ This is exactly the `v r = γ/r → 0` hypothesis of
 `Acharyya2024.Probability.dissimilarity_convergesInProbability_of_secondMoment`.
 Requires `0 < r`.
 
+PAPER CORRESPONDENCE: produces the bound `≤ γ_ij/r` (with `γ = trace(Σ_ij)`) that
+feeds the concentration step of Theorem 2; it is the link between the variance
+algebra here and the `hmoment`/`v r → 0` hypothesis there.
+
 Formalized by Claude Fable 5 (claude-fable-5[1m]).
 -/
 theorem integral_norm_sq_sampleMean_sub_mean_le_of_bound
-    (P : Measure Ω) [IsProbabilityMeasure P]
-    {ι : Type} [Fintype ι]
-    {r : Nat} (hr : 0 < r)
-    (X : Fin r → Ω → EuclideanSpace Real ι)
-    (μ : EuclideanSpace Real ι)
-    (hL2 : ∀ k, MemLp (X k) 2 P)
-    (hmean : ∀ k (c : ι), ∫ ω, X k ω c ∂P = μ c)
+    (P : Measure Ω) [IsProbabilityMeasure P]   -- probability measure (total mass 1)
+    {ι : Type} [Fintype ι]                      -- finite coordinate index (response dimension)
+    {r : Nat} (hr : 0 < r)                      -- positive sample size r
+    (X : Fin r → Ω → EuclideanSpace Real ι)     -- iid-style sample
+    (μ : EuclideanSpace Real ι)                 -- common mean
+    (hL2 : ∀ k, MemLp (X k) 2 P)                -- finite second moment; extra, implicit in paper
+    (hmean : ∀ k (c : ι), ∫ ω, X k ω c ∂P = μ c)  -- identical centring (mean μ)
     (hindep : Set.Pairwise (Set.univ : Set (Fin r))
-      fun i j => IndepFun (X i) (X j) P)
-    {γ : Real}
-    (hbound : ∀ k, ∫ ω, ‖X k ω - μ‖ ^ 2 ∂P ≤ γ) :
+      fun i j => IndepFun (X i) (X j) P)         -- pairwise independence
+    {γ : Real}                                   -- second-moment bound (paper: γ = trace(Σ))
+    (hbound : ∀ k, ∫ ω, ‖X k ω - μ‖ ^ 2 ∂P ≤ γ) :  -- each per-sample second moment ≤ γ
+    -- Conclusion: the sample-mean mean-squared error decays at rate γ/r (paper's γ_ij/r → 0).
     ∫ ω, ‖(r : Real)⁻¹ • (∑ k, X k ω) - μ‖ ^ 2 ∂P ≤ γ / r := by
   rw [integral_norm_sq_sampleMean_sub_mean_eq_sum P hr X μ hL2 hmean hindep]
   have hr0 : (0 : Real) < (r : Real) := by exact_mod_cast hr

@@ -45,13 +45,19 @@ Thin wrapper around the Mathlib-staged
 `ForMathlib.meas_gt_le_ofReal_integral_sq_div_sq`; kept under its original
 name for downstream call-sites.
 
+Internal tooling: this is the standard Chebyshev/Markov second-moment bound (it
+is the inequality applied to each model in the proof of Theorem 2); it is not a
+separately numbered statement in the paper.
+
 Formalized by Claude Fable 5 (claude-fable-5[1m]).
 -/
 theorem meas_gt_le_ofReal_secondMoment_div_sq
-    (P : Measure Ω) [IsProbabilityMeasure P]
+    (P : Measure Ω) [IsProbabilityMeasure P]   -- probability measure (total mass 1)
     {Y : Ω → Real}
-    (hY_int : Integrable (fun ω => (Y ω) ^ 2) P)
-    {v η : Real} (hη : 0 < η) (hmoment : ∫ ω, (Y ω) ^ 2 ∂P ≤ v) :
+    (hY_int : Integrable (fun ω => (Y ω) ^ 2) P)  -- finite second moment ∫ Y² < ∞
+    {v η : Real} (hη : 0 < η)                      -- positive threshold η
+    (hmoment : ∫ ω, (Y ω) ^ 2 ∂P ≤ v) :            -- second moment bounded by v
+    -- Conclusion: the tail probability P(Y > η) is at most v/η² (Chebyshev/Markov).
     P {ω | η < Y ω} ≤ ENNReal.ofReal (v / η ^ 2) :=
   ForMathlib.meas_gt_le_ofReal_integral_sq_div_sq P hY_int hη hmoment
 
@@ -69,18 +75,30 @@ paper it is established by the iid variance/trace computation `v r = (1/r)·Σγ
 We take it as a hypothesis to separate the concentration step from the variance
 algebra.
 
+PAPER CORRESPONDENCE: this is the concentration conclusion of Theorem 2 (the
+`‖D − ∆⁽∞⁾‖_F →P 0` statement). The hypothesis `hmoment` with `hv : v r → 0`
+encodes the paper's condition `(1/m) Σⱼ γ_ij / r → 0`; the variance/trace
+identity that produces `v r = γ_ij/r` is supplied separately in
+`SecondMoment.lean`. The matrices `Xbar r` correspond to the sample-average
+response matrices `X̄_i`, `μ` to the population means, and `v` to the per-model
+mean-squared-error rate.
+
 Formalized by Claude Fable 5 (claude-fable-5[1m]).
 -/
 theorem dissimilarity_convergesInProbability_of_secondMoment
-    (P : Measure Ω) [IsProbabilityMeasure P]
-    {n m p : Nat}
-    (Xbar : Nat → Ω → Fin n → Mat m p)
-    (μ : Fin n → Mat m p)
-    (hmeas : ∀ r i, Measurable (fun ω => Xbar r ω i))
-    (v : Nat → Real)
-    (hint : ∀ r i, Integrable (fun ω => ‖Xbar r ω i - μ i‖ ^ 2) P)
-    (hmoment : ∀ r i, ∫ ω, ‖Xbar r ω i - μ i‖ ^ 2 ∂P ≤ v r)
-    (hv : Tendsto v atTop (𝓝 0)) :
+    (P : Measure Ω) [IsProbabilityMeasure P]   -- probability measure (total mass 1)
+    {n m p : Nat}                               -- n models, response matrices of size m×p
+    (Xbar : Nat → Ω → Fin n → Mat m p)          -- empirical sample-mean responses X̄_i (indexed by sample size r)
+    (μ : Fin n → Mat m p)                        -- population mean responses μ_i
+    -- extra (implicit) assumptions beyond the paper:
+    (hmeas : ∀ r i, Measurable (fun ω => Xbar r ω i))  -- measurability of each response map
+    (v : Nat → Real)                                    -- per-model mean-squared-error rate (paper: γ_ij/r)
+    (hint : ∀ r i, Integrable (fun ω => ‖Xbar r ω i - μ i‖ ^ 2) P)  -- finite second moment per model
+    -- core hypotheses (the paper's γ condition):
+    (hmoment : ∀ r i, ∫ ω, ‖Xbar r ω i - μ i‖ ^ 2 ∂P ≤ v r)  -- mean-squared error bounded by v r
+    (hv : Tendsto v atTop (𝓝 0)) :                            -- v r → 0 as r → ∞ (paper's γ/r → 0)
+    -- Conclusion: the Frobenius distance between the empirical and population
+    -- response-dissimilarity matrices converges to 0 in probability (Theorem 2's ‖D − ∆‖_F →P 0).
     ConvergesInProbabilityZero P
       (fun r ω => frobSub (responseDist (Xbar r ω)) (responseDist μ)) := by
   classical

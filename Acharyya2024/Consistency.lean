@@ -54,15 +54,24 @@ Mathematical source/citation:
 
 Formalized by Claude Fable 5 (claude-fable-5[1m]).
 -/
+-- Paper correspondence: the *unconditional* (minimizer-SET) form behind paper
+-- Theorem 1 / Lemma 1. It is the honest version of those subsequence claims when
+-- `DeltaInf` may admit several minimizers with different distance profiles.
 theorem rawStress_mds_stability_set
   (P : Measure Ω)
-  {n d : Nat}
+  {n d : Nat}                                  -- n = #models (fixed), d = embedding dimension
+  -- Data: a sequence (indexed by replicate count r) of random dissimilarity matrices,
+  -- their deterministic limit `DeltaInf`, and a random MDS minimizer `ψhat r ω` for each.
   (Dseq : Nat → Ω → DisMat n)
   (DeltaInf : DisMat n)
   (ψhat : Nat → Ω → Config n d)
+  -- `hψhat`: `ψhat r ω` is genuinely a raw-stress minimizer of the observed matrix `Dseq r ω`.
   (hψhat : ∀ r ω, ψhat r ω ∈ MDS n d (Dseq r ω))
+  -- `hD`: observed dissimilarities converge to `DeltaInf` in probability (paper's `‖D − Δ^(∞)‖_F →P 0`).
   (hD : ConvergesInProbabilityZero P (fun r ω => frobSub (Dseq r ω) DeltaInf))
   {ε : Real} (hε : 0 < ε) :
+  -- Conclusion: with probability → 1, every pairwise distance of `ψhat r ω` is within ε
+  -- of those of *some* minimizer of `DeltaInf` (closeness to the minimizer SET).
   Tendsto (fun r => P {ω | ¬ ∃ ψ ∈ MDS n d DeltaInf,
     ∀ i j : Fin n, pairDistErr (ψhat r ω) ψ i j ≤ ε}) atTop (𝓝 0) :=
   RawStress.mds_stability_inProbability_set P Dseq DeltaInf ψhat hψhat hD hε
@@ -89,15 +98,26 @@ Mathematical source/citation:
 
 Formalized by Claude Fable 5 (claude-fable-5[1m]).
 -/
+-- Paper correspondence: this is the paper's Theorem 1 / Lemma 1 shape
+-- (`‖ψ̂_i − ψ̂_{i'}‖ − ‖ψ_i − ψ_{i'}‖ →P 0` along a subsequence), here REPAIRED with the
+-- extra profile-uniqueness hypothesis `huniq` (see below) and proved along the FULL sequence.
 theorem rawStress_mds_stability
   (P : Measure Ω)
   {n d : Nat}
   (Dseq : Nat → Ω → DisMat n)
   (DeltaInf : DisMat n)
   (ψhat : Nat → Ω → Config n d)
+  -- `hψhat`: each `ψhat r ω` is a raw-stress minimizer of the observed matrix.
   (hψhat : ∀ r ω, ψhat r ω ∈ MDS n d (Dseq r ω))
+  -- `huniq`: EXTRA (implicit) assumption beyond the paper — all minimizers of `DeltaInf`
+  -- share one pairwise-distance profile. The paper's subsequence claim implicitly needs this
+  -- (otherwise no fixed profile serves all sample paths); in exchange the conclusion holds
+  -- along the full sequence, strictly stronger than the paper's subsequence statement.
   (huniq : RawStress.UniquePairProfile n d DeltaInf)
+  -- `hD`: observed dissimilarities → `DeltaInf` in probability (paper's `‖D − Δ^(∞)‖_F →P 0`).
   (hD : ConvergesInProbabilityZero P (fun r ω => frobSub (Dseq r ω) DeltaInf)) :
+  -- Conclusion: there is a subsequence `u` (here `id`) and a minimizer `ψ` of `DeltaInf`
+  -- such that every pairwise distance error `‖ψ̂_i − ψ̂_{i'}‖ − ‖ψ_i − ψ_{i'}‖` → 0 in probability.
   ∃ u : Nat → Nat,
     Subseq u ∧
     ∃ ψ : Config n d,
@@ -112,6 +132,10 @@ theorem rawStress_mds_stability
 Fixed `n,m` consistency theorem: paper Theorem 1 shape, with the repaired
 profile-uniqueness hypothesis threaded through.
 
+Paper correspondence: this is the **fixed-models / fixed-queries** regime —
+the paper's Theorem 1 (Section 4.1). It is a thin renaming wrapper around
+`rawStress_mds_stability`.
+
 Formalized by Claude Fable 5 (claude-fable-5[1m]).
 -/
 theorem fixed_models_fixed_queries_consistency
@@ -120,9 +144,15 @@ theorem fixed_models_fixed_queries_consistency
   (Dseq : Nat → Ω → DisMat n)
   (DeltaInf : DisMat n)
   (ψhat : Nat → Ω → Config n d)
+  -- `hψhat`: each `ψhat r ω` is a raw-stress minimizer of the observed matrix.
   (hψhat : ∀ r ω, ψhat r ω ∈ MDS n d (Dseq r ω))
+  -- `huniq`: EXTRA (implicit) assumption beyond the paper — uniqueness of the minimizer
+  -- distance profile of `DeltaInf` (see `rawStress_mds_stability`).
   (huniq : RawStress.UniquePairProfile n d DeltaInf)
+  -- `hD`: observed dissimilarities → `DeltaInf` in probability.
   (hD : ConvergesInProbabilityZero P (fun r ω => frobSub (Dseq r ω) DeltaInf)) :
+  -- Conclusion: a subsequence of MDS minimizers has pairwise distances converging (in
+  -- probability) to those of a true minimizer `ψ` of `DeltaInf` (paper Theorem 1).
   ∃ u : Nat → Nat,
     Subseq u ∧
     ∃ ψ : Config n d,
@@ -144,14 +174,22 @@ empirical-to-limit error into the sampling error (handled by
 
 Formalized by Claude Fable 5 (claude-fable-5[1m]).
 -/
+-- Paper correspondence: internal helper (a general "squeeze" for convergence in
+-- probability). Not a named paper result; it supplies the triangle-inequality step
+-- of paper Theorem 2 used in `growing_queries_dissimilarity_converges`.
 theorem convergesInProbabilityZero_of_le_add
     (P : Measure Ω)
     (A C : Nat → Ω → Real)
     (b : Nat → Real)
+    -- `hC_nonneg`: `C` is nonnegative (it is a Frobenius distance in the application).
     (hC_nonneg : ∀ r ω, 0 ≤ C r ω)
+    -- `hle`: pointwise bound `C ≤ A + b` splitting `C` into a random part `A` and a
+    -- deterministic part `b`.
     (hle : ∀ r ω, C r ω ≤ A r ω + b r)
+    -- `hA`: random part → 0 in probability; `hb`: deterministic part → 0.
     (hA : ConvergesInProbabilityZero P A)
     (hb : Tendsto b atTop (𝓝 0)) :
+    -- Conclusion: `C → 0` in probability.
     ConvergesInProbabilityZero P C := by
   intro ε hε
   have hb_event : ∀ᶠ r in atTop, b r ≤ ε / 2 := by
@@ -199,15 +237,24 @@ Mathematical source/citation:
 
 Formalized by Claude Fable 5 (claude-fable-5[1m]).
 -/
+-- Paper correspondence: this is the dissimilarity-concentration content of paper
+-- Theorem 2 (`‖D − Δ^(∞)‖_F →P 0`), split via the triangle inequality into a sampling
+-- error against the model-mean-discrepancy matrix `Delta r` plus an Assumption-1 error.
 theorem growing_queries_dissimilarity_converges
   (P : Measure Ω)
   {n : Nat}
+  -- `Dseq` = observed dissimilarities; `Delta r` = stage-`r` population (model-mean
+  -- discrepancy) matrix `Δ`; `DeltaInf` = limit `Δ^(∞)` from Assumption 1.
   (Dseq : Nat → Ω → DisMat n)
   (Delta : Nat → DisMat n)
   (DeltaInf : DisMat n)
+  -- `hsample`: sampling error `‖D − Δ‖_F →P 0` (supplied in the paper by the Markov/
+  -- variance argument of Theorem 2, formalized in `Acharyya2024.Probability`).
   (hsample :
     ConvergesInProbabilityZero P (fun r ω => frobSub (Dseq r ω) (Delta r)))
+  -- `hlimit`: deterministic Assumption-1 error `‖Δ − Δ^(∞)‖_F → 0`.
   (hlimit : Tendsto (fun r => frobSub (Delta r) DeltaInf) atTop (𝓝 0)) :
+  -- Conclusion: observed dissimilarities converge to `Δ^(∞)` in probability (paper Thm 2).
   ConvergesInProbabilityZero P (fun r ω => frobSub (Dseq r ω) DeltaInf) := by
   refine convergesInProbabilityZero_of_le_add P
     (fun r ω => frobSub (Dseq r ω) (Delta r))
@@ -246,6 +293,12 @@ theorem growing_queries_dissimilarity_converges
 Fixed `n`, growing-query consistency: paper Theorem 3 shape, with the repaired
 probability-step hypotheses threaded through.
 
+Paper correspondence: this is the **fixed-models / growing-queries** regime
+(Section 4.2). It combines paper Theorem 2 (the dissimilarity step,
+`growing_queries_dissimilarity_converges`) with Lemma 1 / the layer-1 stability
+to yield paper Theorem 3 (under the `o(r)` variance condition, here supplied
+abstractly via `hsample`/`hlimit`).
+
 Formalized by Claude Fable 5 (claude-fable-5[1m]).
 -/
 theorem fixed_models_growing_queries_consistency
@@ -255,11 +308,18 @@ theorem fixed_models_growing_queries_consistency
   (Delta : Nat → DisMat n)
   (DeltaInf : DisMat n)
   (ψhat : Nat → Ω → Config n d)
+  -- `hψhat`: each `ψhat r ω` minimizes raw stress for the observed matrix.
   (hψhat : ∀ r ω, ψhat r ω ∈ MDS n d (Dseq r ω))
+  -- `huniq`: EXTRA (implicit) assumption beyond the paper — minimizer profile uniqueness.
   (huniq : RawStress.UniquePairProfile n d DeltaInf)
+  -- `hsample` + `hlimit`: the two parts of the paper Theorem 2 dissimilarity step
+  -- (sampling error and Assumption-1 error). In the paper these follow from the
+  -- variance condition `(1/m)∑_j γ_ij = o(r)`; here they are taken as hypotheses.
   (hsample :
     ConvergesInProbabilityZero P (fun r ω => frobSub (Dseq r ω) (Delta r)))
   (hlimit : Tendsto (fun r => frobSub (Delta r) DeltaInf) atTop (𝓝 0)) :
+  -- Conclusion: a subsequence of MDS minimizers has pairwise distances converging in
+  -- probability to those of a true minimizer `ψ` of `Δ^(∞)` (paper Theorem 3).
   ∃ u : Nat → Nat,
     Subseq u ∧
     ∃ ψ : Config n d,
@@ -305,17 +365,27 @@ Mathematical source/citation:
 
 Formalized by Claude Fable 5 (claude-fable-5[1m]).
 -/
+-- Paper correspondence: the **growing-models / growing-queries** regime (Section 4.3),
+-- corresponding to the FINITE per-stage content of paper Theorem 4. See the SCOPE CAVEAT
+-- above: this is NOT the paper's full Lᵖ-over-the-model-distribution conclusion.
 theorem growing_models_growing_queries_consistency
   (P : Measure Ω)
   (d : Nat)
+  -- `nOf k` = number of models at stage `k` (a triangular array; the model count grows in `k`).
   (nOf : Nat → Nat)
+  -- Per-stage data: observed dissimilarities `Dseq`, limits `DeltaInf k`, minimizers `ψhat`.
   (Dseq : Nat → Ω → (k : Nat) → DisMat (nOf k))
   (DeltaInf : (k : Nat) → DisMat (nOf k))
   (ψhat : Nat → Ω → (k : Nat) → Config (nOf k) d)
+  -- `hψhat`: at every stage `k`, `ψhat r ω k` minimizes raw stress for the observed matrix.
   (hψhat : ∀ r ω k, ψhat r ω k ∈ MDS (nOf k) d (Dseq r ω k))
+  -- `huniq`: EXTRA (implicit) assumption beyond the paper — per-stage minimizer profile uniqueness.
   (huniq : ∀ k, RawStress.UniquePairProfile (nOf k) d (DeltaInf k))
+  -- `hD`: per-stage dissimilarity convergence in probability (paper's `D →P Δ^(∞)`, each stage).
   (hD : ∀ k, ConvergesInProbabilityZero P
     (fun r ω => frobSub (Dseq r ω k) (DeltaInf k))) :
+  -- Conclusion: a single subsequence `u` (here `id`) such that, at every stage `k`, the MDS
+  -- minimizers' pairwise distances converge in probability to those of a true minimizer `ψ`.
   ∃ u : Nat → Nat,
     Subseq u ∧
     ∀ k : Nat,
@@ -344,19 +414,29 @@ formalized).
 
 Formalized by Claude Fable 5 (claude-fable-5[1m]).
 -/
+-- Paper correspondence: the **growing-models / growing-queries** regime in the paper's
+-- Theorem 5 *shape* (the finite per-stage content). Same SCOPE CAVEAT as above: not the
+-- paper's full Lᵖ-over-the-model-distribution conclusion.
 theorem growing_models_growing_queries_consistency_of_sample_limit
   (P : Measure Ω)
   (d : Nat)
-  (nOf : Nat → Nat)
+  (nOf : Nat → Nat)                                   -- stage-`k` model count
+  -- Per-stage data, with `Delta r k` the stage-`k`, budget-`r` population matrix.
   (Dseq : Nat → Ω → (k : Nat) → DisMat (nOf k))
   (Delta : Nat → (k : Nat) → DisMat (nOf k))
   (DeltaInf : (k : Nat) → DisMat (nOf k))
   (ψhat : Nat → Ω → (k : Nat) → Config (nOf k) d)
+  -- `hψhat`: per-stage raw-stress minimality of `ψhat`.
   (hψhat : ∀ r ω k, ψhat r ω k ∈ MDS (nOf k) d (Dseq r ω k))
+  -- `huniq`: EXTRA (implicit) assumption beyond the paper — per-stage profile uniqueness.
   (huniq : ∀ k, RawStress.UniquePairProfile (nOf k) d (DeltaInf k))
+  -- `hsample` + `hlimit`: per-stage split of the dissimilarity convergence (paper Theorem 4)
+  -- into sampling error and deterministic Assumption-2 error.
   (hsample : ∀ k, ConvergesInProbabilityZero P
     (fun r ω => frobSub (Dseq r ω k) (Delta r k)))
   (hlimit : ∀ k, Tendsto (fun r => frobSub (Delta r k) (DeltaInf k)) atTop (𝓝 0)) :
+  -- Conclusion: one subsequence `u` (here `id`) giving per-stage in-probability convergence
+  -- of MDS pairwise distances to those of a true minimizer `ψ` (paper Theorem 5 shape).
   ∃ u : Nat → Nat,
     Subseq u ∧
     ∀ k : Nat,

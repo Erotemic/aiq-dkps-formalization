@@ -13,8 +13,9 @@ open scoped BigOperators Topology
 open Filter MeasureTheory
 
 /--
-Changing both endpoints of a distance changes the distance by at most the sum of
-the two endpoint perturbations.
+Standard fact (elementary normed-space inequality). Changing both endpoints of a
+distance changes the distance by at most the sum of the two endpoint
+perturbations: `| ‖x-y‖ - ‖x₀-y₀‖ | ≤ ‖x-x₀‖ + ‖y-y₀‖`.
 
 This is the normed-additive-group form of the elementary estimate used in the
 paper's Appendix A.2 before applying Markov's inequality.
@@ -24,6 +25,8 @@ Formalized by Codex 5.5 High, per user-observed model label.
 theorem abs_norm_sub_norm_sub_le_norm_sub_add_norm_sub
     {E : Type*} [SeminormedAddCommGroup E]
     (x y x₀ y₀ : E) :
+    -- Conclusion: a perturbation of both endpoints perturbs the distance by at
+    -- most the sum of the two endpoint perturbations.
     |‖x - y‖ - ‖x₀ - y₀‖| ≤ ‖x - x₀‖ + ‖y - y₀‖ := by
   have h₁ : |‖x - y‖ - ‖x₀ - y₀‖| ≤ ‖(x - y) - (x₀ - y₀)‖ :=
     abs_norm_sub_norm_le (x - y) (x₀ - y₀)
@@ -34,14 +37,17 @@ theorem abs_norm_sub_norm_sub_le_norm_sub_add_norm_sub
   exact h₁.trans h₂
 
 /--
-A scaled version of `abs_norm_sub_norm_sub_le_norm_sub_add_norm_sub` for a
-nonnegative scalar.
+Standard fact. A scaled version of
+`abs_norm_sub_norm_sub_le_norm_sub_add_norm_sub` for a nonnegative scalar `c`
+(here used with the `1/m` factor of the paper's dissimilarity entry).
 
 Formalized by Codex 5.5 High, per user-observed model label.
 -/
 theorem abs_mul_norm_sub_sub_le_mul_norm_sub_add
     {E : Type*} [SeminormedAddCommGroup E]
-    {c : Real} (hc : 0 ≤ c) (x y x₀ y₀ : E) :
+    {c : Real} (hc : 0 ≤ c) (x y x₀ y₀ : E) :  -- `hc`: the scalar is nonnegative
+    -- Conclusion: the scaled distance perturbation is at most `c` times the sum
+    -- of the endpoint perturbations.
     |c * ‖x - y‖ - c * ‖x₀ - y₀‖| ≤ c * (‖x - x₀‖ + ‖y - y₀‖) := by
   have h :
       |c * ‖x - y‖ - c * ‖x₀ - y₀‖|
@@ -52,11 +58,14 @@ theorem abs_mul_norm_sub_sub_le_mul_norm_sub_add
     (abs_norm_sub_norm_sub_le_norm_sub_add_norm_sub x y x₀ y₀) hc
 
 /--
-The finite `ℓ²` norm of a real-valued function is bounded by its `ℓ¹` norm.
+Standard fact. The finite `ℓ²` norm of a real-valued function is bounded by its
+`ℓ¹` norm. Used to pass from a Frobenius (`ℓ²`) bound to an entrywise-sum
+(`ℓ¹`) bound on the dissimilarity matrices.
 
 Formalized by Codex 5.5 High, per user-observed model label.
 -/
 theorem sqrt_sum_sq_le_sum_abs {ι : Type*} [Fintype ι] (f : ι → Real) :
+    -- Conclusion: the `ℓ²` norm of `f` is at most its `ℓ¹` norm.
     Real.sqrt (∑ i, (f i)^2) ≤ ∑ i, |f i| := by
   rw [Real.sqrt_le_iff]
   constructor
@@ -79,9 +88,11 @@ theorem tendsto_measure_compl_zero_of_forall_eventually_ge_one_sub
     {Ω : Type*} [MeasurableSpace Ω]
     (P : Measure Ω) [IsProbabilityMeasure P]
     (E : Nat → Set Ω)
-    (hE_meas : ∀ n, MeasurableSet (E n))
-    (hE_prob :
+    (hE_meas : ∀ n, MeasurableSet (E n))   -- measurability of the good events
+    -- (extra technical hypothesis, not stated in the paper)
+    (hE_prob :                             -- good events eventually have prob ≥ 1-δ
       ∀ δ : ENNReal, 0 < δ → ∃ N : Nat, ∀ n > N, P (E n) ≥ 1 - δ) :
+    -- Conclusion: the bad events (complements) have probability tending to zero.
     Tendsto (fun n => P (E n)ᶜ) atTop (𝓝 0) := by
   rw [ENNReal.tendsto_nhds_zero]
   intro δ hδ
@@ -115,11 +126,13 @@ theorem tendsto_measure_abs_gt_zero_of_highProb_abs_le_rate
     (P : Measure Ω) [IsProbabilityMeasure P]
     (X : Nat → Ω → Real)
     (rate : Nat → Real)
+    -- measurability of the good events (extra technical hypothesis, not in the paper)
     (hgood_meas : ∀ n, MeasurableSet {ω | |X n ω| ≤ rate n})
-    (hrate : Tendsto rate atTop (𝓝 0))
-    (hgood_prob :
+    (hrate : Tendsto rate atTop (𝓝 0))   -- the deterministic rate vanishes
+    (hgood_prob :                         -- and holds with high probability
       ∀ δ : ENNReal, 0 < δ → ∃ N : Nat, ∀ n > N,
         P {ω | |X n ω| ≤ rate n} ≥ 1 - δ) :
+    -- Conclusion: `Xₙ → 0` in probability (bad-event probabilities vanish for every ε).
     ∀ ε : Real, 0 < ε →
       Tendsto (fun n => P {ω | |X n ω| > ε}) atTop (𝓝 0) := by
   -- The complements of the good events have vanishing probability.

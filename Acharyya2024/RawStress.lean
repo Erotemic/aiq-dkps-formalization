@@ -42,9 +42,15 @@ variable {n d : Nat}
 /--
 Raw stress is a sum of squares, hence nonnegative.
 
+Internal helper / structural step: raw stress is the objective in Eq. (1) of the
+paper (the sum over pairs of squared mismatches between embedded distances and
+target dissimilarities); this records that that objective is `≥ 0`.
+
 Formalized by Claude Fable 5 (claude-fable-5[1m]).
 -/
 theorem rawStress_nonneg (Δ : DisMat n) (z : Config n d) :
+    -- Δ : target dissimilarity matrix; z : candidate configuration of n points in ℝ^d
+    -- Conclusion: the raw-stress objective of `z` against `Δ` is nonnegative.
     0 ≤ rawStress n d Δ z := by
   unfold rawStress
   exact Finset.sum_nonneg fun i _ =>
@@ -54,9 +60,14 @@ theorem rawStress_nonneg (Δ : DisMat n) (z : Config n d) :
 Raw stress packaged as the squared `ℓ²` norm of the residual family over the set
 of index pairs `Fin n × Fin n`.
 
+Internal helper / structural step: rewrites `√(raw stress)` as a genuine Euclidean
+norm so that triangle inequalities apply. The residual at pair `(i, i')` is
+`‖z i − z i'‖ − Δ i i'`, the per-pair mismatch from Eq. (1).
+
 Formalized by Claude Fable 5 (claude-fable-5[1m]).
 -/
 theorem sqrt_rawStress_eq_norm (Δ : DisMat n) (z : Config n d) :
+    -- Conclusion: √(rawStress) equals the ℓ²-norm of the residual family indexed by pairs.
     Real.sqrt (rawStress n d Δ z)
       = ‖(WithLp.toLp 2
           (fun p : Fin n × Fin n => ‖z p.1 - z p.2‖ - Δ p.1 p.2) :
@@ -77,9 +88,16 @@ The square root of raw stress is `1`-Lipschitz in the dissimilarity matrix:
 Viewing raw stress as a squared distance in `ℓ²(Fin n × Fin n)`, this is the
 reverse triangle inequality `abs_norm_sub_norm_le`.
 
+Internal helper / step of the proof: this Lipschitz-in-`Δ` bound is the engine
+behind the stability arguments (it transfers minimality for one dissimilarity
+matrix to a near-minimality for a nearby one). Compare Remark 2 / Theorem 2 of
+[23], where stress is controlled via the Frobenius distance of distance matrices.
+
 Formalized by Claude Fable 5 (claude-fable-5[1m]).
 -/
 theorem abs_sqrt_rawStress_sub_le (Δ Δ' : DisMat n) (z : Config n d) :
+    -- Δ, Δ' : two target dissimilarity matrices; z : a fixed configuration
+    -- Conclusion: √(stress) at fixed `z` changes by at most the Frobenius distance ‖Δ − Δ'‖_F.
     |Real.sqrt (rawStress n d Δ z) - Real.sqrt (rawStress n d Δ' z)|
       ≤ frobSub Δ Δ' := by
   set a : EuclideanSpace ℝ (Fin n × Fin n) :=
@@ -109,8 +127,11 @@ theorem abs_sqrt_rawStress_sub_le (Δ Δ' : DisMat n) (z : Config n d) :
     ring_nf
   rw [hab]
 
-/-- The Frobenius distance between dissimilarity matrices is symmetric. -/
-theorem frobSub_comm (A B : DisMat n) : frobSub A B = frobSub B A := by
+/-- The Frobenius distance between dissimilarity matrices is symmetric:
+`‖A − B‖_F = ‖B − A‖_F`. Internal helper / bookkeeping step. -/
+theorem frobSub_comm (A B : DisMat n) :
+    -- Conclusion: the Frobenius distance is symmetric in its two arguments.
+    frobSub A B = frobSub B A := by
   unfold frobSub frob frobSq
   congr 1
   refine Finset.sum_congr rfl (fun i _ => Finset.sum_congr rfl (fun j _ => ?_))
@@ -122,10 +143,16 @@ theorem frobSub_comm (A B : DisMat n) : frobSub A B = frobSub B A := by
 Raw stress depends only on the pairwise differences of a configuration, so it is
 invariant under translating every point by a constant vector.
 
+Paper correspondence: this is the translation part of the affine invariance of
+the raw-stress minimizer noted in Remark 1 ("an affine transformation upon a
+minimizer gives another minimizer"); here only translations `z ↦ z − c` are
+treated (orthogonal/affine invariance is not formalized in this lemma).
+
 Formalized by Claude Fable 5 (claude-fable-5[1m]).
 -/
 theorem rawStress_translate (Δ : DisMat n) (z : Config n d)
-    (c : EuclideanSpace ℝ (Fin d)) :
+    (c : EuclideanSpace ℝ (Fin d)) :  -- c : the constant translation vector
+    -- Conclusion: translating every point of `z` by `c` leaves raw stress unchanged.
     rawStress n d Δ (fun i => z i - c) = rawStress n d Δ z := by
   unfold rawStress
   refine Finset.sum_congr rfl (fun i _ => Finset.sum_congr rfl (fun j _ => ?_))
@@ -134,8 +161,11 @@ theorem rawStress_translate (Δ : DisMat n) (z : Config n d)
 
 /-! ## (c) Existence of minimizers -/
 
-/-- Each squared residual term is bounded by the whole raw-stress sum. -/
+/-- Each squared residual term is bounded by the whole raw-stress sum.
+Internal helper / step toward the existence-of-minimizers proof (used to bound
+pairwise distances on sublevel sets). -/
 private theorem term_le_rawStress (Δ : DisMat n) (z : Config n d) (i j : Fin n) :
+    -- Conclusion: a single pair's squared residual is ≤ the total raw stress.
     (‖z i - z j‖ - Δ i j)^2 ≤ rawStress n d Δ z := by
   unfold rawStress
   refine (Finset.single_le_sum (f := fun j' => (‖z i - z j'‖ - Δ i j')^2)
@@ -144,8 +174,13 @@ private theorem term_le_rawStress (Δ : DisMat n) (z : Config n d) (i j : Fin n)
     (fun i' _ => Finset.sum_nonneg (fun j' _ => sq_nonneg _)) (Finset.mem_univ i)
 
 /-- Continuity of raw stress in the configuration (a finite sum of continuous
-maps in the Pi type `Config n d`). -/
+maps in the Pi type `Config n d`). Internal helper / step of the proof: supplies
+the continuity needed to extract minimizers from compact sets.
+
+Note: this continuity is over the configuration `z`, holding `Δ` fixed; it is an
+analytic ingredient (not an explicit hypothesis of the paper). -/
 theorem continuous_rawStress (Δ : DisMat n) :
+    -- Conclusion: `z ↦ rawStress Δ z` is continuous on the space of configurations.
     Continuous (rawStress n d Δ) := by
   unfold rawStress
   refine continuous_finsetSum _ (fun i _ =>
@@ -154,12 +189,20 @@ theorem continuous_rawStress (Δ : DisMat n) :
 
 /-- The coercivity radius `R₀ := √(rawStress Δ z₀) + ∑ᵢⱼ |Δ i j|` (with `z₀` the
 zero configuration), which bounds the pairwise distances on the sublevel set
-`{z | rawStress Δ z ≤ rawStress Δ z₀}`. -/
+`{z | rawStress Δ z ≤ rawStress Δ z₀}`.
+
+Internal helper / construction: this is an explicit, computable radius used to
+confine the search for a minimizer to a compact box (coercivity). It plays the
+role of the bounded set `Yₙ` from Remark 2 / Theorem 2 of [23], here phrased
+directly in terms of configurations rather than distance matrices. -/
 private noncomputable def coRadius (Δ : DisMat n) : ℝ :=
   Real.sqrt (rawStress n d Δ (fun _ : Fin n => (0 : Rvec d)))
     + ∑ i : Fin n, ∑ j : Fin n, |Δ i j|
 
-private theorem coRadius_nonneg (Δ : DisMat n) : 0 ≤ coRadius (d := d) Δ := by
+/-- The coercivity radius is nonnegative. Internal helper / bookkeeping. -/
+private theorem coRadius_nonneg (Δ : DisMat n) :
+    -- Conclusion: the coercivity radius is `≥ 0`.
+    0 ≤ coRadius (d := d) Δ := by
   unfold coRadius
   have h1 : 0 ≤ Real.sqrt (rawStress n d Δ (fun _ : Fin n => (0 : Rvec d))) :=
     Real.sqrt_nonneg _
@@ -168,9 +211,14 @@ private theorem coRadius_nonneg (Δ : DisMat n) : 0 ≤ coRadius (d := d) Δ := 
   linarith
 
 /-- A general sublevel pairwise-distance bound: if `rawStress Δ z ≤ s`, then every
-pairwise distance is bounded by `√s + ∑ᵢⱼ |Δ i j|`. -/
+pairwise distance is bounded by `√s + ∑ᵢⱼ |Δ i j|`.
+
+Internal helper / step of the proof: this is the coercivity estimate — small
+stress forces bounded pairwise distances — used both for minimizer existence and
+for compactness in the stability arguments. -/
 private theorem pairDist_le_of_rawStress_le (Δ : DisMat n) (z : Config n d)
-    {s : ℝ} (hz : rawStress n d Δ z ≤ s) (i j : Fin n) :
+    {s : ℝ} (hz : rawStress n d Δ z ≤ s) (i j : Fin n) :  -- hz : `z` lies in the sublevel set {stress ≤ s}
+    -- Conclusion: each pairwise distance is bounded by `√s` plus the total of `|Δ|` entries.
     ‖z i - z j‖ ≤ Real.sqrt s + ∑ i' : Fin n, ∑ j' : Fin n, |Δ i' j'| := by
   have hterm : (‖z i - z j‖ - Δ i j)^2 ≤ s :=
     (term_le_rawStress Δ z i j).trans hz
@@ -186,25 +234,35 @@ private theorem pairDist_le_of_rawStress_le (Δ : DisMat n) (z : Config n d)
   have hΔ_self : Δ i j ≤ |Δ i j| := le_abs_self _
   linarith
 
-/-- On the sublevel set, every pairwise distance is bounded by `coRadius`. -/
+/-- On the sublevel set, every pairwise distance is bounded by `coRadius`.
+Internal helper / specialization of `pairDist_le_of_rawStress_le` to the level of
+the zero configuration. -/
 private theorem pairDist_le_coRadius (Δ : DisMat n) (z : Config n d)
+    -- hz : `z` does no worse than the all-zero configuration
     (hz : rawStress n d Δ z
         ≤ rawStress n d Δ (fun _ : Fin n => (0 : Rvec d)))
     (i j : Fin n) :
+    -- Conclusion: each pairwise distance of `z` is bounded by the coercivity radius.
     ‖z i - z j‖ ≤ coRadius (d := d) Δ :=
   pairDist_le_of_rawStress_le Δ z hz i j
 
-/-- Centering map: subtract the mean. -/
+/-- Centering map: subtract the mean (translate so that the configuration's
+centroid is at the origin). Internal helper / normalization: a particular
+translation, used to fix the translation freedom of Remark 1. -/
 private noncomputable def center (z : Config n d) : Config n d :=
   fun i => z i - (n : ℝ)⁻¹ • ∑ j : Fin n, z j
 
-/-- Centering does not change raw stress. -/
+/-- Centering does not change raw stress (it is a translation, see
+`rawStress_translate`). Internal helper / step of the proof. -/
 private theorem rawStress_center (Δ : DisMat n) (z : Config n d) :
+    -- Conclusion: centering `z` leaves its raw stress unchanged.
     rawStress n d Δ (center z) = rawStress n d Δ z :=
   rawStress_translate Δ z _
 
-/-- The centered configuration has zero coordinate sum (for `n ≠ 0`). -/
-private theorem sum_center_eq_zero (hn : n ≠ 0) (z : Config n d) :
+/-- The centered configuration has zero coordinate sum (for `n ≠ 0`), i.e. its
+centroid is the origin. Internal helper / normalization step. -/
+private theorem sum_center_eq_zero (hn : n ≠ 0) (z : Config n d) :  -- hn : at least one object
+    -- Conclusion: the centered configuration sums to the zero vector.
     ∑ i : Fin n, center z i = 0 := by
   unfold center
   rw [Finset.sum_sub_distrib, Finset.sum_const, Finset.card_univ, Fintype.card_fin,
@@ -212,10 +270,15 @@ private theorem sum_center_eq_zero (hn : n ≠ 0) (z : Config n d) :
     one_smul, sub_self]
 
 /-- A centered configuration whose pairwise distances are bounded by `R` has each
-point bounded by `R` (for `n ≠ 0`). -/
+point bounded by `R` (for `n ≠ 0`).
+
+Internal helper / step of the proof: converts a bound on pairwise distances into
+a bound on individual points, which is what compactness (a box `‖w i‖ ≤ R`)
+requires. Centering is exactly what makes this passage possible. -/
 private theorem norm_le_of_centered (hn : n ≠ 0) (w : Config n d) {R : ℝ}
-    (hcent : ∑ i : Fin n, w i = 0)
-    (hpair : ∀ i j, ‖w i - w j‖ ≤ R) (i : Fin n) :
+    (hcent : ∑ i : Fin n, w i = 0)        -- hcent : `w` is centered at the origin
+    (hpair : ∀ i j, ‖w i - w j‖ ≤ R) (i : Fin n) :  -- hpair : all pairwise distances ≤ R
+    -- Conclusion: each point of a centered configuration has norm ≤ R.
     ‖w i‖ ≤ R := by
   have hrep : w i = (n : ℝ)⁻¹ • ∑ j : Fin n, (w i - w j) := by
     rw [Finset.sum_sub_distrib, hcent, sub_zero, Finset.sum_const, Finset.card_univ,
@@ -244,9 +307,16 @@ Strategy: minimize over the compact box `K = {w | ∀ i, ‖w i‖ ≤ R₀}` of
 configurations (`R₀ = coRadius Δ`), where raw stress is continuous; translation
 invariance and coercivity upgrade the local minimizer over `K` to a global one.
 
+Paper correspondence: this is the existence of a raw-stress minimizer asserted
+around Eq. (1) and Remark 2 ("This guarantees the existence of a solution to
+Eq. (1)"), i.e. `MDS(Δ)` is nonempty. The compactness/coercivity argument here
+mirrors restricting to the bounded set `Yₙ` in Remark 2 / Theorem 2 of [23].
+
 Formalized by Claude Fable 5 (claude-fable-5[1m]).
 -/
-theorem mds_nonempty : ∀ Δ : DisMat n, (MDS n d Δ).Nonempty := by
+theorem mds_nonempty :
+    -- Conclusion: for every dissimilarity matrix, the set of raw-stress minimizers is nonempty.
+    ∀ Δ : DisMat n, (MDS n d Δ).Nonempty := by
   intro Δ
   rcases Nat.eq_zero_or_pos n with hn0 | hnpos
   · -- `n = 0`: raw stress is the empty sum, identically zero; every config wins.
@@ -304,9 +374,14 @@ The square root of raw stress, evaluated at a fixed configuration `z`, is
 `1`-Lipschitz in the dissimilarity matrix, in the directed form used for the
 stability chain.
 
+Internal helper / step of the proof: the one-sided (directed) form of
+`abs_sqrt_rawStress_sub_le`, convenient for chaining stress inequalities across
+`Δ` and `Δ'`.
+
 Formalized by Claude Fable 5 (claude-fable-5[1m]).
 -/
 private theorem sqrt_rawStress_le_add (Δ Δ' : DisMat n) (z : Config n d) :
+    -- Conclusion: √(stress at Δ) ≤ √(stress at Δ') + Frobenius distance ‖Δ − Δ'‖_F.
     Real.sqrt (rawStress n d Δ z)
       ≤ Real.sqrt (rawStress n d Δ' z) + frobSub Δ Δ' := by
   have h := abs_sqrt_rawStress_sub_le Δ Δ' z
@@ -333,14 +408,28 @@ Mathematical source/citation: Trosset & Priebe, "Continuous multidimensional
 scaling" (cited as Theorem 2 in Acharyya et al., arXiv:2409.17308, Appendix
 A.1–A.2).
 
+Paper correspondence: this is the deterministic skeleton of Lemma 1 / Theorem 1
+of the paper — convergence (in Frobenius norm) of the dissimilarity matrices
+forces a subsequence of MDS minimizers to converge to a minimizer of the limit.
+The paper states convergence "up to an affine transformation" (Remark 1); here the
+affine freedom is pinned down by the centering hypothesis `hcent`, and convergence
+is in the actual configuration space (stronger, given centering).
+
+Extra (implicit) assumption beyond the paper: `hcent` (every `z k` is centered,
+`∑ i, z k i = 0`). The paper's minimizers are only defined up to affine
+transformations; centering is a specific normalization chosen here to obtain
+boundedness/compactness, as the docstring notes. (No measurability hypothesis is
+needed because this is a purely deterministic statement.)
+
 Formalized by Claude Fable 5 (claude-fable-5[1m]).
 -/
 theorem exists_subseq_tendsto_mds
-    (D : Nat → DisMat n) (Δ : DisMat n)
-    (z : Nat → Config n d)
-    (hz : ∀ k, z k ∈ MDS n d (D k))
-    (hcent : ∀ k, ∑ i : Fin n, z k i = 0)
-    (hD : Tendsto (fun k => frobSub (D k) Δ) atTop (𝓝 0)) :
+    (D : Nat → DisMat n) (Δ : DisMat n)         -- D : sequence of (random-data) dissimilarity matrices; Δ : limit matrix
+    (z : Nat → Config n d)                       -- z : a chosen MDS configuration for each `D k`
+    (hz : ∀ k, z k ∈ MDS n d (D k))              -- hz : each `z k` minimizes raw stress for `D k`
+    (hcent : ∀ k, ∑ i : Fin n, z k i = 0)        -- hcent : centering normalization (extra vs. paper)
+    (hD : Tendsto (fun k => frobSub (D k) Δ) atTop (𝓝 0)) :  -- hD : `D k → Δ` in Frobenius norm
+    -- Conclusion: along a subsequence `u`, `z (u t)` converges to some minimizer `ψ` of stress for `Δ`.
     ∃ u : Nat → Nat, StrictMono u ∧ ∃ ψ : Config n d, ψ ∈ MDS n d Δ ∧
       Tendsto (fun t => z (u t)) atTop (𝓝 ψ) := by
   rcases Nat.eq_zero_or_pos n with hn0 | hnpos
@@ -482,14 +571,23 @@ This is the direct geometric consequence of `exists_subseq_tendsto_mds`: the
 paper works with pairwise dissimilarities, and these converge along the extracted
 subsequence.
 
+Paper correspondence: this is the deterministic form of the pairwise-distance
+convergence in Lemma 1 / Theorem 1 — the embedded pairwise distances
+`‖ψ̂_i − ψ̂_i'‖` of the MDS output approach `‖ψ_i − ψ_i'‖` of a limit minimizer.
+Distances are the affine-invariant quantities the paper compares (Remark 1).
+
+Extra (implicit) assumption beyond the paper: same centering hypothesis `hcent`
+as in `exists_subseq_tendsto_mds`.
+
 Formalized by Claude Fable 5 (claude-fable-5[1m]).
 -/
 theorem pairDist_tendsto
-    (D : Nat → DisMat n) (Δ : DisMat n)
-    (z : Nat → Config n d)
-    (hz : ∀ k, z k ∈ MDS n d (D k))
-    (hcent : ∀ k, ∑ i : Fin n, z k i = 0)
-    (hD : Tendsto (fun k => frobSub (D k) Δ) atTop (𝓝 0)) :
+    (D : Nat → DisMat n) (Δ : DisMat n)         -- D : dissimilarity matrices; Δ : limit matrix
+    (z : Nat → Config n d)                       -- z : an MDS configuration for each `D k`
+    (hz : ∀ k, z k ∈ MDS n d (D k))              -- hz : each `z k` is a raw-stress minimizer
+    (hcent : ∀ k, ∑ i : Fin n, z k i = 0)        -- hcent : centering normalization (extra vs. paper)
+    (hD : Tendsto (fun k => frobSub (D k) Δ) atTop (𝓝 0)) :  -- hD : `D k → Δ` in Frobenius norm
+    -- Conclusion: along a subsequence, every pairwise distance converges to that of a minimizer `ψ` of `Δ`.
     ∃ u : Nat → Nat, StrictMono u ∧ ∃ ψ : Config n d, ψ ∈ MDS n d Δ ∧
       ∀ i j : Fin n,
         Tendsto (fun t => pairDist (z (u t)) i j) atTop (𝓝 (pairDist ψ i j)) := by
@@ -523,9 +621,13 @@ Centering preserves all pairwise distances: `center` subtracts the same mean
 vector from every point of a configuration, so differences of points — and
 hence their norms — are unchanged.
 
+Internal helper / step of the proof: lets us replace any minimizer by its
+centered version without altering the distance profile the paper compares.
+
 Formalized by Claude Fable 5 (claude-fable-5[1m]).
 -/
 theorem pairDist_center (z : Config n d) (i j : Fin n) :
+    -- Conclusion: centering leaves each pairwise distance unchanged.
     pairDist (center z) i j = pairDist z i j := by
   unfold pairDist center
   congr 1
@@ -536,9 +638,14 @@ Centering a raw-stress minimizer yields a raw-stress minimizer: raw stress is
 translation invariant (`rawStress_center`), so subtracting the mean does not
 change the objective value, and global minimality is preserved.
 
+Internal helper / step of the proof: concretely realizes a fragment of Remark 1
+(a translate of a minimizer is again a minimizer) and lets us assume minimizers
+are centered when needed.
+
 Formalized by Claude Fable 5 (claude-fable-5[1m]).
 -/
-theorem center_mem_mds {Δ : DisMat n} {z : Config n d} (hz : z ∈ MDS n d Δ) :
+theorem center_mem_mds {Δ : DisMat n} {z : Config n d} (hz : z ∈ MDS n d Δ) :  -- hz : `z` is a raw-stress minimizer for `Δ`
+    -- Conclusion: the centered version of `z` is also a raw-stress minimizer for `Δ`.
     center z ∈ MDS n d Δ := by
   intro z'
   rw [rawStress_center]
@@ -568,9 +675,18 @@ Mathematical source/citation: Trosset & Priebe, "Continuous multidimensional
 scaling" (cited as Theorem 2 in Acharyya et al., arXiv:2409.17308, Appendix
 A.1–A.2).
 
+Paper correspondence: this is a deterministic, quantitative strengthening of the
+stability behind Lemma 1 / Theorem 1. The paper extracts a subsequence; here the
+uniform modulus `δ(Δ, ε)` is what lets the probabilistic statements below proceed
+without measurable selection of minimizers (a gap the paper does not address
+explicitly). Distances are compared, matching the affine-invariant viewpoint of
+Remark 1.
+
 Formalized by Claude Fable 5 (claude-fable-5[1m]).
 -/
-theorem exists_modulus_pairDist (Δ : DisMat n) {ε : ℝ} (hε : 0 < ε) :
+theorem exists_modulus_pairDist (Δ : DisMat n) {ε : ℝ} (hε : 0 < ε) :  -- Δ : limit matrix; ε : target distance tolerance
+    -- Conclusion: a single δ>0 (depending only on Δ, ε) makes ANY minimizer for ANY Δ'-within-δ
+    -- pairwise ε-close to SOME minimizer ψ for Δ.
     ∃ δ : ℝ, 0 < δ ∧ ∀ (D' : DisMat n) (z : Config n d),
       z ∈ MDS n d D' → frobSub D' Δ ≤ δ →
       ∃ ψ ∈ MDS n d Δ, ∀ i j : Fin n, pairDistErr z ψ i j ≤ ε := by
@@ -631,15 +747,30 @@ event inclusion `{bad} ⊆ {frobSub > δ}`, and `MeasureTheory.measure_mono` hol
 for *arbitrary* sets (Mathlib measures are outer measures), so no measurability
 of the bad event — and no measurable choice of minimizer — is required.
 
+Paper correspondence: this is the probabilistic conclusion of Theorem 1 / Lemma 1
+in set (outer-probability) form: the MDS output `ψ̂` becomes pairwise ε-close (in
+probability) to the set of true minimizers `MDS(Δ)`. It compares pairwise
+distances (`pairDistErr`), matching the affine-invariant statement of the paper.
+
+Extra (implicit) assumptions / departures from the paper's exact shape:
+* The bad event is measured by the OUTER measure; no measurability of that event
+  is assumed (the docstring explains this deliberately replaces measurable
+  selection, a step the paper leaves implicit).
+* `hψhat` allows `ψ̂ r ω` to be ANY minimizer (not a measurably-selected one).
+* Convergence is stated for the whole sequence in probability; the paper phrases
+  Theorem 1 along a subsequence.
+
 Formalized by Claude Fable 5 (claude-fable-5[1m]).
 -/
 theorem mds_stability_inProbability_set
-    {Ω : Type} [MeasurableSpace Ω] (P : Measure Ω)
-    (Dseq : Nat → Ω → DisMat n) (DeltaInf : DisMat n)
-    (ψhat : Nat → Ω → Config n d)
-    (hψhat : ∀ r ω, ψhat r ω ∈ MDS n d (Dseq r ω))
-    (hD : ConvergesInProbabilityZero P (fun r ω => frobSub (Dseq r ω) DeltaInf))
-    {ε : ℝ} (hε : 0 < ε) :
+    {Ω : Type} [MeasurableSpace Ω] (P : Measure Ω)   -- (Ω, P) : probability/measure space
+    (Dseq : Nat → Ω → DisMat n) (DeltaInf : DisMat n)  -- Dseq : random dissimilarity matrices; DeltaInf : limit Δ
+    (ψhat : Nat → Ω → Config n d)                     -- ψhat : a chosen MDS output per replicate `r`, outcome `ω`
+    (hψhat : ∀ r ω, ψhat r ω ∈ MDS n d (Dseq r ω))    -- hψhat : `ψhat` is always a raw-stress minimizer (any one)
+    (hD : ConvergesInProbabilityZero P (fun r ω => frobSub (Dseq r ω) DeltaInf))  -- hD : `Dseq → DeltaInf` in probability (Frobenius)
+    {ε : ℝ} (hε : 0 < ε) :                            -- ε : distance tolerance
+    -- Conclusion: the (outer) probability that `ψhat r` fails to be pairwise ε-close to some
+    -- minimizer of `DeltaInf` tends to 0.
     Tendsto (fun r => P {ω | ¬ ∃ ψ ∈ MDS n d DeltaInf,
       ∀ i j : Fin n, pairDistErr (ψhat r ω) ψ i j ≤ ε}) atTop (𝓝 0) := by
   obtain ⟨δ, hδ, hmod⟩ := exists_modulus_pairDist (n := n) (d := d) DeltaInf hε
@@ -666,6 +797,11 @@ hypothesis the paper's Theorem 1 implicitly needs in order to speak of "the"
 embedding distances of the limit; without it only the set version
 (`mds_stability_inProbability_set`) is true.
 
+Note (relation to the paper): Remark 1 explicitly warns that minimizers need not
+be affine images of one another, so `UniquePairProfile` is a genuine EXTRA
+hypothesis, not something the paper proves. It is exactly the additional
+assumption needed to upgrade the set-version conclusion to a fixed-limit one.
+
 Formalized by Claude Fable 5 (claude-fable-5[1m]).
 -/
 def UniquePairProfile (n d : Nat) (Δ : DisMat n) : Prop :=
@@ -687,15 +823,30 @@ inclusion (any witness `ψ'` from the modulus event has the same distance
 profile as `ψ`, by uniqueness) followed by outer-measure monotonicity, so no
 measurability of events or of a minimizer selection is required.
 
+Paper correspondence: this is the closest match to the literal statement of
+Theorem 1 — a SINGLE fixed limit `ψ ∈ MDS(Δ)` against which the pairwise-distance
+errors of `ψ̂` go to 0 in probability — but obtained for the FULL sequence
+(stronger than the paper's subsequence) and under the EXTRA `UniquePairProfile`
+hypothesis (see note on `UniquePairProfile`), which Remark 1 indicates the paper
+does not establish in general.
+
+Extra (implicit) assumptions beyond the paper:
+* `huniq : UniquePairProfile …` — distance-profile uniqueness of the limit
+  minimizers (the paper's Remark 1 explicitly does not guarantee this).
+* As in the set version, the bad events are handled by outer measure; no
+  measurability of events or measurable selection of `ψ̂` is assumed.
+
 Formalized by Claude Fable 5 (claude-fable-5[1m]).
 -/
 theorem mds_stability_inProbability_of_uniqueProfile
-    {Ω : Type} [MeasurableSpace Ω] (P : Measure Ω)
-    (Dseq : Nat → Ω → DisMat n) (DeltaInf : DisMat n)
-    (ψhat : Nat → Ω → Config n d)
-    (hψhat : ∀ r ω, ψhat r ω ∈ MDS n d (Dseq r ω))
-    (huniq : UniquePairProfile n d DeltaInf)
-    (hD : ConvergesInProbabilityZero P (fun r ω => frobSub (Dseq r ω) DeltaInf)) :
+    {Ω : Type} [MeasurableSpace Ω] (P : Measure Ω)   -- (Ω, P) : probability/measure space
+    (Dseq : Nat → Ω → DisMat n) (DeltaInf : DisMat n)  -- Dseq : random dissimilarity matrices; DeltaInf : limit Δ
+    (ψhat : Nat → Ω → Config n d)                     -- ψhat : a chosen MDS output per replicate/outcome (any minimizer)
+    (hψhat : ∀ r ω, ψhat r ω ∈ MDS n d (Dseq r ω))    -- hψhat : `ψhat` is always a raw-stress minimizer
+    (huniq : UniquePairProfile n d DeltaInf)          -- huniq : EXTRA — all limit minimizers share one distance profile
+    (hD : ConvergesInProbabilityZero P (fun r ω => frobSub (Dseq r ω) DeltaInf)) :  -- hD : `Dseq → DeltaInf` in probability
+    -- Conclusion: there is ONE fixed minimizer ψ for DeltaInf such that every pairwise-distance
+    -- error `pairDistErr (ψhat r) ψ` converges to 0 in probability, along the full sequence.
     ∃ ψ ∈ MDS n d DeltaInf, ∀ i j : Fin n,
       ConvergesInProbability P (fun r ω => pairDistErr (ψhat r ω) ψ i j) 0 := by
   obtain ⟨ψ, hψ⟩ := mds_nonempty (n := n) (d := d) DeltaInf

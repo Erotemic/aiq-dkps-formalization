@@ -16,66 +16,85 @@ open Filter MeasureTheory
 
 namespace Acharyya2024
 
-/-- Vector space used for response embeddings or model embeddings. -/
+/-- The `d`-dimensional Euclidean space used for response embeddings or model
+embeddings (the paper's `R^d`, the perspective space). -/
 abbrev Rvec (d : Nat) := EuclideanSpace Real (Fin d)
 
-/-- A row-stacked matrix represented as a Euclidean vector over finite indices. -/
+/-- An `m × p` matrix represented as a Euclidean vector over the finite index set
+`Fin m × Fin p`. The paper's response matrices `Xbar_i` live here; the
+`EuclideanSpace` norm is then the Frobenius norm. -/
 abbrev Mat (m p : Nat) := EuclideanSpace Real (Fin m × Fin p)
 
-/-- Curried dissimilarity matrix on `n` objects. -/
+/-- Curried `n × n` dissimilarity matrix on `n` objects (the paper's `∆`, `D`,
+or `∆(∞)` on a fixed set of `n` models). -/
 abbrev DisMat (n : Nat) := Fin n → Fin n → Real
 
-/-- A finite model configuration: one vector per model. -/
+/-- A finite model configuration: one point of the perspective space per model
+(the paper's `ψ`, `ψ̂`, an `n × d` matrix viewed as `n` vectors in `R^d`). -/
 abbrev Config (n d : Nat) := Fin n → Rvec d
 
-/-- Subsequences of natural numbers. -/
+/-- A subsequence of the naturals, encoded as a strictly monotone reindexing.
+Corresponds to the paper's subsequences `{r_u}` of `{r}`. -/
 def Subseq (u : Nat → Nat) : Prop := StrictMono u
 
-/-- Frobenius norm squared of a dissimilarity matrix. -/
+/-- Squared Frobenius norm of a dissimilarity matrix: `∑ᵢⱼ (Aᵢⱼ)²`. -/
 noncomputable def frobSq {n : Nat} (A : DisMat n) : Real :=
   ∑ i : Fin n, ∑ j : Fin n, (A i j)^2
 
-/-- Frobenius norm of a dissimilarity matrix. -/
+/-- Frobenius norm of a dissimilarity matrix, `‖A‖_F = sqrt(∑ᵢⱼ (Aᵢⱼ)²)`. -/
 noncomputable def frob {n : Nat} (A : DisMat n) : Real :=
   Real.sqrt (frobSq A)
 
-/-- Frobenius norm of a difference of dissimilarity matrices. -/
+/-- Frobenius norm of the entrywise difference of two dissimilarity matrices,
+`‖A - B‖_F`. This is how the paper measures `‖D - ∆(∞)‖`. -/
 noncomputable def frobSub {n : Nat} (A B : DisMat n) : Real :=
   frob (fun i j => A i j - B i j)
 
-/-- Raw-stress objective for metric multidimensional scaling. -/
+/-- Raw-stress objective for metric multidimensional scaling: the paper's
+criterion `σ(z) = ∑ᵢⱼ (‖zᵢ - zⱼ‖ - ∆ᵢⱼ)²`, measuring how well configuration `z`
+in `R^d` reproduces the target dissimilarities `∆`. -/
 noncomputable def rawStress (n d : Nat) (Δ : DisMat n) (z : Config n d) : Real :=
   ∑ i : Fin n, ∑ j : Fin n, (‖z i - z j‖ - Δ i j)^2
 
-/-- Set of raw-stress minimizers. This encodes the non-uniqueness of MDS. -/
+/-- Set of raw-stress minimizers, the paper's `MDS(∆)` / `mds(∆)`. The set form
+encodes the non-uniqueness of MDS noted in the paper's Remark 1 (solutions are
+only determined up to an affine transformation). -/
 def MDS (n d : Nat) (Δ : DisMat n) : Set (Config n d) :=
   { z | ∀ z' : Config n d, rawStress n d Δ z ≤ rawStress n d Δ z' }
 
-/-- Pairwise Euclidean distance induced by a configuration. -/
+/-- Pairwise Euclidean distance `‖zᵢ - zⱼ‖` induced by a configuration `z`. -/
 noncomputable def pairDist {n d : Nat} (z : Config n d) (i j : Fin n) : Real :=
   ‖z i - z j‖
 
-/-- Absolute error in a single pairwise distance. -/
+/-- Absolute error between two configurations in a single pairwise distance. -/
 noncomputable def pairDistErr {n d : Nat} (z z' : Config n d) (i j : Fin n) : Real :=
   |pairDist z i j - pairDist z' i j|
 
-/-- Convergence in probability to a fixed target. -/
+/-- Convergence in probability of a sequence of random elements `Xₙ` to a fixed
+target `x` (the paper's `→P`). Standard definition: for every `ε > 0`, the
+probability of exceeding `ε` tends to `0`. -/
 def ConvergesInProbability {Ω α : Type} [MeasurableSpace Ω] [PseudoMetricSpace α]
     (P : Measure Ω) (X : Nat → Ω → α) (x : α) : Prop :=
   ∀ ε : Real, 0 < ε →
     Tendsto (fun n => P {ω | dist (X n ω) x > ε}) atTop (𝓝 0)
 
-/-- Convergence in probability to zero. -/
+/-- Convergence in probability to `0`, e.g. the paper's `‖D - ∆(∞)‖ →P 0`. -/
 def ConvergesInProbabilityZero {Ω α : Type} [MeasurableSpace Ω] [PseudoMetricSpace α]
     [Zero α] (P : Measure Ω) (X : Nat → Ω → α) : Prop :=
   ConvergesInProbability P X 0
 
-/-- High-probability events along a natural-number asymptotic. -/
+/-- A family of events `Eₙ` that holds with high probability as `n → ∞`: for
+every `δ > 0`, eventually `P(Eₙ) ≥ 1 - δ`. (Here `P` may itself vary with `n`,
+modeling the paper's `r`- or `n`-indexed sampling distributions.) -/
 def HighProbAtTop {Ω : Type} [MeasurableSpace Ω]
     (P : Nat → Measure Ω) (E : Nat → Set Ω) : Prop :=
   ∀ δ : ENNReal, 0 < δ → ∃ N : Nat, ∀ n > N, P n (E n) ≥ 1 - δ
 
-/-- A generic alignment error for configurations, leaving the transformation class abstract. -/
+/-- A generic alignment error between an estimate `ψhat` and the truth `ψ`,
+`∑ᵢ ‖ψhatᵢ - ψᵢ‖`. Note: the paper measures closeness only *up to an affine
+transformation* (Remark 1, Theorems 1/3); this definition is the simpler direct
+(non-affine-quotiented) error, so it is a stronger/encoded notion of closeness
+than the paper's statements use. -/
 noncomputable def ConfigError {n d : Nat} (ψhat ψ : Config n d) : Real :=
   ∑ i : Fin n, ‖ψhat i - ψ i‖
 
@@ -86,8 +105,9 @@ Formalized by Codex 5.5 High, per user-observed model label.
 -/
 theorem HighProbAtTop.mono {Ω : Type} [MeasurableSpace Ω]
     {P : Nat → Measure Ω} {E F : Nat → Set Ω}
-    (hE : HighProbAtTop P E)
-    (h_subset : ∀ n, E n ⊆ F n) :
+    (hE : HighProbAtTop P E)       -- `E` holds with high probability
+    (h_subset : ∀ n, E n ⊆ F n) :  -- and `E` implies the larger event `F`
+    -- Conclusion: the larger event `F` also holds with high probability.
     HighProbAtTop P F := by
   intro δ hδ
   obtain ⟨N, hN⟩ := hE δ hδ
@@ -109,12 +129,14 @@ theorem ConvergesInProbability.of_highProb_dist_le_rate
     (X : Nat → Ω → α)
     (x : α)
     (rate : Nat → Real)
+    -- measurability of the good events (extra technical hypothesis, not in the paper)
     (hgood_meas :
       ∀ n, MeasurableSet {ω | |dist (X n ω) x| ≤ rate n})
-    (hrate : Tendsto rate atTop (𝓝 0))
-    (hgood :
+    (hrate : Tendsto rate atTop (𝓝 0))     -- the deterministic rate vanishes
+    (hgood :                               -- and the rate bound holds with high probability
       HighProbAtTop (fun _n : Nat => P)
         (fun n => {ω | dist (X n ω) x ≤ rate n})) :
+    -- Conclusion: `Xₙ → x` in probability.
     ConvergesInProbability P X x := by
   intro ε hε
   have h :=
@@ -131,6 +153,7 @@ Each component error is bounded by the total configuration error.
 Formalized by Codex 5.5 High, per user-observed model label.
 -/
 theorem norm_config_le_ConfigError {n d : Nat} (ψhat ψ : Config n d) (i : Fin n) :
+    -- Conclusion: the single-model error is at most the total configuration error.
     ‖ψhat i - ψ i‖ ≤ ConfigError ψhat ψ := by
   classical
   unfold ConfigError
@@ -142,6 +165,7 @@ Every entry of a dissimilarity matrix is bounded by its Frobenius norm.
 Formalized by Codex 5.5 High, per user-observed model label.
 -/
 theorem abs_entry_le_frob {n : Nat} (A : DisMat n) (i j : Fin n) :
+    -- Conclusion: each entry is bounded by the matrix's Frobenius norm.
     |A i j| ≤ frob A := by
   have hsq_entry_le_row :
       (A i j)^2 ≤ ∑ j' : Fin n, (A i j')^2 :=
@@ -162,6 +186,7 @@ difference.
 Formalized by Codex 5.5 High, per user-observed model label.
 -/
 theorem abs_entry_sub_le_frobSub {n : Nat} (A B : DisMat n) (i j : Fin n) :
+    -- Conclusion: each entrywise difference is bounded by `‖A - B‖_F`.
     |A i j - B i j| ≤ frobSub A B := by
   simpa [frobSub] using abs_entry_le_frob (fun i j => A i j - B i j) i j
 
@@ -178,7 +203,9 @@ noncomputable def responseDistEntry {n m p : Nat} (Xbar : Fin n → Mat m p)
     (i j : Fin n) : Real :=
   ((m : Real)⁻¹) * ‖Xbar i - Xbar j‖
 
-/-- Curried dissimilarity matrix built from response matrices. -/
+/-- Curried dissimilarity matrix built from the `n` response matrices `Xbar`.
+This is the paper's empirical dissimilarity matrix `D` (entries
+`(1/m)‖Xbar_i - Xbar_j‖_F`). -/
 noncomputable def responseDist {n m p : Nat} (Xbar : Fin n → Mat m p) : DisMat n :=
   fun i j => responseDistEntry Xbar i j
 
@@ -192,6 +219,8 @@ Formalized by Codex 5.5 High, per user-observed model label.
 -/
 theorem abs_responseDistEntry_sub_responseDistEntry_le
     {n m p : Nat} (Xbar μ : Fin n → Mat m p) (i j : Fin n) :
+    -- Conclusion: the error in one dissimilarity entry (empirical `Xbar` vs.
+    -- population mean `μ`) is bounded by `(1/m)` times the two model errors.
     |responseDistEntry Xbar i j - responseDistEntry μ i j|
       ≤ ((m : Real)⁻¹) * (‖Xbar i - μ i‖ + ‖Xbar j - μ j‖) := by
   have hm_nonneg : 0 ≤ ((m : Real)⁻¹) := by
@@ -211,6 +240,8 @@ Formalized by Codex 5.5 High, per user-observed model label.
 -/
 theorem frobSub_responseDist_le_sum_errors
     {n m p : Nat} (Xbar μ : Fin n → Mat m p) :
+    -- Conclusion: `‖D(Xbar) - D(μ)‖_F` is bounded by the entrywise sum of the
+    -- per-model response-matrix errors.
     frobSub (responseDist Xbar) (responseDist μ)
       ≤ ∑ i : Fin n, ∑ j : Fin n,
           ((m : Real)⁻¹) * (‖Xbar i - μ i‖ + ‖Xbar j - μ j‖) := by
@@ -251,7 +282,11 @@ Formalized by Codex 5.5 High, per user-observed model label.
 -/
 theorem frobSub_responseDist_le_of_uniform_errors
     {n m p : Nat} (Xbar μ : Fin n → Mat m p) {η : Real}
+    -- `hη`: every per-model response-matrix error is uniformly bounded by `η`
+    -- (the high-probability event a concentration result would supply).
     (hη : ∀ i : Fin n, ‖Xbar i - μ i‖ ≤ η) :
+    -- Conclusion: an explicit Frobenius bound `n² · (2η/m)` on the induced
+    -- dissimilarity-matrix error.
     frobSub (responseDist Xbar) (responseDist μ)
       ≤ ((n : Real) * (n : Real)) * (((m : Real)⁻¹) * (2 * η)) := by
   have hm_inv_nonneg : 0 ≤ ((m : Real)⁻¹) :=

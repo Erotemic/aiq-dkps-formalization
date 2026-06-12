@@ -4,6 +4,75 @@ Written 2026-06-12 by Claude Opus 4.8. **Supersedes the F5 "likely not provable"
 assessment in `docs/planning/for-fable.md`.** The core measurability obstruction is now broken
 and the load-bearing lemma is proved and committed.
 
+---
+
+## STATUS UPDATE 2026-06-12 (Fable): blockers A–C are PROVED — only plumbing (D) remains
+
+All three blockers below are now proved in
+[`Acharyya2025/SpectralMeasurability.lean`](../../Acharyya2025/SpectralMeasurability.lean)
+(commit `4c10fb0`, 0 errors / 0 warnings / 0 sorry), via a **polynomial route
+that supersedes the cfc plan** — no C*-algebra instances, no `cfc`, no
+matrix-norm-scope wrangling (the "(b) instance risk" below never materializes):
+
+* `measurable_specTransform` — the spectral `h`-transform
+  `Σₖ h(λₖ) uₖuₖᵀ` of a measurable Hermitian family is measurable for any fixed
+  continuous `h`: it is the entrywise pointwise limit of matrix polynomials
+  `pₘ(B̂)` (Stone–Weierstrass on `[-nR, nR]`, eigenvalues bounded entrywise,
+  glued over the countable cover `{‖B̂‖entry ≤ R}` with
+  `ForMathlib.measurable_of_iUnion_restrict`).
+* **(A)** `inner_spectralConfig_eq_specTransform` — on the spectral-split event,
+  `Gram (spectralConfig) = specTransform h` (the `√λ·√λ = λ` computation plus
+  tail-kill/reindex over `Fin.castLE`).
+* **(B)** `alignExists_iff_qProp` — `AlignExists ↔ QProp ψ c (Gram spec)`
+  pointwise and unconditionally (Procrustes rigidity,
+  `exists_linearIsometryEquiv_of_inner_eq`).
+* **(C)** `measurableSet_qProp` — `{M | QProp ψ c M}` is Borel: on each
+  diagonal-bounded piece the realizing configuration lies in a compact ball, so
+  the existential is compactly quantified (`measurableSet_exists_mem_le` with
+  defect functional `Σ|⟪yᵢ,yⱼ⟫−Mᵢⱼ| + (err−c)⁺`); countable union over the bound.
+* **Assembly** `measurableSet_alignExists_inter` — for any measurable `G` on
+  which the split holds: `{AlignExists} ∩ G` is measurable from
+  `Measurable (fun ω => B̂ ω)` alone; `measurable_cmds_matrix` discharges that
+  from `Measurable (Dhat u)`.
+* `ramp a b` (with `ramp_continuous`, `ramp_eq_zero` for `x ≤ a`,
+  `ramp_eq_self` for `b ≤ x`, needs `0 ≤ a < b`) is provided as the fixed filter.
+
+### What remains for Opus — step (D), pure plumbing
+
+Re-wire the four `queryEfficient_nn_of_*` capstones
+(`DkpsQuench/AcharyyaBridge.lean`, via the shared
+`quench_part2_from_aligned_configError_hp`) to consume
+`measurableSet_alignExists_inter` instead of
+`measurableSet_setOf_alignExists`+`hmeas_spec`:
+
+1. **`G` := the entrywise-closeness event** already in the chain (`hcenter`'s
+   event, `EntrywiseClose (cmds B̂) (cmds B) (rate u)`): measurable from
+   `Measurable (Dhat u)` (finitely many coordinate conditions), HP by `hcenter`.
+   Intersect: `E := {AlignExists} ∩ G` is measurable (new theorem), HP
+   (intersection of two HP events, both measurable — `HighProbAtTop.inter`), and
+   `E ⊆ {AlignExists}` = the aligned-error event, exactly what the
+   `*_of_subevent` forms consume.
+2. **`h` := `ramp (α/3) (2α/3)`** — one FIXED filter for all budgets `u` (the
+   filter must not depend on `u`). Supply the split hypothesis `hsplit` on `G`
+   by Weyl: entrywise `rate u` closeness of the CMDS matrices ⇒
+   `‖toEuclideanLin (B̂−B)‖ ≤ n·rate u` (`norm_toEuclideanLin_le_of_entry_le`) ⇒
+   `|λₖ(B̂) − λₖ(B)| ≤ n·rate u` (`Acharyya2025.Weyl.abs_eigenvalues_sub_le`);
+   with `λₖ(B) ≥ α` for `k < d` (hfloor) and `λₖ(B) = 0` for `k ≥ d`
+   (PSD rank-tail, already in `MatrixPerturbation`), the split needs
+   **strict** separation `n·rate u < α/2`. The existing `hsmall : n·rate u ≤ α/2`
+   is NOT strict ⇒ state the new capstone variants with
+   `hsmall' : ∀ u, n * rate u ≤ α / 3` (then tail ≤ α/3 = a < b = 2α/3 ≤ top,
+   uniformly in `u`). Keep the old capstones (hmeas_spec form) or supersede —
+   reviewer's choice; the α/3 strengthening is an honest, mild constant change.
+3. Replace the `hmeas_spec` hypothesis with `hD : Measurable (Dhat u)` (use
+   `measurable_cmds_matrix`), and update `docs/planning/for-fable.md` F5 +
+   README "what to scrutinize" notes accordingly.
+
+The original cfc-route plan is kept below for context; its steps A–C are
+superseded by the above.
+
+---
+
 ## TL;DR
 
 `hmeas_spec` ([`DkpsQuench/AcharyyaBridge.lean`](../../DkpsQuench/AcharyyaBridge.lean), assumed in the four

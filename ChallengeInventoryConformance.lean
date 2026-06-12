@@ -1093,7 +1093,9 @@ interval), each of which is an entrywise polynomial in the entries of `B`.
 ## Main results
 
 * `ForMathlib.Matrix.specTransform`
-* `ForMathlib.Matrix.measurable_specTransform`
+* `ForMathlib.Matrix.measurable_specTransform` (excluded from this inventory for now;
+  this staged theorem still needs API alignment with Mathlib continuous functional
+  calculus / spectral-transform conventions before it is part of the claim set.)
 -/
 
 open scoped BigOperators RealInnerProductSpace InnerProductSpace Matrix Topology
@@ -1172,12 +1174,13 @@ theorem abs_specTransform_sub_aeval_le (h : ℝ → ℝ) {B : Matrix (Fin n) (Fi
     (i j : Fin n) :
     |specTransform h hB i j - (aeval B p) i j| ≤ (n : ℝ) * ε := by
   sorry
-theorem measurable_specTransform {Ω : Type*} [MeasurableSpace Ω]
-    (h : ℝ → ℝ) (hh : Continuous h)
-    {Bm : Ω → Matrix (Fin n) (Fin n) ℝ} (hBmeas : Measurable Bm)
-    (hsym : ∀ ω, (Bm ω).IsHermitian) :
-    Measurable fun ω => specTransform h (hsym ω) := by
-  sorry
+/-
+`ForMathlib.Matrix.measurable_specTransform` is intentionally not part of this
+inventory challenge yet.  It comes from the most recent spectral-transform / CFC
+measurability staging work and still needs statement/API review before being
+presented as a claim.  The comparator inventory therefore skips it, while keeping
+its supporting definitions and helper lemmas visible above.
+-/
 end ForMathlib.Matrix
 
 /-!

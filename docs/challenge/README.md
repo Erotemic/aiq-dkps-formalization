@@ -36,12 +36,16 @@ The headline sampler is meant for quick calibration. It covers:
   public theorem surface of the current `ForMathlib` staging library, with each
   theorem body replaced by `sorry`.
 - `ChallengeInventoryLeaderboard.lean` imports the project `ForMathlib` modules.
-- `comparator/aiq-mathlib-inventory.json` checks the full inventory of staged
-  declarations.
+- `comparator/aiq-mathlib-inventory.json` checks the current staged
+  declaration inventory, excluding `ForMathlib.Matrix.measurable_specTransform`
+  for now.
 
 The inventory challenge is not a proposed single Mathlib PR. It is a mechanical
 claim inventory: it records which reusable staged declarations the current
-project can certify under comparator.
+project can certify under comparator.  `ForMathlib.Matrix.measurable_specTransform`
+is intentionally excluded for now because it comes from the newest
+spectral-transform / CFC measurability work and still needs statement/API review
+before it should be treated as part of the claim set.
 
 ## Suggested local commands
 

@@ -100,9 +100,12 @@ status:
     challenge_file: "ChallengeInventoryConformance.lean"
     solution_file: "ChallengeInventoryLeaderboard.lean"
     comparator_config: "comparator/aiq-mathlib-inventory.json"
-    scope: "Full current public theorem surface of ForMathlib, generated as a comparator inventory."
-    theorem_count: 61
+    scope: "Current public theorem surface of ForMathlib selected for comparator inventory; excludes the staged spectral-transform measurability theorem pending API review."
+    theorem_count: 60
     expected_axioms: ["propext", "Classical.choice", "Quot.sound"]
+    excluded_for_now:
+      - declaration: "ForMathlib.Matrix.measurable_specTransform"
+        reason: "Recent spectral-transform / CFC measurability staging theorem; not part of the current upstream claim set until its statement/API is reviewed."
   additional_upstream_candidates:
     - "Davis-Kahan / sin-theta perturbation bounds"
     - "Entrywise-to-operator-norm and entrywise-to-eigenvalue perturbation"

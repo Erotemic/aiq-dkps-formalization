@@ -17,16 +17,32 @@ against the new pin — re-grep before porting them.  Note Mathlib now uses the
 module system (`module` / `public import` headers); staged files must be
 converted at PR time.
 
-**Staging status (updated later 2026-06-11):** candidates #1, #2 (both
-lemmas), #3a (Courant–Fischer + Weyl, RCLike), #3b, #6 (quantitative polar
-factor, bundled isometry + CLM corollary), and #7 (TendstoInMeasure
-constructors, general filter/EDist) are staged in
-the `ForMathlib/` library (see `ForMathlib/README.md`), generalized to
-`RCLike 𝕜` where applicable, with the paper libraries rewired to consume them
+**Staging status (updated 2026-06-12):** candidates #1, #2 (both lemmas),
+#3a (Courant–Fischer + Weyl, RCLike), #3b, #4 (sample-mean MSE on a
+finite-dim real IPS), #5 (rank-constrained PSD factorization, ℝ), #6
+(quantitative polar factor, bundled isometry + CLM corollary), and #7
+(TendstoInMeasure constructors, general filter/EDist) are ALL staged in the
+`ForMathlib/` library (see `ForMathlib/README.md`), generalized to `RCLike 𝕜`
+where applicable, with the paper libraries rewired to consume them
 (`Acharyya2025/Procrustes.lean`, `Acharyya2025/RateChain.lean`,
-`Acharyya2024/Probability.lean`, `Acharyya2025/DavisKahan.lean` are now thin
-wrappers/consumers).  Remaining to stage: #4 (sample-mean MSE) and #5 (Gram realization +
-eigenvalue tail) — see planning/opus-handoff.md for the execution plan.
+`Acharyya2024/Probability.lean`, `Acharyya2025/DavisKahan.lean`,
+`Acharyya2024/SecondMoment.lean`, `Acharyya2025/GramRealization.lean`,
+`Acharyya2025/Weyl.lean`, `Acharyya2025/PolarFactor.lean`,
+`Acharyya2024/WellKnown.lean` are now thin wrappers/consumers).  All seven
+candidates' gap claims were re-verified against pin `476fb97b621c` before
+porting.
+
+Two documented follow-ups (not blocking; not yet staged):
+* **#5 RCLike generalization.** The factorization is staged over `ℝ` (what the
+  application needs); the reverse direction is already field-general, the
+  forward spectral construction needs `A k i = RCLike.ofReal (√λ_k) · conj (U i k)`
+  with conjugation bookkeeping.  Marked `TODO(RCLike)` in the staged file.
+* **#5 eigenvalue-tail ride-along** (`sortedEigenvalues_tail_eq_zero` →
+  `Matrix.PosSemidef.eigenvalues₀_eq_zero_of_le`) was NOT staged: Mathlib's
+  `eigenvalues₀` (sorted) exposes essentially only antitonicity, and the
+  counting proof needs an `eigenvalues₀ ≈ eigenvalues` (sorted-vs-unsorted)
+  bijection that upstream does not provide.  `Acharyya2025/MatrixPerturbation.lean`
+  keeps its local `sortedEigenvalues` proof untouched, as the handoff permitted.
 
 Formalized by Claude Fable 5, per user-observed model label (claude-fable-5[1m]).
 

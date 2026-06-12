@@ -30,6 +30,7 @@ No `axiom`, no `sorry`.
 -/
 
 import Mathlib
+import ForMathlib.Probability.Moments.SampleMean
 
 open scoped BigOperators Topology
 open Filter MeasureTheory ProbabilityTheory
@@ -53,6 +54,9 @@ The common-mean hypothesis is genuinely needed: without centring each `Z k` at
 Mathlib's `variance` (which absorbs the centring) and
 `ProbabilityTheory.IndepFun.variance_sum`.
 
+This is now a thin wrapper around the Mathlib-staged
+`ForMathlib.integral_sq_scaledSum_sub_of_pairwise_indep`.
+
 Formalized by Claude Fable 5, per user-observed model label (claude-fable-5[1m]).
 -/
 theorem integral_sq_scaled_sum_sub_of_pairwise_indep
@@ -65,46 +69,8 @@ theorem integral_sq_scaled_sum_sub_of_pairwise_indep
     (hindep : Set.Pairwise (Set.univ : Set (Fin r))
       fun i j => IndepFun (Z i) (Z j) P) :
     ∫ ω, ((r : Real)⁻¹ * (∑ k, Z k ω) - μc) ^ 2 ∂P
-      = (r : Real)⁻¹ ^ 2 * ∑ k, ∫ ω, (Z k ω - μc) ^ 2 ∂P := by
-  classical
-  have hr0 : (r : Real) ≠ 0 := by exact_mod_cast hr.ne'
-  -- The scaled sum has mean `μc`.
-  have hmean_sum : P[fun ω => (r : Real)⁻¹ * (∑ k, Z k ω)] = μc := by
-    rw [integral_const_mul, integral_finsetSum]
-    · simp_rw [hmean]
-      simp only [Finset.sum_const, Finset.card_univ, Fintype.card_fin, nsmul_eq_mul]
-      field_simp
-    · exact fun k _ => (hL2 k).integrable one_le_two
-  -- Measurability of the scaled sum.
-  have hmeasS : AEMeasurable (fun ω => (r : Real)⁻¹ * (∑ k, Z k ω)) P := by
-    refine AEMeasurable.const_mul ?_ _
-    have h := Finset.aemeasurable_sum (Finset.univ : Finset (Fin r))
-      (fun k _ => (hL2 k).aemeasurable)
-    have heq : (fun ω => ∑ k, Z k ω) = (∑ i : Fin r, Z i) := by
-      ext ω; simp [Finset.sum_apply]
-    rw [heq]; exact h
-  -- LHS is the variance of the scaled sum (since its mean is `μc`).
-  have hLHS : ∫ ω, ((r : Real)⁻¹ * (∑ k, Z k ω) - μc) ^ 2 ∂P
-      = variance (fun ω => (r : Real)⁻¹ * (∑ k, Z k ω)) P := by
-    rw [variance_eq_integral hmeasS, hmean_sum]
-  rw [hLHS]
-  -- Pull out the scalar.
-  rw [variance_const_mul]
-  -- Variance of a sum of pairwise-independent variables is the sum of variances.
-  have hvarsum : variance (fun ω => ∑ k, Z k ω) P = ∑ k, variance (Z k) P := by
-    have hsum := IndepFun.variance_sum (X := Z) (s := Finset.univ)
-      (fun i _ => hL2 i)
-      (fun i _ j _ hij => hindep (Set.mem_univ i) (Set.mem_univ j) hij)
-    rw [← hsum]
-    congr 1
-    ext ω
-    simp [Finset.sum_apply]
-  rw [hvarsum]
-  -- Each variance is the second moment about `μc`.
-  have hvark : ∀ k, variance (Z k) P = ∫ ω, (Z k ω - μc) ^ 2 ∂P := by
-    intro k
-    rw [variance_eq_integral (hL2 k).aemeasurable, hmean k]
-  simp_rw [hvark]
+      = (r : Real)⁻¹ ^ 2 * ∑ k, ∫ ω, (Z k ω - μc) ^ 2 ∂P :=
+  ForMathlib.integral_sq_scaledSum_sub_of_pairwise_indep P hr Z μc hL2 hmean hindep
 
 /--
 Per-coordinate independence of `EuclideanSpace`-valued samples follows from joint
@@ -123,6 +89,21 @@ theorem pairwise_indep_coord
   have hmeas : Measurable (fun x : EuclideanSpace Real ι => x c) :=
     (EuclideanSpace.proj c : EuclideanSpace Real ι →L[Real] Real).continuous.measurable
   exact (hindep.indepFun hij).comp hmeas hmeas
+
+/-- Coordinate-wise common mean upgrades to a Bochner common mean for an
+integrable `EuclideanSpace`-valued sample.  Used to feed the coordinate-mean
+paper statements into the Mathlib-staged Bochner-mean theorems. -/
+private theorem bochner_mean_of_coord
+    (P : Measure Ω) {ι : Type} [Fintype ι]
+    (Y : Ω → EuclideanSpace Real ι) (μ : EuclideanSpace Real ι)
+    (hint : Integrable Y P) (hmean : ∀ c, ∫ ω, Y ω c ∂P = μ c) :
+    ∫ ω, Y ω ∂P = μ := by
+  ext c
+  have h : (EuclideanSpace.proj c : EuclideanSpace Real ι →L[Real] Real) (∫ ω, Y ω ∂P)
+      = ∫ ω, Y ω c ∂P :=
+    (ContinuousLinearMap.integral_comp_comm _ hint).symm
+  rw [hmean c] at h
+  exact h
 
 /--
 **Main second-moment identity (additive form).**
@@ -151,70 +132,15 @@ theorem integral_norm_sq_sampleMean_sub_mean_eq_sum
     (hindep : iIndepFun X P) :
     ∫ ω, ‖(r : Real)⁻¹ • (∑ k, X k ω) - μ‖ ^ 2 ∂P
       = (r : Real)⁻¹ ^ 2 * ∑ k, ∫ ω, ‖X k ω - μ‖ ^ 2 ∂P := by
-  classical
-  -- Per-coordinate square-integrability of `X k`.
-  have hL2c : ∀ (k : Fin r) (c : ι), MemLp (fun ω => X k ω c) 2 P := by
-    intro k c
-    have := (hL2 k).continuousLinearMap_comp
-      (EuclideanSpace.proj c : EuclideanSpace Real ι →L[Real] Real)
-    simpa using this
-  -- Per-coordinate integrability of the deviation square (for the `∫ Σ_c = Σ_c ∫` swap).
-  have hintc : ∀ c : ι, Integrable
-      (fun ω => ((r : Real)⁻¹ * (∑ k, X k ω c) - μ c) ^ 2) P := by
-    intro c
-    have hsum : MemLp (fun ω => (r : Real)⁻¹ * (∑ k, X k ω c) - μ c) 2 P := by
-      have h1 : MemLp (fun ω => ∑ k, X k ω c) 2 P :=
-        memLp_finsetSum (Finset.univ : Finset (Fin r)) (fun k _ => hL2c k c)
-      exact (h1.const_mul _).sub (memLp_const (μ c))
-    exact hsum.integrable_sq
-  -- Reduce the LHS norm-square integral to a sum over coordinates.
-  have hpt : ∀ ω, ‖(r : Real)⁻¹ • (∑ k, X k ω) - μ‖ ^ 2
-      = ∑ c : ι, ((r : Real)⁻¹ * (∑ k, X k ω c) - μ c) ^ 2 := by
-    intro ω
-    rw [EuclideanSpace.norm_sq_eq]
-    apply Finset.sum_congr rfl
-    intro c _
-    rw [Real.norm_eq_abs, sq_abs]
-    congr 1
-    rw [PiLp.sub_apply, PiLp.smul_apply, WithLp.ofLp_sum, Finset.sum_apply]
-    rfl
-  -- Reduce the RHS per-sample norm-square integral to a sum over coordinates.
-  have hptk : ∀ (k : Fin r) (ω : Ω), ‖X k ω - μ‖ ^ 2
-      = ∑ c : ι, (X k ω c - μ c) ^ 2 := by
-    intro k ω
-    rw [EuclideanSpace.norm_sq_eq]
-    apply Finset.sum_congr rfl
-    intro c _
-    rw [Real.norm_eq_abs, sq_abs, PiLp.sub_apply]
-  -- Per-sample integrability of `(X k c - μ c)²` (for the `∫ Σ_c = Σ_c ∫` swap).
-  have hintkc : ∀ (k : Fin r) (c : ι),
-      Integrable (fun ω => (X k ω c - μ c) ^ 2) P := by
-    intro k c
-    exact ((hL2c k c).sub (memLp_const (μ c))).integrable_sq
-  calc
-    ∫ ω, ‖(r : Real)⁻¹ • (∑ k, X k ω) - μ‖ ^ 2 ∂P
-        = ∫ ω, ∑ c : ι, ((r : Real)⁻¹ * (∑ k, X k ω c) - μ c) ^ 2 ∂P := by
-          simp_rw [hpt]
-    _ = ∑ c : ι, ∫ ω, ((r : Real)⁻¹ * (∑ k, X k ω c) - μ c) ^ 2 ∂P := by
-          rw [integral_finsetSum]; exact fun c _ => hintc c
-    _ = ∑ c : ι, (r : Real)⁻¹ ^ 2 * ∑ k, ∫ ω, (X k ω c - μ c) ^ 2 ∂P := by
-          apply Finset.sum_congr rfl
-          intro c _
-          exact integral_sq_scaled_sum_sub_of_pairwise_indep P hr
-            (fun k ω => X k ω c) (μ c) (fun k => hL2c k c)
-            (fun k => hmean k c) (pairwise_indep_coord P X hindep c)
-    _ = (r : Real)⁻¹ ^ 2 * ∑ c : ι, ∑ k, ∫ ω, (X k ω c - μ c) ^ 2 ∂P := by
-          rw [Finset.mul_sum]
-    _ = (r : Real)⁻¹ ^ 2 * ∑ k, ∑ c : ι, ∫ ω, (X k ω c - μ c) ^ 2 ∂P := by
-          rw [Finset.sum_comm]
-    _ = (r : Real)⁻¹ ^ 2 * ∑ k, ∫ ω, ‖X k ω - μ‖ ^ 2 ∂P := by
-          congr 1
-          apply Finset.sum_congr rfl
-          intro k _
-          rw [← integral_finsetSum]
-          · apply integral_congr_ae
-            exact Eventually.of_forall fun ω => (hptk k ω).symm
-          · exact fun c _ => hintkc k c
+  -- Bridge the paper's `iIndepFun` + coordinate-mean hypotheses to the
+  -- Mathlib-staged abstract theorem (pairwise independence + Bochner mean).
+  have hpw : Set.Pairwise (Set.univ : Set (Fin r))
+      fun i j => IndepFun (X i) (X j) P :=
+    fun i _ j _ hij => hindep.indepFun hij
+  have hbm : ∀ k, ∫ ω, X k ω ∂P = μ :=
+    fun k => bochner_mean_of_coord P (X k) μ ((hL2 k).integrable one_le_two)
+      (fun c => hmean k c)
+  exact ForMathlib.integral_norm_sq_average_sub_eq_sum P hr X μ hL2 hbm hpw
 
 /--
 **iid corollary (equality form).**

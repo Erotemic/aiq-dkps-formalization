@@ -24,6 +24,7 @@ Formalized by Claude Fable 5, per user-observed model label (claude-fable-5[1m])
 -/
 
 import Acharyya2024.Common
+import ForMathlib.LinearAlgebra.Matrix.PosDef
 
 open scoped BigOperators
 open Matrix
@@ -98,96 +99,17 @@ theorem exists_config_gram_eq_of_posSemidef_rank_le
     (hB : B.PosSemidef) (hrank : B.rank ≤ d) :
     ∃ ψ : Acharyya2024.Config n d,
       ∀ i j : Fin n, (∑ k : Fin d, ψ i k * ψ j k) = B i j := by
-  classical
-  have hHerm : B.IsHermitian := hB.isHermitian
-  -- Nonzero-eigenvalue index subtype (written literally so unification sees it).
-  -- card {k // λ k ≠ 0} = rank B ≤ d.
-  have hcardS : Fintype.card {k : Fin n // hHerm.eigenvalues k ≠ 0} = B.rank :=
-    (hHerm.rank_eq_card_non_zero_eigs).symm
-  have hcard_le : Fintype.card {k : Fin n // hHerm.eigenvalues k ≠ 0} ≤ Fintype.card (Fin d) := by
-    simpa [Fintype.card_fin, hcardS] using hrank
-  -- An injection of the nonzero-eigenvalue indices into the d coordinates.
-  obtain ⟨e⟩ := Function.Embedding.nonempty_of_card_le hcard_le
-  -- Coordinate weight for a single nonzero index `k` and row `i`.
-  set w : Fin n → Fin n → Real := fun i k =>
-    Real.sqrt (hHerm.eigenvalues k) * hHerm.eigenvectorUnitary i k with hw
-  -- The configuration: at coordinate `a`, if `a = e k` for a nonzero index `k`,
-  -- place `√(λ_k) · U i k`, otherwise `0`.
-  set ψcoord : Acharyya2024.Config n d := fun i => WithLp.toLp 2 (fun a =>
-      if h : ∃ k : {k : Fin n // hHerm.eigenvalues k ≠ 0}, e k = a then w i (Classical.choose h).1 else 0) with hψcoord
-  refine ⟨ψcoord, ?_⟩
+  -- Derive the configuration from the Mathlib-staged matrix factorization
+  -- `B = Aᴴ * A` with `A : Matrix (Fin d) (Fin n) ℝ`: the columns of `A` are the
+  -- configuration vectors.
+  obtain ⟨A, hA⟩ :=
+    (ForMathlib.Matrix.posSemidef_and_rank_le_iff_exists_conjTranspose_mul_self B).mp
+      ⟨hB, hrank⟩
+  refine ⟨fun i => WithLp.toLp 2 (fun k => A k i), ?_⟩
   intro i j
-  -- For `a = e k` the dite evaluates to `w · k`.
-  have hψ_at : ∀ (i : Fin n) (k : {k : Fin n // hHerm.eigenvalues k ≠ 0}), ψcoord i (e k) = w i k.1 := by
-    intro i k
-    have hex : ∃ k' : {k : Fin n // hHerm.eigenvalues k ≠ 0}, e k' = e k := ⟨k, rfl⟩
-    have : ψcoord i (e k) = w i (Classical.choose hex).1 := by
-      simp only [hψcoord, dif_pos hex]
-    rw [this]
-    have := e.injective (Classical.choose_spec hex)
-    rw [this]
-  -- Off the range of `e`, the coordinate is zero.
-  have hψ_off : ∀ (i : Fin n) (a : Fin d), (∀ k : {k : Fin n // hHerm.eigenvalues k ≠ 0}, e k ≠ a) → ψcoord i a = 0 := by
-    intro i a ha
-    have : ¬ ∃ k : {k : Fin n // hHerm.eigenvalues k ≠ 0}, e k = a := by rintro ⟨k, hk⟩; exact ha k hk
-    simp only [hψcoord, dif_neg this]
-  -- Reduce the sum over Fin d to a sum over S (image of e), then to the full
-  -- spectral sum over Fin n (the zero eigenvalues contribute nothing).
-  calc
-    (∑ a : Fin d, ψcoord i a * ψcoord j a)
-        = ∑ k : {k : Fin n // hHerm.eigenvalues k ≠ 0}, w i k.1 * w j k.1 := by
-          have hstep : (∑ k : {k : Fin n // hHerm.eigenvalues k ≠ 0}, w i k.1 * w j k.1)
-              = ∑ k : {k : Fin n // hHerm.eigenvalues k ≠ 0}, ψcoord i (e k) * ψcoord j (e k) :=
-            Finset.sum_congr rfl fun k _ => by rw [hψ_at i k, hψ_at j k]
-          rw [hstep,
-            ← Finset.sum_map (Finset.univ : Finset {k : Fin n // hHerm.eigenvalues k ≠ 0}) e
-              (fun a => ψcoord i a * ψcoord j a)]
-          refine (Finset.sum_subset (Finset.subset_univ _) ?_).symm
-          intro a _ ha
-          have hnotrange : ∀ k : {k : Fin n // hHerm.eigenvalues k ≠ 0}, e k ≠ a := by
-            intro k hk
-            apply ha
-            simp only [Finset.mem_map, Finset.mem_univ, true_and]
-            exact ⟨k, hk⟩
-          rw [hψ_off i a hnotrange, zero_mul]
-      _ = ∑ k : {k : Fin n // hHerm.eigenvalues k ≠ 0},
-            hHerm.eigenvalues k.1 * hHerm.eigenvectorUnitary i k.1 *
-              hHerm.eigenvectorUnitary j k.1 := by
-          -- Use √λ * √λ = λ for nonzero (hence nonnegative) eigenvalues.
-          apply Finset.sum_congr rfl
-          intro k _
-          have hnn : 0 ≤ hHerm.eigenvalues k.1 := hB.eigenvalues_nonneg k.1
-          simp only [hw]
-          rw [show
-              Real.sqrt (hHerm.eigenvalues k.1) * hHerm.eigenvectorUnitary i k.1 *
-                  (Real.sqrt (hHerm.eigenvalues k.1) * hHerm.eigenvectorUnitary j k.1)
-                = (Real.sqrt (hHerm.eigenvalues k.1) * Real.sqrt (hHerm.eigenvalues k.1)) *
-                    (hHerm.eigenvectorUnitary i k.1 * hHerm.eigenvectorUnitary j k.1)
-              from by ring]
-          rw [Real.mul_self_sqrt hnn]
-          ring
-      _ = ∑ k : Fin n,
-            hHerm.eigenvalues k * hHerm.eigenvectorUnitary i k *
-              hHerm.eigenvectorUnitary j k := by
-          -- Extend the sum over nonzero eigenvalues to all of Fin n: the
-          -- omitted indices have zero eigenvalue, hence contribute nothing.
-          have hsubtype :
-              (∑ k : {k : Fin n // hHerm.eigenvalues k ≠ 0},
-                hHerm.eigenvalues k.1 * hHerm.eigenvectorUnitary i k.1 *
-                  hHerm.eigenvectorUnitary j k.1)
-                = ∑ k ∈ Finset.univ.filter (fun k => hHerm.eigenvalues k ≠ 0),
-                    hHerm.eigenvalues k * hHerm.eigenvectorUnitary i k *
-                      hHerm.eigenvectorUnitary j k :=
-            (Finset.sum_subtype
-              (p := fun k => hHerm.eigenvalues k ≠ 0)
-              (Finset.univ.filter (fun k => hHerm.eigenvalues k ≠ 0))
-              (fun x => by simp)
-              (fun k => hHerm.eigenvalues k * hHerm.eigenvectorUnitary i k *
-                hHerm.eigenvectorUnitary j k)).symm
-          rw [hsubtype]
-          apply Finset.sum_filter_of_ne
-          intro k _ hne hzero
-          exact hne (by rw [hzero, zero_mul, zero_mul])
-      _ = B i j := (isHermitian_entry_eq_sum_eigenvalues B hHerm i j).symm
+  show (∑ k : Fin d, A k i * A k j) = B i j
+  rw [hA, Matrix.mul_apply]
+  exact Finset.sum_congr rfl fun k _ => by
+    rw [Matrix.conjTranspose_apply, star_trivial]
 
 end Acharyya2025.GramRealization

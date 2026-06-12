@@ -26,7 +26,33 @@ Notable finding recorded in #7's docstrings: the `μ(good) → 1` corollary
 NEEDS `NullMeasurableSet` (a set and its complement can both have outer
 measure 1), so it cannot be made measurability-free.
 
-## Task A — stage candidate #4 (vector-valued sample-mean MSE)  [unstarted]
+## STATUS 2026-06-12 (Opus session): Tasks A & B DONE; C done
+
+- **Task A (#4) ✅** staged `ForMathlib/Probability/Moments/SampleMean.lean`
+  (abstract finite-dim real IPS, **pairwise** independence + **Bochner** mean
+  `∫ X k = μ` — both strictly more general than the source's `iIndepFun` +
+  coordinate mean); rewired `Acharyya2024/SecondMoment.lean` (scalar lemma is a
+  direct wrapper; the three vector lemmas go through a coordinate-mean →
+  Bochner-mean bridge `bochner_mean_of_coord` via `integral_comp_comm` /
+  `EuclideanSpace.proj`).
+- **Task B (#5) ✅ (B1 only)** staged
+  `ForMathlib/LinearAlgebra/Matrix/PosDef.lean`:
+  `posSemidef_and_rank_le_iff_exists_conjTranspose_mul_self` (ℝ; reverse dir via
+  `posSemidef_conjTranspose_mul_self` + `rank_conjTranspose_mul_self` +
+  `rank_le_height`; forward dir = spectral construction moved from source).
+  Rewired `Acharyya2025/GramRealization.lean` (config = columns of `A`).
+  **B2 (eigenvalues₀ tail) SKIPPED** — see the two documented follow-ups in
+  `planning/mathlib-candidates.md`. `MatrixPerturbation.lean` left untouched.
+- **Task C ✅** root module, README inventory, candidates doc updated; full
+  `lake build` green (8618 jobs, 0 warnings); sorry/axiom census = 0.
+
+Remaining open items: #5 RCLike generalization; #5 eigenvalues₀ ride-along;
+Task D (deferred norm-comparison PR, Davis–Kahan projector form); Task E (the
+actual Mathlib PR pipeline — user-gated).
+
+---
+
+## Task A — stage candidate #4 (vector-valued sample-mean MSE)  [DONE — see status above]
 
 Source: `Acharyya2024/SecondMoment.lean` (293 lines). Theorems at ~:58
 (scalar pairwise-indep variance algebra), :143 (E‖X̄−μ‖² = r⁻²Σₖ E‖Xₖ−μ‖²),

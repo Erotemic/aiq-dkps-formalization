@@ -44,12 +44,24 @@ Thin `ℝ`-instantiation of the Mathlib-staged
 `ForMathlib.exists_linearIsometryEquiv_of_inner_eq` (which is stated over
 `RCLike 𝕜`); kept under its original name for downstream call-sites.
 
+Paper correspondence: this is the **exact (noise-free) limit** of the alignment
+in Theorem 2.  When the two configurations have *equal* Gram matrices, the
+aligning orthogonal map `W*` exists exactly and achieves zero error; the
+finite-sample Theorem 2 is the approximate version of this rigidity.
+
+Note (extra implicit assumptions beyond the paper): `E` is assumed to be a
+finite-dimensional real inner-product space — a Lean modelling choice matching
+the Euclidean embedding space of the paper.
+
 Formalized by Claude Fable 5 (claude-fable-5[1m]).
 -/
 theorem exists_linearIsometryEquiv_of_inner_eq
-    {E : Type*} [NormedAddCommGroup E] [InnerProductSpace ℝ E] [FiniteDimensional ℝ E]
+    {E : Type*} [NormedAddCommGroup E] [InnerProductSpace ℝ E]
+    [FiniteDimensional ℝ E]               -- extra (implicit) assumption: finite-dimensional ambient space
     {ι : Type*} (φ ψ : ι → E)
-    (h : ∀ i j, ⟪φ i, φ j⟫ = ⟪ψ i, ψ j⟫) :
+    (h : ∀ i j, ⟪φ i, φ j⟫ = ⟪ψ i, ψ j⟫) :  -- hypothesis: the two families have equal Gram matrices
+    -- Conclusion: there is an orthogonal map `W` (linear isometry equivalence of `E`)
+    -- aligning the families exactly, `W (φ i) = ψ i` for all `i` — the exact case of W*.
     ∃ W : E ≃ₗᵢ[ℝ] E, ∀ i, W (φ i) = ψ i :=
   ForMathlib.exists_linearIsometryEquiv_of_inner_eq h
 
@@ -60,11 +72,19 @@ Specialization of `exists_linearIsometryEquiv_of_inner_eq` to the DKPS
 configuration type `Acharyya2024.Config n d = Fin n → EuclideanSpace ℝ (Fin d)`,
 with the Gram condition phrased entrywise as `∑ k, φ i k * φ j k`.
 
+Paper correspondence: the DKPS-typed exact-alignment statement.  Two
+configurations realizing the same classical-MDS Gram matrix are related by an
+orthogonal `W ∈ O(d)` — the exact (κ = 0) instance of the alignment in
+Theorem 2.
+
 Formalized by Claude Fable 5 (claude-fable-5[1m]).
 -/
 theorem exists_linearIsometryEquiv_of_gram_eq
     {n d : Nat} (φ ψ : Acharyya2024.Config n d)
+    -- hypothesis: the two DKPS configurations have equal Gram matrices (entrywise)
     (h : ∀ i j, ∑ k : Fin d, φ i k * φ j k = ∑ k : Fin d, ψ i k * ψ j k) :
+    -- Conclusion: an orthogonal map `W` of `EuclideanSpace ℝ (Fin d)` aligns them
+    -- exactly, `W (φ i) = ψ i` for all `i`.
     ∃ W : EuclideanSpace ℝ (Fin d) ≃ₗᵢ[ℝ] EuclideanSpace ℝ (Fin d),
       ∀ i, W (φ i) = ψ i := by
   apply exists_linearIsometryEquiv_of_inner_eq φ ψ

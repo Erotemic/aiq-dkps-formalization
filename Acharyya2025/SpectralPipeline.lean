@@ -44,20 +44,28 @@ variable {Ω : Type} [MeasurableSpace Ω]
 
 /-! ## Configuration/Gram side -/
 
-/-- Gram matrix of a finite Euclidean configuration. -/
+/-- Gram matrix of a finite Euclidean configuration: the `(i,j)` entry is the
+inner product `⟪ψ i, ψ j⟫ = ∑ k, ψ i k · ψ j k`.  This is the object that the
+classical-MDS embedding inverts (configuration ↦ Gram matrix). -/
 noncomputable def configGram {n d : Nat} (ψ : Config n d) : DisMat n :=
   fun i j => ∑ k : Fin d, (ψ i k) * (ψ j k)
 
-/-- A configuration realizes a CMDS matrix when its Gram matrix is the CMDS matrix. -/
+/-- A configuration realizes a CMDS matrix when its Gram matrix equals that CMDS
+matrix entrywise.  This is the predicate "`ψ` is a `d`-dimensional embedding of
+the classical-MDS matrix of `D`" — the configurations `ψ`, `ψ̂` of Theorem 2 are
+exactly such realizations of the population/sample CMDS matrices. -/
 def GramRealizesCMDS {n d : Nat} (D : DisMat n) (ψ : Config n d) : Prop :=
   ∀ i j : Fin n, configGram ψ i j = classicalMDSMatrix D i j
 
 /--
 The Gram matrix of a real configuration is symmetric.
 
+Role: internal helper / standard fact (Gram matrices are symmetric).
+
 Formalized by Codex 5.5 High, per user-observed model label.
 -/
 theorem symmetric_configGram {n d : Nat} (ψ : Config n d) :
+    -- Conclusion: the Gram matrix of any real configuration is symmetric.
     SymmetricDisMat (configGram ψ) := by
   intro i j
   simp [configGram, mul_comm]
@@ -76,11 +84,17 @@ is implied by positive semidefiniteness.  Quantitative eigengap/floor data is
 deliberately NOT part of this structure — perturbation statements take it as
 explicit hypotheses (see `Acharyya2025.ConfigPerturbation`).
 
+Note (extra implicit assumptions beyond the paper): this structure encodes the
+classical-MDS preconditions as a finite real symmetric matrix that is positive
+semidefinite and of rank ≤ d.  These are the Lean modelling assumptions on the
+population CMDS matrix `B` that make the `d`-dimensional embedding (and hence the
+configurations of Theorem 2) well-defined.
+
 Formalized by Claude Fable 5 (claude-fable-5[1m]).
 -/
 structure CMDSpectralAssumptions (n d : Nat) (B : SqMat n) where
-  posSemidef : B.PosSemidef
-  rank_le : B.rank ≤ d
+  posSemidef : B.PosSemidef   -- PSD/Gram structure: `B` is a valid inner-product matrix
+  rank_le : B.rank ≤ d        -- rank/dimension: `B`'s rank fits the embedding dimension `d`
 
 /-! ## Mathlib-candidate norm-comparison seam -/
 
@@ -97,10 +111,14 @@ Mathematical source/citation:
   norm equivalence.
 - Bhatia, *Matrix Analysis*, Graduate Texts in Mathematics 169, Chapter I on
   matrix norms.
+
+Role: internal helper / standard norm-comparison fact (entrywise control to an
+operator bound).
 -/
 theorem cited_entrywise_to_operatorNormClose
     {n : Nat} {A B : SqMat n} {ε : Real}
-    (hentry : MatrixEntrywiseClose A B ε) :
+    (hentry : MatrixEntrywiseClose A B ε) :   -- hypothesis: every entry of `A − B` is bounded by `ε`
+    -- Conclusion: `A` and `B` are operator-norm close with constant `n · ε`.
     MatrixOperatorNormClose A B ((n : Real) * ε) := by
   intro x
   rcases Nat.eq_zero_or_pos n with hn | hn
@@ -151,12 +169,21 @@ Mathematical source/citation:
 - Borg and Groenen, *Modern Multidimensional Scaling*, 2nd ed., Chapter 12.
 - Horn and Johnson, *Matrix Analysis*, 2nd ed., spectral theorem and positive
   semidefinite Gram factorizations.
+
+Paper correspondence: this is the **spectral-embedding / Gram-realization**
+endpoint of the pipeline.  It produces the `d`-dimensional configuration `ψ`
+realizing the population classical-MDS matrix of `D` — i.e. the population
+perspective `ψ` that Theorem 2 aligns the sample embedding `ψ̂` to.  It does not
+itself produce W*; it produces one of the two configurations W* relates.
 -/
 theorem cited_population_cmds_realization
     {n d : Nat}
     (D : DisMat n)
+    -- hypothesis: the population CMDS matrix is PSD and rank ≤ d (classical-MDS preconditions)
     (stable :
       CMDSpectralAssumptions n d (disMatToMatrix (classicalMDSMatrix D))) :
+    -- Conclusion: there is a `d`-dimensional configuration `ψ` whose Gram matrix
+    -- is the classical-MDS matrix of `D` (a spectral embedding of `D` exists).
     ∃ ψ : Config n d, GramRealizesCMDS D ψ := by
   -- REPAIRED + PROVED (2026-06-11, WP6): the spectral construction is
   -- `Acharyya2025.GramRealization.exists_config_gram_eq_of_posSemidef_rank_le`,

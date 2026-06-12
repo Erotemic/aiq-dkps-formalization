@@ -71,13 +71,18 @@ No measurability of `E u` is needed: subadditivity gives
 `1 = P u (E u ∪ (E u)ᶜ) ≤ P u (E u) + P u ((E u)ᶜ)`, hence
 `P u (E u) ≥ 1 − P u ((E u)ᶜ)` by `ENNReal` truncated-subtraction arithmetic.
 
+Internal helper (probability bookkeeping toward Corollary 2's "with high
+probability" statements).
+
 Formalized by Claude Fable 5 (claude-fable-5[1m]).
 -/
 theorem highProbAtTop_of_tendsto_compl_zero
-    {Ω : Type} [MeasurableSpace Ω]
-    (P : Nat → Measure Ω) [∀ u, IsProbabilityMeasure (P u)]
+    {Ω : Type} [MeasurableSpace Ω]                       -- EXTRA: measurable-space structure
+    (P : Nat → Measure Ω) [∀ u, IsProbabilityMeasure (P u)]  -- EXTRA: each `P u` is a probability measure
     (E : Nat → Set Ω)
-    (h : Tendsto (fun u => P u ((E u)ᶜ)) atTop (𝓝 0)) :
+    (h : Tendsto (fun u => P u ((E u)ᶜ)) atTop (𝓝 0))   -- complement probabilities vanish
+    -- Conclusion: `E` is a high-probability event family.
+    :
     HighProbAtTop P E := by
   intro δ hδ
   have hev : ∀ᶠ u in atTop, P u ((E u)ᶜ) < δ := h.eventually (gt_mem_nhds hδ)
@@ -105,20 +110,26 @@ hypothesis is the integrability `hint` of the squared errors (which carries
 `MeasurableSet` hypothesis is needed because the `HighProbAtTop` conversion is
 measurability-free.
 
+Internal helper (the probabilistic input to the rate chain): produces the
+high-probability uniform response-mean event that feeds the aligned pipeline.
+
 Formalized by Claude Fable 5 (claude-fable-5[1m]).
 -/
 theorem highProb_uniformResponseMeanClose_of_secondMoment
-    {Ω : Type} [MeasurableSpace Ω]
-    (P : Nat → Measure Ω) [∀ u, IsProbabilityMeasure (P u)]
+    {Ω : Type} [MeasurableSpace Ω]                       -- EXTRA: measurable-space structure
+    (P : Nat → Measure Ω) [∀ u, IsProbabilityMeasure (P u)]  -- EXTRA: each `P u` is a probability measure
     {n m p : Nat}
-    (Xbar : Nat → Ω → Fin n → Mat m p)
-    (μ : Fin n → Mat m p)
-    (σ2 : Nat → Real)
-    (t : Nat → Real)
+    (Xbar : Nat → Ω → Fin n → Mat m p)                  -- sample mean responses
+    (μ : Fin n → Mat m p)                               -- population means
+    (σ2 : Nat → Real)                                   -- per-model second-moment bound (cf. γ/r)
+    (t : Nat → Real)                                    -- closeness level
+    -- EXTRA (measurability-flavored): integrability of the squared errors, consumed by Chebyshev.
     (hint : ∀ u (i : Fin n), Integrable (fun ω => ‖Xbar u ω i - μ i‖ ^ 2) (P u))
-    (hσ2 : ∀ u (i : Fin n), ∫ ω, ‖Xbar u ω i - μ i‖ ^ 2 ∂(P u) ≤ σ2 u)
+    (hσ2 : ∀ u (i : Fin n), ∫ ω, ‖Xbar u ω i - μ i‖ ^ 2 ∂(P u) ≤ σ2 u)  -- second-moment bound holds
     (ht_pos : ∀ u, 0 < t u)
-    (hratio : Tendsto (fun u => (n : Real) * σ2 u / (t u) ^ 2) atTop (𝓝 0)) :
+    (hratio : Tendsto (fun u => (n : Real) * σ2 u / (t u) ^ 2) atTop (𝓝 0))  -- vanishing Chebyshev ratio
+    -- Conclusion: the uniform response-mean closeness event holds with high probability.
+    :
     HighProbAtTop P
       (fun u => {ω | UniformResponseMeanClose (Xbar u ω) μ (t u)}) := by
   apply highProbAtTop_of_tendsto_compl_zero
@@ -167,8 +178,11 @@ The capstone spectral bound `configBound n d α Λ ε` is continuous in `ε`
 (for any fixed `n, d, α, Λ`): it is built from `√`, `+`, `*`, `^2` and division
 by the constants `α²` and `√(α/2)`, all continuous.
 
+Internal helper (analytic ingredient for the vanishing-rate lemma).
+
 Formalized by Claude Fable 5 (claude-fable-5[1m]).
 -/
+-- Conclusion: the spectral bound is continuous in its perturbation argument `ε`.
 theorem continuous_configBound (n d : Nat) (α Λ : Real) :
     Continuous (fun ε : Real => configBound n d α Λ ε) := by
   unfold configBound
@@ -178,8 +192,11 @@ theorem continuous_configBound (n d : Nat) (α Λ : Real) :
 The capstone spectral bound vanishes at `ε = 0`: every summand of
 `configBound n d α Λ ε` carries a factor of `ε` or `ε²`.
 
+Internal helper (analytic ingredient for the vanishing-rate lemma).
+
 Formalized by Claude Fable 5 (claude-fable-5[1m]).
 -/
+-- Conclusion: the spectral bound is `0` at zero perturbation.
 theorem configBound_zero (n d : Nat) (α Λ : Real) :
     configBound n d α Λ 0 = 0 := by
   simp [configBound]
@@ -190,8 +207,12 @@ theorem configBound_zero (n d : Nat) (α Λ : Real) :
 because Lean's division-by-zero and `Real.sqrt`-of-negative conventions keep
 the formula continuous and zero at `ε = 0` unconditionally).
 
+Vanishing-rate lemma (toward Corollary 2): the deterministic spectral bound
+shrinks to `0` as the perturbation shrinks.
+
 Formalized by Claude Fable 5 (claude-fable-5[1m]).
 -/
+-- Conclusion: `configBound … ε → 0` as `ε → 0`.
 theorem tendsto_configBound_zero (n d : Nat) (α Λ : Real) :
     Tendsto (fun ε => configBound n d α Λ ε) (𝓝 0) (𝓝 0) := by
   simpa [configBound_zero n d α Λ] using
@@ -201,10 +222,14 @@ theorem tendsto_configBound_zero (n d : Nat) (α Λ : Real) :
 Sequence corollary: along any vanishing rate sequence `e u → 0`, the capstone
 spectral bound vanishes: `configBound n d α Λ (e u) → 0`.
 
+Vanishing-rate lemma (toward Corollary 2): sequence form of the above.
+
 Formalized by Claude Fable 5 (claude-fable-5[1m]).
 -/
 theorem tendsto_configBound_comp_zero (n d : Nat) (α Λ : Real)
-    {e : Nat → Real} (he : Tendsto e atTop (𝓝 0)) :
+    {e : Nat → Real} (he : Tendsto e atTop (𝓝 0))  -- the perturbation sequence vanishes
+    -- Conclusion: the spectral bound along that sequence vanishes.
+    :
     Tendsto (fun u => configBound n d α Λ (e u)) atTop (𝓝 0) :=
   (tendsto_configBound_zero n d α Λ).comp he
 
@@ -219,6 +244,10 @@ closeness level, `R` the uniform dissimilarity bound, and
 CMDS-matrix rate.  This is literally the bound produced by
 `Acharyya2025.AlignedPipeline.highProb_aligned_configError_of_response_mean`
 specialized to a constant dissimilarity bound `R`.
+
+This is the named rate sequence that plays the role of the paper's
+`Poly₃((n³/r)^{1/2−δ})` bound (see the file header for the constant-by-constant
+comparison); Corollary 2 is the statement that it vanishes as the budget grows.
 
 Formalized by Claude Fable 5 (claude-fable-5[1m]).
 -/
@@ -242,34 +271,43 @@ pipeline (`highProb_aligned_configError_of_response_mean`); the spectral
 hypotheses are threaded through verbatim with the dissimilarity bound
 specialized to the constant `R`.
 
+This is the explicit-rate high-probability form of **Theorem 2** with the rate
+named (`endToEndRate`); paired with `tendsto_endToEndRate_zero` below it gives
+the **Corollary 2** "for any κ > 0, with high probability eventually" statement.
+
 Formalized by Claude Fable 5 (claude-fable-5[1m]).
 -/
 theorem highProb_aligned_configError_endToEndRate
-    {Ω : Type} [MeasurableSpace Ω]
-    (P : Nat → Measure Ω) [∀ u, IsProbabilityMeasure (P u)]
-    {n m p d : Nat} (hn : 0 < n) (hd : d ≤ n)
-    (Xbar : Nat → Ω → Fin n → Mat m p) (μ : Fin n → Mat m p)
-    (hB : (disMatToMatrix (classicalMDSMatrix (responseDist μ))).PosSemidef)
-    (hrank : (disMatToMatrix (classicalMDSMatrix (responseDist μ))).rank ≤ d)
+    {Ω : Type} [MeasurableSpace Ω]                       -- EXTRA: measurable-space structure
+    (P : Nat → Measure Ω) [∀ u, IsProbabilityMeasure (P u)]  -- EXTRA: each `P u` is a probability measure
+    {n m p d : Nat} (hn : 0 < n) (hd : d ≤ n)           -- EXTRA: finite embedding dim `d ≤ n`, nonempty index set
+    (Xbar : Nat → Ω → Fin n → Mat m p) (μ : Fin n → Mat m p)  -- sample mean responses vs population means
+    -- Spectral structure of the population CMDS Gram matrix (Assumptions 1/2):
+    (hB : (disMatToMatrix (classicalMDSMatrix (responseDist μ))).PosSemidef)      -- PSD
+    (hrank : (disMatToMatrix (classicalMDSMatrix (responseDist μ))).rank ≤ d)     -- rank ≤ d
     {α Λ : Real} (hα_pos : 0 < α)
     (hfloor : ∀ i : Fin n, (i : ℕ) < d →
-      α ≤ MatrixPerturbation.sortedEigenvalues hB.isHermitian i)
-    (hΛ : ∀ l, MatrixPerturbation.sortedEigenvalues hB.isHermitian l ≤ Λ)
+      α ≤ MatrixPerturbation.sortedEigenvalues hB.isHermitian i)  -- eigenvalue floor α on top-d block
+    (hΛ : ∀ l, MatrixPerturbation.sortedEigenvalues hB.isHermitian l ≤ Λ)  -- eigenvalue cap Λ
     (ψ : Config n d)
     (hψ : ∀ i j, (∑ k, ψ i k * ψ j k)
-      = classicalMDSMatrix (responseDist μ) i j)
-    (t : Nat → Real) (R : Real) (σ2 : Nat → Real)
+      = classicalMDSMatrix (responseDist μ) i j)  -- ψ is a Gram factor of the population CMDS matrix
+    (t : Nat → Real) (R : Real) (σ2 : Nat → Real)  -- closeness level, constant dissimilarity bound, second-moment bound
+    -- EXTRA (measurability-flavored): integrability of the squared errors.
     (hint : ∀ u (i : Fin n), Integrable (fun ω => ‖Xbar u ω i - μ i‖ ^ 2) (P u))
-    (hσ2 : ∀ u (i : Fin n), ∫ ω, ‖Xbar u ω i - μ i‖ ^ 2 ∂(P u) ≤ σ2 u)
+    (hσ2 : ∀ u (i : Fin n), ∫ ω, ‖Xbar u ω i - μ i‖ ^ 2 ∂(P u) ≤ σ2 u)  -- second-moment bound
     (ht_pos : ∀ u, 0 < t u)
-    (hratio : Tendsto (fun u => (n : Real) * σ2 u / (t u) ^ 2) atTop (𝓝 0))
+    (hratio : Tendsto (fun u => (n : Real) * σ2 u / (t u) ^ 2) atTop (𝓝 0))  -- vanishing Chebyshev ratio (cf. r = ω(n³))
+    -- Rate / smallness side-conditions (per budget `u`):
     (hrate_nonneg : ∀ u, 0 ≤ cmdsEntrywiseRate n m R (t u))
-    (hsmall : ∀ u, (n : Real) * cmdsEntrywiseRate n m R (t u) ≤ α / 2)
+    (hsmall : ∀ u, (n : Real) * cmdsEntrywiseRate n m R (t u) ≤ α / 2)  -- EXTRA: numeric smallness
     (hpolar : ∀ u, (d : Real) *
       (4 * (n : Real) * ((n : Real) * cmdsEntrywiseRate n m R (t u))^2 / α^2)
-        ≤ 1/2)
-    (hsample_bound : ∀ u ω i j, |responseDist (Xbar u ω) i j| ≤ R)
-    (hpopulation_bound : ∀ i j, |responseDist μ i j| ≤ R) :
+        ≤ 1/2)  -- EXTRA: numeric polar-factor condition
+    (hsample_bound : ∀ u ω i j, |responseDist (Xbar u ω) i j| ≤ R)  -- uniform dissimilarity bound (sample)
+    (hpopulation_bound : ∀ i j, |responseDist μ i j| ≤ R) :         -- uniform dissimilarity bound (population)
+    -- Conclusion (explicit-rate Theorem 2): with high probability the aligned
+    -- estimator's `ConfigError` against `ψ` is `≤ endToEndRate …`.
     HighProbAtTop P (fun u => {ω |
       ConfigError
         (alignedSpectralConfig hd (fun u ω => responseDist (Xbar u ω))
@@ -301,10 +339,17 @@ The inner rate `n · cmdsEntrywiseRate n m R (t u)` is linear in `t u` (constant
 `tendsto_configBound_comp_zero` finishes.  No sign conditions on `R, Λ, α` are
 needed (the bound is continuous and zero-at-zero unconditionally).
 
+This is the vanishing-rate side of **Corollary 2**: as the response-mean
+closeness level shrinks (which the paper achieves by growing the per-model
+response count `r = ω(n³)`), the explicit end-to-end bound tends to `0`, so any
+target accuracy `κ > 0` is eventually met with high probability.
+
 Formalized by Claude Fable 5 (claude-fable-5[1m]).
 -/
 theorem tendsto_endToEndRate_zero (n m d : Nat) (α Λ R : Real)
-    {t : Nat → Real} (ht : Tendsto t atTop (𝓝 0)) :
+    {t : Nat → Real} (ht : Tendsto t atTop (𝓝 0))  -- the closeness level vanishes (cf. growing budget)
+    -- Conclusion (Corollary 2, rate side): the explicit end-to-end bound vanishes.
+    :
     Tendsto (endToEndRate n m d α Λ R t) atTop (𝓝 0) := by
   -- The inner rate is a constant multiple of `t u`.
   have hkey : ∀ u, (n : Real) * cmdsEntrywiseRate n m R (t u)

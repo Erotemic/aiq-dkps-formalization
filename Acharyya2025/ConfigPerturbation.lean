@@ -59,7 +59,11 @@ the `i`-th point has `k`-th coordinate `√λ̂_k · v_k(i)`, where `v_k` is the
 `k`-th sample eigenvector and `λ̂_k` the `k`-th (decreasingly sorted) eigenvalue.
 `Real.sqrt` clamps possibly-negative trailing eigenvalues to `0` (the CMDS
 convention); under the main theorem's hypotheses the top-`d` block eigenvalues
-are `≥ α/2 > 0`, so no clamping occurs there. -/
+are `≥ α/2 > 0`, so no clamping occurs there.
+
+Paper correspondence: this is the classical-MDS embedding `ψ̂` (when `S` is the
+sample Gram operator) or `ψ` (when `S` is the population Gram operator) appearing
+in Theorem 2. It is a plain definition, not a claim. -/
 noncomputable def spectralConfig {n d : ℕ}
     (S : EuclideanSpace ℝ (Fin n) →ₗ[ℝ] EuclideanSpace ℝ (Fin n))
     (hS : S.IsSymmetric) (hd : d ≤ n) : Acharyya2024.Config n d :=
@@ -70,12 +74,16 @@ noncomputable def spectralConfig {n d : ℕ}
 variable {n d : ℕ}
 variable {T S : EuclideanSpace ℝ (Fin n) →ₗ[ℝ] EuclideanSpace ℝ (Fin n)}
 
-/-- Local abbreviation for the canonical finrank witness. -/
+/-- Internal helper / bookkeeping fact: the dimension of `EuclideanSpace ℝ (Fin n)`
+is `n`. This is a Lean-specific witness threaded through the eigenvalue/eigenvector
+API; it has no mathematical content in the paper. -/
 private theorem hn_eq : finrank ℝ (EuclideanSpace ℝ (Fin n)) = n := finrank_euclideanSpace_fin
 
-/-- Local copy of the `castLE`-image reindexing (`Overlap`'s is private):
-`∑_{m : Fin d} f (castLE m) = ∑_{j : j < d} f j`. -/
+/-- Internal helper / purely combinatorial reindexing (`Overlap`'s is private):
+summing `f` over the image of the inclusion `Fin d ↪ Fin n` equals summing over
+the first `d` indices `{ j : (j:ℕ) < d }`. No mathematical content from the paper. -/
 private theorem sum_castLE_eq_filter (hd : d ≤ n) (f : Fin n → ℝ) :
+    -- Conclusion: the two indexings of the leading `d`-block give the same sum.
     ∑ m : Fin d, f (Fin.castLE hd m)
       = ∑ j ∈ Finset.univ.filter (fun j : Fin n => (j : ℕ) < d), f j := by
   classical
@@ -95,11 +103,23 @@ The sample top-`d` eigenvalues are squeezed between `α/2` and `Λ + α/2`; the
 trailing population eigenvalues vanish.  These per-eigenvalue facts feed the gap
 and the `√λ̂` denominators below. -/
 
-/-- The sample top-block eigenvalues satisfy `λ̂_k ≥ α/2 > 0` (Weyl + floor). -/
+/-- Internal helper (Weyl, lower bound). The sample top-block eigenvalues satisfy
+`λ̂_k ≥ α/2 > 0`. This is the eigenvalue-stability half of Theorem 2's argument
+(Weyl's inequality), specialized to the leading block.
+
+Hypotheses:
+* `hd : d ≤ n` — dimension/rank `d` (encodes Assumption 1: the population operator
+  has rank `d`).
+* `hα` — eigenvalue floor: leading population eigenvalues are `≥ α` (the paper's
+  spectral lower bound `λ_d`, the `C1` side of Assumption 2).
+* `hε` — the sample `S` is `ε`-close to the population `T` in operator norm.
+* `hsmall : ε ≤ α/2` — smallness/perturbation side-condition (extra explicit numeric
+  condition beyond the paper's asymptotic statement). -/
 private theorem sample_eig_lb (hd : d ≤ n) (hT : T.IsSymmetric) (hS : S.IsSymmetric)
     {α ε : ℝ}
     (hα : ∀ i : Fin n, (i : ℕ) < d → α ≤ hT.eigenvalues hn_eq i)
     (hε : ∀ x, ‖(S - T) x‖ ≤ ε * ‖x‖) (hsmall : ε ≤ α / 2) (k : Fin d) :
+    -- Conclusion: the `k`-th leading sample eigenvalue is at least `α/2`.
     α / 2 ≤ hS.eigenvalues hn_eq (Fin.castLE hd k) := by
   have hε' : ∀ x, ‖(T - S) x‖ ≤ ε * ‖x‖ := by
     intro x
@@ -111,11 +131,18 @@ private theorem sample_eig_lb (hd : d ≤ n) (hT : T.IsSymmetric) (hS : S.IsSymm
   have hαk : α ≤ hT.eigenvalues hn_eq (Fin.castLE hd k) := hα (Fin.castLE hd k) hlt
   linarith [hweyl.2, hαk]
 
-/-- The sample top-block eigenvalues satisfy `λ̂_k ≤ Λ + α/2` (Weyl + ceiling). -/
+/-- Internal helper (Weyl, upper bound). The sample top-block eigenvalues satisfy
+`λ̂_k ≤ Λ + ε`. Eigenvalue-stability (Weyl) companion to `sample_eig_lb`.
+
+Hypotheses:
+* `hΛ` — eigenvalue cap `Λ` on all population eigenvalues (the paper's `λ_1` upper
+  bound, the `C2` side of Assumption 2).
+* `hε` — sample/population operator-norm closeness. -/
 private theorem sample_eig_ub (hd : d ≤ n) (hT : T.IsSymmetric) (hS : S.IsSymmetric)
     {Λ ε : ℝ}
     (hΛ : ∀ l : Fin n, hT.eigenvalues hn_eq l ≤ Λ)
     (hε : ∀ x, ‖(S - T) x‖ ≤ ε * ‖x‖) (k : Fin d) :
+    -- Conclusion: the `k`-th leading sample eigenvalue is at most `Λ + ε`.
     hS.eigenvalues hn_eq (Fin.castLE hd k) ≤ Λ + ε := by
   have hε' : ∀ x, ‖(T - S) x‖ ≤ ε * ‖x‖ := by
     intro x
@@ -134,27 +161,39 @@ bounded directly by `Acharyya2025.RankGap` (population structure on `T`).
 bounded by `Acharyya2025.DavisKahan` with a manually supplied gap (`λ̂_i ≥ α/2`
 for `i < d`, `λ_j = 0` for `j ≥ d`).  Both bounds are `4 n ε² / α²`. -/
 
-/-- `crossPop ≤ 4 n ε² / α²`: leading population eigenvectors against trailing
-sample eigenvectors. -/
+/-- Internal helper (Davis–Kahan / rank-gap cross energy). `crossPop ≤ 4 n ε² / α²`:
+total squared overlap of leading population eigenvectors against trailing sample
+eigenvectors. This is the eigenvector-perturbation half of Theorem 2's argument.
+
+Hypotheses:
+* `hα_pos`, `hα` — eigenvalue floor `α > 0` on the leading block (Assumption 2 lower
+  bound `λ_d` / `C1`).
+* `htail` — all trailing population eigenvalues vanish (rank `= d`, encoding
+  Assumption 1).
+* `hε`, `hsmall : ε ≤ α/2` — operator-norm closeness and smallness side-condition. -/
 private theorem crossPop_le (hT : T.IsSymmetric) (hS : S.IsSymmetric)
     {α ε : ℝ} (hα_pos : 0 < α)
     (hα : ∀ i : Fin n, (i : ℕ) < d → α ≤ hT.eigenvalues hn_eq i)
     (htail : ∀ j : Fin n, d ≤ (j : ℕ) → hT.eigenvalues hn_eq j = 0)
     (hε : ∀ x, ‖(S - T) x‖ ≤ ε * ‖x‖) (hsmall : ε ≤ α / 2) :
+    -- Conclusion: the leading-population / trailing-sample cross energy is `≤ 4nε²/α²`.
     ∑ i ∈ Finset.univ.filter (fun i : Fin n => (i : ℕ) < d),
       ∑ j ∈ Finset.univ.filter (fun j : Fin n => d ≤ (j : ℕ)),
         (⟪hT.eigenvectorBasis hn_eq i, hS.eigenvectorBasis hn_eq j⟫_ℝ)^2
       ≤ 4 * (n : ℝ) * ε^2 / α^2 :=
   Acharyya2025.RankGap.sum_cross_inner_sq_le_of_rank_floor hT hS hn_eq d hα_pos hα htail hε hsmall
 
-/-- `crossSamp ≤ 4 n ε² / α²`: leading sample eigenvectors against trailing
-population eigenvectors.  The gap is `α/2` because each leading sample eigenvalue
-exceeds `α/2` (Weyl) while every trailing population eigenvalue is `0`. -/
+/-- Internal helper (Davis–Kahan cross energy, swapped roles). `crossSamp ≤ 4 n ε² / α²`:
+total squared overlap of leading sample eigenvectors against trailing population
+eigenvectors. The spectral gap is `α/2` because each leading sample eigenvalue
+exceeds `α/2` (Weyl) while every trailing population eigenvalue is `0`. Same
+hypothesis roles as `crossPop_le` (floor `α`, rank-`d` tail, closeness `ε`). -/
 private theorem crossSamp_le (hT : T.IsSymmetric) (hS : S.IsSymmetric)
     {α ε : ℝ} (hα_pos : 0 < α)
     (hα : ∀ i : Fin n, (i : ℕ) < d → α ≤ hT.eigenvalues hn_eq i)
     (htail : ∀ j : Fin n, d ≤ (j : ℕ) → hT.eigenvalues hn_eq j = 0)
     (hε : ∀ x, ‖(S - T) x‖ ≤ ε * ‖x‖) (hsmall : ε ≤ α / 2) :
+    -- Conclusion: the leading-sample / trailing-population cross energy is `≤ 4nε²/α²`.
     ∑ i ∈ Finset.univ.filter (fun i : Fin n => (i : ℕ) < d),
       ∑ j ∈ Finset.univ.filter (fun j : Fin n => d ≤ (j : ℕ)),
         (⟪hS.eigenvectorBasis hn_eq i, hT.eigenvectorBasis hn_eq j⟫_ℝ)^2
@@ -186,14 +225,16 @@ private theorem crossSamp_le (hT : T.IsSymmetric) (hS : S.IsSymmetric)
         ≤ (n : ℝ) * ε^2 / (α / 2)^2 := hbound
     _ = 4 * (n : ℝ) * ε^2 / α^2 := by field_simp; ring
 
-/-- A single trailing-energy column of the `(overlap hS hT)ᵀ * (overlap hS hT)`
-deviation is bounded by `crossSamp`:
-`∑_{j≥d}⟪hT.basis j, hS.basis (castLE k)⟫² ≤ 4 n ε² / α²`. -/
+/-- Internal helper / algebraic step. A single trailing-energy column of the
+`(overlap hS hT)ᵀ * (overlap hS hT)` deviation is bounded by `crossSamp`:
+`∑_{j≥d}⟪hT.basis j, hS.basis (castLE k)⟫² ≤ 4 n ε² / α²`. Same hypothesis roles
+as `crossSamp_le`. -/
 private theorem tailS_le (hd : d ≤ n) (hT : T.IsSymmetric) (hS : S.IsSymmetric)
     {α ε : ℝ} (hα_pos : 0 < α)
     (hα : ∀ i : Fin n, (i : ℕ) < d → α ≤ hT.eigenvalues hn_eq i)
     (htail : ∀ j : Fin n, d ≤ (j : ℕ) → hT.eigenvalues hn_eq j = 0)
     (hε : ∀ x, ‖(S - T) x‖ ≤ ε * ‖x‖) (hsmall : ε ≤ α / 2) (k : Fin d) :
+    -- Conclusion: the `k`-th trailing-energy column is `≤ 4nε²/α²`.
     ∑ j ∈ Finset.univ.filter (fun j : Fin n => d ≤ (j : ℕ)),
         (⟪hT.eigenvectorBasis hn_eq j, hS.eigenvectorBasis hn_eq (Fin.castLE hd k)⟫_ℝ)^2
       ≤ 4 * (n : ℝ) * ε^2 / α^2 := by
@@ -229,22 +270,31 @@ private theorem tailS_le (hd : d ≤ n) (hT : T.IsSymmetric) (hS : S.IsSymmetric
 deviation matrix `QQᵀ − I = (overlap hS hT)ᵀ * (overlap hS hT) − I`, each entry
 of which is `≤ τ := 4 n ε² / α²`. -/
 
-/-- The near-isometry `M := toEuclideanLin Qᵀ` (`Q := overlap hT hS`). -/
+/-- The near-isometry `M := toEuclideanLin Qᵀ`, where `Q := overlap hT hS` is the
+overlap (cosine) matrix between the population and sample leading eigenbases.
+`M` is the linear map whose polar factor will furnish the alignment matrix `W`
+(the paper's orthogonal `W*`). It is `≈` an isometry because `Q` is `≈`
+orthogonal under the rank-`d` floor; a plain definition, not a claim. -/
 noncomputable def nearIsometry (hT : T.IsSymmetric) (hS : S.IsSymmetric) (hd : d ≤ n) :
     EuclideanSpace ℝ (Fin d) →ₗ[ℝ] EuclideanSpace ℝ (Fin d) :=
   Matrix.toEuclideanLin (Acharyya2025.Overlap.overlap hT hS hn_eq hd)ᵀ
 
-/-- Coordinate formula: `(M x)_l = ∑_k Q_{kl} x_k`. -/
+/-- Internal helper / algebraic step: coordinate formula for `M`,
+`(M x)_l = ∑_k Q_{kl} x_k`. -/
 private theorem nearIsometry_apply (hT : T.IsSymmetric) (hS : S.IsSymmetric) (hd : d ≤ n)
     (x : EuclideanSpace ℝ (Fin d)) (l : Fin d) :
+    -- Conclusion: the `l`-th coordinate of `M x` is the `Q`-weighted combination of `x`.
     (nearIsometry hT hS hd x) l
       = ∑ k, (Acharyya2025.Overlap.overlap hT hS hn_eq hd) k l * x k := by
   show ((Acharyya2025.Overlap.overlap hT hS hn_eq hd)ᵀ.mulVec (WithLp.ofLp x)) l = _
   rw [Matrix.mulVec_eq_sum]
   simp [mul_comm]
 
-/-- The deviation matrix `QQᵀ − I` equals `(overlap hS hT)ᵀ * (overlap hS hT) − I`. -/
+/-- Internal helper / algebraic step: the deviation matrix `QQᵀ` equals
+`(overlap hS hT)ᵀ * (overlap hS hT)` (rewrites the Gram deviation into the form the
+`Overlap` toolkit bounds). -/
 private theorem dev_eq (hT : T.IsSymmetric) (hS : S.IsSymmetric) (hd : d ≤ n) :
+    -- Conclusion: the two ways of writing the overlap-Gram product agree.
     (Acharyya2025.Overlap.overlap hT hS hn_eq hd) *
         (Acharyya2025.Overlap.overlap hT hS hn_eq hd)ᵀ
       = (Acharyya2025.Overlap.overlap hS hT hn_eq hd)ᵀ *
@@ -256,13 +306,17 @@ private theorem dev_eq (hT : T.IsSymmetric) (hS : S.IsSymmetric) (hd : d ≤ n) 
     rw [real_inner_comm]
   rw [h, Matrix.transpose_transpose]
 
-/-- **Entrywise deviation bound.**  Each entry of `QQᵀ − I` is at most `τ` in
-absolute value, where `τ := 4 n ε² / α²`. -/
+/-- Internal helper / algebraic step (**entrywise Gram-deviation bound**). Each
+entry of `QQᵀ − I` is at most `τ := 4 n ε² / α²` in absolute value. This
+quantifies how close the overlap matrix `Q` is to orthogonal (a Davis–Kahan
+consequence). Same hypothesis roles as `crossPop_le` (floor `α`, rank-`d` tail,
+closeness `ε`). -/
 private theorem abs_dev_le (hd : d ≤ n) (hT : T.IsSymmetric) (hS : S.IsSymmetric)
     {α ε : ℝ} (hα_pos : 0 < α)
     (hα : ∀ i : Fin n, (i : ℕ) < d → α ≤ hT.eigenvalues hn_eq i)
     (htail : ∀ j : Fin n, d ≤ (j : ℕ) → hT.eigenvalues hn_eq j = 0)
     (hε : ∀ x, ‖(S - T) x‖ ≤ ε * ‖x‖) (hsmall : ε ≤ α / 2) (k m : Fin d) :
+    -- Conclusion: each entry of the Gram deviation `QQᵀ − I` is `≤ 4nε²/α²`.
     |((Acharyya2025.Overlap.overlap hT hS hn_eq hd) *
           (Acharyya2025.Overlap.overlap hT hS hn_eq hd)ᵀ
         - (1 : Matrix (Fin d) (Fin d) ℝ)) k m|
@@ -293,11 +347,13 @@ private theorem abs_dev_le (hd : d ≤ n) (hT : T.IsSymmetric) (hS : S.IsSymmetr
         mul_le_mul hsk hsm (Real.sqrt_nonneg _) (Real.sqrt_nonneg _)
     _ = τ := by rw [← Real.sqrt_mul hτ0, Real.sqrt_mul_self hτ0]
 
-/-- **Gram-deviation identity.**  The quadratic-form deviation of `M` is the
-quadratic form of the deviation matrix `D := QQᵀ − I`:
-`⟪M x, M x⟫ − ⟪x, x⟫ = ∑_k ∑_m D_{km} (x_k x_m)`. -/
+/-- Internal helper / algebraic step (**Gram-deviation identity**). The
+quadratic-form deviation of `M` is the quadratic form of the deviation matrix
+`D := QQᵀ − I`: `⟪M x, M x⟫ − ⟪x, x⟫ = ∑_k ∑_m D_{km} (x_k x_m)`. Pure algebra,
+no hypotheses on the spectrum. -/
 private theorem gram_dev_identity (hT : T.IsSymmetric) (hS : S.IsSymmetric) (hd : d ≤ n)
     (x : EuclideanSpace ℝ (Fin d)) :
+    -- Conclusion: the isometry defect of `M` at `x` is the `D`-quadratic form of `x`.
     ⟪nearIsometry hT hS hd x, nearIsometry hT hS hd x⟫_ℝ - ⟪x, x⟫_ℝ
       = ∑ k, ∑ m, ((Acharyya2025.Overlap.overlap hT hS hn_eq hd) *
             (Acharyya2025.Overlap.overlap hT hS hn_eq hd)ᵀ
@@ -339,21 +395,27 @@ private theorem gram_dev_identity (hT : T.IsSymmetric) (hS : S.IsSymmetric) (hd 
   refine Finset.sum_congr rfl (fun m _ => ?_)
   rw [Matrix.sub_apply]; ring
 
-/-- `⟪x, x⟫` as the coordinate sum of squares on `EuclideanSpace ℝ (Fin d)`. -/
+/-- Internal helper / algebraic step: `⟪x, x⟫` as the coordinate sum of squares
+on `EuclideanSpace ℝ (Fin d)`. -/
 private theorem inner_self_eq_sum (x : EuclideanSpace ℝ (Fin d)) :
+    -- Conclusion: the self inner product equals the sum of squared coordinates.
     ⟪x, x⟫_ℝ = ∑ k, (x k)^2 := by
   rw [PiLp.inner_apply]
   refine Finset.sum_congr rfl (fun k _ => ?_)
   simp [pow_two]
 
-/-- **Gram-deviation quadratic-form bound.**  `M` is a near-isometry:
-`|⟪M x, M x⟫ − ⟪x, x⟫| ≤ δ ⟪x, x⟫` with `δ := d · τ`, `τ := 4 n ε² / α²`. -/
+/-- Internal helper / algebraic step (**Gram-deviation quadratic-form bound**).
+`M` is a near-isometry: `|⟪M x, M x⟫ − ⟪x, x⟫| ≤ δ ⟪x, x⟫` with `δ := d · τ`,
+`τ := 4 n ε² / α²`. This is the input to the polar-factor step that produces the
+alignment `W`. Same hypothesis roles as `crossPop_le` (floor `α`, rank-`d` tail,
+closeness `ε`, smallness `ε ≤ α/2`). -/
 private theorem gram_dev_le (hd : d ≤ n) (hT : T.IsSymmetric) (hS : S.IsSymmetric)
     {α ε : ℝ} (hα_pos : 0 < α)
     (hα : ∀ i : Fin n, (i : ℕ) < d → α ≤ hT.eigenvalues hn_eq i)
     (htail : ∀ j : Fin n, d ≤ (j : ℕ) → hT.eigenvalues hn_eq j = 0)
     (hε : ∀ x, ‖(S - T) x‖ ≤ ε * ‖x‖) (hsmall : ε ≤ α / 2)
     (x : EuclideanSpace ℝ (Fin d)) :
+    -- Conclusion: `M`'s isometry defect at `x` is `≤ δ ⟪x,x⟫` with `δ = d·4nε²/α²`.
     |⟪nearIsometry hT hS hd x, nearIsometry hT hS hd x⟫_ℝ - ⟪x, x⟫_ℝ|
       ≤ ((d : ℝ) * (4 * (n : ℝ) * ε^2 / α^2)) * ⟪x, x⟫_ℝ := by
   set τ : ℝ := 4 * (n : ℝ) * ε^2 / α^2 with hτ
@@ -388,18 +450,22 @@ private theorem gram_dev_le (hd : d ≤ n) (hT : T.IsSymmetric) (hS : S.IsSymmet
 
 /-! ### Coordinate / Parseval utilities -/
 
-/-- The `i`-th coordinate of a finite `smul`-combination in `EuclideanSpace`. -/
+/-- Internal helper / algebraic step: the `i`-th coordinate of a finite
+`smul`-combination in `EuclideanSpace`. -/
 private theorem smul_sum_apply {m p : ℕ} (c : Fin p → ℝ)
     (v : Fin p → EuclideanSpace ℝ (Fin m)) (i : Fin m) :
+    -- Conclusion: coordinate of a linear combination is the combination of coordinates.
     (∑ k, c k • v k) i = ∑ k, c k * (v k) i := by
   show (∑ k, c k • v k).ofLp i = ∑ k, c k * (v k).ofLp i
   rw [WithLp.ofLp_sum, Finset.sum_apply]
   refine Finset.sum_congr rfl (fun k _ => ?_)
   rw [WithLp.ofLp_smul]; rfl
 
-/-- **Parseval for an orthonormal family.**  `‖∑ k, c k • v k‖² = ∑ k, (c k)²`. -/
+/-- Internal helper / algebraic step (**Parseval for an orthonormal family**):
+`‖∑ k, c k • v k‖² = ∑ k, (c k)²`. -/
 private theorem norm_sq_smul_sum_orthonormal {m p : ℕ}
     {v : Fin p → EuclideanSpace ℝ (Fin m)} (hv : Orthonormal ℝ v) (c : Fin p → ℝ) :
+    -- Conclusion: the squared norm of an orthonormal combination is the coefficient energy.
     ‖∑ k, c k • v k‖^2 = ∑ k, (c k)^2 := by
   classical
   rw [← real_inner_self_eq_norm_sq, sum_inner]
@@ -421,10 +487,12 @@ the partial reconstruction `∑_k Q_{kl} v_k` (over the top-`d` sample eigenbasi
 the defect vector `w_l := (∑_k Q_{kl} • v_k) − u_l` has squared norm equal to the
 trailing cross-energy `∑_{j ≥ d} ⟪v_j, u_l⟫²`. -/
 
-/-- The `v`-coordinate of the Term-3 defect vanishes in the leading block and is
-`−⟪v_j, u_l⟫` in the trailing block. -/
+/-- Internal helper / algebraic step. The `v`-coordinate of the Term-3
+reconstruction defect vanishes in the leading block and equals `−⟪v_j, u_l⟫` in
+the trailing block. (Term 3 is the Davis–Kahan reconstruction-defect term.) -/
 private theorem defect_repr (hT : T.IsSymmetric) (hS : S.IsSymmetric) (hd : d ≤ n)
     (l : Fin d) (j : Fin n) :
+    -- Conclusion: the defect's `j`-th sample coordinate is `−⟪v_j,u_l⟫` (trailing) or `0` (leading).
     (hS.eigenvectorBasis hn_eq).repr
         ((∑ k, (Acharyya2025.Overlap.overlap hT hS hn_eq hd) k l
             • hS.eigenvectorBasis hn_eq (Fin.castLE hd k))
@@ -478,9 +546,12 @@ private theorem defect_repr (hT : T.IsSymmetric) (hS : S.IsSymmetric) (hd : d �
       rw [hQ, Acharyya2025.Overlap.overlap, hjcast]
     rw [this, sub_self]
 
-/-- **Term-3 defect squared norm.**  `‖w_l‖² = ∑_{j ≥ d} ⟪v_j, u_l⟫²`. -/
+/-- Internal helper / algebraic step (**Term-3 defect squared norm**):
+`‖w_l‖² = ∑_{j ≥ d} ⟪v_j, u_l⟫²` — the defect's energy equals the trailing
+cross-energy (which `crossPop_le` bounds). -/
 private theorem defect_norm_sq (hT : T.IsSymmetric) (hS : S.IsSymmetric) (hd : d ≤ n)
     (l : Fin d) :
+    -- Conclusion: the `l`-th defect's squared norm equals its trailing cross energy.
     ‖(∑ k, (Acharyya2025.Overlap.overlap hT hS hn_eq hd) k l
           • hS.eigenvectorBasis hn_eq (Fin.castLE hd k))
         - hT.eigenvectorBasis hn_eq (Fin.castLE hd l)‖^2
@@ -510,22 +581,26 @@ The total error and the three terms are packaged as elements of
 `EuclideanSpace ℝ (Fin n × Fin d)`, so the Minkowski (triangle) inequality is
 just `norm_add_le`. -/
 
-/-- The squared Frobenius norm of a product-space vector as an iterated sum. -/
+/-- Internal helper / algebraic step: the squared Frobenius norm of a
+product-space vector as an iterated (rows × columns) sum. -/
 private theorem frob_sq (t : EuclideanSpace ℝ (Fin n × Fin d)) :
+    -- Conclusion: the squared norm equals the double sum of squared entries.
     ‖t‖^2 = ∑ i : Fin n, ∑ l : Fin d, (t (i, l))^2 := by
   rw [EuclideanSpace.norm_eq, Real.sq_sqrt (by positivity), Fintype.sum_prod_type]
   refine Finset.sum_congr rfl (fun i _ => Finset.sum_congr rfl (fun l _ => ?_))
   simp [Real.norm_eq_abs, sq_abs]
 
-/-- Abbreviation: the sample top-block eigenvalue `λ̂_k`. -/
+/-- Notation abbreviation: the `k`-th sample top-block eigenvalue `λ̂_k`. -/
 private noncomputable abbrev lamHat (hS : S.IsSymmetric) (hd : d ≤ n) (k : Fin d) : ℝ :=
   hS.eigenvalues hn_eq (Fin.castLE hd k)
 
-/-- Abbreviation: the population top-block eigenvalue `λ_l`. -/
+/-- Notation abbreviation: the `l`-th population top-block eigenvalue `λ_l`. -/
 private noncomputable abbrev lamPop (hT : T.IsSymmetric) (hd : d ≤ n) (l : Fin d) : ℝ :=
   hT.eigenvalues hn_eq (Fin.castLE hd l)
 
-/-- Term-2 vector: `(i,l) ↦ ∑_k Q_{kl}(√λ̂_k − √λ_l) v_k(i)`. -/
+/-- The **Term-2 (commutator) vector**, packaged as a Frobenius vector:
+`(i,l) ↦ ∑_k Q_{kl}(√λ̂_k − √λ_l) v_k(i)`. This is the second of the three terms
+in the decomposition `ψ̂W − ψ = Term1 + Term2 + Term3`; a plain definition. -/
 private noncomputable def term2vec (hT : T.IsSymmetric) (hS : S.IsSymmetric) (hd : d ≤ n) :
     EuclideanSpace ℝ (Fin n × Fin d) :=
   WithLp.toLp 2 (fun p : Fin n × Fin d =>
@@ -533,7 +608,9 @@ private noncomputable def term2vec (hT : T.IsSymmetric) (hS : S.IsSymmetric) (hd
         * (Real.sqrt (lamHat hS hd k) - Real.sqrt (lamPop hT hd p.2))
         * hS.eigenvectorBasis hn_eq (Fin.castLE hd k) p.1)
 
-/-- Term-3 vector: `(i,l) ↦ √λ_l (∑_k Q_{kl} v_k(i) − u_l(i))`. -/
+/-- The **Term-3 (Davis–Kahan reconstruction-defect) vector**, packaged as a
+Frobenius vector: `(i,l) ↦ √λ_l (∑_k Q_{kl} v_k(i) − u_l(i))`. Third of the three
+decomposition terms; a plain definition. -/
 private noncomputable def term3vec (hT : T.IsSymmetric) (hS : S.IsSymmetric) (hd : d ≤ n) :
     EuclideanSpace ℝ (Fin n × Fin d) :=
   WithLp.toLp 2 (fun p : Fin n × Fin d =>
@@ -542,23 +619,30 @@ private noncomputable def term3vec (hT : T.IsSymmetric) (hS : S.IsSymmetric) (hd
             • hS.eigenvectorBasis hn_eq (Fin.castLE hd k))
           - hT.eigenvectorBasis hn_eq (Fin.castLE hd p.2)) p.1))
 
-/-- Coordinate formula for `term3vec`. -/
+/-- Internal helper / algebraic step: coordinate formula for `term3vec`. -/
 private theorem term3vec_apply (hT : T.IsSymmetric) (hS : S.IsSymmetric) (hd : d ≤ n)
     (i : Fin n) (l : Fin d) :
+    -- Conclusion: the `(i,l)` entry of the Term-3 vector unfolds to its defining expression.
     (term3vec hT hS hd) (i, l)
       = Real.sqrt (lamPop hT hd l)
         * (((∑ k, (Acharyya2025.Overlap.overlap hT hS hn_eq hd) k l
               • hS.eigenvectorBasis hn_eq (Fin.castLE hd k))
             - hT.eigenvectorBasis hn_eq (Fin.castLE hd l)) i) := rfl
 
-/-- **Term-3 squared Frobenius bound.**
-`‖term3vec‖² ≤ Λ · (4 n ε² / α²)`. -/
+/-- Internal helper / algebraic step (**Term-3 squared Frobenius bound**):
+`‖term3vec‖² ≤ Λ · (4 n ε² / α²)`. Bounds the Davis–Kahan reconstruction-defect
+term using the eigenvalue cap `Λ` and the cross energy.
+
+Hypotheses combine the eigenvalue floor `α` (`hα_pos`, `hα`), the rank-`d` tail
+(`htail`, Assumption 1), the cap `Λ` (`hΛ`, Assumption 2 upper bound), and
+operator-norm closeness `ε` with smallness `ε ≤ α/2`. -/
 private theorem term3_norm_sq_le (hd : d ≤ n) (hT : T.IsSymmetric) (hS : S.IsSymmetric)
     {α Λ ε : ℝ} (hα_pos : 0 < α)
     (hα : ∀ i : Fin n, (i : ℕ) < d → α ≤ hT.eigenvalues hn_eq i)
     (htail : ∀ j : Fin n, d ≤ (j : ℕ) → hT.eigenvalues hn_eq j = 0)
     (hΛ : ∀ l : Fin n, hT.eigenvalues hn_eq l ≤ Λ)
     (hε : ∀ x, ‖(S - T) x‖ ≤ ε * ‖x‖) (hsmall : ε ≤ α / 2) :
+    -- Conclusion: the Term-3 Frobenius energy is `≤ Λ · 4nε²/α²`.
     ‖term3vec hT hS hd‖^2 ≤ Λ * (4 * (n : ℝ) * ε^2 / α^2) := by
   classical
   -- `0 ≤ Λ`: when `n = 0` both sides vanish; otherwise eigenvalue `0` witnesses it.
@@ -638,20 +722,24 @@ private theorem term3_norm_sq_le (hd : d ≤ n) (hT : T.IsSymmetric) (hS : S.IsS
     _ ≤ Λ * (4 * (n : ℝ) * ε^2 / α^2) :=
         mul_le_mul_of_nonneg_left (le_trans hbridge hcrossPop) hΛ0
 
-/-- Coordinate formula for `term2vec`. -/
+/-- Internal helper / algebraic step: coordinate formula for `term2vec`. -/
 private theorem term2vec_apply (hT : T.IsSymmetric) (hS : S.IsSymmetric) (hd : d ≤ n)
     (i : Fin n) (l : Fin d) :
+    -- Conclusion: the `(i,l)` entry of the Term-2 vector unfolds to its defining expression.
     (term2vec hT hS hd) (i, l)
       = ∑ k, (Acharyya2025.Overlap.overlap hT hS hn_eq hd) k l
           * (Real.sqrt (lamHat hS hd k) - Real.sqrt (lamPop hT hd l))
           * hS.eigenvectorBasis hn_eq (Fin.castLE hd k) i := rfl
 
-/-- The Term-2 coefficient `c_{kl} = Q_{kl}(√λ̂_k − √λ_l)` is bounded by
-`ε / √(α/2)` in absolute value (Sylvester identity + the `√` quotient). -/
+/-- Internal helper / algebraic step. The Term-2 coefficient
+`c_{kl} = Q_{kl}(√λ̂_k − √λ_l)` is bounded by `ε / √(α/2)` in absolute value
+(Sylvester/commutator identity + the `√a − √b = (a−b)/(√a+√b)` quotient, with the
+denominator bounded below using the floor `α`). -/
 private theorem abs_term2_coeff_le (hd : d ≤ n) (hT : T.IsSymmetric) (hS : S.IsSymmetric)
     {α ε : ℝ} (hα_pos : 0 < α) (hε_nonneg : 0 ≤ ε)
     (hα : ∀ i : Fin n, (i : ℕ) < d → α ≤ hT.eigenvalues hn_eq i)
     (hε : ∀ x, ‖(S - T) x‖ ≤ ε * ‖x‖) (hsmall : ε ≤ α / 2) (k l : Fin d) :
+    -- Conclusion: each Term-2 coefficient is `≤ ε / √(α/2)` in absolute value.
     |(Acharyya2025.Overlap.overlap hT hS hn_eq hd) k l
         * (Real.sqrt (lamHat hS hd k) - Real.sqrt (lamPop hT hd l))|
       ≤ ε / Real.sqrt (α / 2) := by
@@ -693,12 +781,15 @@ private theorem abs_term2_coeff_le (hd : d ≤ n) (hT : T.IsSymmetric) (hS : S.I
       ≤ ε * Real.sqrt (α / 2) := mul_le_mul_of_nonneg_right hcomm (le_of_lt hsa_pos)
     _ ≤ ε * (Real.sqrt a + Real.sqrt b) := mul_le_mul_of_nonneg_left hdenlb hε_nonneg
 
-/-- **Term-2 squared Frobenius bound.**
-`‖term2vec‖² ≤ d² · (ε / √(α/2))²`. -/
+/-- Internal helper / algebraic step (**Term-2 squared Frobenius bound**):
+`‖term2vec‖² ≤ d² · (ε / √(α/2))²`. Bounds the commutator term by Parseval
+(orthonormal sample eigenbasis) plus the per-coefficient bound `abs_term2_coeff_le`,
+with `d²` summands. Same hypothesis roles (floor `α`, closeness `ε`, smallness). -/
 private theorem term2_norm_sq_le (hd : d ≤ n) (hT : T.IsSymmetric) (hS : S.IsSymmetric)
     {α ε : ℝ} (hα_pos : 0 < α) (hε_nonneg : 0 ≤ ε)
     (hα : ∀ i : Fin n, (i : ℕ) < d → α ≤ hT.eigenvalues hn_eq i)
     (hε : ∀ x, ‖(S - T) x‖ ≤ ε * ‖x‖) (hsmall : ε ≤ α / 2) :
+    -- Conclusion: the Term-2 Frobenius energy is `≤ d²·(ε/√(α/2))²`.
     ‖term2vec hT hS hd‖^2 ≤ (d : ℝ)^2 * (ε / Real.sqrt (α / 2))^2 := by
   classical
   set c := fun (k l : Fin d) => (Acharyya2025.Overlap.overlap hT hS hn_eq hd) k l
@@ -752,17 +843,24 @@ private theorem term2_norm_sq_le (hd : d ≤ n) (hT : T.IsSymmetric) (hS : S.IsS
 `∑_i ‖ψ̂ i‖² = ∑_k λ̂_k ≤ d (Λ + ε)`, where the orthonormality of the sample
 eigenbasis collapses the `i`-sum and Weyl bounds each `λ̂_k`. -/
 
-/-- Coordinate of the spectral embedding: `ψ̂ i k = √λ̂_k · v_k(i)`. -/
+/-- Internal helper / algebraic step: coordinate of the spectral embedding,
+`ψ̂ i k = √λ̂_k · v_k(i)`. -/
 private theorem spectralConfig_apply (hS : S.IsSymmetric) (hd : d ≤ n) (i : Fin n) (k : Fin d) :
+    -- Conclusion: the `(i,k)` coordinate of the embedding unfolds to `√λ̂_k · v_k(i)`.
     spectralConfig S hS hd i k
       = Real.sqrt (lamHat hS hd k) * hS.eigenvectorBasis hn_eq (Fin.castLE hd k) i := rfl
 
-/-- **Total spectral energy bound.**  `∑_i ‖ψ̂ i‖² ≤ d (Λ + ε)`. -/
+/-- Internal helper / algebraic step (**total spectral energy bound**):
+`∑_i ‖ψ̂ i‖² ≤ d (Λ + ε)`. The sample embedding has bounded total energy (its
+columns are the orthonormal eigenvectors scaled by `√λ̂_k`, each `λ̂_k ≤ Λ + ε`
+by Weyl). Feeds the Term-1 bound. Uses the cap `Λ` (Assumption 2 upper bound) and
+operator-norm closeness `ε`. -/
 private theorem sum_norm_sq_spectralConfig_le (hd : d ≤ n) (hT : T.IsSymmetric)
     (hS : S.IsSymmetric) {α Λ ε : ℝ} (hα_pos : 0 < α)
     (hα : ∀ i : Fin n, (i : ℕ) < d → α ≤ hT.eigenvalues hn_eq i)
     (hΛ : ∀ l : Fin n, hT.eigenvalues hn_eq l ≤ Λ)
     (hε : ∀ x, ‖(S - T) x‖ ≤ ε * ‖x‖) (hsmall : ε ≤ α / 2) :
+    -- Conclusion: the sample embedding's total energy is `≤ d(Λ+ε)`.
     ∑ i : Fin n, ‖spectralConfig S hS hd i‖^2 ≤ (d : ℝ) * (Λ + ε) := by
   classical
   -- each top-block sample eigenvalue is `≥ α/2 ≥ 0`, so `(√λ̂_k)² = λ̂_k`.
@@ -805,8 +903,17 @@ private theorem sum_norm_sq_spectralConfig_le (hd : d ≤ n) (hT : T.IsSymmetric
 
 /-! ### The configuration-perturbation theorem (WP7(c4)) -/
 
-/-- The explicit closed-form bound `CBOUND` produced by the three-term
-decomposition.  `δ := d · (4 n ε² / α²)` is the polar-factor parameter. -/
+/-- The explicit closed-form configuration-error bound `CBOUND` produced by the
+three-term decomposition, as a function of the sample size `n`, embedding
+dimension `d`, eigenvalue floor `α` (paper's `λ_d`/`C1`), eigenvalue cap `Λ`
+(paper's `λ_1`/`C2`), and operator-norm perturbation `ε`.
+
+The three `Real.sqrt` summands are the Frobenius bounds of Term 1 (polar factor),
+Term 2 (commutator), and Term 3 (Davis–Kahan defect) respectively; the leading
+`√n` converts the Frobenius norm to the per-point `ConfigError`. Here
+`δ := d · (4 n ε² / α²)` is the polar-factor parameter. This is the explicit
+`κ`-style bound on `‖ψ̂W* − ψ‖` in the deterministic core of Theorem 2; a plain
+definition (the bound is asserted in the theorem below). -/
 noncomputable def configBound (n d : ℕ) (α Λ ε : ℝ) : ℝ :=
   Real.sqrt n *
     ( Real.sqrt ((2 * ((d : ℝ) * (4 * (n : ℝ) * ε^2 / α^2)))^2 * ((d : ℝ) * (Λ + ε)))
@@ -830,19 +937,33 @@ three-term decomposition `ψ̂W − ψ = Term1 + Term2 + Term3` (polar / commuta
 Davis–Kahan), combined by the Minkowski inequality on
 `EuclideanSpace ℝ (Fin n × Fin d)` and `ConfigError ≤ √n · ‖·‖_F`.
 
+PAPER CORRESPONDENCE: this is the **deterministic core of Theorem 2** (the
+Weyl + Davis–Kahan part). The existential `W` is the paper's orthogonal matrix
+`W* ∈ O(d)`; the conclusion is the deterministic version of `‖ψ̂W* − ψ‖ ≤ κ`,
+here with the explicit `κ = configBound n d α Λ ε`. The probabilistic
+"with high probability" content of Theorem 2 (turning `ε` and the asymptotic
+regime `r = ω(n³)` into a tail bound) lives elsewhere; this theorem supplies the
+deterministic bound that holds once `S` is `ε`-close to `T`.
+
 Formalized by Claude Fable 5 (claude-fable-5[1m]).
 -/
 theorem exists_isometry_configError_spectralConfig_le
-    {n d : ℕ} (hd : d ≤ n)
-    (T S : EuclideanSpace ℝ (Fin n) →ₗ[ℝ] EuclideanSpace ℝ (Fin n))
-    (hT : T.IsSymmetric) (hS : S.IsSymmetric)
-    {α Λ ε : ℝ} (hα_pos : 0 < α) (hε_nonneg : 0 ≤ ε)
+    {n d : ℕ} (hd : d ≤ n)               -- embedding dimension/rank `d ≤ n` (Assumption 1: rank = d)
+    (T S : EuclideanSpace ℝ (Fin n) →ₗ[ℝ] EuclideanSpace ℝ (Fin n))  -- `T` population, `S` sample Gram operators
+    (hT : T.IsSymmetric) (hS : S.IsSymmetric)  -- extra (encoding) assumption: operators are symmetric/self-adjoint
+    {α Λ ε : ℝ} (hα_pos : 0 < α) (hε_nonneg : 0 ≤ ε)  -- floor `α > 0`, perturbation `ε ≥ 0`
+    -- Assumption 2 (lower): leading `d` population eigenvalues `≥ α` (paper's `λ_d`/`C1`):
     (hα : ∀ i : Fin n, (i : ℕ) < d → α ≤ hT.eigenvalues finrank_euclideanSpace_fin i)
+    -- Assumption 1 (rank = d, encoded): all trailing population eigenvalues vanish:
     (htail : ∀ j : Fin n, d ≤ (j : ℕ) → hT.eigenvalues finrank_euclideanSpace_fin j = 0)
+    -- Assumption 2 (upper): all population eigenvalues `≤ Λ` (paper's `λ_1`/`C2`):
     (hΛ : ∀ l : Fin n, hT.eigenvalues finrank_euclideanSpace_fin l ≤ Λ)
-    (hε : ∀ x, ‖(S - T) x‖ ≤ ε * ‖x‖)
-    (hsmall : ε ≤ α / 2)
+    (hε : ∀ x, ‖(S - T) x‖ ≤ ε * ‖x‖)   -- sample/population operator-norm closeness `‖S − T‖ ≤ ε`
+    (hsmall : ε ≤ α / 2)                 -- smallness side-condition (extra explicit numeric condition)
+    -- polar-factor applicability: `δ = d·4nε²/α² ≤ 1/2` (extra explicit smallness condition):
     (hpolar : (d : ℝ) * (4 * (n : ℝ) * ε^2 / α^2) ≤ 1/2) :
+    -- Conclusion: there is an isometry `W` of `ℝ^d` aligning the sample embedding to the
+    -- population embedding with configuration error `≤ configBound n d α Λ ε`.
     ∃ W : EuclideanSpace ℝ (Fin d) →ₗ[ℝ] EuclideanSpace ℝ (Fin d),
       (∀ x y, ⟪W x, W y⟫_ℝ = ⟪x, y⟫_ℝ) ∧
       Acharyya2024.ConfigError (fun i => W (spectralConfig S hS hd i)) (spectralConfig T hT hd)

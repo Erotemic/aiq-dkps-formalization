@@ -43,7 +43,17 @@ Lipschitz estimate reusable.
 noncomputable def doubleCenter {n : Nat} (A : DisMat n) : DisMat n :=
   fun i j => A i j - rowMean A i - colMean A j + grandMean A
 
-/-- Classical-MDS centered matrix, without choosing an eigendecomposition. -/
+/--
+Classical-MDS centered matrix, without choosing an eigendecomposition.
+
+Corresponds to the paper's `B = -½ Hₙ ∆∘² Hₙ` (true distances) and
+`B̂ = -½ Hₙ D∘² Hₙ` (sample distances): the doubly-centered, squared
+dissimilarity matrix from which CMDS perspectives are extracted (paper §3,
+Algorithm 1a, step 4). Here `doubleCenter` plays the role of the centering
+matrix `Hₙ (·) Hₙ`, the entry squaring plays the role of `(·)∘²`, and the
+`-½` factor matches. The eigendecomposition step that turns this into
+embeddings is *not* taken here; this is only the matrix `B`/`B̂` itself.
+-/
 noncomputable def classicalMDSMatrix {n : Nat} (D : DisMat n) : DisMat n :=
   fun i j => -(1 / 2 : Real) * doubleCenter (fun i j => (D i j)^2) i j
 
@@ -53,9 +63,11 @@ Entrywise perturbations bound perturbations of row means.
 Formalized by Codex 5.5 High, per user-observed model label.
 -/
 theorem abs_rowMean_sub_le_of_entrywise
-    {n : Nat} (hn : 0 < n) {A B : DisMat n} {ε : Real}
-    (hε : ∀ i j : Fin n, |A i j - B i j| ≤ ε)
+    {n : Nat} (hn : 0 < n)                      -- nonempty index set (n > 0)
+    {A B : DisMat n} {ε : Real}
+    (hε : ∀ i j : Fin n, |A i j - B i j| ≤ ε)   -- entrywise closeness of A, B
     (i : Fin n) :
+    -- Conclusion: row means of two entrywise-ε-close matrices differ by at most ε.
     |rowMean A i - rowMean B i| ≤ ε := by
   have hn_real_pos : 0 < (n : Real) := by exact_mod_cast hn
   have hn_real_nonneg : 0 ≤ (n : Real) := le_of_lt hn_real_pos
@@ -85,9 +97,11 @@ Entrywise perturbations bound perturbations of column means.
 Formalized by Codex 5.5 High, per user-observed model label.
 -/
 theorem abs_colMean_sub_le_of_entrywise
-    {n : Nat} (hn : 0 < n) {A B : DisMat n} {ε : Real}
-    (hε : ∀ i j : Fin n, |A i j - B i j| ≤ ε)
+    {n : Nat} (hn : 0 < n)                      -- nonempty index set (n > 0)
+    {A B : DisMat n} {ε : Real}
+    (hε : ∀ i j : Fin n, |A i j - B i j| ≤ ε)   -- entrywise closeness of A, B
     (j : Fin n) :
+    -- Conclusion: column means of two entrywise-ε-close matrices differ by at most ε.
     |colMean A j - colMean B j| ≤ ε := by
   have hn_real_pos : 0 < (n : Real) := by exact_mod_cast hn
   have hn_real_nonneg : 0 ≤ (n : Real) := le_of_lt hn_real_pos
@@ -117,8 +131,10 @@ Entrywise perturbations bound perturbations of the grand mean.
 Formalized by Codex 5.5 High, per user-observed model label.
 -/
 theorem abs_grandMean_sub_le_of_entrywise
-    {n : Nat} (hn : 0 < n) {A B : DisMat n} {ε : Real}
-    (hε : ∀ i j : Fin n, |A i j - B i j| ≤ ε) :
+    {n : Nat} (hn : 0 < n)                      -- nonempty index set (n > 0)
+    {A B : DisMat n} {ε : Real}
+    (hε : ∀ i j : Fin n, |A i j - B i j| ≤ ε) : -- entrywise closeness of A, B
+    -- Conclusion: grand means of two entrywise-ε-close matrices differ by at most ε.
     |grandMean A - grandMean B| ≤ ε := by
   have hn_real_pos : 0 < (n : Real) := by exact_mod_cast hn
   have hn_real_nonneg : 0 ≤ (n : Real) := le_of_lt hn_real_pos
@@ -165,9 +181,12 @@ the DKPS/MDS chain.
 Formalized by Codex 5.5 High, per user-observed model label.
 -/
 theorem abs_doubleCenter_sub_le_of_entrywise
-    {n : Nat} (hn : 0 < n) {A B : DisMat n} {ε : Real}
-    (hε : ∀ i j : Fin n, |A i j - B i j| ≤ ε)
+    {n : Nat} (hn : 0 < n)                      -- nonempty index set (n > 0)
+    {A B : DisMat n} {ε : Real}
+    (hε : ∀ i j : Fin n, |A i j - B i j| ≤ ε)   -- entrywise closeness of A, B
     (i j : Fin n) :
+    -- Conclusion: double-centering is entrywise 4-Lipschitz, i.e. it inflates an
+    -- entrywise ε bound to at most 4ε (the centering link in the CMDS chain).
     |doubleCenter A i j - doubleCenter B i j| ≤ 4 * ε := by
   have hrow := abs_rowMean_sub_le_of_entrywise hn hε i
   have hcol := abs_colMean_sub_le_of_entrywise hn hε j

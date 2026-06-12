@@ -41,16 +41,25 @@ subspace spanned by the basis vectors selected by `p`.  We record its dimension
 (the number of selected indices) and the key orthogonality fact: a vector in
 this subspace has vanishing `b`-coordinates outside `p`. -/
 
-/-- The subspace spanned by the basis vectors `b i` for indices `i` satisfying
-`p i`. -/
+/-- Internal helper (scaffolding for Courant–Fischer).
+The subspace spanned by the eigenbasis vectors `b i` for the indices `i`
+satisfying the predicate `p`.  Used below to carve out "leading" vs "trailing"
+eigenspaces in the min-max argument. -/
+-- `b`         : an orthonormal eigenbasis
+-- `p`         : selects which basis vectors span the subspace
+-- `DecidablePred p` : extra (implicit) assumption beyond the paper (Lean must be
+--                     able to decide membership in `p` to form the filtered span)
 noncomputable def specSubspace (b : OrthonormalBasis (Fin n) ℝ E) (p : Fin n → Prop)
     [DecidablePred p] : Submodule ℝ E :=
   Submodule.span ℝ (Set.range (fun i : {i : Fin n // p i} => b i))
 
 omit [FiniteDimensional ℝ E] in
-/-- A spectral subspace has dimension equal to the number of selected indices. -/
+/-- Internal helper.
+A spectral subspace has dimension equal to the number of selected indices
+(the basis vectors selected by `p` are orthonormal, hence independent). -/
 theorem finrank_specSubspace (b : OrthonormalBasis (Fin n) ℝ E) (p : Fin n → Prop)
     [DecidablePred p] :
+    -- Conclusion: dim of the selected-eigenvector span = number of selected indices.
     finrank ℝ (specSubspace b p) = (Finset.univ.filter p).card := by
   rw [specSubspace,
     finrank_span_eq_card (b := fun i : {i : Fin n // p i} => b i)
@@ -58,10 +67,13 @@ theorem finrank_specSubspace (b : OrthonormalBasis (Fin n) ℝ E) (p : Fin n →
     Fintype.card_subtype]
 
 omit [FiniteDimensional ℝ E] in
-/-- A vector in a spectral subspace has zero `b`-coordinate at any index outside
+/-- Internal helper.
+A vector in a spectral subspace has zero `b`-coordinate at any index outside
 the selecting predicate. -/
 theorem repr_eq_zero_of_mem_specSubspace (b : OrthonormalBasis (Fin n) ℝ E) (p : Fin n → Prop)
-    [DecidablePred p] {x : E} (hx : x ∈ specSubspace b p) {i : Fin n} (hi : ¬ p i) :
+    [DecidablePred p] {x : E} (hx : x ∈ specSubspace b p)  -- `x` lies in the selected span
+    {i : Fin n} (hi : ¬ p i) :                              -- `i` is an unselected index
+    -- Conclusion: the `i`-th coordinate of `x` in the eigenbasis vanishes.
     b.repr x i = 0 := by
   rw [b.repr_apply_apply]
   -- `⟪b i, ·⟫` vanishes on the spanning set, hence on the whole span.
@@ -79,21 +91,25 @@ theorem repr_eq_zero_of_mem_specSubspace (b : OrthonormalBasis (Fin n) ℝ E) (p
 /-! ### Step 1: the quadratic form in the eigenbasis -/
 
 omit [FiniteDimensional ℝ E] in
-/-- Parseval: in any orthonormal basis the squared coordinates sum to the squared
-norm.  This is a thin wrapper around `OrthonormalBasis.sum_sq_inner_right`
-together with `OrthonormalBasis.repr_apply_apply`. -/
+/-- Internal helper (Parseval identity).
+In any orthonormal basis the squared coordinates of a vector sum to its squared
+norm.  Thin wrapper around `OrthonormalBasis.sum_sq_inner_right`. -/
 theorem sum_repr_sq_eq_norm_sq (b : OrthonormalBasis (Fin n) ℝ E) (x : E) :
+    -- Conclusion: ∑ᵢ (coordinate i)² = ‖x‖² (Parseval).
     ∑ i : Fin n, (b.repr x i) ^ 2 = ‖x‖ ^ 2 := by
   rw [← b.sum_sq_inner_right x]
   refine Finset.sum_congr rfl ?_
   intro i _
   rw [b.repr_apply_apply]
 
-/-- The quadratic form `⟪T x, x⟫` expressed in the eigenbasis of the symmetric
-operator `T`: it is the eigenvalue-weighted sum of squared coordinates.  This is
-the diagonalization of the quadratic form. -/
+/-- Internal helper (diagonalization of the quadratic form).
+The quadratic form `⟪T x, x⟫` expressed in the eigenbasis of the symmetric
+operator `T`: it is the eigenvalue-weighted sum of squared coordinates. -/
 theorem inner_map_self_eq_sum_eigenvalues_sq
-    (hT : T.IsSymmetric) (hn : finrank ℝ E = n) (x : E) :
+    (hT : T.IsSymmetric)            -- `T` self-adjoint (so it has a real eigenbasis)
+    (hn : finrank ℝ E = n)          -- finite-dimensionality: dim E = n (implicit in the paper)
+    (x : E) :
+    -- Conclusion: ⟪T x, x⟫ = ∑ᵢ λᵢ · (coordinate i of x)²  (diagonal form).
     ⟪T x, x⟫ = ∑ i : Fin n, hT.eigenvalues hn i * ((hT.eigenvectorBasis hn).repr x i) ^ 2 := by
   set b := hT.eigenvectorBasis hn with hb
   -- Expand only the inner `x` (the argument of `T`) in the eigenbasis, then use
@@ -122,10 +138,16 @@ proves them over any `RCLike` field with `RCLike.re ⟪T x, x⟫` in place of
 Proof idea: `V` must intersect the `(n - k)`-dimensional "tail" eigenspace
 `span {bᵢ : k ≤ i}` nontrivially by dimension counting; on that intersection
 the quadratic form is bounded above by `λₖ` since the involved eigenvalues are
-all `≤ λₖ` (eigenvalues are sorted decreasingly). -/
+all `≤ λₖ` (eigenvalues are sorted decreasingly).
+
+Internal helper: one of the two directional Courant–Fischer bounds feeding
+Weyl's inequality below. -/
 theorem exists_unit_vector_inner_le_eigenvalue
-    (hT : T.IsSymmetric) (hn : finrank ℝ E = n) (k : Fin n)
-    (V : Submodule ℝ E) (hV : finrank ℝ V = (k : ℕ) + 1) :
+    (hT : T.IsSymmetric)               -- `T` self-adjoint
+    (hn : finrank ℝ E = n)             -- finite-dimensionality (implicit in the paper)
+    (k : Fin n)
+    (V : Submodule ℝ E) (hV : finrank ℝ V = (k : ℕ) + 1) :  -- any (k+1)-dim subspace
+    -- Conclusion: V contains a unit vector whose Rayleigh quotient is ≤ λₖ(T).
     ∃ x ∈ V, ‖x‖ = 1 ∧ ⟪T x, x⟫ ≤ hT.eigenvalues hn k := by
   simpa using ForMathlib.exists_unit_vector_re_inner_le_eigenvalue hT hn k V hV
 
@@ -133,26 +155,39 @@ theorem exists_unit_vector_inner_le_eigenvalue
 `k + 1` on which every unit vector `x` satisfies `λₖ(T) ≤ ⟪T x, x⟫`.
 
 Witness: `V = span {bᵢ : i ≤ k}`; on it the quadratic form is bounded below by
-`λₖ` since all involved eigenvalues are `≥ λₖ`. -/
+`λₖ` since all involved eigenvalues are `≥ λₖ`.
+
+Internal helper: the second directional Courant–Fischer bound. -/
 theorem forall_unit_vector_eigenvalue_le_inner
-    (hT : T.IsSymmetric) (hn : finrank ℝ E = n) (k : Fin n) :
+    (hT : T.IsSymmetric)               -- `T` self-adjoint
+    (hn : finrank ℝ E = n)             -- finite-dimensionality (implicit in the paper)
+    (k : Fin n) :
+    -- Conclusion: some (k+1)-dim subspace has every unit vector's Rayleigh quotient ≥ λₖ(T).
     ∃ V : Submodule ℝ E, finrank ℝ V = (k : ℕ) + 1 ∧
       ∀ x ∈ V, ‖x‖ = 1 → hT.eigenvalues hn k ≤ ⟪T x, x⟫ := by
   simpa using ForMathlib.forall_unit_vector_eigenvalue_le_re_inner hT hn k
 
 /-! ### Step 3: Weyl's inequality -/
 
-/-- **Weyl's inequality** for symmetric operators on a finite-dimensional real
-inner product space: the `k`-th (decreasingly sorted) eigenvalues of `T` and `S`
-differ by at most the operator norm of `T − S`.
+/-- **Weyl's inequality (standard).** For symmetric operators on a
+finite-dimensional real inner product space: the `k`-th (decreasingly sorted)
+eigenvalues of `T` and `S` differ by at most the operator norm of `T − S`.
 
-Here the operator-norm bound is supplied as the hypothesis
-`∀ x, ‖(T − S) x‖ ≤ ε · ‖x‖`.
+This is the classical eigenvalue-perturbation tool the paper invokes (prose:
+"Weyl's Inequality, which puts a bound on the eigenvalue perturbations").  In
+the Theorem 2 argument it guarantees the sorted eigenvalues of the sample matrix
+B̂ stay close to those of the population B, which (together with the eigenvalue
+floor α of Assumption 2) keeps the sample's leading eigenvalues above α/2 and
+its trailing ones below — i.e. it provides the eigengap fed to Davis–Kahan.
 
 Horn & Johnson, *Matrix Analysis* 2nd ed., Theorem 4.3.1; Bhatia,
 *Matrix Analysis*, Corollary III.2.6. -/
 theorem abs_eigenvalues_sub_le
-    (hT : T.IsSymmetric) (hS : S.IsSymmetric) (hn : finrank ℝ E = n)
-    {ε : ℝ} (hε : ∀ x : E, ‖(T - S) x‖ ≤ ε * ‖x‖) (k : Fin n) :
+    (hT : T.IsSymmetric) (hS : S.IsSymmetric)  -- both operators self-adjoint
+    (hn : finrank ℝ E = n)                      -- finite-dimensionality (implicit in the paper)
+    {ε : ℝ}
+    (hε : ∀ x : E, ‖(T - S) x‖ ≤ ε * ‖x‖)       -- operator-norm bound: ‖T − S‖op ≤ ε
+    (k : Fin n) :
+    -- Conclusion: |λₖ(T) − λₖ(S)| ≤ ε (eigenvalues move by at most ‖T − S‖op).
     |hT.eigenvalues hn k - hS.eigenvalues hn k| ≤ ε :=
   ForMathlib.abs_eigenvalues_sub_le hT hS hn hε k

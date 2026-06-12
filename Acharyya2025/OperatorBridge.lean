@@ -36,6 +36,10 @@ Honest `ℓ² → ℓ²` operator-norm closeness for square real matrices:
 `‖(A − B) x‖₂ ≤ ε‖x‖₂` for every Euclidean vector `x`, where the matrix acts
 via `Matrix.toEuclideanLin`.
 
+Role: the operator-norm closeness predicate consumed by the operator-world
+spectral perturbation theorems (Weyl, Davis–Kahan).  In the paper's pipeline it
+quantifies how close the sample CMDS matrix is to the population one.
+
 Formalized by Claude Fable 5 (claude-fable-5[1m]).
 -/
 def MatrixL2OperatorClose {n : Nat} (A B : SqMat n) (ε : Real) : Prop :=
@@ -45,9 +49,12 @@ def MatrixL2OperatorClose {n : Nat} (A B : SqMat n) (ε : Real) : Prop :=
 /--
 The `ℓ¹`–`ℓ²` comparison on Euclidean coordinates: `∑ |xⱼ| ≤ √n · ‖x‖₂`.
 
+Role: internal helper / standard norm-comparison fact.
+
 Formalized by Claude Fable 5 (claude-fable-5[1m]).
 -/
 theorem sum_abs_le_sqrt_card_mul_norm {n : Nat} (x : EuclideanSpace Real (Fin n)) :
+    -- Conclusion: the ℓ¹ norm of `x`'s coordinates is at most `√n` times its ℓ² norm.
     ∑ j : Fin n, |x j| ≤ Real.sqrt n * ‖x‖ := by
   -- Thin ℝ-instantiation of the Mathlib-staged RCLike version.
   simpa [Real.norm_eq_abs, Fintype.card_fin] using
@@ -65,11 +72,16 @@ operator-world spectral perturbation theorems (Weyl, Davis–Kahan).
 Mathematical source: Horn and Johnson, *Matrix Analysis*, 2nd ed., §5.6
 (norm equivalence).
 
+Role: internal helper / standard norm-comparison fact bridging entrywise control
+to operator-norm control, so matrix-world events can be fed to the spectral
+perturbation theorems.
+
 Formalized by Claude Fable 5 (claude-fable-5[1m]).
 -/
 theorem matrixL2OperatorClose_of_entrywise
     {n : Nat} {A B : SqMat n} {ε : Real}
-    (hentry : MatrixEntrywiseClose A B ε) :
+    (hentry : MatrixEntrywiseClose A B ε) :   -- hypothesis: every entry of `A − B` is bounded by `ε`
+    -- Conclusion: `A` and `B` are `ℓ² → ℓ²` operator-close with constant `n · ε`.
     MatrixL2OperatorClose A B ((n : Real) * ε) := by
   intro x
   -- Thin reduction to the Mathlib-staged entrywise -> operator-norm bound,
@@ -82,20 +94,30 @@ theorem matrixL2OperatorClose_of_entrywise
 A Hermitian (over `ℝ`: symmetric) matrix induces a symmetric operator on
 Euclidean space.  Thin wrapper around `Matrix.isSymmetric_toEuclideanLin_iff`.
 
+Role: internal helper transporting symmetry from the matrix world to the operator
+world, so the spectral theorems apply to the CMDS matrix.
+
 Formalized by Claude Fable 5 (claude-fable-5[1m]).
 -/
 theorem isSymmetric_toEuclideanLin_of_isHermitian
-    {n : Nat} {A : SqMat n} (hA : A.IsHermitian) :
+    {n : Nat} {A : SqMat n}
+    (hA : A.IsHermitian) :   -- hypothesis: `A` is symmetric (Hermitian over ℝ)
+    -- Conclusion: the induced Euclidean operator `toEuclideanLin A` is symmetric.
     (Matrix.toEuclideanLin A).IsSymmetric :=
   Matrix.isSymmetric_toEuclideanLin_iff.mpr hA
 
 /--
 A symmetric curried dissimilarity matrix induces a symmetric Euclidean operator.
 
+Role: internal helper specializing the previous transport to the DKPS
+dissimilarity-matrix type.
+
 Formalized by Claude Fable 5 (claude-fable-5[1m]).
 -/
 theorem isSymmetric_toEuclideanLin_of_symmetricDisMat
-    {n : Nat} {D : DisMat n} (hD : SymmetricDisMat D) :
+    {n : Nat} {D : DisMat n}
+    (hD : SymmetricDisMat D) :   -- hypothesis: the dissimilarity matrix `D` is symmetric
+    -- Conclusion: the induced Euclidean operator is symmetric.
     (Matrix.toEuclideanLin (disMatToMatrix D)).IsSymmetric := by
   refine isSymmetric_toEuclideanLin_of_isHermitian ?_
   show Matrix.conjTranspose (disMatToMatrix D) = disMatToMatrix D

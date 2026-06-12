@@ -39,10 +39,18 @@ Entrywise spectral expansion of a real Hermitian (symmetric) matrix:
 unitary.  This is the entrywise form of `Matrix.IsHermitian.spectral_theorem`
 specialized to `ℝ`, where the conjugate transpose is just the transpose.
 
+Role: internal helper / standard linear-algebra fact (the entrywise spectral
+theorem).  It is a stepping stone toward the Gram realization below; it does not
+itself produce the aligning map W* of Theorem 2.
+
 Formalized by Claude Fable 5 (claude-fable-5[1m]).
 -/
 theorem isHermitian_entry_eq_sum_eigenvalues {n : Nat}
-    (B : Matrix (Fin n) (Fin n) Real) (hB : B.IsHermitian) (i j : Fin n) :
+    (B : Matrix (Fin n) (Fin n) Real)
+    (hB : B.IsHermitian)               -- hypothesis: `B` is symmetric (Hermitian over ℝ)
+    (i j : Fin n) :
+    -- Conclusion: the `(i,j)` entry of `B` equals the sum over eigenpairs
+    -- `Σ_k λ_k · U i k · U j k` (entrywise spectral decomposition).
     B i j = ∑ k : Fin n,
       hB.eigenvalues k * (hB.eigenvectorUnitary i k) * (hB.eigenvectorUnitary j k) := by
   classical
@@ -92,11 +100,24 @@ spectral decomposition, scale each eigenvector with a nonzero eigenvalue by the
 square root of that eigenvalue, and embed those `rank B ≤ d` coordinates into the
 `d` available dimensions.
 
+Paper correspondence: this is the **Gram realization** step — it produces the
+`d`-dimensional configuration `ψ` whose Gram matrix is the (population or sample)
+classical-MDS matrix `B`.  It is the precondition that lets one speak of the
+configurations `ψ`, `ψ̂` that Theorem 2 aligns; it does not itself produce W*.
+
+Note (extra implicit assumptions beyond the paper): the input is modelled as a
+finite real symmetric matrix that is explicitly positive semidefinite (`hB`) and
+of rank ≤ d (`hrank`); finite-dimensionality and the PSD/rank encoding are Lean
+modelling choices, faithful to the classical-MDS setting of the paper.
+
 Formalized by Claude Fable 5 (claude-fable-5[1m]).
 -/
 theorem exists_config_gram_eq_of_posSemidef_rank_le
     {n d : Nat} (B : Matrix (Fin n) (Fin n) Real)
-    (hB : B.PosSemidef) (hrank : B.rank ≤ d) :
+    (hB : B.PosSemidef)          -- hypothesis: `B` is positive semidefinite (a valid Gram matrix)
+    (hrank : B.rank ≤ d) :       -- hypothesis: rank of `B` fits in the embedding dimension `d`
+    -- Conclusion: there is a `d`-dimensional configuration `ψ` whose Gram matrix
+    -- `Σ_k ψ i k · ψ j k` equals `B` entrywise (i.e. `ψ` realizes `B`).
     ∃ ψ : Acharyya2024.Config n d,
       ∀ i j : Fin n, (∑ k : Fin d, ψ i k * ψ j k) = B i j := by
   -- Derive the configuration from the Mathlib-staged matrix factorization

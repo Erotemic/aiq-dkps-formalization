@@ -56,8 +56,13 @@ open Acharyya2025.MatrixPerturbation
 The response-distance dissimilarity matrix is symmetric: its entries are
 normalized norms `‖Xbar i - Xbar j‖`, symmetric in `i, j` via `norm_sub_rev`.
 
+Internal helper (symmetry plumbing for the CMDS Gram matrix). Used so that the
+sample CMDS matrices are Hermitian, which the spectral capstone requires.
+
 Formalized by Claude Fable 5 (claude-fable-5[1m]).
 -/
+-- `Xbar` : the mean (vector-embedded) responses (one matrix per model).
+-- Conclusion: the response-distance dissimilarity matrix is symmetric.
 theorem symmetricDisMat_responseDist {n m p : Nat} (Xbar : Fin n → Mat m p) :
     SymmetricDisMat (responseDist Xbar) := by
   intro i j
@@ -73,8 +78,12 @@ symmetric.
 squared matrix `A i j = (D i j)²`, symmetry of `D` gives `A i j = A j i`, so the
 row means and column means swap, making `doubleCenter A` symmetric.
 
+Internal helper (symmetry plumbing for the CMDS Gram matrix).
+
 Formalized by Claude Fable 5 (claude-fable-5[1m]).
 -/
+-- `hD` : input dissimilarity matrix `D` is symmetric.
+-- Conclusion: the classical-MDS (double-centered) matrix of `D` is symmetric.
 theorem symmetricDisMat_classicalMDSMatrix {n : Nat} {D : DisMat n}
     (hD : SymmetricDisMat D) : SymmetricDisMat (classicalMDSMatrix D) := by
   classical
@@ -105,7 +114,20 @@ The alignment existential at sample `(u, ω)` for the CMDS spectral embedding of
 
 This is exactly the existential produced by the matrix-world capstone
 `exists_isometry_configError_le_of_entrywise_close`.
+
+In the paper, `W` corresponds to the orthogonal alignment matrix `W*` of
+Theorem 2 (the embedding is only identified up to an orthogonal transform). This
+`AlignExists` predicate is a choice-free *device*: it asserts the mere existence
+of such a `W` achieving the bound, without selecting one. EXTRA (implicit)
+assumption beyond the paper: the formalization works in finite dimension `d`
+(`hd : d ≤ n`) and packages the alignment as this explicit existential.
 -/
+-- `hd`    : target embedding dimension `d` is at most `n` (finite-dimensional).
+-- `Dhat`  : sample dissimilarity matrix at budget index `u` and sample point `ω`.
+-- `hsym`  : EXTRA assumption — each sample CMDS matrix is Hermitian (so it has a
+--           real spectral decomposition); supplied automatically downstream.
+-- `ψ`     : the population/target configuration.
+-- `c u`   : the target error bound at budget `u`.
 def AlignExists {n d : Nat} (hd : d ≤ n) {Ω : Type} (Dhat : Nat → Ω → DisMat n)
     (hsym : ∀ u ω, (disMatToMatrix (classicalMDSMatrix (Dhat u ω))).IsHermitian)
     (ψ : Config n d) (c : Nat → Real) (u : Nat) (ω : Ω) : Prop :=
@@ -121,6 +143,11 @@ open Classical in
 The aligned CMDS spectral estimator.  When the alignment isometry exists (with
 bound `c u`), apply the chosen isometry to the raw sample spectral embedding;
 otherwise fall back to the raw embedding.
+
+This is the formal counterpart of the paper's aligned sample embedding `ψ̂ W*`.
+EXTRA (implicit) assumption beyond the paper: the isometry is selected via
+`Classical.choose` (the noncomputable choice device); the falling-back branch is
+a Lean technicality with no analogue in the prose.
 
 Formalized by Claude Fable 5 (claude-fable-5[1m]).
 -/
@@ -141,13 +168,18 @@ noncomputable def alignedSpectralConfig {n d : Nat} (hd : d ≤ n)
 Defining property of the aligned estimator: when the alignment exists with bound
 `c u`, the aligned estimator achieves `ConfigError ≤ c u`.
 
+Internal helper: this is what makes the choice-based estimator usable — it
+discharges the `Classical.choose` and exposes the achieved bound.
+
 Formalized by Claude Fable 5 (claude-fable-5[1m]).
 -/
 theorem configError_alignedSpectralConfig_le {n d : Nat} (hd : d ≤ n)
     {Ω : Type} (Dhat : Nat → Ω → DisMat n)
-    (hsym : ∀ u ω, (disMatToMatrix (classicalMDSMatrix (Dhat u ω))).IsHermitian)
+    (hsym : ∀ u ω, (disMatToMatrix (classicalMDSMatrix (Dhat u ω))).IsHermitian)  -- EXTRA: sample CMDS matrix Hermitian
     (ψ : Config n d) (c : Nat → Real) (u : Nat) (ω : Ω)
-    (h : AlignExists hd Dhat hsym ψ c u ω) :
+    (h : AlignExists hd Dhat hsym ψ c u ω)  -- the alignment exists at bound `c u`
+    -- Conclusion: the aligned estimator's `ConfigError` against `ψ` is `≤ c u`.
+    :
     ConfigError (alignedSpectralConfig hd Dhat hsym ψ c u ω) ψ ≤ c u := by
   have hspec := (Classical.choose_spec h).2
   have heq : alignedSpectralConfig hd Dhat hsym ψ c u ω
@@ -172,12 +204,17 @@ This eliminates the `Classical.choose` inside `alignedSpectralConfig` from any
 measurability question about the error event: the event equals a set defined by
 an existential over isometries, with no choice function in sight.
 
+Internal helper (measurability-machinery seam): identifies the error event with
+the choice-free `AlignExists`, enabling the measurability proof below.
+
 Formalized by Claude Fable 5 (claude-fable-5[1m]).
 -/
 theorem configError_alignedSpectralConfig_le_iff_alignExists {n d : Nat} (hd : d ≤ n)
     {Ω : Type} (Dhat : Nat → Ω → DisMat n)
-    (hsym : ∀ u ω, (disMatToMatrix (classicalMDSMatrix (Dhat u ω))).IsHermitian)
-    (ψ : Config n d) (c : Nat → Real) (u : Nat) (ω : Ω) :
+    (hsym : ∀ u ω, (disMatToMatrix (classicalMDSMatrix (Dhat u ω))).IsHermitian)  -- EXTRA: sample CMDS matrix Hermitian
+    (ψ : Config n d) (c : Nat → Real) (u : Nat) (ω : Ω)
+    -- Conclusion: the aligned error event equals the choice-free `AlignExists` event.
+    :
     ConfigError (alignedSpectralConfig hd Dhat hsym ψ c u ω) ψ ≤ c u ↔
       AlignExists hd Dhat hsym ψ c u ω := by
   constructor
@@ -208,16 +245,25 @@ Combined with `configError_alignedSpectralConfig_le_iff_alignExists`, this makes
 the aligned-estimator error event measurable from the single honest primitive
 "the raw spectral embedding is measurable in the sample".
 
+Internal helper (measurability machinery). EXTRA (implicit) assumptions beyond
+the paper: a `MeasurableSpace` structure on the sample space, the raw-spectral-
+embedding measurability primitive `hmeas` (assumed, not derived — see below), and
+the finite-dimensionality used to make the isometry set `S` compact. The paper
+treats measurability informally.
+
 Formalized by Claude Fable 5 (claude-fable-5[1m]).
 -/
 theorem measurableSet_setOf_alignExists {n d : Nat} (hd : d ≤ n)
     {Ω : Type} [MeasurableSpace Ω] (Dhat : Nat → Ω → DisMat n)
-    (hsym : ∀ u ω, (disMatToMatrix (classicalMDSMatrix (Dhat u ω))).IsHermitian)
+    (hsym : ∀ u ω, (disMatToMatrix (classicalMDSMatrix (Dhat u ω))).IsHermitian)  -- EXTRA: sample CMDS matrix Hermitian
     (ψ : Config n d) (c : Nat → Real) (u : Nat)
+    -- EXTRA (assumed primitive): the raw sample spectral embedding is measurable
+    -- in `ω`, coordinatewise. This is taken as a hypothesis, not proved.
     (hmeas : ∀ i : Fin n, Measurable (fun ω =>
       spectralConfig
         (Matrix.toEuclideanLin (disMatToMatrix (classicalMDSMatrix (Dhat u ω))))
         (opSym (hsym u ω)) hd i)) :
+    -- Conclusion: the alignment-existence event `{ω | AlignExists …}` is measurable.
     MeasurableSet {ω | AlignExists hd Dhat hsym ψ c u ω} := by
   classical
   set spec : Ω → Fin n → EuclideanSpace ℝ (Fin d) := fun ω i =>
@@ -291,28 +337,38 @@ This is the honest, TRUE replacement for the legacy unaligned
 carries the alignment isometry (baked into `alignedSpectralConfig`), and every
 hypothesis matches the matrix-world capstone exactly.
 
+This is the high-probability form of **Theorem 2** (the bound `‖ψ̂ W* − ψ‖ ≤ κ`
+with high probability), assembled by feeding the entrywise CMDS-closeness event
+(the high-probability input from **Theorem 1**) through the deterministic
+configuration bound (Theorem 2's deterministic core, `configBound`).
+
 Formalized by Claude Fable 5 (claude-fable-5[1m]).
 -/
 theorem highProb_aligned_configError_of_entrywise_close
-    {Ω : Type} [MeasurableSpace Ω]
-    (P : Nat → MeasureTheory.Measure Ω)
-    {n d : Nat} (hd : d ≤ n)
-    (Dhat : Nat → Ω → DisMat n) (D : DisMat n)
-    (hsym : ∀ u ω, (disMatToMatrix (classicalMDSMatrix (Dhat u ω))).IsHermitian)
-    (hB : (disMatToMatrix (classicalMDSMatrix D)).PosSemidef)
-    (hrank : (disMatToMatrix (classicalMDSMatrix D)).rank ≤ d)
+    {Ω : Type} [MeasurableSpace Ω]                      -- EXTRA: measurable-space structure
+    (P : Nat → MeasureTheory.Measure Ω)                 -- family of measures indexed by budget `u`
+    {n d : Nat} (hd : d ≤ n)                            -- EXTRA: finite embedding dim `d ≤ n`
+    (Dhat : Nat → Ω → DisMat n) (D : DisMat n)          -- sample vs population dissimilarity matrices
+    (hsym : ∀ u ω, (disMatToMatrix (classicalMDSMatrix (Dhat u ω))).IsHermitian)  -- EXTRA: sample CMDS matrix Hermitian
+    -- Spectral structure of the population CMDS Gram matrix (Assumptions 1/2):
+    (hB : (disMatToMatrix (classicalMDSMatrix D)).PosSemidef)   -- PSD
+    (hrank : (disMatToMatrix (classicalMDSMatrix D)).rank ≤ d)  -- rank ≤ d
     {α Λ : Real} (hα_pos : 0 < α)
     (hfloor : ∀ i : Fin n, (i : ℕ) < d →
-      α ≤ MatrixPerturbation.sortedEigenvalues hB.isHermitian i)
-    (hΛ : ∀ l, MatrixPerturbation.sortedEigenvalues hB.isHermitian l ≤ Λ)
+      α ≤ MatrixPerturbation.sortedEigenvalues hB.isHermitian i)  -- eigenvalue floor α on top-d block
+    (hΛ : ∀ l, MatrixPerturbation.sortedEigenvalues hB.isHermitian l ≤ Λ)  -- eigenvalue cap Λ
     (ψ : Config n d)
-    (hψ : ∀ i j, (∑ k, ψ i k * ψ j k) = classicalMDSMatrix D i j)
+    (hψ : ∀ i j, (∑ k, ψ i k * ψ j k) = classicalMDSMatrix D i j)  -- ψ is a Gram factor of the population CMDS matrix
+    -- Rate / smallness side-conditions (per budget `u`):
     (rate : Nat → Real) (hrate_nonneg : ∀ u, 0 ≤ rate u)
-    (hsmall : ∀ u, (n : Real) * rate u ≤ α / 2)
-    (hpolar : ∀ u, (d : Real) * (4 * (n : Real) * ((n : Real) * rate u)^2 / α^2) ≤ 1/2)
+    (hsmall : ∀ u, (n : Real) * rate u ≤ α / 2)  -- EXTRA: numeric smallness of the perturbation
+    (hpolar : ∀ u, (d : Real) * (4 * (n : Real) * ((n : Real) * rate u)^2 / α^2) ≤ 1/2)  -- EXTRA: numeric polar-factor condition
+    -- Theorem 1 input: high-probability entrywise closeness of sample to population CMDS matrices.
     (hcenter : HighProbAtTop P (fun u => {ω |
       Acharyya2025.Bridge.EntrywiseClose
         (classicalMDSMatrix (Dhat u ω)) (classicalMDSMatrix D) (rate u)})) :
+    -- Conclusion (high-probability Theorem 2): with high probability the aligned
+    -- estimator's `ConfigError` against `ψ` is `≤ configBound …`.
     HighProbAtTop P (fun u => {ω |
       ConfigError
         (alignedSpectralConfig hd Dhat hsym ψ
@@ -349,8 +405,12 @@ theorem highProb_aligned_configError_of_entrywise_close
 A symmetric curried dissimilarity matrix induces a Hermitian Mathlib matrix
 (over `ℝ`, Hermitian = symmetric).
 
+Internal helper (Hermitian plumbing — discharges the `hsym` hypothesis above).
+
 Formalized by Claude Fable 5 (claude-fable-5[1m]).
 -/
+-- `hD` : the dissimilarity matrix is symmetric.
+-- Conclusion: its Mathlib-matrix realization is Hermitian.
 theorem isHermitian_disMatToMatrix_of_symmetricDisMat {n : Nat} {D : DisMat n}
     (hD : SymmetricDisMat D) : (disMatToMatrix D).IsHermitian := by
   show Matrix.conjTranspose (disMatToMatrix D) = disMatToMatrix D
@@ -360,8 +420,13 @@ theorem isHermitian_disMatToMatrix_of_symmetricDisMat {n : Nat} {D : DisMat n}
 /--
 The CMDS matrix of a response-distance matrix induces a Hermitian Mathlib matrix.
 
+Internal helper (Hermitian plumbing): supplies the `hsym` hypothesis
+automatically for response-distance pipelines.
+
 Formalized by Claude Fable 5 (claude-fable-5[1m]).
 -/
+-- `Xbar` : the mean (vector-embedded) responses.
+-- Conclusion: the response-distance CMDS matrix is Hermitian.
 theorem isHermitian_disMatToMatrix_classicalMDSMatrix_responseDist
     {n m p : Nat} (Xbar : Fin n → Mat m p) :
     (disMatToMatrix (classicalMDSMatrix (responseDist Xbar))).IsHermitian :=
@@ -383,34 +448,45 @@ ness of every sample CMDS matrix is supplied automatically (symmetry plumbing);
 the remaining spectral hypotheses (PSD, rank, floor, cap, smallness, polar) are
 exactly those of the capstone.
 
+This is the response-mean-driven high-probability form of **Theorem 2**: it takes
+a high-probability uniform response-mean event and emits the high-probability
+aligned `ConfigError` bound, composing `Bridge.lean`'s concentration chain
+(response-mean → Frobenius → entrywise → CMDS-entrywise, i.e. the Theorem 1
+input) with the deterministic configuration bound.
+
 Formalized by Claude Fable 5 (claude-fable-5[1m]).
 -/
 theorem highProb_aligned_configError_of_response_mean
-    {Ω : Type} [MeasurableSpace Ω]
+    {Ω : Type} [MeasurableSpace Ω]                      -- EXTRA: measurable-space structure
     (P : Nat → MeasureTheory.Measure Ω)
-    {n m p d : Nat} (hn : 0 < n) (hd : d ≤ n)
-    (Xbar : Nat → Ω → Fin n → Mat m p) (μ : Fin n → Mat m p)
-    (hB : (disMatToMatrix (classicalMDSMatrix (responseDist μ))).PosSemidef)
-    (hrank : (disMatToMatrix (classicalMDSMatrix (responseDist μ))).rank ≤ d)
+    {n m p d : Nat} (hn : 0 < n) (hd : d ≤ n)          -- EXTRA: finite embedding dim `d ≤ n`, nonempty index set
+    (Xbar : Nat → Ω → Fin n → Mat m p) (μ : Fin n → Mat m p)  -- sample mean responses vs population means
+    -- Spectral structure of the population CMDS Gram matrix (Assumptions 1/2):
+    (hB : (disMatToMatrix (classicalMDSMatrix (responseDist μ))).PosSemidef)      -- PSD
+    (hrank : (disMatToMatrix (classicalMDSMatrix (responseDist μ))).rank ≤ d)     -- rank ≤ d
     {α Λ : Real} (hα_pos : 0 < α)
     (hfloor : ∀ i : Fin n, (i : ℕ) < d →
-      α ≤ MatrixPerturbation.sortedEigenvalues hB.isHermitian i)
-    (hΛ : ∀ l, MatrixPerturbation.sortedEigenvalues hB.isHermitian l ≤ Λ)
+      α ≤ MatrixPerturbation.sortedEigenvalues hB.isHermitian i)  -- eigenvalue floor α on top-d block
+    (hΛ : ∀ l, MatrixPerturbation.sortedEigenvalues hB.isHermitian l ≤ Λ)  -- eigenvalue cap Λ
     (ψ : Config n d)
     (hψ : ∀ i j, (∑ k, ψ i k * ψ j k)
-      = classicalMDSMatrix (responseDist μ) i j)
+      = classicalMDSMatrix (responseDist μ) i j)  -- ψ is a Gram factor of the population CMDS matrix
+    -- Rate / smallness side-conditions (per budget `u`):
     (η R : Nat → Real)
     (hrate_nonneg : ∀ u, 0 ≤ Acharyya2025.Bridge.cmdsEntrywiseRate n m (R u) (η u))
     (hsmall : ∀ u,
-      (n : Real) * Acharyya2025.Bridge.cmdsEntrywiseRate n m (R u) (η u) ≤ α / 2)
+      (n : Real) * Acharyya2025.Bridge.cmdsEntrywiseRate n m (R u) (η u) ≤ α / 2)  -- EXTRA: numeric smallness
     (hpolar : ∀ u, (d : Real) *
       (4 * (n : Real) *
         ((n : Real) * Acharyya2025.Bridge.cmdsEntrywiseRate n m (R u) (η u))^2 / α^2)
-        ≤ 1/2)
+        ≤ 1/2)  -- EXTRA: numeric polar-factor condition
+    -- Theorem 1 input: high-probability uniform response-mean closeness at level `η u`.
     (hmean : HighProbAtTop P
       (fun u => {ω | Acharyya2025.Bridge.UniformResponseMeanClose (Xbar u ω) μ (η u)}))
-    (hsample_bound : ∀ u ω i j, |responseDist (Xbar u ω) i j| ≤ R u)
-    (hpopulation_bound : ∀ u i j, |responseDist μ i j| ≤ R u) :
+    (hsample_bound : ∀ u ω i j, |responseDist (Xbar u ω) i j| ≤ R u)  -- uniform dissimilarity bound (sample)
+    (hpopulation_bound : ∀ u i j, |responseDist μ i j| ≤ R u) :       -- uniform dissimilarity bound (population)
+    -- Conclusion (high-probability Theorem 2, response-mean form): with high
+    -- probability the aligned estimator's `ConfigError` against `ψ` is `≤ configBound …`.
     HighProbAtTop P (fun u => {ω |
       ConfigError
         (alignedSpectralConfig hd (fun u ω => responseDist (Xbar u ω))

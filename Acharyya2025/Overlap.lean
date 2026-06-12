@@ -60,9 +60,14 @@ to the `⟪bⱼ, ·⟫` convention used throughout the overlap matrix. -/
 omit [FiniteDimensional ℝ E] in
 /-- **Bilinear Parseval.**  Expanding both arguments in an orthonormal basis `b`,
 `⟪x, y⟫ = ∑ⱼ ⟪bⱼ, x⟫ ⟪bⱼ, y⟫`.  (Real inner product; arguments ordered so the
-basis vector appears first, matching the overlap-matrix convention.) -/
+basis vector appears first, matching the overlap-matrix convention.)
+
+Role: internal helper / standard fact (Parseval's identity), used to expand the
+overlap-matrix entries below. -/
 theorem inner_eq_sum_inner_basis_mul
-    (b : OrthonormalBasis (Fin n) ℝ E) (x y : E) :
+    (b : OrthonormalBasis (Fin n) ℝ E)   -- hypothesis: `b` is an orthonormal basis
+    (x y : E) :
+    -- Conclusion: the inner product factors coordinatewise in the basis `b`.
     ⟪x, y⟫_ℝ = ∑ j : Fin n, ⟪b j, x⟫_ℝ * ⟪b j, y⟫_ℝ := by
   rw [← b.sum_inner_mul_inner x y]
   refine Finset.sum_congr rfl ?_
@@ -73,14 +78,26 @@ theorem inner_eq_sum_inner_basis_mul
 
 /-- The **overlap matrix** of the top-`d` eigenblocks: `Q_{kl} = ⟪v_k, u_l⟫`,
 where `v_k = hS.eigenvectorBasis hn (castLE k)` (sample eigenbasis, rows) and
-`u_l = hT.eigenvectorBasis hn (castLE l)` (population eigenbasis, columns). -/
+`u_l = hT.eigenvectorBasis hn (castLE l)` (population eigenbasis, columns).
+
+Paper correspondence: `Q` measures the **subspace overlap / inner-product
+preservation** between the leading sample and population eigenbases.  Its
+closeness to an orthogonal matrix (lemmas below) is exactly what underlies the
+existence of the aligning orthogonal `W*` in Theorem 2: `W*` is the orthogonal
+matrix nearest to `Q`.
+
+`hT`, `hS`: symmetry of the population (`T`) and sample (`S`) operators (so they
+have orthonormal eigenbases and real sorted eigenvalues).  `hn`, `hd`: the
+ambient dimension is `n` and the leading block size `d ≤ n`. -/
 noncomputable def overlap (hT : T.IsSymmetric) (hS : S.IsSymmetric)
     (hn : finrank ℝ E = n) (hd : d ≤ n) : Matrix (Fin d) (Fin d) ℝ :=
   fun k l => ⟪hS.eigenvectorBasis hn (Fin.castLE hd k),
               hT.eigenvectorBasis hn (Fin.castLE hd l)⟫_ℝ
 
 /-- The image of `Fin.castLE hd` is exactly the index set `{j : Fin n | (j:ℕ) < d}`:
-the sum over `Fin d` reindexes to the sum over the leading-block filter. -/
+the sum over `Fin d` reindexes to the sum over the leading-block filter.
+
+Role: internal helper / reindexing bookkeeping. -/
 private theorem sum_castLE_eq_sum_filter_lt (hd : d ≤ n) (f : Fin n → ℝ) :
     ∑ m : Fin d, f (Fin.castLE hd m)
       = ∑ j ∈ Finset.univ.filter (fun j : Fin n => (j : Nat) < d), f j := by
@@ -109,7 +126,9 @@ private theorem sum_castLE_eq_sum_filter_lt (hd : d ≤ n) (f : Fin n → ℝ) :
     rfl
 
 /-- The leading-block `j`-coordinate of `⟪u_k, u_l⟫` collected as `(QᵀQ)_{kl}`:
-`(QᵀQ)_{kl} = ∑_{j < d} ⟪v_j, u_k⟫ ⟪v_j, u_l⟫`. -/
+`(QᵀQ)_{kl} = ∑_{j < d} ⟪v_j, u_k⟫ ⟪v_j, u_l⟫`.
+
+Role: internal helper (entrywise expansion of `QᵀQ`). -/
 private theorem transpose_mul_overlap_apply
     (hT : T.IsSymmetric) (hS : S.IsSymmetric) (hn : finrank ℝ E = n) (hd : d ≤ n)
     (k l : Fin d) :
@@ -127,7 +146,9 @@ private theorem transpose_mul_overlap_apply
   simp only [Matrix.transpose_apply, overlap]
 
 /-- `⟪u_k, u_l⟫ = δ_{kl}`: the leading population eigenvectors are orthonormal,
-since `Fin.castLE` is injective. -/
+since `Fin.castLE` is injective.
+
+Role: internal helper / standard fact (orthonormality of the eigenbasis). -/
 private theorem inner_eigenvectorBasis_castLE
     (hT : T.IsSymmetric) (hn : finrank ℝ E = n) (hd : d ≤ n) (k l : Fin d) :
     ⟪hT.eigenvectorBasis hn (Fin.castLE hd k),
@@ -144,10 +165,18 @@ private theorem inner_eigenvectorBasis_castLE
 `QᵀQ` is the trailing cross-energy
 `(QᵀQ − I)_{kl} = −∑_{j ≥ d} ⟪v_j, u_k⟫ ⟪v_j, u_l⟫`, hence bounded by the
 Cauchy–Schwarz product of the trailing-energy square roots:
-`|(QᵀQ − I)_{kl}| ≤ √(∑_{j ≥ d} ⟪v_j, u_k⟫²) · √(∑_{j ≥ d} ⟪v_j, u_l⟫²)`. -/
+`|(QᵀQ − I)_{kl}| ≤ √(∑_{j ≥ d} ⟪v_j, u_k⟫²) · √(∑_{j ≥ d} ⟪v_j, u_l⟫²)`.
+
+Paper correspondence: this measures how far the overlap matrix `Q` is from being
+orthogonal (`QᵀQ ≈ I`).  It feeds the **Term-1 polar-factor estimate** in the
+decomposition of `ψ̂W* − ψ`, i.e. it justifies that the orthogonal `W*` nearest
+to `Q` is close to `Q`. -/
 theorem abs_overlapT_mul_overlap_sub_one_le
+    -- hypotheses: `T`, `S` symmetric; ambient dimension `n`; leading block `d ≤ n`
     (hT : T.IsSymmetric) (hS : S.IsSymmetric) (hn : finrank ℝ E = n) (hd : d ≤ n)
     (k l : Fin d) :
+    -- Conclusion: each entry of `QᵀQ − I` is bounded by the Cauchy–Schwarz product
+    -- of the trailing (`j ≥ d`) cross-energies of the two columns.
     |((overlap hT hS hn hd)ᵀ * (overlap hT hS hn hd)) k l
         - (1 : Matrix (Fin d) (Fin d) ℝ) k l|
       ≤ Real.sqrt (∑ j ∈ Finset.univ.filter (fun j : Fin n => d ≤ (j : Nat)),
@@ -216,10 +245,17 @@ eigenvalue `λS_k`) and `u_l` (of `T`, eigenvalue `λT_l`),
 `(λS_k − λT_l) Q_{kl} = ⟪v_k, (S − T) u_l⟫`.
 
 Sign convention: the eigenvalue factor is `λS_k − λT_l` (sample minus population),
-matching the design `(λ̂_k − λ_l) Q_{kl} = ⟪v_k, (S − T) u_l⟫`. -/
+matching the design `(λ̂_k − λ_l) Q_{kl} = ⟪v_k, (S − T) u_l⟫`.
+
+Role: this is the algebraic heart of the **Term-2** commutator estimate in the
+decomposition of `ψ̂W* − ψ`; it relates the overlap entries to the perturbation
+`S − T`. -/
 theorem eigenvalue_commutator_eq
+    -- hypotheses: `T`, `S` symmetric; ambient dimension `n`; leading block `d ≤ n`
     (hT : T.IsSymmetric) (hS : S.IsSymmetric) (hn : finrank ℝ E = n) (hd : d ≤ n)
     (k l : Fin d) :
+    -- Conclusion: the eigenvalue gap times the overlap entry equals the cross-term
+    -- `⟪v_k, (S − T) u_l⟫` (Sylvester-style commutator identity).
     (hS.eigenvalues hn (Fin.castLE hd k) - hT.eigenvalues hn (Fin.castLE hd l))
         * (overlap hT hS hn hd) k l
       = ⟪hS.eigenvectorBasis hn (Fin.castLE hd k),
@@ -245,10 +281,15 @@ theorem eigenvalue_commutator_eq
 /-- **Entrywise commutator bound.**  If `S − T` is small in operator norm
 (`∀ x, ‖(S − T) x‖ ≤ ε ‖x‖`), then each commutator entry obeys
 `|(λS_k − λT_l) Q_{kl}| ≤ ε`.  Immediate from the commutator identity and
-Cauchy–Schwarz on unit eigenvectors. -/
+Cauchy–Schwarz on unit eigenvectors.
+
+Role: quantitative form of the Term-2 estimate feeding the `ψ̂W* − ψ` bound. -/
 theorem abs_eigenvalue_diff_mul_overlap_le
+    -- hypotheses: `T`, `S` symmetric; ambient dimension `n`; leading block `d ≤ n`
     (hT : T.IsSymmetric) (hS : S.IsSymmetric) (hn : finrank ℝ E = n) (hd : d ≤ n)
+    -- hypothesis: `S − T` is `ε`-small in operator norm (perturbation size)
     {ε : ℝ} (hε : ∀ x : E, ‖(S - T) x‖ ≤ ε * ‖x‖) (k l : Fin d) :
+    -- Conclusion: each eigenvalue-gap-weighted overlap entry is bounded by `ε`.
     |(hS.eigenvalues hn (Fin.castLE hd k) - hT.eigenvalues hn (Fin.castLE hd l))
         * (overlap hT hS hn hd) k l| ≤ ε := by
   rw [eigenvalue_commutator_eq hT hS hn hd k l]

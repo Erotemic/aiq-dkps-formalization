@@ -40,8 +40,14 @@ variable {F : Type*} [NormedAddCommGroup F] [InnerProductSpace ℝ F] [FiniteDim
 /-- If `|μ − 1| ≤ δ ≤ 1/2`, then `|1 − (√μ)⁻¹| ≤ δ`.
 
 The point: `1 − (√μ)⁻¹ = (μ − 1)/(μ + √μ)` and the denominator `μ + √μ ≥ 1`
-when `μ ≥ 1/2`. -/
-theorem abs_one_sub_inv_sqrt_le {μ δ : ℝ} (hδ : δ ≤ 1/2) (hμ : |μ - 1| ≤ δ) :
+when `μ ≥ 1/2`.
+
+Role: internal helper / standard scalar inequality, used to control the
+eigenvalue-rescaling `G^{-1/2}` in the polar-factor construction below. -/
+theorem abs_one_sub_inv_sqrt_le {μ δ : ℝ}
+    (hδ : δ ≤ 1/2)            -- hypothesis: the deviation budget is at most 1/2
+    (hμ : |μ - 1| ≤ δ) :      -- hypothesis: `μ` lies within `δ` of 1
+    -- Conclusion: the inverse-square-root rescaling moves `1` by at most `δ`.
     |1 - (Real.sqrt μ)⁻¹| ≤ δ :=
   ForMathlib.Real.abs_one_sub_inv_sqrt_le hδ hμ
 
@@ -57,12 +63,26 @@ genuine linear isometry `W` by an operator of norm at most `2 δ`:
 from the sorted eigenbasis of `G`.  The constant `2 δ` is not sharp (the
 construction gives `√(1+δ) · δ ≤ √(3/2) · δ`), but suffices.
 
+Paper correspondence: this is the **polar-factor / orthogonal Procrustes** step
+that produces the aligning orthogonal map `W*` of Theorem 2 in the approximate
+(noisy) regime.  Given a map `M` that is only near-isometric, it extracts a true
+orthogonal `W` (the isometry `⟪W x, W y⟫ = ⟪x, y⟫`) close to `M`.  In the
+Agterberg-style decomposition of `ψ̂W* − ψ`, this controls the leading
+("Term-1") polar-factor error.
+
+Note (extra implicit assumptions beyond the paper): `F` is assumed
+finite-dimensional and a real inner-product space (set by the `variable` line);
+the near-isometry budget `δ ≤ 1/2` is a quantitative hypothesis of this lemma.
+
 Formalized by Claude Fable 5 (claude-fable-5[1m]). -/
 theorem exists_isometry_close_of_self_adjoint_comp_close
-    {d : ℕ} (_hd : finrank ℝ F = d)
+    {d : ℕ} (_hd : finrank ℝ F = d)        -- records the ambient dimension `d` (unused in proof)
     (M : F →ₗ[ℝ] F)
-    {δ : ℝ} (hδ_lt : δ ≤ 1/2)
+    {δ : ℝ} (hδ_lt : δ ≤ 1/2)              -- hypothesis: near-isometry budget at most 1/2
+    -- hypothesis: `M`'s quadratic form is uniformly `δ`-close to the identity's (near-isometry)
     (hclose : ∀ x : F, |⟪M x, M x⟫_ℝ - ⟪x, x⟫_ℝ| ≤ δ * ⟪x, x⟫_ℝ) :
+    -- Conclusion: there is a genuine orthogonal map `W` (an isometry, first conjunct)
+    -- with `‖(M − W) x‖ ≤ 2δ ‖x‖` (second conjunct) — the optimal orthogonal W* close to `M`.
     ∃ W : F →ₗ[ℝ] F,
       (∀ x y : F, ⟪W x, W y⟫_ℝ = ⟪x, y⟫_ℝ) ∧
       (∀ x : F, ‖(M - W) x‖ ≤ 2 * δ * ‖x‖) := by

@@ -68,7 +68,7 @@ Mathlib check confirms all four are non-duplicative.
 
 | Item | What | Effort | Fable? | Status |
 |---|---|---|---|---|
-| R1 | **Gram/Procrustes rigidity** (`ForMathlib/Analysis/InnerProductSpace/GramMatrix.lean`). Extract the well-phased `have` blocks into named lemmas (inner-product of linear combinations; kernel inclusion; **span-level isometry core**); add the same-ambient corollary + `Matrix.gram` iff as wrappers; rename for discoverability. Proof is already clean and phased. | M | **no** (extraction is mechanical) | open — **first target** |
+| R1 | ✅ **DONE** — **Gram/Procrustes rigidity** refactored (`ForMathlib/Analysis/InnerProductSpace/GramMatrix.lean`). Extracted the reusable identity `inner_linearCombination_linearCombination` (inner product of two finite linear combinations over Gram data; no finiteness). Split out the **span-level core** `exists_linearIsometry_of_inner_eq` — equal inner products ⟹ a `LinearIsometry` from `span 𝕜 (range φ)` into `E` with `L (φ i) = ψ i`, needing **no finite-dimensionality** (strictly more general; addresses audit §1.2). `exists_linearIsometryEquiv_of_inner_eq` is now a thin finite-dim corollary (extend + surjectivity upgrade); `Matrix.gram` iff unchanged. Public names preserved (no downstream breakage); full build green, no sorries, ≤100-char lines. | M | no | **✅** |
 | R1b | Gram **two-ambient-space** generalization (`φ : ι → E`, `ψ : ι → F`). The core machinery is space-agnostic; the span-level isometry into `F` is Opus-doable. The equiv-level corollary needs a `finrank E = finrank F` (or same-space) hypothesis. | M | attempt Opus, Fable fallback | open |
 | R2 | **Rank-controlled PSD factorization** (`ForMathlib/LinearAlgebra/Matrix/PosDef.lean`). Split forward/backward into named one-direction lemmas; relocate the entrywise spectral helper `isHermitian_entry_eq_sum_eigenvalues` to a spectrum-focused home; rename. | M | no | open |
 | R2b | PSD **alternate proof exploration** through existing Mathlib factorization/CFC APIs (vs. the hand-rolled embedding+`Classical.choose`). **Uncertain payoff** — the rank-compression step looks largely inherent; may end up justifying the spectral proof instead. | M–L | **likely** (exploratory) | open |
@@ -94,4 +94,10 @@ Mathlib check confirms all four are non-duplicative.
 1. ✅ **B1 — sample-covariance eigenvalue concentration** (B1a engine + B1b iid layer).
 2. ✅ **B2 — Berge maximum theorem** (UHC half + value-function half + finite-family modulus + engine sibling).
 3. ⏸ **A / C / B2b-MDS-rederivation — SHELVED, not complete** (see PIVOT banner).
-4. ▶ **R — Mathlib-readiness pass** (active). Suggested order R1 → R2 → R3 → R3b, with R1b/R2b/R4/R5 as the Fable-leaning follow-ups and R6 decisions surfaced to the user before finalizing.
+4. ▶ **R — Mathlib-readiness pass** (active). R1 ✅ done. Next R2 → R3 → R3b, with R1b/R2b/R4/R5 as the Fable-leaning follow-ups and R6 decisions surfaced to the user before finalizing.
+
+### R-track naming note (R6, prepared option — NOT yet applied)
+Audit §1.3 suggests `exists_linearIsometryEquiv_map_eq_of_inner_eq` (the
+conclusion is a `map_eq`) over the current `exists_linearIsometryEquiv_of_inner_eq`.
+Kept the current names in R1 to avoid churn / preserve downstream references;
+surface for human decision before PR.

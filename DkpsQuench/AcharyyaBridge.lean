@@ -11,7 +11,7 @@ configuration.
 
 import Acharyya2025.AlignedPipeline
 import Acharyya2025.RateChain
-import DkpsQuench.Basic
+import DkpsQuench.Theorem2
 
 open scoped BigOperators Topology
 open Filter MeasureTheory

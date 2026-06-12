@@ -88,6 +88,22 @@ loose `nε²` total cross-energy) and the `RCLike` generalization of the project
 section (the cross-block bound is already RCLike; only the projector identity is
 ℝ — the conj/re bookkeeping is routine but omitted). Neither blocks anything.
 
+## F6. `hcenter` discharged one level deeper to response-mean — ✅ DONE 2026-06-12 (Opus)
+
+`DkpsQuench/AcharyyaBridge.lean` now has `Theorem2_part2_of_response_mean`: the
+Quench query-efficiency capstone with the packaged entrywise CMDS-closeness
+event `hcenter` REPLACED by the paper's actual upstream input — the uniform
+response-mean closeness HP event `{ω | UniformResponseMeanClose (Xbar u ω) μ
+(η u)}` — deriving the entrywise CMDS chain internally via
+`Acharyya2025.AlignedPipeline.highProb_aligned_configError_of_response_mean`.
+The shared sub-event/measurability + Theorem-2 machinery was extracted into the
+reusable `quench_part2_from_aligned_configError_hp` (both capstones feed it).
+The residual primitives are unchanged: `hmeas_spec` (raw response-based spectral
+embedding measurability — see F5 residual) and the model coverage `h_cover`.
+Possible further step: a `_of_second_moment` capstone deriving the response-mean
+event itself from iid second moments via
+`RateChain.highProb_uniformResponseMeanClose_of_secondMoment`.
+
 ## F5. `h_conc_meas` measurable-selection seam — ✅ DISCHARGED 2026-06-12 (Fable)
 
 RESOLVED without any measurable-selection theorem, by relocating the seam:

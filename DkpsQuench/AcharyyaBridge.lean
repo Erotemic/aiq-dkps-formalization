@@ -141,6 +141,112 @@ theorem quench_uniform_embedding_error_of_aligned_spectral
     hψ hψHat haligned
 
 /--
+**Reusable core: query efficiency from an aligned-`ConfigError` HP event.**
+
+Given a high-probability bound on `ConfigError (alignedSpectralConfig …) ψFinite`
+at *any* bound function `c`, the honest raw-spectral-embedding measurability
+primitive `hmeas_spec`, the vanishing-rate side conditions, and the genuine
+Quench assumptions (factorization, score Lipschitz, model coverage, MSE
+positivity), conclude Theorem 2 Part 2.  The measurability of the embedding-error
+event is obtained — with no measurable selection — by routing through the
+choice-free `AlignExists` existential (`…_le_iff_alignExists` +
+`measurableSet_setOf_alignExists`) and the sub-event form
+`Theorem2_part2_paper_subevent`.  Both capstones below feed their
+aligned-`ConfigError` event into this lemma.
+
+Formalized by Claude Opus 4.8 (claude-opus-4-8[1m]).
+-/
+theorem quench_part2_from_aligned_configError_hp
+    [DecidableEq Q]
+    (Pf : Measure (Model Q X)) [IsProbabilityMeasure Pf]
+    (μ : Nat → Measure Ω) (hμ : ∀ k, IsProbabilityMeasure (μ k))
+    {n d : Nat} (hd : d ≤ n)
+    (Dhat : Nat → Ω → Acharyya2024.DisMat n)
+    (hsym : ∀ u ω, (Acharyya2025.MathlibBridge.disMatToMatrix
+        (Acharyya2025.Deterministic.classicalMDSMatrix (Dhat u ω))).IsHermitian)
+    (ψFinite : Config n d) (c : Nat → Real)
+    (haligned : Acharyya2024.HighProbAtTop μ (fun k => {ω |
+      ConfigError (Acharyya2025.AlignedPipeline.alignedSpectralConfig hd Dhat hsym
+        ψFinite c k ω) ψFinite ≤ c k}))
+    (hmeas_spec : ∀ (k : Nat) (i : Fin n), Measurable (fun ω =>
+      Acharyya2025.ConfigPerturbation.spectralConfig
+        (Matrix.toEuclideanLin (Acharyya2025.MathlibBridge.disMatToMatrix
+          (Acharyya2025.Deterministic.classicalMDSMatrix (Dhat k ω))))
+        (Acharyya2025.MatrixPerturbation.opSym (hsym k ω)) hd i))
+    (h_c_tendsto : Filter.Tendsto c Filter.atTop (nhds 0))
+    (h_c_nonneg : ∀ k, 0 ≤ c k)
+    (f_ref : ∀ k, Ω → Fin k → Model Q X)
+    (score : Model Q X → Finset Q → ℝ)
+    (Qstar Qsub : Finset Q)
+    (hm : Qsub.card < Qstar.card)
+    (γ : ℝ)
+    (indexOf : Model Q X → Fin n)
+    (ψ : Model Q X → Vec d)
+    (ψHat : Nat → Ω → Model Q X → Vec d)
+    (h_lipQ : ∀ (f f' : Model Q X),
+      |score f Qstar - score f' Qstar| ≤ γ * ‖ψ f - ψ f'‖)
+    (h_gamma_pos : 0 < γ)
+    (hψ : ∀ f, ψ f = ψFinite (indexOf f))
+    (hψHat : ∀ u ω f, ψHat u ω f =
+      Acharyya2025.AlignedPipeline.alignedSpectralConfig hd Dhat hsym ψFinite c u ω
+        (indexOf f))
+    (h_cover : ∀ ρ > 0,
+      _root_.HighProbAtTop μ hμ
+        (fun k => {ω | ∀ f, ∃ i, ‖ψ (f_ref k ω i) - ψ f‖ ≤ ρ}))
+    (h_cover_meas : ∀ ρ > 0, ∀ k,
+      MeasurableSet {ω | ∀ f, ∃ i, ‖ψ (f_ref k ω i) - ψ f‖ ≤ ρ})
+    (hMSE_Q_pos :
+      0 < MSE (Q := Q) (X := X) Pf (yFull score Qstar)
+        (yQ (Q := Q) (X := X) score Qsub)) :
+    ∀ δ : ENNReal, 0 < δ →
+      ∃ k : ℕ,
+        (μ k) {ω |
+          MSE (Q := Q) (X := X) Pf (yFull score Qstar)
+            (fun f => yNN_paper (d := d)
+              (fun u ω (_ : Finset Q) f => ψHat u ω f) f_ref score Qstar Qsub k ω f)
+          ≤ MSE (Q := Q) (X := X) Pf (yFull score Qstar)
+              (yQ (Q := Q) (X := X) score Qsub)} ≥ 1 - δ := by
+  -- The choice-free alignment existential is the measurable HP sub-event.
+  have hE_meas : ∀ k, MeasurableSet {ω |
+      Acharyya2025.AlignedPipeline.AlignExists hd Dhat hsym ψFinite c k ω} := fun k =>
+    Acharyya2025.AlignedPipeline.measurableSet_setOf_alignExists hd Dhat hsym ψFinite c k
+      (hmeas_spec k)
+  have hE_sub : ∀ k, {ω |
+      Acharyya2025.AlignedPipeline.AlignExists hd Dhat hsym ψFinite c k ω}
+      ⊆ {ω | ∀ f, ‖ψHat k ω f - ψ f‖ ≤ c k} := by
+    intro k ω hA f
+    have hcfg := Acharyya2025.AlignedPipeline.configError_alignedSpectralConfig_le
+      hd Dhat hsym ψFinite c k ω hA
+    calc ‖ψHat k ω f - ψ f‖
+        = ‖Acharyya2025.AlignedPipeline.alignedSpectralConfig hd Dhat hsym ψFinite c k ω
+            (indexOf f) - ψFinite (indexOf f)‖ := by rw [hψHat, hψ]
+      _ ≤ ConfigError
+            (Acharyya2025.AlignedPipeline.alignedSpectralConfig hd Dhat hsym ψFinite c k ω)
+            ψFinite := norm_config_le_ConfigError _ _ _
+      _ ≤ _ := hcfg
+  have hE : _root_.HighProbAtTop μ hμ (fun k => {ω |
+      Acharyya2025.AlignedPipeline.AlignExists hd Dhat hsym ψFinite c k ω}) := by
+    intro δ hδ
+    obtain ⟨N, hN⟩ := haligned δ hδ
+    refine ⟨N, fun k hk => ?_⟩
+    have hset : {ω | ConfigError
+          (Acharyya2025.AlignedPipeline.alignedSpectralConfig hd Dhat hsym ψFinite c k ω)
+          ψFinite ≤ c k}
+        = {ω | Acharyya2025.AlignedPipeline.AlignExists hd Dhat hsym ψFinite c k ω} := by
+      ext ω
+      exact Acharyya2025.AlignedPipeline.configError_alignedSpectralConfig_le_iff_alignExists
+        hd Dhat hsym ψFinite c k ω
+    show (μ k) {ω | Acharyya2025.AlignedPipeline.AlignExists hd Dhat hsym ψFinite c k ω}
+        ≥ 1 - δ
+    rw [← hset]
+    exact hN k hk
+  exact Theorem2_part2_paper_subevent (Q := Q) (X := X) (d := d) Pf μ hμ
+    (fun _ f => ψ f) (fun u ω (_ : Finset Q) f => ψHat u ω f) f_ref score Qstar Qsub
+    hm γ h_lipQ h_gamma_pos _ h_c_tendsto h_c_nonneg
+    (fun k => {ω | Acharyya2025.AlignedPipeline.AlignExists hd Dhat hsym ψFinite c k ω})
+    hE_meas hE_sub hE h_cover h_cover_meas hMSE_Q_pos
+
+/--
 **Query efficiency from the spectral concentration chain (Theorem 2 Part 2,
 `h_conc` discharged).**
 
@@ -245,71 +351,12 @@ theorem Theorem2_part2_of_aligned_spectral
               (fun u ω (_ : Finset Q) f => ψHat u ω f) f_ref score Qstar Qsub k ω f)
           ≤ MSE (Q := Q) (X := X) Pf (yFull score Qstar)
               (yQ (Q := Q) (X := X) score Qsub)} ≥ 1 - δ := by
-  -- The measurable high-probability sub-event: the choice-free alignment
-  -- existential at the `configBound` level.
-  have hE_meas : ∀ k, MeasurableSet {ω |
-      Acharyya2025.AlignedPipeline.AlignExists hd Dhat hsym ψFinite
-        (fun u => Acharyya2025.ConfigPerturbation.configBound n d α Λ
-          ((n : Real) * rate u)) k ω} := fun k =>
-    Acharyya2025.AlignedPipeline.measurableSet_setOf_alignExists hd Dhat hsym ψFinite
-      (fun u => Acharyya2025.ConfigPerturbation.configBound n d α Λ
-        ((n : Real) * rate u)) k (hmeas_spec k)
-  -- The sub-event is contained in the uniform embedding-error event.
-  have hE_sub : ∀ k, {ω |
-      Acharyya2025.AlignedPipeline.AlignExists hd Dhat hsym ψFinite
-        (fun u => Acharyya2025.ConfigPerturbation.configBound n d α Λ
-          ((n : Real) * rate u)) k ω}
-      ⊆ {ω | ∀ f, ‖ψHat k ω f - ψ f‖
-          ≤ Acharyya2025.ConfigPerturbation.configBound n d α Λ
-              ((n : Real) * rate k)} := by
-    intro k ω hA f
-    have hcfg := Acharyya2025.AlignedPipeline.configError_alignedSpectralConfig_le
-      hd Dhat hsym ψFinite
-      (fun u => Acharyya2025.ConfigPerturbation.configBound n d α Λ
-        ((n : Real) * rate u)) k ω hA
-    calc ‖ψHat k ω f - ψ f‖
-        = ‖Acharyya2025.AlignedPipeline.alignedSpectralConfig hd Dhat hsym ψFinite
-            (fun u => Acharyya2025.ConfigPerturbation.configBound n d α Λ
-              ((n : Real) * rate u)) k ω (indexOf f) - ψFinite (indexOf f)‖ := by
-          rw [hψHat, hψ]
-      _ ≤ ConfigError
-            (Acharyya2025.AlignedPipeline.alignedSpectralConfig hd Dhat hsym ψFinite
-              (fun u => Acharyya2025.ConfigPerturbation.configBound n d α Λ
-                ((n : Real) * rate u)) k ω) ψFinite :=
-          norm_config_le_ConfigError _ _ _
-      _ ≤ _ := hcfg
-  -- The sub-event is high-probability: it *equals* the aligned-estimator error
-  -- event (the choice-elimination iff), which the spectral chain controls.
-  have hE : _root_.HighProbAtTop μ hμ (fun k => {ω |
-      Acharyya2025.AlignedPipeline.AlignExists hd Dhat hsym ψFinite
-        (fun u => Acharyya2025.ConfigPerturbation.configBound n d α Λ
-          ((n : Real) * rate u)) k ω}) := by
-    have haligned :=
-      Acharyya2025.AlignedPipeline.highProb_aligned_configError_of_entrywise_close
-        μ hd Dhat D hsym hB hrank hα_pos hfloor hΛ ψFinite hψFinite
-        rate hrate_nonneg hsmall hpolar hcenter
-    intro δ hδ
-    obtain ⟨N, hN⟩ := haligned δ hδ
-    refine ⟨N, fun k hk => ?_⟩
-    have hset : {ω | ConfigError
-          (Acharyya2025.AlignedPipeline.alignedSpectralConfig hd Dhat hsym ψFinite
-            (fun u => Acharyya2025.ConfigPerturbation.configBound n d α Λ
-              ((n : Real) * rate u)) k ω) ψFinite
-          ≤ Acharyya2025.ConfigPerturbation.configBound n d α Λ ((n : Real) * rate k)}
-        = {ω | Acharyya2025.AlignedPipeline.AlignExists hd Dhat hsym ψFinite
-            (fun u => Acharyya2025.ConfigPerturbation.configBound n d α Λ
-              ((n : Real) * rate u)) k ω} := by
-      ext ω
-      exact Acharyya2025.AlignedPipeline.configError_alignedSpectralConfig_le_iff_alignExists
-        hd Dhat hsym ψFinite
-        (fun u => Acharyya2025.ConfigPerturbation.configBound n d α Λ
-          ((n : Real) * rate u)) k ω
-    show (μ k) {ω | Acharyya2025.AlignedPipeline.AlignExists hd Dhat hsym ψFinite
-      (fun u => Acharyya2025.ConfigPerturbation.configBound n d α Λ
-        ((n : Real) * rate u)) k ω} ≥ 1 - δ
-    rw [← hset]
-    exact hN k hk
-  -- Discharge the rate side-conditions from `RateChain`.
+  -- The aligned-`ConfigError` HP event from the entrywise spectral capstone, fed
+  -- into the reusable Theorem 2 core.
+  have haligned :=
+    Acharyya2025.AlignedPipeline.highProb_aligned_configError_of_entrywise_close
+      μ hd Dhat D hsym hB hrank hα_pos hfloor hΛ ψFinite hψFinite
+      rate hrate_nonneg hsmall hpolar hcenter
   have h_c_tendsto :
       Filter.Tendsto
         (fun k => Acharyya2025.ConfigPerturbation.configBound n d α Λ
@@ -320,14 +367,133 @@ theorem Theorem2_part2_of_aligned_spectral
     intro k
     unfold Acharyya2025.ConfigPerturbation.configBound
     positivity
-  -- Feed into the sub-event paper theorem (everything else genuine).
-  exact Theorem2_part2_paper_subevent (Q := Q) (X := X) (d := d) Pf μ hμ
-    (fun _ f => ψ f) (fun u ω (_ : Finset Q) f => ψHat u ω f) f_ref score Qstar Qsub
-    hm γ h_lipQ h_gamma_pos _ h_c_tendsto h_c_nonneg
-    (fun k => {ω | Acharyya2025.AlignedPipeline.AlignExists hd Dhat hsym ψFinite
-      (fun u => Acharyya2025.ConfigPerturbation.configBound n d α Λ
-        ((n : Real) * rate u)) k ω})
-    hE_meas hE_sub hE
-    h_cover h_cover_meas hMSE_Q_pos
+  exact quench_part2_from_aligned_configError_hp Pf μ hμ hd Dhat hsym ψFinite
+    (fun u => Acharyya2025.ConfigPerturbation.configBound n d α Λ ((n : Real) * rate u))
+    haligned hmeas_spec h_c_tendsto h_c_nonneg f_ref score Qstar Qsub hm γ
+    indexOf ψ ψHat h_lipQ h_gamma_pos hψ hψHat h_cover h_cover_meas hMSE_Q_pos
+
+/--
+**Query efficiency from response-mean concentration (Theorem 2 Part 2, deeper).**
+
+Like `Theorem2_part2_of_aligned_spectral`, but one level deeper in the
+concentration chain: instead of the packaged entrywise CMDS-closeness event
+`hcenter`, this takes the paper's actual upstream input — the **uniform
+response-mean closeness** high-probability event
+`{ω | UniformResponseMeanClose (Xbar u ω) μ (η u)}` — and *derives* the entrywise
+CMDS event internally via
+`Acharyya2025.AlignedPipeline.highProb_aligned_configError_of_response_mean`
+(which composes the Bridge chain response-mean → Frobenius → entrywise → CMDS).
+Everything else (the choice-free measurable sub-event, the genuine Quench
+assumptions) is the shared `quench_part2_from_aligned_configError_hp` core.
+
+The residual honest primitives are the same: `hmeas_spec` (measurability of the
+raw response-based spectral embedding) and the model coverage `h_cover`.
+
+Formalized by Claude Opus 4.8 (claude-opus-4-8[1m]).
+-/
+theorem Theorem2_part2_of_response_mean
+    [DecidableEq Q]
+    (Pf : Measure (Model Q X)) [IsProbabilityMeasure Pf]
+    (μ : Nat → Measure Ω) (hμ : ∀ k, IsProbabilityMeasure (μ k))
+    {n m p d : Nat} (hn : 0 < n) (hd : d ≤ n)
+    (Xbar : Nat → Ω → Fin n → Acharyya2024.Mat m p) (μvec : Fin n → Acharyya2024.Mat m p)
+    (hB : (Acharyya2025.MathlibBridge.disMatToMatrix
+        (Acharyya2025.Deterministic.classicalMDSMatrix
+          (Acharyya2024.responseDist μvec))).PosSemidef)
+    (hrank : (Acharyya2025.MathlibBridge.disMatToMatrix
+        (Acharyya2025.Deterministic.classicalMDSMatrix
+          (Acharyya2024.responseDist μvec))).rank ≤ d)
+    {α Λ : Real} (hα_pos : 0 < α)
+    (hfloor : ∀ i : Fin n, (i : ℕ) < d →
+      α ≤ Acharyya2025.MatrixPerturbation.sortedEigenvalues hB.isHermitian i)
+    (hΛ : ∀ l, Acharyya2025.MatrixPerturbation.sortedEigenvalues hB.isHermitian l ≤ Λ)
+    (ψFinite : Config n d)
+    (hψFinite : ∀ i j, (∑ k, ψFinite i k * ψFinite j k)
+      = Acharyya2025.Deterministic.classicalMDSMatrix (Acharyya2024.responseDist μvec) i j)
+    (η R : Nat → Real)
+    (hrate_nonneg : ∀ u, 0 ≤ Acharyya2025.Bridge.cmdsEntrywiseRate n m (R u) (η u))
+    (hsmall : ∀ u,
+      (n : Real) * Acharyya2025.Bridge.cmdsEntrywiseRate n m (R u) (η u) ≤ α / 2)
+    (hpolar : ∀ u, (d : Real) *
+      (4 * (n : Real) *
+        ((n : Real) * Acharyya2025.Bridge.cmdsEntrywiseRate n m (R u) (η u))^2 / α^2)
+        ≤ 1/2)
+    (hrate_zero : Filter.Tendsto
+      (fun u => (n : Real) * Acharyya2025.Bridge.cmdsEntrywiseRate n m (R u) (η u))
+      Filter.atTop (nhds 0))
+    (hmean : Acharyya2024.HighProbAtTop μ
+      (fun u => {ω | Acharyya2025.Bridge.UniformResponseMeanClose (Xbar u ω) μvec (η u)}))
+    (hsample_bound : ∀ u ω i j, |Acharyya2024.responseDist (Xbar u ω) i j| ≤ R u)
+    (hpopulation_bound : ∀ u i j, |Acharyya2024.responseDist μvec i j| ≤ R u)
+    (indexOf : Model Q X → Fin n)
+    (ψ : Model Q X → Vec d)
+    (ψHat : Nat → Ω → Model Q X → Vec d)
+    (hψ : ∀ f, ψ f = ψFinite (indexOf f))
+    (hψHat : ∀ u ω f, ψHat u ω f =
+      Acharyya2025.AlignedPipeline.alignedSpectralConfig hd
+        (fun u ω => Acharyya2024.responseDist (Xbar u ω))
+        (fun u ω => Acharyya2025.AlignedPipeline.isHermitian_disMatToMatrix_classicalMDSMatrix_responseDist
+          (Xbar u ω))
+        ψFinite
+        (fun u => Acharyya2025.ConfigPerturbation.configBound n d α Λ
+          ((n : Real) * Acharyya2025.Bridge.cmdsEntrywiseRate n m (R u) (η u))) u ω
+        (indexOf f))
+    (f_ref : ∀ k, Ω → Fin k → Model Q X)
+    (score : Model Q X → Finset Q → ℝ)
+    (Qstar Qsub : Finset Q)
+    (hm : Qsub.card < Qstar.card)
+    (γ : ℝ)
+    (h_lipQ : ∀ (f f' : Model Q X),
+      |score f Qstar - score f' Qstar| ≤ γ * ‖ψ f - ψ f'‖)
+    (h_gamma_pos : 0 < γ)
+    (hmeas_spec : ∀ (k : Nat) (i : Fin n), Measurable (fun ω =>
+      Acharyya2025.ConfigPerturbation.spectralConfig
+        (Matrix.toEuclideanLin (Acharyya2025.MathlibBridge.disMatToMatrix
+          (Acharyya2025.Deterministic.classicalMDSMatrix
+            (Acharyya2024.responseDist (Xbar k ω)))))
+        (Acharyya2025.MatrixPerturbation.opSym
+          (Acharyya2025.AlignedPipeline.isHermitian_disMatToMatrix_classicalMDSMatrix_responseDist
+            (Xbar k ω))) hd i))
+    (h_cover : ∀ ρ > 0,
+      _root_.HighProbAtTop μ hμ
+        (fun k => {ω | ∀ f, ∃ i, ‖ψ (f_ref k ω i) - ψ f‖ ≤ ρ}))
+    (h_cover_meas : ∀ ρ > 0, ∀ k,
+      MeasurableSet {ω | ∀ f, ∃ i, ‖ψ (f_ref k ω i) - ψ f‖ ≤ ρ})
+    (hMSE_Q_pos :
+      0 < MSE (Q := Q) (X := X) Pf (yFull score Qstar)
+        (yQ (Q := Q) (X := X) score Qsub)) :
+    ∀ δ : ENNReal, 0 < δ →
+      ∃ k : ℕ,
+        (μ k) {ω |
+          MSE (Q := Q) (X := X) Pf (yFull score Qstar)
+            (fun f => yNN_paper (d := d)
+              (fun u ω (_ : Finset Q) f => ψHat u ω f) f_ref score Qstar Qsub k ω f)
+          ≤ MSE (Q := Q) (X := X) Pf (yFull score Qstar)
+              (yQ (Q := Q) (X := X) score Qsub)} ≥ 1 - δ := by
+  -- The aligned-`ConfigError` HP event derived from response-mean concentration.
+  have haligned :=
+    Acharyya2025.AlignedPipeline.highProb_aligned_configError_of_response_mean
+      μ hn hd Xbar μvec hB hrank hα_pos hfloor hΛ ψFinite hψFinite η R
+      hrate_nonneg hsmall hpolar hmean hsample_bound hpopulation_bound
+  have h_c_tendsto :
+      Filter.Tendsto
+        (fun k => Acharyya2025.ConfigPerturbation.configBound n d α Λ
+          ((n : Real) * Acharyya2025.Bridge.cmdsEntrywiseRate n m (R k) (η k)))
+        Filter.atTop (nhds 0) :=
+    Acharyya2025.RateChain.tendsto_configBound_comp_zero n d α Λ hrate_zero
+  have h_c_nonneg : ∀ k, 0 ≤ Acharyya2025.ConfigPerturbation.configBound n d α Λ
+      ((n : Real) * Acharyya2025.Bridge.cmdsEntrywiseRate n m (R k) (η k)) := by
+    intro k
+    unfold Acharyya2025.ConfigPerturbation.configBound
+    positivity
+  exact quench_part2_from_aligned_configError_hp Pf μ hμ hd
+    (fun u ω => Acharyya2024.responseDist (Xbar u ω))
+    (fun u ω => Acharyya2025.AlignedPipeline.isHermitian_disMatToMatrix_classicalMDSMatrix_responseDist
+      (Xbar u ω))
+    ψFinite
+    (fun u => Acharyya2025.ConfigPerturbation.configBound n d α Λ
+      ((n : Real) * Acharyya2025.Bridge.cmdsEntrywiseRate n m (R u) (η u)))
+    haligned hmeas_spec h_c_tendsto h_c_nonneg f_ref score Qstar Qsub hm γ
+    indexOf ψ ψHat h_lipQ h_gamma_pos hψ hψHat h_cover h_cover_meas hMSE_Q_pos
 
 end DkpsQuench.AcharyyaBridge

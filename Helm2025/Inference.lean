@@ -192,34 +192,7 @@ theorem consistency_transfer_dkps_bayes (d d' : ℕ)
       (L := bayesRisk d d' P loss H)
       h_meas_psi h_align h_inv h_cont_learn h_bound_learn h_cont_loss h_bound_label h_consistent
 
-/-!
-## Suggested local `#check`s
-
-These are intended for a lightweight sanity pass (they should be fast, unlike some `#find`s).
-
-Uncomment in a scratch file if you like:
-
-```
--- #check risk
--- #check risk_est
--- #check DKPSAlignmentConsistency
--- #check InvariantToAffineIsometries
--- #check ContinuousLearningRule
--- #check BoundedLearningRule
--- #check ContinuousLoss
--- #check risk_converges_fixed_n
--- #check diagonal_convergence
--- #check consistency_transfer_dkps
--- #check consistency_transfer_dkps_bayes
--- #check ContinuousLossInPred
--- #check PaperA3_HypothesisClass
-```
-
--/
-
 end PaperFacing
-
-
 
 /-! ## Paper-facing names
 

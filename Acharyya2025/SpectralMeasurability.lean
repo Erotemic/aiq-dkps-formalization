@@ -1,39 +1,52 @@
 /-
-Measurability of the alignment-existence event from measurability of the
-sample matrix alone — the core of the `hmeas_spec` discharge
-(`docs/planning/hmeas-spec-discharge.md`).
+Measurability of spectral / alignment events from measurability of the sample
+dissimilarity matrix alone.
 
 The raw spectral embedding `spectralConfig` is eigenvector-valued and genuinely
 non-measurable in the sample matrix at eigenvalue crossings (the eigenbasis is a
-`Classical.choice`).  This file routes around it:
+`Classical.choice`).  This file develops the measurability needed to keep that
+embedding out of the probability statements, in two layers.
 
-1. (`specTransform`, `measurable_specTransform`) The *spectral `h`-transform*
-   `Σₖ h(λₖ) uₖ(i) uₖ(j)` of a Hermitian-matrix family IS measurable, for any
-   fixed continuous `h` — it is the entrywise pointwise limit of matrix
-   *polynomials* `p(B̂)` (Stone–Weierstrass on a spectral interval), each of
-   which is an entrywise polynomial in the matrix entries.  No continuous
-   functional calculus and no eigenbasis selection is needed.
+## Used by the Quench `hmeas_spec` discharge
 
-2. (`inner_spectralConfig_eq_specTransform`) On the spectral-split event (top-`d`
-   eigenvalues fixed by `h`, tail killed by `h`), the Gram matrix of
-   `spectralConfig` equals `specTransform h`.
+The bridge (`DkpsQuench.AcharyyaBridge`) uses only the lightweight route:
 
-3. (`alignExists_iff_qProp`) `AlignExists` depends on the raw embedding only
-   through its Gram matrix (Procrustes rigidity), via the matrix-level
-   predicate `QProp`.
+* `measurable_cmds_matrix` — the sample CMDS matrix is a measurable function of
+  the sample (every entry is algebraic in the `Dhat` entries);
+* `measurableSet_entrywiseClose_event` — hence the CMDS-entrywise-closeness
+  event is Borel.
 
-4. (`measurableSet_qProp`) `{M | QProp ψ c M}` is Borel — a compactly
-   quantified existential after a countable norm-cover, no measurable
-   selection (`ForMathlib.measurableSet_exists_mem_le`).
+That event is *deterministically* contained in the alignment-existence event
+(`AlignedPipeline.alignExists_of_entrywiseClose`), so it serves directly as the
+measurable high-probability sub-event — no eigenvector measurability is ever
+needed.  See `docs/planning/hmeas-spec-discharge.md`.
 
-5. (`measurableSet_alignExists_inter`) Assembly: on any measurable event where
-   the spectral split holds, the alignment-existence event is measurable from
-   `Measurable (fun ω => B̂ ω)` alone.
+## General standalone development (more than the discharge needs)
 
-This replaces the unprovable raw-embedding measurability primitive with the
-trivially-dischargeable measurability of the sample CMDS matrix.
+A self-contained, more general result, kept as a reusable / Mathlib-candidate
+measurability fact (it shows the alignment event is measurable for *any*
+measurable spectral-split event, not just the entrywise one):
 
-Formalized by Claude Fable 5 (claude-fable-5[1m]).
+1. (`measurable_specTransform`) The spectral `h`-transform `Σₖ h(λₖ) uₖuₖᵀ` of a
+   measurable Hermitian-matrix family is measurable for any fixed continuous
+   `h` — the entrywise pointwise limit of matrix *polynomials* `p(B̂)`
+   (Stone–Weierstrass on a spectral interval); no functional calculus, no
+   eigenbasis selection.
+2. (`inner_spectralConfig_eq_specTransform`) On the spectral-split event, the
+   Gram matrix of `spectralConfig` equals `specTransform h`.
+3. (`alignExists_iff_qProp`) `AlignExists` depends on the embedding only through
+   its Gram matrix (Procrustes rigidity), via the matrix predicate `QProp`.
+4. (`measurableSet_qProp`) `{M | QProp ψ c M}` is Borel (compactly quantified
+   existential, no measurable selection, `ForMathlib.measurableSet_exists_mem_le`).
+5. (`measurableSet_alignExists_inter`) Assembly: on any measurable spectral-split
+   event the alignment-existence event is measurable from `Measurable Dhat`.
+
+Layer 1's `measurable_specTransform` and the assembly are independent of the
+Quench discharge; they record that the harder, fully-general route also goes
+through.
+
+Formalized by Claude Fable 5 (claude-fable-5[1m]); the entrywise-event layer and
+this header by Claude Opus 4.8 (claude-opus-4-8[1m]).
 -/
 
 import Acharyya2025.MatrixPerturbation
@@ -700,5 +713,28 @@ theorem measurableSet_alignExists_inter {Ω : Type} [MeasurableSpace Ω]
     rw [hMeq]
   rw [hset]
   exact (hT (measurableSet_qProp ψ (c u))).inter hG
+
+open Acharyya2025.MathlibBridge Acharyya2025.Deterministic in
+/-- **The CMDS-entrywise-closeness event is Borel**, from measurability of the
+sample dissimilarity matrix alone — every CMDS entry is a finite algebraic
+expression in the `Dhat` entries.  This is the measurable high-probability
+sub-event the Quench bridge uses in place of `hmeas_spec`. -/
+theorem measurableSet_entrywiseClose_event {Ω : Type} [MeasurableSpace Ω]
+    (Dhat : Nat → Ω → DisMat n) (D : DisMat n) (rate : Nat → ℝ) (u : Nat)
+    (hD : Measurable fun ω => Dhat u ω) :
+    MeasurableSet {ω | Acharyya2025.Bridge.EntrywiseClose
+      (classicalMDSMatrix (Dhat u ω)) (classicalMDSMatrix D) (rate u)} := by
+  have hcmds : Measurable fun ω => disMatToMatrix (classicalMDSMatrix (Dhat u ω)) :=
+    measurable_cmds_matrix Dhat u hD
+  have hset : {ω | Acharyya2025.Bridge.EntrywiseClose
+        (classicalMDSMatrix (Dhat u ω)) (classicalMDSMatrix D) (rate u)}
+      = ⋂ (i : Fin n), ⋂ (j : Fin n),
+          {ω | |classicalMDSMatrix (Dhat u ω) i j - classicalMDSMatrix D i j| ≤ rate u} := by
+    ext ω; simp [Acharyya2025.Bridge.EntrywiseClose, Set.mem_iInter]
+  rw [hset]
+  refine MeasurableSet.iInter fun i => MeasurableSet.iInter fun j => ?_
+  have hentry : Measurable fun ω => classicalMDSMatrix (Dhat u ω) i j :=
+    (measurable_pi_apply j).comp ((measurable_pi_apply i).comp hcmds)
+  exact (hentry.sub measurable_const).abs measurableSet_Iic
 
 end Acharyya2025.SpectralMeasurability

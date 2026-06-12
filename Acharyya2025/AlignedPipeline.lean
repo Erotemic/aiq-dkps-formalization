@@ -324,6 +324,47 @@ theorem measurableSet_setOf_alignExists {n d : Nat} (hd : d ≤ n)
 /-! ### (3) High-probability aligned perturbation (repaired legacy seam) -/
 
 /--
+**Deterministic: entrywise CMDS-closeness implies the alignment existential.**
+
+On any sample where the CMDS matrices are entrywise `rate u`-close, the
+matrix-world capstone produces the aligning isometry achieving
+`ConfigError ≤ configBound`.  This is the deterministic core of
+`highProb_aligned_configError_of_entrywise_close`, extracted so the Quench
+bridge can use the (directly measurable) entrywise event itself as its
+high-probability sub-event — replacing the unprovable raw-embedding
+measurability primitive `hmeas_spec`.
+
+Formalized by Claude Opus 4.8 (claude-opus-4-8[1m]).
+-/
+theorem alignExists_of_entrywiseClose {Ω : Type}
+    {n d : Nat} (hd : d ≤ n)
+    (Dhat : Nat → Ω → DisMat n) (D : DisMat n)
+    (hsym : ∀ u ω, (disMatToMatrix (classicalMDSMatrix (Dhat u ω))).IsHermitian)
+    (hB : (disMatToMatrix (classicalMDSMatrix D)).PosSemidef)
+    (hrank : (disMatToMatrix (classicalMDSMatrix D)).rank ≤ d)
+    {α Λ : Real} (hα_pos : 0 < α)
+    (hfloor : ∀ i : Fin n, (i : ℕ) < d →
+      α ≤ MatrixPerturbation.sortedEigenvalues hB.isHermitian i)
+    (hΛ : ∀ l, MatrixPerturbation.sortedEigenvalues hB.isHermitian l ≤ Λ)
+    (ψ : Config n d)
+    (hψ : ∀ i j, (∑ k, ψ i k * ψ j k) = classicalMDSMatrix D i j)
+    (rate : Nat → Real) (hrate_nonneg : ∀ u, 0 ≤ rate u)
+    (hsmall : ∀ u, (n : Real) * rate u ≤ α / 2)
+    (hpolar : ∀ u, (d : Real) * (4 * (n : Real) * ((n : Real) * rate u)^2 / α^2) ≤ 1/2)
+    (u : Nat) (ω : Ω)
+    (hω : Acharyya2025.Bridge.EntrywiseClose
+      (classicalMDSMatrix (Dhat u ω)) (classicalMDSMatrix D) (rate u)) :
+    AlignExists hd Dhat hsym ψ (fun u => configBound n d α Λ ((n : Real) * rate u)) u ω := by
+  have hentry : ∀ i j,
+      |disMatToMatrix (classicalMDSMatrix (Dhat u ω)) i j
+          - disMatToMatrix (classicalMDSMatrix D) i j| ≤ rate u := fun i j => hω i j
+  exact MatrixPerturbation.exists_isometry_configError_le_of_entrywise_close
+    hd (disMatToMatrix (classicalMDSMatrix D))
+    (disMatToMatrix (classicalMDSMatrix (Dhat u ω)))
+    hB (hsym u ω) hrank hα_pos (hrate_nonneg u) hfloor hΛ hentry (hsmall u) (hpolar u) ψ hψ
+
+
+/--
 **Repaired aligned CMDS perturbation seam.**
 
 Given a high-probability event that the sample CMDS matrices `classicalMDSMatrix
@@ -375,31 +416,54 @@ theorem highProb_aligned_configError_of_entrywise_close
           (fun u => configBound n d α Λ ((n : Real) * rate u)) u ω) ψ
         ≤ configBound n d α Λ ((n : Real) * rate u)}) := by
   refine HighProbAtTop.mono hcenter (fun u ω hω => ?_)
-  -- The entrywise event gives entrywise closeness of the Mathlib matrices.
-  have hentry : ∀ i j,
-      |disMatToMatrix (classicalMDSMatrix (Dhat u ω)) i j
-          - disMatToMatrix (classicalMDSMatrix D) i j| ≤ rate u := by
-    intro i j
-    -- `disMatToMatrix` entries are definitionally the curried entries.
-    exact hω i j
-  -- The Gram realization hypothesis transported to `disMatToMatrix B`.
-  have hψ' : ∀ i j, (∑ k, ψ i k * ψ j k)
-      = disMatToMatrix (classicalMDSMatrix D) i j := hψ
-  -- Apply the matrix-world capstone to produce the alignment existential.
-  have hcap := MatrixPerturbation.exists_isometry_configError_le_of_entrywise_close
-    hd (disMatToMatrix (classicalMDSMatrix D))
-    (disMatToMatrix (classicalMDSMatrix (Dhat u ω)))
-    hB (hsym u ω) hrank hα_pos
-    (hrate_nonneg u) hfloor hΛ hentry (hsmall u) (hpolar u)
-    ψ hψ'
-  -- The capstone's existential is exactly `AlignExists` at this bound.
-  have hexists : AlignExists hd Dhat hsym ψ
-      (fun u => configBound n d α Λ ((n : Real) * rate u)) u ω := hcap
-  -- Conclude via the estimator's defining property.
+  -- The entrywise event is contained in the alignment-existence event (deterministic core);
+  -- conclude via the aligned estimator's defining property.
   exact configError_alignedSpectralConfig_le hd Dhat hsym ψ
-    (fun u => configBound n d α Λ ((n : Real) * rate u)) u ω hexists
+    (fun u => configBound n d α Λ ((n : Real) * rate u)) u ω
+    (alignExists_of_entrywiseClose hd Dhat D hsym hB hrank hα_pos hfloor hΛ ψ hψ
+      rate hrate_nonneg hsmall hpolar u ω hω)
 
 /-! ### (4) End-to-end response-mean → aligned ConfigError -/
+
+/-- **Response-mean concentration to CMDS-entrywise closeness (high-probability).**
+The `Bridge.lean` deterministic chain (response-mean → Frobenius → entrywise →
+CMDS-entrywise), packaged to expose the CMDS-entrywise high-probability event
+directly — the measurable sub-event the response-mean Quench capstones consume.
+
+Formalized by Claude Opus 4.8 (claude-opus-4-8[1m]).
+-/
+theorem highProb_cmdsEntrywise_of_response_mean
+    {Ω : Type} [MeasurableSpace Ω]
+    (P : Nat → MeasureTheory.Measure Ω)
+    {n m p : Nat} (hn : 0 < n)
+    (Xbar : Nat → Ω → Fin n → Mat m p) (μ : Fin n → Mat m p)
+    (η R : Nat → Real)
+    (hmean : HighProbAtTop P
+      (fun u => {ω | Acharyya2025.Bridge.UniformResponseMeanClose (Xbar u ω) μ (η u)}))
+    (hsample_bound : ∀ u ω i j, |responseDist (Xbar u ω) i j| ≤ R u)
+    (hpopulation_bound : ∀ u i j, |responseDist μ i j| ≤ R u) :
+    HighProbAtTop P (fun u => {ω | Acharyya2025.Bridge.EntrywiseClose
+      (classicalMDSMatrix (responseDist (Xbar u ω))) (classicalMDSMatrix (responseDist μ))
+      (Acharyya2025.Bridge.cmdsEntrywiseRate n m (R u) (η u))}) := by
+  set Dhat : Nat → Ω → DisMat n := fun u ω => responseDist (Xbar u ω) with hDhat
+  set D : DisMat n := responseDist μ with hD
+  have hfrob :
+      HighProbAtTop P
+        (fun u => {ω | frobSub (Dhat u ω) D
+          ≤ Acharyya2025.Bridge.responseFrobRate n m (η u)}) := by
+    simpa [Dhat, D] using
+      Acharyya2025.Bridge.response_mean_close_hp_to_frob_hp P Xbar μ η hmean
+  have hentry :
+      HighProbAtTop P
+        (fun u => {ω | Acharyya2025.Bridge.EntrywiseClose (Dhat u ω) D
+          (Acharyya2025.Bridge.responseFrobRate n m (η u))}) :=
+    Acharyya2025.Bridge.frob_close_hp_to_entrywise_close_hp P Dhat D
+      (fun u => Acharyya2025.Bridge.responseFrobRate n m (η u)) hfrob
+  refine HighProbAtTop.mono hentry (fun u ω hω => ?_)
+  exact Acharyya2025.Bridge.entrywise_close_to_cmds_entrywise_close_of_bounded hn hω
+    (fun i j => by simpa [Dhat] using hsample_bound u ω i j)
+    (fun i j => by simpa [D] using hpopulation_bound u i j)
+
 
 /--
 A symmetric curried dissimilarity matrix induces a Hermitian Mathlib matrix
@@ -501,29 +565,13 @@ theorem highProb_aligned_configError_of_response_mean
   set D : DisMat n := responseDist μ with hD
   set rate : Nat → Real :=
     fun u => Acharyya2025.Bridge.cmdsEntrywiseRate n m (R u) (η u) with hrate
-  -- response-mean HP event → Frobenius HP event.
-  have hfrob :
-      HighProbAtTop P
-        (fun u => {ω | frobSub (Dhat u ω) D
-          ≤ Acharyya2025.Bridge.responseFrobRate n m (η u)}) := by
-    simpa [Dhat, D] using
-      Acharyya2025.Bridge.response_mean_close_hp_to_frob_hp P Xbar μ η hmean
-  -- Frobenius HP event → entrywise distance HP event.
-  have hentry :
-      HighProbAtTop P
-        (fun u => {ω | Acharyya2025.Bridge.EntrywiseClose (Dhat u ω) D
-          (Acharyya2025.Bridge.responseFrobRate n m (η u))}) :=
-    Acharyya2025.Bridge.frob_close_hp_to_entrywise_close_hp P Dhat D
-      (fun u => Acharyya2025.Bridge.responseFrobRate n m (η u)) hfrob
-  -- entrywise distance HP event → entrywise CMDS-matrix HP event.
+  -- response-mean HP event → entrywise CMDS-matrix HP event (Bridge chain).
   have hcenter :
       HighProbAtTop P
         (fun u => {ω | Acharyya2025.Bridge.EntrywiseClose
-          (classicalMDSMatrix (Dhat u ω)) (classicalMDSMatrix D) (rate u)}) := by
-    refine HighProbAtTop.mono hentry (fun u ω hω => ?_)
-    exact Acharyya2025.Bridge.entrywise_close_to_cmds_entrywise_close_of_bounded hn hω
-      (fun i j => by simpa [Dhat] using hsample_bound u ω i j)
-      (fun i j => by simpa [D] using hpopulation_bound u i j)
+          (classicalMDSMatrix (Dhat u ω)) (classicalMDSMatrix D) (rate u)}) :=
+    highProb_cmdsEntrywise_of_response_mean P hn Xbar μ η R hmean
+      hsample_bound hpopulation_bound
   -- Apply (3) with this CMDS-entrywise event.
   exact highProb_aligned_configError_of_entrywise_close P hd Dhat D
     (fun u ω => isHermitian_disMatToMatrix_classicalMDSMatrix_responseDist (Xbar u ω))

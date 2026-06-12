@@ -102,8 +102,10 @@ ones:
 - **Measurability hypotheses** (`h_conc_meas`, `h_cover_meas`, the `E`/`hE_meas`
   sub-event machinery). The paper does not discuss measurability of its
   high-probability events; Lean requires it to take probabilities. In the
-  bridge this is reduced to one honest primitive (`hmeas_spec`: the *raw*
-  spectral embedding is Borel-measurable).
+  bridge this is reduced to one *trivially-true* primitive (`Measurable Dhat`:
+  the sample dissimilarity matrix is measurable in the sample) — the measurable
+  high-probability sub-event is the CMDS-entrywise event itself, which is
+  directly Borel and deterministically contained in the embedding-error event.
 - **The concentration event is assumed, not derived, in `Theorem2.lean`.** The
   rate `c n → 0` (the DKPS estimation content) enters as a hypothesis
   `h_conc`. It is genuinely derived only in `AcharyyaBridge.lean`, from the

@@ -12,6 +12,7 @@ configuration.
 import Acharyya2025.AlignedPipeline
 import Acharyya2025.RateChain
 import DkpsQuench.Theorem2
+import Acharyya2025.SpectralMeasurability
 
 open scoped BigOperators Topology
 open Filter MeasureTheory
@@ -145,18 +146,23 @@ theorem quench_uniform_embedding_error_of_aligned_spectral
     hψ hψHat haligned
 
 /--
-**Reusable core: query efficiency from an aligned-`ConfigError` HP event.**
+**Reusable core: query efficiency from the CMDS-entrywise high-probability event.**
 
-Given a high-probability bound on `ConfigError (alignedSpectralConfig …) ψFinite`
-at *any* bound function `c`, the honest raw-spectral-embedding measurability
-primitive `hmeas_spec`, the vanishing-rate side conditions, and the genuine
-Quench assumptions (factorization, score Lipschitz, model coverage, MSE
-positivity), conclude Theorem 2 Part 2.  The measurability of the embedding-error
-event is obtained — with no measurable selection — by routing through the
-choice-free `AlignExists` existential (`…_le_iff_alignExists` +
-`measurableSet_setOf_alignExists`) and the sub-event form
-`highProb_queryEfficient_nn_of_subevent`.  Both capstones below feed their
-aligned-`ConfigError` event into this lemma.
+Given the population spectral structure (PSD / rank / floor `α` / cap `Λ`), the
+Gram realization of `ψFinite`, the vanishing-rate side conditions, the honest
+*sample-matrix* measurability primitive `hDmeas` (`Measurable (fun ω => Dhat k ω)`,
+trivially true), the high-probability CMDS-entrywise-closeness event `hcenter`
+(the paper's Theorem 1 content), and the genuine Quench assumptions
+(factorization, score Lipschitz, model coverage, MSE positivity), conclude
+Theorem 2 Part 2.
+
+The measurable high-probability sub-event is the **entrywise event itself**: it
+is directly Borel (each CMDS entry is algebraic in `Dhat`,
+`SpectralMeasurability.measurableSet_entrywiseClose_event`) and is *deterministically*
+contained in the embedding-error event (`AlignedPipeline.alignExists_of_entrywiseClose`
+— the matrix capstone produces the aligning isometry on every entrywise-close
+sample).  No measurability of the eigenvector-valued raw embedding is needed; the
+previously-assumed `hmeas_spec` is gone.
 
 Formalized by Claude Opus 4.8 (claude-opus-4-8[1m]).
 -/
@@ -168,15 +174,34 @@ theorem quench_part2_from_aligned_configError_hp
     (Dhat : Nat → Ω → Acharyya2024.DisMat n)
     (hsym : ∀ u ω, (Acharyya2025.MathlibBridge.disMatToMatrix
         (Acharyya2025.Deterministic.classicalMDSMatrix (Dhat u ω))).IsHermitian)
-    (ψFinite : Config n d) (c : Nat → Real)
-    (haligned : Acharyya2024.HighProbAtTop μ (fun k => {ω |
-      ConfigError (Acharyya2025.AlignedPipeline.alignedSpectralConfig hd Dhat hsym
-        ψFinite c k ω) ψFinite ≤ c k}))
-    (hmeas_spec : ∀ (k : Nat) (i : Fin n), Measurable (fun ω =>
-      Acharyya2025.ConfigPerturbation.spectralConfig
-        (Matrix.toEuclideanLin (Acharyya2025.MathlibBridge.disMatToMatrix
-          (Acharyya2025.Deterministic.classicalMDSMatrix (Dhat k ω))))
-        (Acharyya2025.MatrixPerturbation.opSym (hsym k ω)) hd i))
+    (D : Acharyya2024.DisMat n)
+    (ψFinite : Config n d)
+    -- Population spectral structure (Assumptions 1/2):
+    (hB : (Acharyya2025.MathlibBridge.disMatToMatrix
+        (Acharyya2025.Deterministic.classicalMDSMatrix D)).PosSemidef)
+    (hrank : (Acharyya2025.MathlibBridge.disMatToMatrix
+        (Acharyya2025.Deterministic.classicalMDSMatrix D)).rank ≤ d)
+    {α Λ : Real} (hα_pos : 0 < α)
+    (hfloor : ∀ i : Fin n, (i : ℕ) < d →
+      α ≤ Acharyya2025.MatrixPerturbation.sortedEigenvalues hB.isHermitian i)
+    (hΛ : ∀ l, Acharyya2025.MatrixPerturbation.sortedEigenvalues hB.isHermitian l ≤ Λ)
+    (hψFinite_gram : ∀ i j, (∑ k, ψFinite i k * ψFinite j k)
+      = Acharyya2025.Deterministic.classicalMDSMatrix D i j)
+    (rate : Nat → Real) (hrate_nonneg : ∀ u, 0 ≤ rate u)
+    (hsmall : ∀ u, (n : Real) * rate u ≤ α / 2)
+    (hpolar : ∀ u, (d : Real) *
+      (4 * (n : Real) * ((n : Real) * rate u)^2 / α^2) ≤ 1/2)
+    (c : Nat → Real)
+    (hc_eq : c = fun u => Acharyya2025.ConfigPerturbation.configBound n d α Λ
+      ((n : Real) * rate u))
+    -- The honest measurability primitive replacing `hmeas_spec`: the sample
+    -- dissimilarity matrix is measurable in the sample (trivially dischargeable).
+    (hDmeas : ∀ k, Measurable (fun ω => Dhat k ω))
+    -- Theorem 1 input: high-probability entrywise CMDS-closeness event.
+    (hcenter : Acharyya2024.HighProbAtTop μ (fun k => {ω |
+      Acharyya2025.Bridge.EntrywiseClose
+        (Acharyya2025.Deterministic.classicalMDSMatrix (Dhat k ω))
+        (Acharyya2025.Deterministic.classicalMDSMatrix D) (rate k)}))
     (h_c_tendsto : Filter.Tendsto c Filter.atTop (nhds 0))
     (h_c_nonneg : ∀ k, 0 ≤ c k)
     (f_ref : ∀ k, Ω → Fin k → Model Q X)
@@ -213,15 +238,21 @@ theorem quench_part2_from_aligned_configError_hp
               (fun u ω (_ : Finset Q) f => ψHat u ω f) f_ref score Qstar Qsub k ω f)
           ≤ MSE (Q := Q) (X := X) Pf (yFull score Qstar)
               (yQ (Q := Q) (X := X) score Qsub)} ≥ 1 - δ := by
-  -- The choice-free alignment existential is the measurable HP sub-event.
-  have hE_meas : ∀ k, MeasurableSet {ω |
-      Acharyya2025.AlignedPipeline.AlignExists hd Dhat hsym ψFinite c k ω} := fun k =>
-    Acharyya2025.AlignedPipeline.measurableSet_setOf_alignExists hd Dhat hsym ψFinite c k
-      (hmeas_spec k)
-  have hE_sub : ∀ k, {ω |
-      Acharyya2025.AlignedPipeline.AlignExists hd Dhat hsym ψFinite c k ω}
-      ⊆ {ω | ∀ f, ‖ψHat k ω f - ψ f‖ ≤ c k} := by
-    intro k ω hA f
+  -- The CMDS-entrywise event is a directly-measurable high-probability sub-event of
+  -- `{AlignExists}` (deterministic containment), so no raw-embedding measurability is needed.
+  set E : Nat → Set Ω := fun k => {ω |
+    Acharyya2025.Bridge.EntrywiseClose
+      (Acharyya2025.Deterministic.classicalMDSMatrix (Dhat k ω))
+      (Acharyya2025.Deterministic.classicalMDSMatrix D) (rate k)} with hE_def
+  have hE_meas : ∀ k, MeasurableSet (E k) := fun k =>
+    Acharyya2025.SpectralMeasurability.measurableSet_entrywiseClose_event Dhat D rate k (hDmeas k)
+  have hE_sub : ∀ k, E k ⊆ {ω | ∀ f, ‖ψHat k ω f - ψ f‖ ≤ c k} := by
+    intro k ω hω f
+    have hA : Acharyya2025.AlignedPipeline.AlignExists hd Dhat hsym ψFinite c k ω := by
+      rw [hc_eq]
+      exact Acharyya2025.AlignedPipeline.alignExists_of_entrywiseClose
+        hd Dhat D hsym hB hrank hα_pos hfloor hΛ ψFinite hψFinite_gram
+        rate hrate_nonneg hsmall hpolar k ω hω
     have hcfg := Acharyya2025.AlignedPipeline.configError_alignedSpectralConfig_le
       hd Dhat hsym ψFinite c k ω hA
     calc ‖ψHat k ω f - ψ f‖
@@ -231,27 +262,12 @@ theorem quench_part2_from_aligned_configError_hp
             (Acharyya2025.AlignedPipeline.alignedSpectralConfig hd Dhat hsym ψFinite c k ω)
             ψFinite := norm_config_le_ConfigError _ _ _
       _ ≤ _ := hcfg
-  have hE : _root_.HighProbAtTop μ hμ (fun k => {ω |
-      Acharyya2025.AlignedPipeline.AlignExists hd Dhat hsym ψFinite c k ω}) := by
-    intro δ hδ
-    obtain ⟨N, hN⟩ := haligned δ hδ
-    refine ⟨N, fun k hk => ?_⟩
-    have hset : {ω | ConfigError
-          (Acharyya2025.AlignedPipeline.alignedSpectralConfig hd Dhat hsym ψFinite c k ω)
-          ψFinite ≤ c k}
-        = {ω | Acharyya2025.AlignedPipeline.AlignExists hd Dhat hsym ψFinite c k ω} := by
-      ext ω
-      exact Acharyya2025.AlignedPipeline.configError_alignedSpectralConfig_le_iff_alignExists
-        hd Dhat hsym ψFinite c k ω
-    show (μ k) {ω | Acharyya2025.AlignedPipeline.AlignExists hd Dhat hsym ψFinite c k ω}
-        ≥ 1 - δ
-    rw [← hset]
-    exact hN k hk
+  have hE : _root_.HighProbAtTop μ hμ E := by
+    intro δ hδ; exact hcenter δ hδ
   exact highProb_queryEfficient_nn_of_subevent (Q := Q) (X := X) (d := d) Pf μ hμ
     (fun _ f => ψ f) (fun u ω (_ : Finset Q) f => ψHat u ω f) f_ref score Qstar Qsub
     hm γ h_lipQ h_gamma_pos _ h_c_tendsto h_c_nonneg
-    (fun k => {ω | Acharyya2025.AlignedPipeline.AlignExists hd Dhat hsym ψFinite c k ω})
-    hE_meas hE_sub hE h_cover h_cover_meas hMSE_Q_pos
+    E hE_meas hE_sub hE h_cover h_cover_meas hMSE_Q_pos
 
 /--
 **Query efficiency from the spectral concentration chain (Theorem 2 Part 2,
@@ -267,24 +283,18 @@ hypothesis is replaced by the prose assumptions that produce it (population PSD
 high-probability event `hcenter`, the Gram realization of `ψ`, the index-map
 factorization, and the vanishing rate `(n)·rate u → 0`).
 
-**Measurability seam discharged (no measurable selection).**  The former
-`h_conc_meas` hypothesis (measurability of the embedding-error event of the
-`Classical.choose`-based aligned estimator) is gone.  The route: the aligned
-estimator's error event *equals* the choice-free alignment existential
-(`configError_alignedSpectralConfig_le_iff_alignExists` — a raw embedding
-satisfying the bound witnesses the existential with `W = id`), and the
-existential over the **compact** set of inner-product-preserving maps is
-measurable by `ForMathlib.measurableSet_exists_mem_le` (countable dense
-approximation; no selection of the optimal alignment).  This measurable
-high-probability event is contained in the embedding-error event, which is
-exactly what the sub-event form `highProb_queryEfficient_nn_of_subevent` consumes.
-
-The one remaining measurability primitive is `hmeas_spec`: the **raw**
-(unaligned) spectral embedding `ω ↦ spectralConfig …(Dhat k ω)…` is measurable.
-This is a genuine Borel-measurability question about the fixed eigendecomposition
-map (no `ω`-dependent choice), recorded in `planning/for-fable.md` F5.  The
-model-coverage assumptions `h_cover`/`h_cover_meas` (paper Assumption 2) and the
-score Lipschitz / MSE-positivity assumptions remain, as they should.
+**Measurability fully discharged (no eigenbasis, no measurable selection).**
+The previously-assumed `hmeas_spec` (measurability of the eigenvector-valued raw
+spectral embedding — genuinely *not* provable, the eigenbasis is discontinuous
+at eigenvalue crossings) is replaced by the trivially-true `hDhat_meas`
+(`Measurable (fun ω => Dhat k ω)`: the sample dissimilarity matrix is measurable
+in the sample).  The measurable high-probability sub-event is the CMDS-entrywise
+event `hcenter` itself: directly Borel (each CMDS entry is algebraic in `Dhat`),
+and *deterministically* contained in the embedding-error event (the matrix
+capstone aligns every entrywise-close sample —
+`AlignedPipeline.alignExists_of_entrywiseClose`).  The model-coverage assumptions
+`h_cover`/`h_cover_meas` (paper Assumption 2) and the score Lipschitz /
+MSE-positivity assumptions remain, as they should.
 
 Formalized by Claude Opus 4.8 (claude-opus-4-8[1m]); measurability seam
 discharged by Claude Fable 5 (claude-fable-5[1m]).
@@ -334,13 +344,9 @@ theorem queryEfficient_nn_of_aligned_spectral
     (h_lipQ : ∀ (f f' : Model Q X),
       |score f Qstar - score f' Qstar| ≤ γ * ‖ψ f - ψ f'‖)
     (h_gamma_pos : 0 < γ)
-    -- Honest measurability primitive: the RAW spectral embedding is measurable
-    -- in the sample; no measurability of the chosen alignment is needed.
-    (hmeas_spec : ∀ (k : Nat) (i : Fin n), Measurable (fun ω =>
-      Acharyya2025.ConfigPerturbation.spectralConfig
-        (Matrix.toEuclideanLin (Acharyya2025.MathlibBridge.disMatToMatrix
-          (Acharyya2025.Deterministic.classicalMDSMatrix (Dhat k ω))))
-        (Acharyya2025.MatrixPerturbation.opSym (hsym k ω)) hd i))
+    -- Honest measurability primitive (replacing raw-embedding measurability):
+    -- the sample dissimilarity matrix is measurable in the sample.
+    (hDhat_meas : ∀ k, Measurable (fun ω => Dhat k ω))
     -- Genuine model-coverage assumption (paper Assumption 2):
     (h_cover : ∀ ρ > 0,
       _root_.HighProbAtTop μ hμ
@@ -361,12 +367,6 @@ theorem queryEfficient_nn_of_aligned_spectral
               (fun u ω (_ : Finset Q) f => ψHat u ω f) f_ref score Qstar Qsub k ω f)
           ≤ MSE (Q := Q) (X := X) Pf (yFull score Qstar)
               (yQ (Q := Q) (X := X) score Qsub)} ≥ 1 - δ := by
-  -- The aligned-`ConfigError` HP event from the entrywise spectral capstone, fed
-  -- into the reusable Theorem 2 core.
-  have haligned :=
-    Acharyya2025.AlignedPipeline.highProb_aligned_configError_of_entrywise_close
-      μ hd Dhat D hsym hB hrank hα_pos hfloor hΛ ψFinite hψFinite
-      rate hrate_nonneg hsmall hpolar hcenter
   have h_c_tendsto :
       Filter.Tendsto
         (fun k => Acharyya2025.ConfigPerturbation.configBound n d α Λ
@@ -377,9 +377,10 @@ theorem queryEfficient_nn_of_aligned_spectral
     intro k
     unfold Acharyya2025.ConfigPerturbation.configBound
     positivity
-  exact quench_part2_from_aligned_configError_hp Pf μ hμ hd Dhat hsym ψFinite
-    (fun u => Acharyya2025.ConfigPerturbation.configBound n d α Λ ((n : Real) * rate u))
-    haligned hmeas_spec h_c_tendsto h_c_nonneg f_ref score Qstar Qsub hm γ
+  exact quench_part2_from_aligned_configError_hp Pf μ hμ hd Dhat hsym D ψFinite
+    hB hrank hα_pos hfloor hΛ hψFinite rate hrate_nonneg hsmall hpolar
+    (fun u => Acharyya2025.ConfigPerturbation.configBound n d α Λ ((n : Real) * rate u)) rfl
+    hDhat_meas hcenter h_c_tendsto h_c_nonneg f_ref score Qstar Qsub hm γ
     indexOf ψ ψHat h_lipQ h_gamma_pos hψ hψHat h_cover h_cover_meas hMSE_Q_pos
 
 /--
@@ -396,8 +397,9 @@ CMDS event internally via
 Everything else (the choice-free measurable sub-event, the genuine Quench
 assumptions) is the shared `quench_part2_from_aligned_configError_hp` core.
 
-The residual honest primitives are the same: `hmeas_spec` (measurability of the
-raw response-based spectral embedding) and the model coverage `h_cover`.
+The residual honest primitives are the same: `hXmeas` (measurability of the
+sample response-distance matrix in the sample — trivially true) and the model
+coverage `h_cover`.
 
 Formalized by Claude Opus 4.8 (claude-opus-4-8[1m]).
 -/
@@ -456,14 +458,9 @@ theorem queryEfficient_nn_of_response_mean
     (h_lipQ : ∀ (f f' : Model Q X),
       |score f Qstar - score f' Qstar| ≤ γ * ‖ψ f - ψ f'‖)
     (h_gamma_pos : 0 < γ)
-    (hmeas_spec : ∀ (k : Nat) (i : Fin n), Measurable (fun ω =>
-      Acharyya2025.ConfigPerturbation.spectralConfig
-        (Matrix.toEuclideanLin (Acharyya2025.MathlibBridge.disMatToMatrix
-          (Acharyya2025.Deterministic.classicalMDSMatrix
-            (Acharyya2024.responseDist (Xbar k ω)))))
-        (Acharyya2025.MatrixPerturbation.opSym
-          (Acharyya2025.AlignedPipeline.isHermitian_disMatToMatrix_classicalMDSMatrix_responseDist
-            (Xbar k ω))) hd i))
+    -- Honest measurability primitive: the sample response-distance matrix is
+    -- measurable in the sample.
+    (hXmeas : ∀ k, Measurable (fun ω => Acharyya2024.responseDist (Xbar k ω)))
     (h_cover : ∀ ρ > 0,
       _root_.HighProbAtTop μ hμ
         (fun k => {ω | ∀ f, ∃ i, ‖ψ (f_ref k ω i) - ψ f‖ ≤ ρ}))
@@ -483,11 +480,10 @@ theorem queryEfficient_nn_of_response_mean
               (fun u ω (_ : Finset Q) f => ψHat u ω f) f_ref score Qstar Qsub k ω f)
           ≤ MSE (Q := Q) (X := X) Pf (yFull score Qstar)
               (yQ (Q := Q) (X := X) score Qsub)} ≥ 1 - δ := by
-  -- The aligned-`ConfigError` HP event derived from response-mean concentration.
-  have haligned :=
-    Acharyya2025.AlignedPipeline.highProb_aligned_configError_of_response_mean
-      μ hn hd Xbar μvec hB hrank hα_pos hfloor hΛ ψFinite hψFinite η R
-      hrate_nonneg hsmall hpolar hmean hsample_bound hpopulation_bound
+  -- The CMDS-entrywise HP event derived from response-mean concentration (Bridge chain).
+  have hcenter :=
+    Acharyya2025.AlignedPipeline.highProb_cmdsEntrywise_of_response_mean
+      μ hn Xbar μvec η R hmean hsample_bound hpopulation_bound
   have h_c_tendsto :
       Filter.Tendsto
         (fun k => Acharyya2025.ConfigPerturbation.configBound n d α Λ
@@ -503,10 +499,13 @@ theorem queryEfficient_nn_of_response_mean
     (fun u ω => Acharyya2024.responseDist (Xbar u ω))
     (fun u ω => Acharyya2025.AlignedPipeline.isHermitian_disMatToMatrix_classicalMDSMatrix_responseDist
       (Xbar u ω))
-    ψFinite
+    (Acharyya2024.responseDist μvec)
+    ψFinite hB hrank hα_pos hfloor hΛ hψFinite
+    (fun u => Acharyya2025.Bridge.cmdsEntrywiseRate n m (R u) (η u))
+    hrate_nonneg hsmall hpolar
     (fun u => Acharyya2025.ConfigPerturbation.configBound n d α Λ
-      ((n : Real) * Acharyya2025.Bridge.cmdsEntrywiseRate n m (R u) (η u)))
-    haligned hmeas_spec h_c_tendsto h_c_nonneg f_ref score Qstar Qsub hm γ
+      ((n : Real) * Acharyya2025.Bridge.cmdsEntrywiseRate n m (R u) (η u))) rfl
+    hXmeas hcenter h_c_tendsto h_c_nonneg f_ref score Qstar Qsub hm γ
     indexOf ψ ψHat h_lipQ h_gamma_pos hψ hψHat h_cover h_cover_meas hMSE_Q_pos
 
 /--
@@ -522,8 +521,8 @@ conclusion now follows from iid second-moment hypotheses on the response means
 (the only honest probabilistic input the paper assumes), together with the
 spectral structure and the genuine Quench assumptions.
 
-The residual honest primitives remain `hmeas_spec` (raw response-based spectral
-embedding measurability) and the model coverage `h_cover`.
+The residual honest primitives remain `hXmeas` (sample response-distance matrix
+measurability — trivially true) and the model coverage `h_cover`.
 
 Formalized by Claude Opus 4.8 (claude-opus-4-8[1m]).
 -/
@@ -586,14 +585,9 @@ theorem queryEfficient_nn_of_second_moment
     (h_lipQ : ∀ (f f' : Model Q X),
       |score f Qstar - score f' Qstar| ≤ γ * ‖ψ f - ψ f'‖)
     (h_gamma_pos : 0 < γ)
-    (hmeas_spec : ∀ (k : Nat) (i : Fin n), Measurable (fun ω =>
-      Acharyya2025.ConfigPerturbation.spectralConfig
-        (Matrix.toEuclideanLin (Acharyya2025.MathlibBridge.disMatToMatrix
-          (Acharyya2025.Deterministic.classicalMDSMatrix
-            (Acharyya2024.responseDist (Xbar k ω)))))
-        (Acharyya2025.MatrixPerturbation.opSym
-          (Acharyya2025.AlignedPipeline.isHermitian_disMatToMatrix_classicalMDSMatrix_responseDist
-            (Xbar k ω))) hd i))
+    -- Honest measurability primitive: the sample response-distance matrix is
+    -- measurable in the sample.
+    (hXmeas : ∀ k, Measurable (fun ω => Acharyya2024.responseDist (Xbar k ω)))
     (h_cover : ∀ ρ > 0,
       _root_.HighProbAtTop μ hμ
         (fun k => {ω | ∀ f, ∃ i, ‖ψ (f_ref k ω i) - ψ f‖ ≤ ρ}))
@@ -621,6 +615,6 @@ theorem queryEfficient_nn_of_second_moment
   exact queryEfficient_nn_of_response_mean Pf μ hμ hn hd Xbar μvec hB hrank hα_pos hfloor hΛ
     ψFinite hψFinite η R hrate_nonneg hsmall hpolar hrate_zero hmean hsample_bound
     hpopulation_bound indexOf ψ ψHat hψ hψHat f_ref score Qstar Qsub hm γ h_lipQ
-    h_gamma_pos hmeas_spec h_cover h_cover_meas hMSE_Q_pos
+    h_gamma_pos hXmeas h_cover h_cover_meas hMSE_Q_pos
 
 end DkpsQuench.AcharyyaBridge

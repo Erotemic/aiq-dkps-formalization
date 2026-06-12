@@ -107,7 +107,20 @@ The DkpsQuench query-efficiency conclusion now follows end-to-end from the
 literal bottom of the chain (iid second moments) + spectral structure + the
 genuine Quench assumptions; only `hmeas_spec` and `h_cover` remain primitive.
 
-## F5. `h_conc_meas` measurable-selection seam — ✅ DISCHARGED 2026-06-12 (Fable)
+## F5. `h_conc_meas` / `hmeas_spec` measurability seam — ✅ FULLY DISCHARGED 2026-06-12 (Fable + Opus)
+
+**FINAL STATUS: `hmeas_spec` is eliminated** (commit "Eliminate hmeas_spec from
+the Quench capstones"). The four `queryEfficient_nn_of_*` capstones now assume
+only the trivially-true `Measurable Dhat` (sample dissimilarity matrix measurable
+in the sample). The chain below relocated `h_conc_meas` to `hmeas_spec`; the
+final step removed `hmeas_spec` too: the matrix capstone
+`exists_isometry_configError_le_of_entrywise_close` is *deterministic*, so the
+CMDS-entrywise event is directly Borel
+(`SpectralMeasurability.measurableSet_entrywiseClose_event`) and deterministically
+contained in `{AlignExists}` (`AlignedPipeline.alignExists_of_entrywiseClose`) —
+so it serves as the measurable HP sub-event with no eigenvector measurability.
+The only remaining honest seam in the whole development is now Helm's `halign`.
+See `docs/planning/hmeas-spec-discharge.md`. History of the relocation below.
 
 RESOLVED without any measurable-selection theorem, by relocating the seam:
 
@@ -187,9 +200,9 @@ review; both routes are a scoped research task, not mechanical work.
 2. ~~F2 (eigenvalues₀ tail)~~ — ✅ DONE 2026-06-12 (Opus).
 3. ~~F4 (projector-form Davis–Kahan)~~ — ✅ DONE 2026-06-12 (Opus).  Only the
    SHARP constant + RCLike projector generalization remain, both optional.
-4. **F5 residual** (`hmeas_spec`) — scoped research task (see assessment above),
-   not mechanical; leave documented for the domain expert.  The single
-   remaining load-bearing item.
+4. ~~F5 residual (`hmeas_spec`)~~ — ✅ ELIMINATED 2026-06-12 (Fable + Opus).
+   Replaced by the trivially-true `Measurable Dhat`; no honest seam remains in
+   the DkpsQuench chain.
 5. **F3** — skip; raise the Berge maximum theorem upstream instead.
 
 Everything else (the whole spectral-perturbation toolkit, probability lemmas,

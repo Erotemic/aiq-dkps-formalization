@@ -6,6 +6,30 @@ and the load-bearing lemma is proved and committed.
 
 ---
 
+## STATUS 2026-06-12: COMPLETE — `hmeas_spec` is eliminated from the development
+
+The four `DkpsQuench.AcharyyaBridge.queryEfficient_nn_of_*` capstones no longer
+take `hmeas_spec`; they take the trivially-true `Measurable Dhat` (sample
+dissimilarity matrix measurable in the sample). Full build green, 0 sorry/axiom.
+
+**The final discharge is simpler than the route below.** Opus's step (D) found
+that the matrix capstone `exists_isometry_configError_le_of_entrywise_close` is
+*deterministic*, so the CMDS-entrywise event is (a) directly Borel — each entry
+is algebraic in `Dhat` (`SpectralMeasurability.measurableSet_entrywiseClose_event`)
+— and (b) *deterministically contained* in `{AlignExists}`
+(`AlignedPipeline.alignExists_of_entrywiseClose`). So the entrywise event itself
+is the measurable high-probability sub-event: no spectral split, no Gram=cfc
+identity, no `α/3` strengthening, no eigenvector measurability. Fable's
+blockers A–C (the spectral-split route, `measurable_specTransform` …
+`measurableSet_alignExists_inter`) are kept in `SpectralMeasurability.lean` as a
+correct, more-general standalone result — they confirm the harder route also
+closes, but the discharge does not use them.
+
+Everything below this line is the historical plan (the cfc route and the
+blocker-by-blocker status); it is superseded by the entrywise-event discharge.
+
+---
+
 ## STATUS UPDATE 2026-06-12 (Fable): blockers A–C are PROVED — only plumbing (D) remains
 
 All three blockers below are now proved in

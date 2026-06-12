@@ -176,7 +176,11 @@ independently Mathlib-worthy, proposed home near
 `OrthonormalBasis.starProjection_eq_sum_rankOne`):
 `Orthonormal.starProjection_span_image_apply` (projection onto the span of an
 orthonormal subfamily = sum of rank-ones), `…_apply_self`, and the Parseval
-`Orthonormal.norm_sq_starProjection_span_image`. Main results renamed:
+`Orthonormal.norm_sq_starProjection_span_image` — **all three hold in any inner
+product space** (no `FiniteDimensional` on the ambient space; they take
+`[(span 𝕜 (w '' ↑s)).HasOrthogonalProjection]`, which fires automatically in the
+finite-dimensional spectral-subspace application), Opus follow-on 2026-06-12.
+Main results renamed:
 `sum_norm_sub_starProjection_span_sq_eq` (identity, arbitrary `s`) and
 `sum_norm_sub_starProjection_span_sq_le` (the `2nε²/gap²` sin-Θ bound).
 

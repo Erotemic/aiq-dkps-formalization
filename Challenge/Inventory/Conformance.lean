@@ -523,26 +523,31 @@ theorem sum_cross_norm_inner_eigenvectorBasis_sq_le_of_rank_floor
   sorry
 section Projector
 
-variable {F : Type*} [NormedAddCommGroup F] [InnerProductSpace 𝕜 F] [FiniteDimensional 𝕜 F]
-  {m : ℕ}
+variable {F : Type*} [NormedAddCommGroup F] [InnerProductSpace 𝕜 F]
 
 /--
 **Projection onto the span of an orthonormal subfamily.** For an orthonormal
 family `w` and a finite index set `s`, the orthogonal projection onto
-`span 𝕜 (w '' s)` acts as `x ↦ ∑ i ∈ s, ⟪w i, x⟫ • w i`.
+`span 𝕜 (w '' s)` acts as `x ↦ ∑ i ∈ s, ⟪w i, x⟫ • w i`.  (No finite-dimensionality
+of the ambient space: the finite span carries its own projection.)
 -/
 theorem Orthonormal.starProjection_span_image_apply {ι : Type*} {w : ι → F}
-    (hw : Orthonormal 𝕜 w) (s : Finset ι) (x : F) :
+    (hw : Orthonormal 𝕜 w) (s : Finset ι)
+    [(Submodule.span 𝕜 (w '' ↑s)).HasOrthogonalProjection] (x : F) :
     (Submodule.span 𝕜 (w '' ↑s)).starProjection x = ∑ i ∈ s, ⟪w i, x⟫_𝕜 • w i := by
   sorry
 theorem Orthonormal.starProjection_span_image_apply_self {ι : Type*} [DecidableEq ι]
-    {w : ι → F} (hw : Orthonormal 𝕜 w) (s : Finset ι) (k : ι) :
+    {w : ι → F} (hw : Orthonormal 𝕜 w) (s : Finset ι)
+    [(Submodule.span 𝕜 (w '' ↑s)).HasOrthogonalProjection] (k : ι) :
     (Submodule.span 𝕜 (w '' ↑s)).starProjection (w k) = if k ∈ s then w k else 0 := by
   sorry
 theorem Orthonormal.norm_sq_starProjection_span_image {ι : Type*} {w : ι → F}
-    (hw : Orthonormal 𝕜 w) (s : Finset ι) (x : F) :
+    (hw : Orthonormal 𝕜 w) (s : Finset ι)
+    [(Submodule.span 𝕜 (w '' ↑s)).HasOrthogonalProjection] (x : F) :
     ‖(Submodule.span 𝕜 (w '' ↑s)).starProjection x‖ ^ 2 = ∑ i ∈ s, ‖⟪w i, x⟫_𝕜‖ ^ 2 := by
   sorry
+variable [FiniteDimensional 𝕜 F] {m : ℕ}
+
 /--
 **Projector form of the Davis–Kahan identity.** The squared Frobenius distance
 (computed in the basis `u`) between the orthogonal projections onto

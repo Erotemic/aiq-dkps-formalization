@@ -80,7 +80,7 @@ Used to reprove the PSD forward direction through-API (audit §2.3 discharged: t
 
 | Item | What | Why deferred | Fable? |
 |---|---|---|---|
-| R4 | ✅ **DONE (Fable, 2026-06-12, user-directed).** DK projector section redesigned onto `Submodule.starProjection` of orthonormal-subfamily spans: RCLike (was ℝ-only), arbitrary `s : Finset (Fin m)` (was `< d` cutoff), bespoke `spectralProjection` def deleted. Plus three reusable bridge lemmas (`Orthonormal.starProjection_span_image_apply` etc.). Audit §4.1–§4.3 discharged. | — | done |
+| R4 | ✅ **DONE (Fable, 2026-06-12, user-directed).** DK projector section redesigned onto `Submodule.starProjection` of orthonormal-subfamily spans: RCLike (was ℝ-only), arbitrary `s : Finset (Fin m)` (was `< d` cutoff), bespoke `spectralProjection` def deleted. Plus three reusable bridge lemmas (`Orthonormal.starProjection_span_image_apply` etc.), generalized (Opus follow-on) to **any inner product space** via a `[HasOrthogonalProjection]` binder (no `FiniteDimensional` on the ambient space). Audit §4.1–§4.3 discharged. | — | done |
 | R5 | **Courant–Fischer full min-max** (canonical min-over-subspaces). | Net-new; Mathlib has only the extremal Rayleigh case, and our directional bounds already suffice for Weyl. Pursue only if a reviewer asks. | yes |
 
 ### Track 4 — decisions needing human / Zulip input (R6)

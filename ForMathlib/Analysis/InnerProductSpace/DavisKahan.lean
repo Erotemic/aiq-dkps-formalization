@@ -36,7 +36,8 @@ is self-contained and correct.
   cross-block bound `∑_{i < d, j ≥ d} ‖⟪uᵢ, v̂ⱼ⟫‖² ≤ n ε² / gap²`.
 * `ForMathlib.Orthonormal.starProjection_span_image_apply`: the orthogonal
   projection onto the span of an orthonormal subfamily is the sum of the
-  corresponding rank-one projections (`Submodule.starProjection` form).
+  corresponding rank-one projections (`Submodule.starProjection` form; holds in
+  any inner product space, the finite span carrying its own projection).
 * `ForMathlib.sum_norm_sub_starProjection_span_sq_eq`: the canonical projector
   identity — the squared Frobenius distance between the projections onto two
   orthonormal-subfamily spans is `2 ·` the cross overlap sum (over `RCLike 𝕜`,
@@ -257,8 +258,13 @@ the field is any `RCLike 𝕜`, and the selected index set is an arbitrary
 
 section Projector
 
-variable {F : Type*} [NormedAddCommGroup F] [InnerProductSpace 𝕜 F] [FiniteDimensional 𝕜 F]
-  {m : ℕ}
+variable {F : Type*} [NormedAddCommGroup F] [InnerProductSpace 𝕜 F]
+
+/-! The three bridge lemmas hold for an orthonormal family in *any* inner product
+space: the span of a finite subfamily is finite-dimensional, so it always carries
+an orthogonal projection (the `HasOrthogonalProjection` instance is automatic when
+the ambient space is finite-dimensional, as in the spectral-subspace application
+below, and is requested explicitly otherwise). -/
 
 /--
 **Projection onto the span of an orthonormal subfamily.** For an orthonormal
@@ -266,7 +272,8 @@ family `w` and a finite index set `s`, the orthogonal projection onto
 `span 𝕜 (w '' s)` acts as `x ↦ ∑ i ∈ s, ⟪w i, x⟫ • w i`.
 -/
 theorem Orthonormal.starProjection_span_image_apply {ι : Type*} {w : ι → F}
-    (hw : Orthonormal 𝕜 w) (s : Finset ι) (x : F) :
+    (hw : Orthonormal 𝕜 w) (s : Finset ι)
+    [(Submodule.span 𝕜 (w '' ↑s)).HasOrthogonalProjection] (x : F) :
     (Submodule.span 𝕜 (w '' ↑s)).starProjection x = ∑ i ∈ s, ⟪w i, x⟫_𝕜 • w i := by
   classical
   refine Submodule.eq_starProjection_of_mem_of_inner_eq_zero ?_ ?_
@@ -290,7 +297,8 @@ On a member `w k` of the orthonormal family, the projection onto
 `span 𝕜 (w '' s)` keeps it iff `k ∈ s`.
 -/
 theorem Orthonormal.starProjection_span_image_apply_self {ι : Type*} [DecidableEq ι]
-    {w : ι → F} (hw : Orthonormal 𝕜 w) (s : Finset ι) (k : ι) :
+    {w : ι → F} (hw : Orthonormal 𝕜 w) (s : Finset ι)
+    [(Submodule.span 𝕜 (w '' ↑s)).HasOrthogonalProjection] (k : ι) :
     (Submodule.span 𝕜 (w '' ↑s)).starProjection (w k) = if k ∈ s then w k else 0 := by
   classical
   rw [Orthonormal.starProjection_span_image_apply hw s (w k),
@@ -303,7 +311,8 @@ Parseval for the projection onto the span of an orthonormal subfamily:
 `‖P x‖² = ∑ i ∈ s, ‖⟪w i, x⟫‖²`.
 -/
 theorem Orthonormal.norm_sq_starProjection_span_image {ι : Type*} {w : ι → F}
-    (hw : Orthonormal 𝕜 w) (s : Finset ι) (x : F) :
+    (hw : Orthonormal 𝕜 w) (s : Finset ι)
+    [(Submodule.span 𝕜 (w '' ↑s)).HasOrthogonalProjection] (x : F) :
     ‖(Submodule.span 𝕜 (w '' ↑s)).starProjection x‖ ^ 2 = ∑ i ∈ s, ‖⟪w i, x⟫_𝕜‖ ^ 2 := by
   have hcast : ((‖(Submodule.span 𝕜 (w '' ↑s)).starProjection x‖ : ℝ) : 𝕜) ^ 2
       = ((∑ i ∈ s, ‖⟪w i, x⟫_𝕜‖ ^ 2 : ℝ) : 𝕜) := by
@@ -313,6 +322,8 @@ theorem Orthonormal.norm_sq_starProjection_span_image {ι : Type*} {w : ι → F
     push_cast
     rfl
   exact_mod_cast hcast
+
+variable [FiniteDimensional 𝕜 F] {m : ℕ}
 
 /--
 **Projector form of the Davis–Kahan identity.** For two orthonormal bases `u`,

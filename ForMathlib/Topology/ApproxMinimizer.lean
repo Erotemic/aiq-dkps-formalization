@@ -27,6 +27,10 @@ The typical source of the approximate-minimizer hypothesis is a second family
 ## Main results
 
 * `ForMathlib.exists_subseq_tendsto_forall_le_of_approxMin`
+* `ForMathlib.exists_subseq_tendsto_isMinOn_of_approxMinOn` — the variant where the
+  approximate-minimization comparison ranges only over the compact set `K`, so the
+  limit is a minimizer *on `K`* (`IsMinOn F K`) rather than a global one. This is
+  the form the Berge maximum theorem consumes (the feasible set is constrained).
 -/
 
 namespace ForMathlib
@@ -66,5 +70,40 @@ theorem exists_subseq_tendsto_forall_le_of_approxMin
   -- Pass the pointwise bound to the limit.
   exact le_of_tendsto_of_tendsto hcont hrhs
     (Eventually.of_forall fun t => happrox x (φ t))
+
+/--
+**Stability of constrained minimizers under approximate minimization.**
+
+The constrained variant of `exists_subseq_tendsto_forall_le_of_approxMin`: the
+approximate-minimization bound is only required to hold for comparison points `x`
+*in the compact set* `K` (`F (z k) ≤ F x + ε x k` for `x ∈ K`), and the limit
+point `ψ` is correspondingly a minimizer of `F` *on `K`* (`IsMinOn F K ψ`) rather
+than a global minimizer.  This is the form consumed by the Berge maximum theorem,
+where the feasible set is the fixed compact `K`.
+-/
+theorem exists_subseq_tendsto_isMinOn_of_approxMinOn
+    {X : Type*} [TopologicalSpace X] [FirstCountableTopology X]
+    {K : Set X} (hK : IsCompact K)
+    {F : X → ℝ} (hF : Continuous F)
+    {z : ℕ → X} (hz : ∀ k, z k ∈ K)
+    {ε : X → ℕ → ℝ} (hε : ∀ x ∈ K, Tendsto (ε x) atTop (𝓝 0))
+    (happrox : ∀ x ∈ K, ∀ k, F (z k) ≤ F x + ε x k) :
+    ∃ φ : ℕ → ℕ, StrictMono φ ∧ ∃ ψ ∈ K, IsMinOn F K ψ ∧
+      Tendsto (fun t => z (φ t)) atTop (𝓝 ψ) := by
+  obtain ⟨ψ, hψK, φ, hφ_mono, hφ_tendsto⟩ := hK.tendsto_subseq hz
+  refine ⟨φ, hφ_mono, ψ, hψK, ?_, hφ_tendsto⟩
+  rw [isMinOn_iff]
+  intro x hx
+  -- `F (z (φ t)) → F ψ` by continuity of `F`.
+  have hcont : Tendsto (fun t => F (z (φ t))) atTop (𝓝 (F ψ)) :=
+    (hF.tendsto ψ).comp hφ_tendsto
+  -- `F x + ε x (φ t) → F x` since the (subsequenced) error vanishes.
+  have hrhs : Tendsto (fun t => F x + ε x (φ t)) atTop (𝓝 (F x)) := by
+    have hεφ : Tendsto (fun t => ε x (φ t)) atTop (𝓝 0) :=
+      (hε x hx).comp hφ_mono.tendsto_atTop
+    simpa using tendsto_const_nhds.add hεφ
+  -- Pass the pointwise bound (valid for `x ∈ K`) to the limit.
+  exact le_of_tendsto_of_tendsto hcont hrhs
+    (Eventually.of_forall fun t => happrox x hx (φ t))
 
 end ForMathlib

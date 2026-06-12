@@ -34,7 +34,8 @@ These make a staged candidate more PR-worthy; low/medium effort, Opus-doable.
 | **B1** | **Sample-covariance / empirical-Gram eigenvalue concentration** (the `halign` eigengap route). | L | no | **✅ DONE** |
 | B1a | ✅ **DONE** — the generic engine (no matrix Bernstein): `ForMathlib.Matrix.abs_sortedEig_sub_le_of_entry_le` (entrywise ⇒ eigenvalue via Weyl), `ForMathlib.measure_exists_entry_gt_le` (entrywise Chebyshev + union bound), `ForMathlib.measure_forall_abs_sortedEig_sub_le_ge` (eigenvalue concentration), `ForMathlib.measure_forall_sortedEig_ge_ge` (eigenvalue **lower bound** — take `η = c/(2n)`). Takes per-entry second-moment bounds as hypotheses (matches the existing dissimilarity-concentration style). Commit `2356fd0`. | — | no | ✅ |
 | B1b | ✅ **DONE** — the iid → per-entry-second-moment layer specializing B1a to the actual *sample covariance* `Σ̂_{kl} = n⁻¹ Σᵢ Vᵢ(k)Vᵢ(l)`. File `ForMathlib/Probability/Moments/SampleCovariance.lean`: `ForMathlib.sampleCovariance` (the empirical covariance), `ForMathlib.integral_sq_sampleCovariance_entry_le` (feeds the coordinate products `Yᵢ = Vᵢ(·)ₖ Vᵢ(·)ₗ` into the scalar `integral_norm_sq_average_sub_of_iid` to get `∫(Σ̂_{kl}−Cov_{kl})² ≤ v/n`), `ForMathlib.isHermitian_sampleCovariance`, and the capstone `ForMathlib.measure_forall_sampleCovariance_sortedEig_ge_ge` (composes the entry bound with the B1a engine `measure_forall_sortedEig_ge_ge`). The product-level iid hypotheses (`MemLp`/`IndepFun`/identical-distribution of the coordinate products) are taken as inputs, matching the existing dissimilarity-concentration style; per-coordinate measurability `∀ i k, Measurable (V i · k)` avoids the `EuclideanSpace` measurable-space friction. | M | no | ✅ |
-| B2 | **Berge maximum theorem** (upper-hemicontinuity of the argmin/argmax correspondence) — would give the general form of `exists_modulus_pairDist` (for-fable F3). Mathlib has `Topology/Semicontinuity/Hemicontinuity.lean` but no Berge. **Decision pending:** raise upstream as a feature request vs. formalize the general theorem here. | L | likely | queued (after B1) |
+| **B2** | ✅ **DONE** (upper-hemicontinuity half, no Fable) — **Berge maximum theorem** for a fixed compact constraint, staged in `ForMathlib/Topology/Berge.lean`: `tendsto_eval_sub_of_isCompact` (uniform conv. on compact from joint continuity), `tendsto_subseq_isMinOn_of_isMinOn` (sequential upper hemicontinuity / closed graph), `upperHemicontinuousAt_isMinOn` (lands on Mathlib's `UpperHemicontinuousAt` via `of_sequences`), `exists_modulus_isMinOn` (uniform `ε`–`δ` modulus = general form of `exists_modulus_pairDist`). Plus engine sibling `exists_subseq_tendsto_isMinOn_of_approxMinOn`. Candidate #13. | L | no | **✅** |
+| B2b | **Remaining (optional, non-blocking):** the *value-function-continuity* half of Berge (`p ↦ ⨅ x ∈ K, g p x` continuous), and instantiating `exists_modulus_isMinOn` at the raw-stress objective to literally re-derive `exists_modulus_pairDist` (MDS compares `pairDistErr`, a different pseudometric — a wiring exercise). | M | no | open |
 
 ---
 
@@ -51,7 +52,7 @@ These make a staged candidate more PR-worthy; low/medium effort, Opus-doable.
 
 | Item | Note |
 |---|---|
-| D1 | **Task E — submit the Mathlib PRs** (re-author the 11 staged ForMathlib candidates per the AI-contribution policy). **Gated:** hold until a domain expert reviews the repo (user instruction). |
+| D1 | **Task E — submit the Mathlib PRs** (re-author the staged ForMathlib candidates #1–#13 per the AI-contribution policy). **Gated:** hold until a domain expert reviews the repo (user instruction). |
 | D2 | `for-fable.md` F1/F2/F4/F5/F6 — DONE. F3 = B2 above. |
 
 ---
@@ -59,7 +60,7 @@ These make a staged candidate more PR-worthy; low/medium effort, Opus-doable.
 ## Working order (user-directed 2026-06-12)
 
 1. ✅ **B1 — sample-covariance eigenvalue concentration** (done: B1a engine + B1b iid layer).
-2. **B2 — Berge maximum theorem** (next).
+2. ✅ **B2 — Berge maximum theorem** (done: upper-hemicontinuity half, four forms + engine sibling; value-function half B2b optional).
 
 "Note if we need to bring in Fable at any point, but we can probably get very far
 without it." — flagged per-item in the Fable? column; reassess B1 after the

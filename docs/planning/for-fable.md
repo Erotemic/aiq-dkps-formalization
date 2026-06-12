@@ -51,21 +51,38 @@ operator-world `sortedEigenvalues` for `eigenvalues₀` is a large refactor
 thread `sortedEigenvalues`) with NO downstream benefit and high regression risk.
 Deliberately left; the staged lemma stands alone as a Mathlib addition.
 
-## F3. `exists_modulus_pairDist` general form (Berge maximum theorem) — BLOCKED/REDESIGN
+## F3. `exists_modulus_pairDist` general form (Berge maximum theorem) — ✅ DONE 2026-06-12 (Opus)
 
-Source: `Acharyya2024/RawStress.lean:582` `exists_modulus_pairDist`. This is the
+Source: `Acharyya2024/RawStress.lean:687` `exists_modulus_pairDist`. This is the
 argmin-set stability with an explicit modulus: a uniform `δ` such that
 `frobSub D Δ < δ ⇒ every minimizer of D has pairwise distances within ε of the
 Δ-profile`. The general statement is a Berge-maximum-theorem / upper-hemicontinuity
 of the argmin correspondence.
 
-Blocker: Mathlib gained `Topology/Semicontinuity/Hemicontinuity.lean` but has NO
-Berge maximum theorem. A clean general extraction would be the Berge theorem
-itself (a substantial contribution and its own design project). The MDS-specific
-proof here uses the already-staged `exists_subseq_tendsto_forall_le_of_approxMin`
-(`ForMathlib/Topology/ApproxMinimizer.lean`) plus a contradiction at
-`δ = 1/(k+1)`. NOT worth porting the MDS-specific version; the general Berge
-theorem is the real target and should be its own scoped effort. Leave as-is.
+Resolved WITHOUT Fable. The general upper-hemicontinuity half of Berge's maximum
+theorem (fixed compact constraint) is now staged in
+`ForMathlib/Topology/Berge.lean`:
+* `tendsto_eval_sub_of_isCompact` — sequential uniform convergence on a compact set
+  from joint continuity (the only consequence of "`g (pₖ) → g p₀` uniformly on `K`"
+  Berge needs).
+* `tendsto_subseq_isMinOn_of_isMinOn` — sequential upper hemicontinuity (closed
+  graph): minimizers for `pₖ → p₀` subconverge to a minimizer for `p₀`.
+* `upperHemicontinuousAt_isMinOn` — the same on Mathlib's own
+  `UpperHemicontinuousAt` predicate for `p ↦ {x ∈ K | IsMinOn (g p) K x}`, via
+  `UpperHemicontinuousAt.of_sequences` (needs `X` Hausdorff).
+* `exists_modulus_isMinOn` — the uniform `ε`–`δ` modulus form (metric `P`, `X`):
+  exactly the shape of `exists_modulus_pairDist`, generalized to an arbitrary
+  jointly-continuous objective.
+
+Engine generalization added: `ForMathlib.exists_subseq_tendsto_isMinOn_of_approxMinOn`
+(the `K`-constrained sibling of `exists_subseq_tendsto_forall_le_of_approxMin`,
+concluding `IsMinOn F K` instead of a global minimizer).
+
+Remaining (optional, NOT blocking): the value-function-continuity half of Berge
+(`p ↦ ⨅ x ∈ K, g p x` continuous) and instantiating `exists_modulus_isMinOn` at
+the raw-stress objective to literally re-derive `exists_modulus_pairDist` (the MDS
+version compares `pairDistErr`, a different pseudometric — a wiring exercise). See
+`mathlib-candidates.md` candidate #13.
 
 ## F4. Davis–Kahan: projector-form sin-Θ — ✅ DONE 2026-06-12 (Opus)
 

@@ -112,6 +112,32 @@ This furnishes the eigengap Helm's `halign` needs (a population eigenvalue
 floored at `c` stays above `c/2` w.h.p.).  Loose `n`/`n²` constants (the price
 of the elementary route); a matrix-Bernstein sharpening is possible future work.
 
+**Candidate #13 — Berge's maximum theorem (fixed compact constraint): NOW
+STAGED.**  Mathlib has the hemicontinuity *definitions*
+(`Topology/Semicontinuity/Hemicontinuity.lean`) and the extreme-value theorem
+(`IsCompact.exists_isMinOn`) but NO Berge maximum theorem.  Staged in
+`ForMathlib/Topology/Berge.lean` (the upper-hemicontinuity half), building on the
+approximate-minimizer engine:
+- `tendsto_eval_sub_of_isCompact` — sequential uniform convergence on a compact
+  `K` from joint continuity: `g (pₖ)(xₖ) − g p₀(xₖ) → 0` for `pₖ → p₀`, `xₖ ∈ K`
+  (proved via the subsequence criterion + sequential compactness, no compact-open
+  topology).
+- `tendsto_subseq_isMinOn_of_isMinOn` — sequential upper hemicontinuity (closed
+  graph): constrained minimizers for `pₖ → p₀` subconverge to a constrained
+  minimizer of `g p₀`.
+- `upperHemicontinuousAt_isMinOn` — the closed-graph statement on Mathlib's own
+  `UpperHemicontinuousAt` predicate for `p ↦ {x ∈ K | IsMinOn (g p) K x}`, via
+  `UpperHemicontinuousAt.of_sequences` (needs `X` Hausdorff so `K` is closed).
+- `exists_modulus_isMinOn` — the uniform `ε`–`δ` modulus form (metric `P`, `X`):
+  the general shape of the MDS-stability modulus `exists_modulus_pairDist`.
+
+Engine generalization (in `ForMathlib/Topology/ApproxMinimizer.lean`):
+`exists_subseq_tendsto_isMinOn_of_approxMinOn`, the `K`-constrained sibling of
+`exists_subseq_tendsto_forall_le_of_approxMin` (concludes `IsMinOn F K` rather
+than a global minimizer).  Remaining for a complete Berge contribution: the
+value-function-continuity half (`p ↦ ⨅ x ∈ K, g p x` continuous).  Resolves
+for-fable F3 without Fable.
+
 **Update 2026-06-12 (Opus session):** candidate #8 (Davis–Kahan cross-block
 bound) is now STAGED, RCLike-general, in
 `ForMathlib/Analysis/InnerProductSpace/DavisKahan.lean` —

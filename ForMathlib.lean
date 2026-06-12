@@ -25,3 +25,4 @@ import ForMathlib.Probability.Moments.SampleCovariance
 import ForMathlib.Probability.Moments.SampleMean
 import ForMathlib.Probability.Moments.Variance
 import ForMathlib.Topology.ApproxMinimizer
+import ForMathlib.Topology.Berge

@@ -595,6 +595,11 @@ determined exactly up to an orthogonal (unitary) transformation.
 
 ## Main results
 
+* `ForMathlib.inner_linearCombination_linearCombination`: the inner product of two
+  finite linear combinations of a vector family, expanded over its Gram data.
+* `ForMathlib.exists_linearIsometry_of_inner_eq`: the span-level core (two
+  possibly-different ambient spaces, no finiteness) — equal pairwise inner
+  products give a linear isometry from `span 𝕜 (range φ)` into `F`.
 * `ForMathlib.exists_linearIsometryEquiv_of_inner_eq`: equal pairwise inner
   products yield a linear isometry equivalence mapping one family to the other.
 * `ForMathlib.Matrix.gram_eq_gram_iff_exists_linearIsometryEquiv`: the same
@@ -632,6 +637,31 @@ theorem exists_linearIsometryEquiv_of_inner_eq {φ ψ : ι → E}
     (h : ∀ i j, ⟪φ i, φ j⟫_𝕜 = ⟪ψ i, ψ j⟫_𝕜) :
     ∃ W : E ≃ₗᵢ[𝕜] E, ∀ i, W (φ i) = ψ i := by
   sorry
+
+omit [FiniteDimensional 𝕜 E] in
+/--
+The inner product of two finite linear combinations of a vector family, expanded
+over its Gram data.  (Reusable; no finiteness, single ambient space.)
+-/
+theorem inner_linearCombination_linearCombination (v : ι → E) (a b : ι →₀ 𝕜) :
+    ⟪Finsupp.linearCombination 𝕜 v a, Finsupp.linearCombination 𝕜 v b⟫_𝕜
+      = a.sum fun i s => b.sum fun j t => starRingEnd 𝕜 s * t * ⟪v i, v j⟫_𝕜 := by
+  sorry
+
+omit [FiniteDimensional 𝕜 E] in
+/--
+**Gram rigidity, span-level core.** For families `φ : ι → E`, `ψ : ι → F` in two
+possibly-different inner product spaces over `𝕜` with equal pairwise inner
+products, a linear isometry from `span 𝕜 (range φ)` into `F` sends `φ i ↦ ψ i`.
+No finiteness of `ι`, `E`, or `F` is required.
+-/
+theorem exists_linearIsometry_of_inner_eq {F : Type*} [NormedAddCommGroup F]
+    [InnerProductSpace 𝕜 F] {φ : ι → E} {ψ : ι → F}
+    (h : ∀ i j, ⟪φ i, φ j⟫_𝕜 = ⟪ψ i, ψ j⟫_𝕜) :
+    ∃ L : (Submodule.span 𝕜 (Set.range φ)) →ₗᵢ[𝕜] F,
+      ∀ i, L ⟨φ i, Submodule.subset_span ⟨i, rfl⟩⟩ = ψ i := by
+  sorry
+
 namespace Matrix
 
 open _root_.Matrix

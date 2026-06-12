@@ -101,6 +101,17 @@ Mathlib check confirms all four are non-duplicative.
    Zulip decisions (naming, statement shapes, destination files) — see
    `spectral-pr-decomposition.md` and the R6 note below.
 
+### R-track trust-artifact sync (done 2026-06-12)
+Headline Gram challenge (`Challenge/Gram/`) kept simple/unchanged (equiv + `gram`
+iff). New public results from the readiness pass added to the **Inventory**
+challenge instead: `inner_linearCombination_linearCombination` and the span-level
+core `exists_linearIsometry_of_inner_eq` (stated at full generality via
+`omit [FiniteDimensional]`) in `Inventory/Conformance.lean`; `#print axioms`
+checks for those plus `exists_conjTranspose_mul_self_of_posSemidef_of_rank_le`
+and `abs_eigenvalues_sub_le_opNorm` in `Inventory/Leaderboard.lean`. No downstream
+DKPS code needed changes (public names/signatures preserved; `Procrustes.lean`
+consumes the equiv unchanged).
+
 ### R-track naming note (R6, prepared option — NOT yet applied)
 Audit §1.3 suggests `exists_linearIsometryEquiv_map_eq_of_inner_eq` (the
 conclusion is a `map_eq`) over the current `exists_linearIsometryEquiv_of_inner_eq`.

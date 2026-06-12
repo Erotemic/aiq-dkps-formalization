@@ -16,6 +16,7 @@ import ForMathlib.Analysis.Matrix.SpectralFunctionMeasurable
 import ForMathlib.Analysis.Matrix.EntrywiseEigenvalue
 import ForMathlib.Analysis.Matrix.Spectrum
 import ForMathlib.LinearAlgebra.Matrix.PosDef
+import ForMathlib.LinearAlgebra.Matrix.RankFactorization
 import ForMathlib.MeasureTheory.CfcMeasurable
 import ForMathlib.MeasureTheory.CompactExists
 import ForMathlib.MeasureTheory.Function.ConvergenceInMeasure

@@ -1,37 +1,44 @@
 /-
 Staged for Mathlib: additions to `Mathlib/LinearAlgebra/Matrix/PosDef.lean`.
 
-Formalized by Claude Opus 4.8 (claude-opus-4-8[1m]);
-to be re-authored per Mathlib's AI-contribution policy at PR time.
+Formalized by Claude Opus 4.8 (claude-opus-4-8[1m]); rank-controlled direction
+reproved through the rank-factorization API by Claude Fable 5 (claude-fable-5[1m]).
+To be re-authored per Mathlib's AI-contribution policy at PR time.
 -/
 
 import Mathlib.LinearAlgebra.Matrix.PosDef
 import Mathlib.LinearAlgebra.Matrix.Rank
 import Mathlib.Analysis.Matrix.Spectrum
 import Mathlib.Analysis.Matrix.PosDef
+import ForMathlib.LinearAlgebra.Matrix.RankFactorization
 
 /-! # Rank-constrained positive-semidefinite factorization
 
-A real positive-semidefinite matrix `B` factors as `B = Aᴴ * A` with `A` having
-at most `d` rows **iff** its rank is at most `d`. The square-factor version
-(`B = Aᴴ * A` with `A` square, e.g. the PSD square root) is already available;
-this is the dimension-controlled refinement, equivalently the statement that a
-PSD matrix of rank `≤ d` is the Gram matrix of `n` points in `ℝ^d` — the
-classical multidimensional-scaling embedding step.
+A positive-semidefinite matrix `B` factors as `B = Aᴴ * A` with `A` having at
+most `d` rows **iff** its rank is at most `d` — equivalently, a PSD matrix of
+rank `≤ d` is the Gram matrix of `n` points in `𝕜^d`, the classical
+multidimensional-scaling embedding step.
 
-The forward (hard) direction is the spectral construction: `B = Σ_k λ_k uₖ uₖᵀ`
-with `λ_k ≥ 0` and exactly `rank B` nonzero eigenvalues; scaling each nonzero
-eigenvector by `√λ_k` and packing the `rank B ≤ d` resulting coordinates into
-`d` rows yields `A`. The reverse direction is `posSemidef_conjTranspose_mul_self`
-together with `rank_conjTranspose_mul_self` and `rank_le_height`.
+The factorization is assembled from two reusable pieces:
+* the **square** factorization `B = Aᴴ * A` with `A` square, built spectrally
+  (`A = √D · Uᴴ` for the spectral decomposition `B = U D Uᴴ`); and
+* the **rank factorization** `A = L * R` through `Fin d`
+  (`ForMathlib.Matrix.exists_eq_mul_of_rank_le`), which compresses the inner
+  dimension.
+
+A second application of the square factorization to `Lᴴ * L` then yields the
+rank-controlled Gram factor `(S * R)ᴴ * (S * R)`.  The reverse direction is
+`posSemidef_conjTranspose_mul_self` with `rank_conjTranspose_mul_self` and
+`rank_le_height`.
 
 ## Main results
 
+* `ForMathlib.Matrix.PosSemidef.exists_eq_conjTranspose_mul_self`: the square
+  factorization `B = Aᴴ * A` of a PSD matrix (spectral construction).
 * `ForMathlib.Matrix.PosSemidef.exists_conjTranspose_mul_self_of_rank_le`: the
-  spectral forward direction (PSD of rank `≤ d` factors as `Aᴴ * A` with `A` a
-  `d × n` matrix).
+  rank-controlled factorization, `A` of size `d × n` for any `rank B ≤ d`.
 * `ForMathlib.Matrix.posSemidef_and_rank_le_iff_exists_conjTranspose_mul_self`:
-  the rank-`≤ d` PSD factorization characterization, over `RCLike 𝕜`.
+  the iff characterization, over `RCLike 𝕜`.
 
 ## References
 
@@ -83,112 +90,68 @@ theorem isHermitian_entry_eq_sum_eigenvalues
   rw [hdiag]; ring
 
 /--
+**Square PSD factorization.** A positive-semidefinite matrix `B` over `𝕜 = ℝ, ℂ`
+factors as `B = Aᴴ * A` with `A` square: take `A = √D · Uᴴ` for the spectral
+decomposition `B = U D Uᴴ` (row `k` of `A` is the `k`-th eigenvector scaled by
+`√λ_k`).
+-/
+theorem PosSemidef.exists_eq_conjTranspose_mul_self
+    {B : Matrix (Fin n) (Fin n) 𝕜} (hB : B.PosSemidef) :
+    ∃ A : Matrix (Fin n) (Fin n) 𝕜, B = Aᴴ * A := by
+  have hHerm : B.IsHermitian := hB.1
+  refine ⟨fun k i =>
+    (Real.sqrt (hHerm.eigenvalues k) : 𝕜) * conj (hHerm.eigenvectorUnitary i k), ?_⟩
+  ext i j
+  rw [Matrix.mul_apply, isHermitian_entry_eq_sum_eigenvalues B hHerm i j]
+  refine Finset.sum_congr rfl fun k _ => ?_
+  rw [Matrix.conjTranspose_apply, RCLike.star_def]
+  have hnn : 0 ≤ hHerm.eigenvalues k := _root_.Matrix.PosSemidef.eigenvalues_nonneg hB k
+  simp only [map_mul, RCLike.conj_ofReal, RCLike.conj_conj]
+  rw [show RCLike.ofReal (Real.sqrt (hHerm.eigenvalues k)) * hHerm.eigenvectorUnitary i k *
+      ((Real.sqrt (hHerm.eigenvalues k) : 𝕜) * conj (hHerm.eigenvectorUnitary j k))
+    = ((Real.sqrt (hHerm.eigenvalues k) : 𝕜) * (Real.sqrt (hHerm.eigenvalues k) : 𝕜))
+        * (hHerm.eigenvectorUnitary i k * conj (hHerm.eigenvectorUnitary j k)) from by ring]
+  rw [← RCLike.ofReal_mul, Real.mul_self_sqrt hnn]
+  ring
+
+/--
 **Rank-constrained PSD factorization, forward direction.** A positive
 semidefinite matrix `B` of rank `≤ d` is the Gram matrix of `n` points in
 `𝕜^d`: it factors as `B = Aᴴ * A` for some `A : Matrix (Fin d) (Fin n) 𝕜`.
 
-The construction is spectral: `B = Σ_k λ_k uₖ uₖᴴ` with `λ_k ≥ 0` and `rank B`
-nonzero eigenvalues; scaling each nonzero eigenvector by `√λ_k` and packing the
-`rank B ≤ d` resulting coordinates into `d` rows yields `A`.
+Proof through the factorization API: write `B = A₀ᴴ * A₀` with `A₀` square
+(`PosSemidef.exists_eq_conjTranspose_mul_self`), compress `A₀ = L * R` through
+`Fin d` by rank factorization (`rank A₀ = rank B ≤ d`), and absorb the leftover
+Gram factor `Lᴴ * L` by a second square factorization `Lᴴ * L = Sᴴ * S`, giving
+`B = (S * R)ᴴ * (S * R)`.
 -/
 theorem PosSemidef.exists_conjTranspose_mul_self_of_rank_le
     {d : ℕ} {B : Matrix (Fin n) (Fin n) 𝕜} (hB : B.PosSemidef) (hrank : B.rank ≤ d) :
     ∃ A : Matrix (Fin d) (Fin n) 𝕜, B = Aᴴ * A := by
-  classical
-  have hHerm : B.IsHermitian := hB.isHermitian
-  -- card {nonzero eigenvalues} = rank B ≤ d, giving an embedding into `Fin d`.
-  have hcardS : Fintype.card {k : Fin n // hHerm.eigenvalues k ≠ 0} = B.rank :=
-    hHerm.rank_eq_card_non_zero_eigs.symm
-  have hcard_le :
-      Fintype.card {k : Fin n // hHerm.eigenvalues k ≠ 0} ≤ Fintype.card (Fin d) := by
-    simpa [Fintype.card_fin, hcardS] using hrank
-  obtain ⟨e⟩ := Function.Embedding.nonempty_of_card_le hcard_le
-  -- Coordinate weight `√λ_k · conj (U i k)`.
-  set w : Fin n → Fin n → 𝕜 := fun i k =>
-    (Real.sqrt (hHerm.eigenvalues k) : 𝕜) * conj (hHerm.eigenvectorUnitary i k) with hw
-  -- The factor `A`: row `a`, column `i` carries `w i k` when `a = e k`.
-  set A : Matrix (Fin d) (Fin n) 𝕜 := fun a i =>
-    if h : ∃ k : {k : Fin n // hHerm.eigenvalues k ≠ 0}, e k = a then
-      w i (Classical.choose h).1 else 0 with hA
-  refine ⟨A, ?_⟩
-  have hA_at : ∀ (i : Fin n) (k : {k : Fin n // hHerm.eigenvalues k ≠ 0}),
-      A (e k) i = w i k.1 := by
-    intro i k
-    have hex : ∃ k' : {k : Fin n // hHerm.eigenvalues k ≠ 0}, e k' = e k := ⟨k, rfl⟩
-    have hval : A (e k) i = w i (Classical.choose hex).1 := by
-      simp only [hA, dif_pos hex]
-    rw [hval, e.injective (Classical.choose_spec hex)]
-  have hA_off : ∀ (i : Fin n) (a : Fin d),
-      (∀ k : {k : Fin n // hHerm.eigenvalues k ≠ 0}, e k ≠ a) → A a i = 0 := by
-    intro i a ha
-    have : ¬ ∃ k : {k : Fin n // hHerm.eigenvalues k ≠ 0}, e k = a := by
-      rintro ⟨k, hk⟩; exact ha k hk
-    simp only [hA, dif_neg this]
-  -- Entrywise: `(Aᴴ * A) i j = Σ_a conj (A a i) * A a j = B i j`.
-  ext i j
-  rw [Matrix.mul_apply]
-  have hconj : ∀ a, (Aᴴ) i a * A a j = conj (A a i) * A a j := by
-    intro a; rw [Matrix.conjTranspose_apply, RCLike.star_def]
-  rw [Finset.sum_congr rfl (fun a _ => hconj a)]
-  symm
-  calc
-    (∑ a : Fin d, conj (A a i) * A a j)
-        = ∑ k : {k : Fin n // hHerm.eigenvalues k ≠ 0}, conj (w i k.1) * w j k.1 := by
-          have hstep : (∑ k : {k : Fin n // hHerm.eigenvalues k ≠ 0},
-                conj (w i k.1) * w j k.1)
-              = ∑ k : {k : Fin n // hHerm.eigenvalues k ≠ 0},
-                  conj (A (e k) i) * A (e k) j :=
-            Finset.sum_congr rfl fun k _ => by rw [hA_at i k, hA_at j k]
-          rw [hstep,
-            ← Finset.sum_map (Finset.univ : Finset {k : Fin n // hHerm.eigenvalues k ≠ 0}) e
-              (fun a => conj (A a i) * A a j)]
-          refine (Finset.sum_subset (Finset.subset_univ _) ?_).symm
-          intro a _ ha
-          have hnotrange : ∀ k : {k : Fin n // hHerm.eigenvalues k ≠ 0}, e k ≠ a := by
-            intro k hk; apply ha
-            simp only [Finset.mem_map, Finset.mem_univ, true_and]; exact ⟨k, hk⟩
-          rw [hA_off i a hnotrange, map_zero, zero_mul]
-      _ = ∑ k : {k : Fin n // hHerm.eigenvalues k ≠ 0},
-            (hHerm.eigenvalues k.1 : 𝕜) * hHerm.eigenvectorUnitary i k.1 *
-              conj (hHerm.eigenvectorUnitary j k.1) := by
-          refine Finset.sum_congr rfl fun k _ => ?_
-          have hnn : 0 ≤ hHerm.eigenvalues k.1 := hB.eigenvalues_nonneg k.1
-          simp only [hw, map_mul, RCLike.conj_ofReal, RCLike.conj_conj]
-          rw [show
-              (Real.sqrt (hHerm.eigenvalues k.1) : 𝕜) * hHerm.eigenvectorUnitary i k.1 *
-                  ((Real.sqrt (hHerm.eigenvalues k.1) : 𝕜)
-                    * conj (hHerm.eigenvectorUnitary j k.1))
-                = ((Real.sqrt (hHerm.eigenvalues k.1) : 𝕜)
-                    * (Real.sqrt (hHerm.eigenvalues k.1) : 𝕜))
-                    * (hHerm.eigenvectorUnitary i k.1
-                        * conj (hHerm.eigenvectorUnitary j k.1)) from by ring]
-          rw [← RCLike.ofReal_mul, Real.mul_self_sqrt hnn]
-          ring
-      _ = ∑ k : Fin n,
-            (hHerm.eigenvalues k : 𝕜) * hHerm.eigenvectorUnitary i k *
-              conj (hHerm.eigenvectorUnitary j k) := by
-          have hsubtype :
-              (∑ k : {k : Fin n // hHerm.eigenvalues k ≠ 0},
-                (hHerm.eigenvalues k.1 : 𝕜) * hHerm.eigenvectorUnitary i k.1 *
-                  conj (hHerm.eigenvectorUnitary j k.1))
-                = ∑ k ∈ Finset.univ.filter (fun k => hHerm.eigenvalues k ≠ 0),
-                    (hHerm.eigenvalues k : 𝕜) * hHerm.eigenvectorUnitary i k *
-                      conj (hHerm.eigenvectorUnitary j k) :=
-            (Finset.sum_subtype (p := fun k => hHerm.eigenvalues k ≠ 0)
-              (Finset.univ.filter (fun k => hHerm.eigenvalues k ≠ 0)) (fun x => by simp)
-              (fun k => (hHerm.eigenvalues k : 𝕜) * hHerm.eigenvectorUnitary i k *
-                conj (hHerm.eigenvectorUnitary j k))).symm
-          rw [hsubtype]
-          apply Finset.sum_filter_of_ne
-          intro k _ hne hzero
-          exact hne (by rw [hzero]; push_cast; rw [zero_mul, zero_mul])
-      _ = B i j := (isHermitian_entry_eq_sum_eigenvalues B hHerm i j).symm
+  -- Square factorization of `B`, whose factor has the same rank as `B`.
+  obtain ⟨A₀, hA₀⟩ := PosSemidef.exists_eq_conjTranspose_mul_self hB
+  have hrankA₀ : A₀.rank ≤ d := by
+    rwa [hA₀, rank_conjTranspose_mul_self] at hrank
+  -- Compress the inner dimension to `Fin d` by rank factorization.
+  obtain ⟨L, R, hLR⟩ := exists_eq_mul_of_rank_le A₀ hrankA₀
+  -- Absorb the leftover Gram factor `Lᴴ * L` by a second square factorization.
+  obtain ⟨S, hS⟩ :=
+    PosSemidef.exists_eq_conjTranspose_mul_self (posSemidef_conjTranspose_mul_self L)
+  refine ⟨S * R, ?_⟩
+  calc B = A₀ᴴ * A₀ := hA₀
+    _ = Rᴴ * (Lᴴ * L) * R := by
+        rw [hLR, Matrix.conjTranspose_mul]
+        simp only [Matrix.mul_assoc]
+    _ = Rᴴ * (Sᴴ * S) * R := by rw [← hS]
+    _ = (S * R)ᴴ * (S * R) := by
+        rw [Matrix.conjTranspose_mul]
+        simp only [Matrix.mul_assoc]
 
 /--
 **Rank-constrained PSD factorization.** A matrix `B` over `𝕜 = ℝ, ℂ` is positive
 semidefinite with rank at most `d` if and only if `B = Aᴴ * A` for some
 `A : Matrix (Fin d) (Fin n) 𝕜` (equivalently, `B` is the Gram matrix of `n`
-points in `𝕜^d`).  Splits into the spectral forward direction
+points in `𝕜^d`).  Splits into the forward direction
 `PosSemidef.exists_conjTranspose_mul_self_of_rank_le` and the elementary
 converse (`posSemidef_conjTranspose_mul_self` + `rank_conjTranspose_mul_self`).
 -/

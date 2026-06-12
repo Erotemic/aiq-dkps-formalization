@@ -70,11 +70,17 @@ scope now.
 |---|---|---|---|---|
 | R2b | ✅ **DONE — verdict: keep the spectral proof.** Recon confirmed **no cleaner proof exists**: Mathlib has the PSD square root (`CFC.sqrt`, square `n×n` factor) but **no rank-factorization API** (`M = L·R`, `L : m×r`, `R : r×n`), so the rank-`≤d` compression into `Fin d` must be hand-built — the current spectral + `Classical.choose` construction is near-optimal. **No Fable needed.** Discovered upstream gap (deferred, net-new): a general `Matrix.exists_mul_eq_of_rank_le` would be broadly useful — flagged in `pr-decisions.md` D-7, not pursued. | S | no | **✅** |
 
-### Track 3 — net-new Fable content (DEFER per priority; revisit only if reviewers want it)
+### Track 3 — net-new Fable content (R4 + rank factorization DONE 2026-06-12, user-directed)
+
+**Rank factorization (fable-options #1) ✅ DONE** — candidate #14,
+`ForMathlib/LinearAlgebra/Matrix/RankFactorization.lean`
+(`exists_eq_mul_rank` / `exists_eq_mul_of_rank_le` / `rank_le_iff_exists_eq_mul`).
+Used to reprove the PSD forward direction through-API (audit §2.3 discharged: the
+`Classical.choose`/embedding construction is gone; R2b verdict superseded).
 
 | Item | What | Why deferred | Fable? |
 |---|---|---|---|
-| R4 | **Davis–Kahan redesign** onto `orthogonalProjection`/spectral-subspace API (vs. DKPS index-cutoffs). | Net-new statement + proof; audit §4 says it needs human spectral-analysis review and an API decision — reviewers may not converge. Not worth Fable until DK is a confirmed target. | yes |
+| R4 | ✅ **DONE (Fable, 2026-06-12, user-directed).** DK projector section redesigned onto `Submodule.starProjection` of orthonormal-subfamily spans: RCLike (was ℝ-only), arbitrary `s : Finset (Fin m)` (was `< d` cutoff), bespoke `spectralProjection` def deleted. Plus three reusable bridge lemmas (`Orthonormal.starProjection_span_image_apply` etc.). Audit §4.1–§4.3 discharged. | — | done |
 | R5 | **Courant–Fischer full min-max** (canonical min-over-subspaces). | Net-new; Mathlib has only the extremal Rayleigh case, and our directional bounds already suffice for Weyl. Pursue only if a reviewer asks. | yes |
 
 ### Track 4 — decisions needing human / Zulip input (R6)

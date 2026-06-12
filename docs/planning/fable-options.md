@@ -10,8 +10,8 @@ Ranking is by *strengthening per Fable effort*, not raw difficulty.
 
 | # | Task | Effort | Strengthens | Clears the "reviewers care" filter? |
 |---|---|---|---|---|
-| 1 | **Rank factorization** `Matrix.exists_mul_eq_of_rank_le` | M–L | **High** | ✅ yes |
-| 2 | **Davis–Kahan** redesign onto `orthogonalProjection` (R4) | L | **High** (but gated) | ⚠ after Zulip |
+| 1 | ✅ **DONE** (2026-06-12) — **Rank factorization**, candidate #14 | M–L | **High** | ✅ done |
+| 2 | ✅ **DONE** (2026-06-12) — **Davis–Kahan** redesign onto `Submodule.starProjection` (R4) | L | **High** | ✅ done |
 | 3 | Courant–Fischer full min-max (R5) | L | Low | ➖ marginal |
 | 4 | Two-space Gram **equivalence** (R1b leftover) | M | Low | ➖ marginal |
 | 5 | B1 matrix-Bernstein sharp constants | XL | Medium | ✅ but huge effort |

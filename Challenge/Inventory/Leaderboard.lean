@@ -46,10 +46,11 @@ import ForMathlib.Topology.Berge
 #print axioms ForMathlib.sum_cross_norm_inner_eigenvectorBasis_sq_le
 #print axioms ForMathlib.gap_of_rank_floor
 #print axioms ForMathlib.sum_cross_norm_inner_eigenvectorBasis_sq_le_of_rank_floor
-#print axioms ForMathlib.spectralProjection_apply
-#print axioms ForMathlib.spectralProjection_apply_self
-#print axioms ForMathlib.sum_norm_sub_spectralProjection_sq_eq
-#print axioms ForMathlib.sum_norm_sub_spectralProjection_sq_le
+#print axioms ForMathlib.Orthonormal.starProjection_span_image_apply
+#print axioms ForMathlib.Orthonormal.starProjection_span_image_apply_self
+#print axioms ForMathlib.Orthonormal.norm_sq_starProjection_span_image
+#print axioms ForMathlib.sum_norm_sub_starProjection_span_sq_eq
+#print axioms ForMathlib.sum_norm_sub_starProjection_span_sq_le
 #print axioms ForMathlib.exists_linearIsometryEquiv_map_eq_of_inner_eq
 #print axioms ForMathlib.Matrix.gram_eq_gram_iff_exists_linearIsometryEquiv_map_eq
 #print axioms ForMathlib.inner_linearCombination_linearCombination
@@ -60,7 +61,11 @@ import ForMathlib.Topology.Berge
 #print axioms ForMathlib.Matrix.PosSemidef.eigenvalues₀_eq_zero_of_le
 #print axioms ForMathlib.Matrix.isHermitian_entry_eq_sum_eigenvalues
 #print axioms ForMathlib.Matrix.posSemidef_and_rank_le_iff_exists_conjTranspose_mul_self
+#print axioms ForMathlib.Matrix.PosSemidef.exists_eq_conjTranspose_mul_self
 #print axioms ForMathlib.Matrix.PosSemidef.exists_conjTranspose_mul_self_of_rank_le
+#print axioms ForMathlib.Matrix.exists_eq_mul_rank
+#print axioms ForMathlib.Matrix.exists_eq_mul_of_rank_le
+#print axioms ForMathlib.Matrix.rank_le_iff_exists_eq_mul
 #print axioms ForMathlib.measurable_of_iUnion_restrict
 #print axioms ForMathlib.measurable_cfc_comp
 #print axioms ForMathlib.measurableSet_exists_mem_le

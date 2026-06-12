@@ -44,15 +44,22 @@ Both #5 follow-ups are now resolved (Opus, 2026-06-12):
   `PosSemidef.eigenvalues₀_eq_zero_of_le` (`RCLike`).  The local operator-world
   `Acharyya2025/MatrixPerturbation.lean` `sortedEigenvalues` is deliberately
   left (retiring it is a large, zero-benefit refactor).
-* **#5 proof shape (R2b recon, Opus 2026-06-12)** — VERDICT: keep the spectral
-  proof. The hard direction was modularized (forward lemma
-  `PosSemidef.exists_conjTranspose_mul_self_of_rank_le` + thin iff). A recon of
-  Mathlib's factorization APIs found **no cleaner route**: Mathlib has the PSD
-  square root (`CFC.sqrt`) but **no rank-factorization** (`M = L·R`, `r = rank`),
-  so the rank-`≤d` compression into `Fin d` is inherently hand-built. The current
-  `Classical.choose`/embedding construction is near-optimal. A general
-  `Matrix.exists_mul_eq_of_rank_le` is a genuine upstream gap but net-new content
-  (see `pr-decisions.md` D-7).
+* **#5 proof shape — SUPERSEDED (Fable, 2026-06-12).** The R2b recon found the
+  blocker was Mathlib's missing rank-factorization API; **candidate #14 below now
+  supplies it**, and the PSD forward direction is reproved through the API: square
+  factorization `PosSemidef.exists_eq_conjTranspose_mul_self` (spectral, no index
+  packing) → rank-factor the square factor through `Fin d` → absorb `Lᴴ·L` by a
+  second square factorization. The `Classical.choose`/embedding construction is
+  **gone** (audit §2.3 discharged).
+
+**Candidate #14 — rank factorization (`Matrix.exists_eq_mul_rank` /
+`exists_eq_mul_of_rank_le` / `rank_le_iff_exists_eq_mul`): STAGED (Fable,
+2026-06-12),** `ForMathlib/LinearAlgebra/Matrix/RankFactorization.lean`. Every
+matrix over a field factors `M = L·R` with inner dimension `M.rank` (basis of the
+column space + coordinates), zero-padded to any `r ≥ rank`, and conversely any
+factorization through `Fin r` bounds the rank — `M.rank ≤ r ↔ ∃ L R, M = L * R`.
+Textbook-foundational, entirely absent upstream (verified in the R2b recon);
+proposed home `Mathlib/LinearAlgebra/Matrix/Rank.lean`.
 
 Formalized by Claude Fable 5 (claude-fable-5[1m]).
 
@@ -158,6 +165,20 @@ invariants), but a literal re-derivation is NOT possible from the fixed-`K`
 theorem — MDS minimizes over the non-compact config space and recovers
 compactness only via coercive centering into a `Δ`-dependent box, an MDS-specific
 ingredient.  Documented at `exists_modulus_pairDist`; bespoke proof kept.
+
+**Candidate #8 projector form — REDESIGNED (Fable, 2026-06-12), audit §4
+discharged.** The bespoke ℝ-only `spectralProjection` finite-sum def is gone; the
+projector section of `ForMathlib/Analysis/InnerProductSpace/DavisKahan.lean` is
+now phrased with **Mathlib's `Submodule.starProjection`** of orthonormal-subfamily
+spans, over **`RCLike 𝕜`**, with the index cutoff generalized to an **arbitrary
+`s : Finset (Fin m)`** (`sᶜ` the complementary block). New bridge lemmas (each
+independently Mathlib-worthy, proposed home near
+`OrthonormalBasis.starProjection_eq_sum_rankOne`):
+`Orthonormal.starProjection_span_image_apply` (projection onto the span of an
+orthonormal subfamily = sum of rank-ones), `…_apply_self`, and the Parseval
+`Orthonormal.norm_sq_starProjection_span_image`. Main results renamed:
+`sum_norm_sub_starProjection_span_sq_eq` (identity, arbitrary `s`) and
+`sum_norm_sub_starProjection_span_sq_le` (the `2nε²/gap²` sin-Θ bound).
 
 **Update 2026-06-12 (Opus session):** candidate #8 (Davis–Kahan cross-block
 bound) is now STAGED, RCLike-general, in

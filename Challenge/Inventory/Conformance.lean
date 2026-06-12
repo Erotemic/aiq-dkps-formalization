@@ -446,11 +446,11 @@ is self-contained and correct.
   cross-energy bound `∑_{i,j} ‖⟪uᵢ, (S − T) v̂ⱼ⟫‖² ≤ n ε²`.
 * `ForMathlib.sum_cross_norm_inner_eigenvectorBasis_sq_le`: the Davis–Kahan
   cross-block bound `∑_{i < d, j ≥ d} ‖⟪uᵢ, v̂ⱼ⟫‖² ≤ n ε² / gap²`.
-* `ForMathlib.sum_norm_sub_spectralProjection_sq_eq` (real): the canonical
-  projector form — the squared Frobenius distance between the two rank-`d`
-  spectral projectors is `2 ·` the cross-block sum.
-* `ForMathlib.sum_norm_sub_spectralProjection_sq_le` (real): the resulting
-  `‖P̂ − P‖_F² ≤ 2 n ε² / gap²` sin-Θ bound.
+* `ForMathlib.sum_norm_sub_starProjection_span_sq_eq`: the canonical projector
+  identity over `RCLike 𝕜`, phrased with `Submodule.starProjection` of
+  orthonormal-subfamily spans (arbitrary index subsets).
+* `ForMathlib.sum_norm_sub_starProjection_span_sq_le`: the resulting
+  `‖P̂ − P‖_F² ≤ 2 n ε² / gap²` Davis–Kahan sin-Θ bound.
 
 ## References
 
@@ -516,59 +516,57 @@ theorem sum_cross_norm_inner_eigenvectorBasis_sq_le_of_rank_floor
         ‖⟪hT.eigenvectorBasis hn i, hS.eigenvectorBasis hn j⟫_𝕜‖ ^ 2
       ≤ 4 * (n : ℝ) * ε ^ 2 / α ^ 2 := by
   sorry
-section RealProjector
+section Projector
 
-variable {F : Type*} [NormedAddCommGroup F] [InnerProductSpace ℝ F] [FiniteDimensional ℝ F]
+variable {F : Type*} [NormedAddCommGroup F] [InnerProductSpace 𝕜 F] [FiniteDimensional 𝕜 F]
   {m : ℕ}
 
-open scoped RealInnerProductSpace
-
-/-- The orthogonal projection onto the span of the first `d` vectors of an
-orthonormal basis `b`, as a linear map `x ↦ ∑_{i < d} ⟪bᵢ, x⟫ • bᵢ`. -/
-noncomputable def spectralProjection (b : OrthonormalBasis (Fin m) ℝ F) (d : ℕ) :
-    F →ₗ[ℝ] F :=
-  ∑ i ∈ Finset.univ.filter (fun i : Fin m => (i : ℕ) < d),
-    LinearMap.smulRight ((innerSL ℝ (b i)).toLinearMap) (b i)
-
-omit [FiniteDimensional ℝ F] in
-theorem spectralProjection_apply (b : OrthonormalBasis (Fin m) ℝ F) (d : ℕ) (x : F) :
-    spectralProjection b d x
-      = ∑ i ∈ Finset.univ.filter (fun i : Fin m => (i : ℕ) < d), ⟪b i, x⟫ • b i := by
-  sorry
-omit [FiniteDimensional ℝ F] in
-/-- On a vector of its own basis, the projector keeps it iff its index is `< d`. -/
-theorem spectralProjection_apply_self (b : OrthonormalBasis (Fin m) ℝ F) (d : ℕ)
-    (k : Fin m) :
-    spectralProjection b d (b k) = if (k : ℕ) < d then b k else 0 := by
-  sorry
-omit [FiniteDimensional ℝ F] in
 /--
-**Projector form of the Davis–Kahan identity (real).** For two orthonormal bases
-`u`, `v` of a finite-dimensional real inner product space and a cutoff `d`, the
-squared Frobenius distance between the two rank-`d` spectral projectors (computed
-in the `u` basis) is twice the cross-block overlap sum:
-`∑ₖ ‖(P_v − P_u) uₖ‖² = 2 · ∑_{i < d} ∑_{j ≥ d} ⟪uᵢ, vⱼ⟫²`.
-
-(The left side `∑ₖ ‖A uₖ‖²` is the Frobenius / Hilbert–Schmidt norm² of
-`A = P_v − P_u`, evaluated in the orthonormal basis `u`.)
+**Projection onto the span of an orthonormal subfamily.** For an orthonormal
+family `w` and a finite index set `s`, the orthogonal projection onto
+`span 𝕜 (w '' s)` acts as `x ↦ ∑ i ∈ s, ⟪w i, x⟫ • w i`.
 -/
-theorem sum_norm_sub_spectralProjection_sq_eq
-    (u v : OrthonormalBasis (Fin m) ℝ F) (d : ℕ) :
-    ∑ k, ‖(spectralProjection v d - spectralProjection u d) (u k)‖ ^ 2
-      = 2 * ∑ i ∈ Finset.univ.filter (fun i : Fin m => (i : ℕ) < d),
-          ∑ j ∈ Finset.univ.filter (fun j : Fin m => d ≤ (j : ℕ)), ⟪u i, v j⟫ ^ 2 := by
+theorem Orthonormal.starProjection_span_image_apply {ι : Type*} {w : ι → F}
+    (hw : Orthonormal 𝕜 w) (s : Finset ι) (x : F) :
+    (Submodule.span 𝕜 (w '' ↑s)).starProjection x = ∑ i ∈ s, ⟪w i, x⟫_𝕜 • w i := by
   sorry
-theorem sum_norm_sub_spectralProjection_sq_le {T S : F →ₗ[ℝ] F}
-    (hT : T.IsSymmetric) (hS : S.IsSymmetric) (hn : finrank ℝ F = m)
+theorem Orthonormal.starProjection_span_image_apply_self {ι : Type*} [DecidableEq ι]
+    {w : ι → F} (hw : Orthonormal 𝕜 w) (s : Finset ι) (k : ι) :
+    (Submodule.span 𝕜 (w '' ↑s)).starProjection (w k) = if k ∈ s then w k else 0 := by
+  sorry
+theorem Orthonormal.norm_sq_starProjection_span_image {ι : Type*} {w : ι → F}
+    (hw : Orthonormal 𝕜 w) (s : Finset ι) (x : F) :
+    ‖(Submodule.span 𝕜 (w '' ↑s)).starProjection x‖ ^ 2 = ∑ i ∈ s, ‖⟪w i, x⟫_𝕜‖ ^ 2 := by
+  sorry
+/--
+**Projector form of the Davis–Kahan identity.** The squared Frobenius distance
+(computed in the basis `u`) between the orthogonal projections onto
+`span (v '' s)` and `span (u '' s)` is twice the cross overlap sum.
+-/
+theorem sum_norm_sub_starProjection_span_sq_eq (u v : OrthonormalBasis (Fin m) 𝕜 F)
+    (s : Finset (Fin m)) :
+    ∑ k, ‖((Submodule.span 𝕜 (v '' ↑s)).starProjection
+        - (Submodule.span 𝕜 (u '' ↑s)).starProjection) (u k)‖ ^ 2
+      = 2 * ∑ i ∈ s, ∑ j ∈ sᶜ, ‖⟪u i, v j⟫_𝕜‖ ^ 2 := by
+  sorry
+/--
+**Davis–Kahan, projector form.** `‖P̂ − P‖_F² ≤ 2 m ε² / gap²` for the
+projections onto the leading-`d` spectral subspaces.
+-/
+theorem sum_norm_sub_starProjection_span_sq_le {T S : F →ₗ[𝕜] F}
+    (hT : T.IsSymmetric) (hS : S.IsSymmetric) (hn : finrank 𝕜 F = m)
     (d : ℕ) {gap : ℝ} (hgap_pos : 0 < gap)
     (hgap : ∀ i j : Fin m, (i : ℕ) < d → d ≤ (j : ℕ) →
       gap ≤ |hT.eigenvalues hn i - hS.eigenvalues hn j|)
     {ε : ℝ} (hε : ∀ x : F, ‖(S - T) x‖ ≤ ε * ‖x‖) :
-    ∑ k, ‖(spectralProjection (hS.eigenvectorBasis hn) d
-        - spectralProjection (hT.eigenvectorBasis hn) d) (hT.eigenvectorBasis hn k)‖ ^ 2
+    ∑ k, ‖((Submodule.span 𝕜 (hS.eigenvectorBasis hn ''
+          ↑(Finset.univ.filter fun j : Fin m => (j : ℕ) < d))).starProjection
+        - (Submodule.span 𝕜 (hT.eigenvectorBasis hn ''
+          ↑(Finset.univ.filter fun i : Fin m => (i : ℕ) < d))).starProjection)
+        (hT.eigenvectorBasis hn k)‖ ^ 2
       ≤ 2 * ((m : ℝ) * ε ^ 2 / gap ^ 2) := by
   sorry
-end RealProjector
+end Projector
 
 end ForMathlib
 
@@ -889,9 +887,38 @@ theorem isHermitian_entry_eq_sum_eigenvalues
       (hB.eigenvalues k : 𝕜) * (hB.eigenvectorUnitary i k) *
         conj (hB.eigenvectorUnitary j k) := by
   sorry
+theorem PosSemidef.exists_eq_conjTranspose_mul_self
+    {B : Matrix (Fin n) (Fin n) 𝕜} (hB : B.PosSemidef) :
+    ∃ A : Matrix (Fin n) (Fin n) 𝕜, B = Aᴴ * A := by
+  sorry
 theorem posSemidef_and_rank_le_iff_exists_conjTranspose_mul_self
     {d : ℕ} (B : Matrix (Fin n) (Fin n) 𝕜) :
     (B.PosSemidef ∧ B.rank ≤ d) ↔ ∃ A : Matrix (Fin d) (Fin n) 𝕜, B = Aᴴ * A := by
+  sorry
+end ForMathlib.Matrix
+
+/-!
+## Source: `ForMathlib/LinearAlgebra/Matrix/RankFactorization.lean`
+-/
+/-! # Rank factorization
+
+Every matrix over a field factors as `M = L * R` with inner dimension exactly
+`M.rank`, hence through `Fin r` for any `r ≥ M.rank`; conversely any product
+through `Fin r` has rank at most `r`.  Mathlib has the rank API but no
+factorization realizing the rank as an inner dimension. -/
+
+namespace ForMathlib.Matrix
+
+variable {𝕜' m' n' : Type*} [Field 𝕜'] [Fintype n'] [DecidableEq n']
+
+theorem exists_eq_mul_rank (M : Matrix m' n' 𝕜') :
+    ∃ (L : Matrix m' (Fin M.rank) 𝕜') (R : Matrix (Fin M.rank) n' 𝕜'), M = L * R := by
+  sorry
+theorem exists_eq_mul_of_rank_le (M : Matrix m' n' 𝕜') {r : ℕ} (h : M.rank ≤ r) :
+    ∃ (L : Matrix m' (Fin r) 𝕜') (R : Matrix (Fin r) n' 𝕜'), M = L * R := by
+  sorry
+theorem rank_le_iff_exists_eq_mul (M : Matrix m' n' 𝕜') (r : ℕ) :
+    M.rank ≤ r ↔ ∃ (L : Matrix m' (Fin r) 𝕜') (R : Matrix (Fin r) n' 𝕜'), M = L * R := by
   sorry
 end ForMathlib.Matrix
 

@@ -2,8 +2,10 @@
 Staged for Mathlib: additions to `Mathlib/Analysis/InnerProductSpace/` (new file
 `DavisKahan.lean`).
 
-Formalized by Claude Opus 4.8 (claude-opus-4-8[1m]);
-to be re-authored per Mathlib's AI-contribution policy at PR time.
+Formalized by Claude Opus 4.8 (claude-opus-4-8[1m]); projector section
+redesigned onto `Submodule.starProjection` (RCLike, arbitrary index subsets)
+by Claude Fable 5 (claude-fable-5[1m]).
+To be re-authored per Mathlib's AI-contribution policy at PR time.
 -/
 
 import Mathlib.Analysis.InnerProductSpace.Spectrum
@@ -32,11 +34,16 @@ is self-contained and correct.
   cross-energy bound `∑_{i,j} ‖⟪uᵢ, (S − T) v̂ⱼ⟫‖² ≤ n ε²`.
 * `ForMathlib.sum_cross_norm_inner_eigenvectorBasis_sq_le`: the Davis–Kahan
   cross-block bound `∑_{i < d, j ≥ d} ‖⟪uᵢ, v̂ⱼ⟫‖² ≤ n ε² / gap²`.
-* `ForMathlib.sum_norm_sub_spectralProjection_sq_eq` (real): the canonical
-  projector form — the squared Frobenius distance between the two rank-`d`
-  spectral projectors is `2 ·` the cross-block sum.
-* `ForMathlib.sum_norm_sub_spectralProjection_sq_le` (real): the resulting
-  `‖P̂ − P‖_F² ≤ 2 n ε² / gap²` sin-Θ bound.
+* `ForMathlib.Orthonormal.starProjection_span_image_apply`: the orthogonal
+  projection onto the span of an orthonormal subfamily is the sum of the
+  corresponding rank-one projections (`Submodule.starProjection` form).
+* `ForMathlib.sum_norm_sub_starProjection_span_sq_eq`: the canonical projector
+  identity — the squared Frobenius distance between the projections onto two
+  orthonormal-subfamily spans is `2 ·` the cross overlap sum (over `RCLike 𝕜`,
+  arbitrary index subsets, phrased with `Submodule.starProjection`).
+* `ForMathlib.sum_norm_sub_starProjection_span_sq_le`: the resulting
+  `‖P̂ − P‖_F² ≤ 2 n ε² / gap²` Davis–Kahan sin-Θ bound for the spectral
+  subspaces of two close self-adjoint operators.
 
 ## References
 
@@ -240,179 +247,188 @@ theorem sum_cross_norm_inner_eigenvectorBasis_sq_le_of_rank_floor
             (by positivity : (0 : ℝ) < α / 2) hgap hε
     _ = 4 * (n : ℝ) * ε ^ 2 / α ^ 2 := by field_simp; ring
 
-/-! ### Projector (canonical sin-Θ) form over `ℝ`
+/-! ### Projector (canonical sin-Θ) form via `Submodule.starProjection`
 
 The cross-block sum is exactly half the squared Frobenius distance between the
-two rank-`d` spectral projectors.  We record this over a real inner product
-space, where the conjugation bookkeeping is trivial; it turns the cross-block
-bounds above into the canonical `‖P̂ − P‖_F²` Davis–Kahan sin-Θ statement. -/
+orthogonal projections onto the two spectral subspaces.  The projections are
+Mathlib's `Submodule.starProjection` of the spans of the selected eigenvectors,
+the field is any `RCLike 𝕜`, and the selected index set is an arbitrary
+`s : Finset (Fin m)` (the sorted-cutoff case is `s = {i | (i : ℕ) < d}`). -/
 
-section RealProjector
+section Projector
 
-variable {F : Type*} [NormedAddCommGroup F] [InnerProductSpace ℝ F] [FiniteDimensional ℝ F]
+variable {F : Type*} [NormedAddCommGroup F] [InnerProductSpace 𝕜 F] [FiniteDimensional 𝕜 F]
   {m : ℕ}
 
-open scoped RealInnerProductSpace
-
-/-- The orthogonal projection onto the span of the first `d` vectors of an
-orthonormal basis `b`, as a linear map `x ↦ ∑_{i < d} ⟪bᵢ, x⟫ • bᵢ`. -/
-noncomputable def spectralProjection (b : OrthonormalBasis (Fin m) ℝ F) (d : ℕ) :
-    F →ₗ[ℝ] F :=
-  ∑ i ∈ Finset.univ.filter (fun i : Fin m => (i : ℕ) < d),
-    LinearMap.smulRight ((innerSL ℝ (b i)).toLinearMap) (b i)
-
-omit [FiniteDimensional ℝ F] in
-theorem spectralProjection_apply (b : OrthonormalBasis (Fin m) ℝ F) (d : ℕ) (x : F) :
-    spectralProjection b d x
-      = ∑ i ∈ Finset.univ.filter (fun i : Fin m => (i : ℕ) < d), ⟪b i, x⟫ • b i := by
-  simp [spectralProjection, LinearMap.sum_apply, LinearMap.smulRight_apply]
-
-omit [FiniteDimensional ℝ F] in
-/-- On a vector of its own basis, the projector keeps it iff its index is `< d`. -/
-theorem spectralProjection_apply_self (b : OrthonormalBasis (Fin m) ℝ F) (d : ℕ)
-    (k : Fin m) :
-    spectralProjection b d (b k) = if (k : ℕ) < d then b k else 0 := by
-  classical
-  rw [spectralProjection_apply]
-  have hk : ∀ i, ⟪b i, b k⟫ • b i = if i = k then b k else 0 := by
-    intro i
-    rw [orthonormal_iff_ite.mp b.orthonormal i k]
-    split <;> rename_i h
-    · rw [h, one_smul]
-    · rw [zero_smul]
-  rw [Finset.sum_congr rfl fun i _ => hk i, Finset.sum_ite_eq' _ k]
-  simp [Finset.mem_filter]
-
-omit [FiniteDimensional ℝ F] in
 /--
-**Projector form of the Davis–Kahan identity (real).** For two orthonormal bases
-`u`, `v` of a finite-dimensional real inner product space and a cutoff `d`, the
-squared Frobenius distance between the two rank-`d` spectral projectors (computed
-in the `u` basis) is twice the cross-block overlap sum:
-`∑ₖ ‖(P_v − P_u) uₖ‖² = 2 · ∑_{i < d} ∑_{j ≥ d} ⟪uᵢ, vⱼ⟫²`.
-
-(The left side `∑ₖ ‖A uₖ‖²` is the Frobenius / Hilbert–Schmidt norm² of
-`A = P_v − P_u`, evaluated in the orthonormal basis `u`.)
+**Projection onto the span of an orthonormal subfamily.** For an orthonormal
+family `w` and a finite index set `s`, the orthogonal projection onto
+`span 𝕜 (w '' s)` acts as `x ↦ ∑ i ∈ s, ⟪w i, x⟫ • w i`.
 -/
-theorem sum_norm_sub_spectralProjection_sq_eq
-    (u v : OrthonormalBasis (Fin m) ℝ F) (d : ℕ) :
-    ∑ k, ‖(spectralProjection v d - spectralProjection u d) (u k)‖ ^ 2
-      = 2 * ∑ i ∈ Finset.univ.filter (fun i : Fin m => (i : ℕ) < d),
-          ∑ j ∈ Finset.univ.filter (fun j : Fin m => d ≤ (j : ℕ)), ⟪u i, v j⟫ ^ 2 := by
+theorem Orthonormal.starProjection_span_image_apply {ι : Type*} {w : ι → F}
+    (hw : Orthonormal 𝕜 w) (s : Finset ι) (x : F) :
+    (Submodule.span 𝕜 (w '' ↑s)).starProjection x = ∑ i ∈ s, ⟪w i, x⟫_𝕜 • w i := by
   classical
-  set s := Finset.univ.filter (fun i : Fin m => (i : ℕ) < d) with hs
-  set t := Finset.univ.filter (fun j : Fin m => d ≤ (j : ℕ)) with ht
-  -- `P_u uₖ = [k < d] uₖ`,  `P_v uₖ = ∑_{j<d} ⟪vⱼ,uₖ⟫ vⱼ`.
-  have hP : ∀ k, spectralProjection u d (u k) = if (k : ℕ) < d then u k else 0 :=
-    spectralProjection_apply_self u d
-  have hQ : ∀ k, spectralProjection v d (u k) = ∑ j ∈ s, ⟪v j, u k⟫ • v j := fun k =>
-    spectralProjection_apply v d (u k)
-  -- Expand each squared norm via `‖a - b‖² = ‖a‖² - 2⟪a,b⟫ + ‖b‖²`.
-  have hterm : ∀ k, ‖(spectralProjection v d - spectralProjection u d) (u k)‖ ^ 2
-      = ‖spectralProjection v d (u k)‖ ^ 2
-        - 2 * ⟪spectralProjection v d (u k), spectralProjection u d (u k)⟫
-        + ‖spectralProjection u d (u k)‖ ^ 2 := by
+  refine Submodule.eq_starProjection_of_mem_of_inner_eq_zero ?_ ?_
+  · exact Submodule.sum_smul_mem _ _ fun i hi =>
+      Submodule.subset_span (Set.mem_image_of_mem w (by exact_mod_cast hi))
+  · intro y hy
+    induction hy using Submodule.span_induction with
+    | mem y hy =>
+      obtain ⟨j, hj, rfl⟩ := hy
+      have hj' : j ∈ s := by exact_mod_cast hj
+      rw [inner_sub_left, sum_inner, Finset.sum_congr rfl (fun i _ => by
+        rw [inner_smul_left, orthonormal_iff_ite.mp hw i j, mul_ite, mul_one, mul_zero])]
+      rw [Finset.sum_ite_eq' s j fun i => (starRingEnd 𝕜) ⟪w i, x⟫_𝕜, if_pos hj',
+        inner_conj_symm, sub_self]
+    | zero => simp
+    | add a b _ _ ha hb => rw [inner_add_right, ha, hb, add_zero]
+    | smul c a _ ha => rw [inner_smul_right, ha, mul_zero]
+
+/--
+On a member `w k` of the orthonormal family, the projection onto
+`span 𝕜 (w '' s)` keeps it iff `k ∈ s`.
+-/
+theorem Orthonormal.starProjection_span_image_apply_self {ι : Type*} [DecidableEq ι]
+    {w : ι → F} (hw : Orthonormal 𝕜 w) (s : Finset ι) (k : ι) :
+    (Submodule.span 𝕜 (w '' ↑s)).starProjection (w k) = if k ∈ s then w k else 0 := by
+  classical
+  rw [Orthonormal.starProjection_span_image_apply hw s (w k),
+    Finset.sum_congr rfl (fun i _ => by
+      rw [orthonormal_iff_ite.mp hw i k, ite_smul, one_smul, zero_smul]),
+    Finset.sum_ite_eq' s k fun i => w i]
+
+/--
+Parseval for the projection onto the span of an orthonormal subfamily:
+`‖P x‖² = ∑ i ∈ s, ‖⟪w i, x⟫‖²`.
+-/
+theorem Orthonormal.norm_sq_starProjection_span_image {ι : Type*} {w : ι → F}
+    (hw : Orthonormal 𝕜 w) (s : Finset ι) (x : F) :
+    ‖(Submodule.span 𝕜 (w '' ↑s)).starProjection x‖ ^ 2 = ∑ i ∈ s, ‖⟪w i, x⟫_𝕜‖ ^ 2 := by
+  have hcast : ((‖(Submodule.span 𝕜 (w '' ↑s)).starProjection x‖ : ℝ) : 𝕜) ^ 2
+      = ((∑ i ∈ s, ‖⟪w i, x⟫_𝕜‖ ^ 2 : ℝ) : 𝕜) := by
+    rw [← inner_self_eq_norm_sq_to_K (𝕜 := 𝕜),
+      Orthonormal.starProjection_span_image_apply hw s x, _root_.Orthonormal.inner_sum hw]
+    rw [Finset.sum_congr rfl fun i _ => RCLike.conj_mul ⟪w i, x⟫_𝕜]
+    push_cast
+    rfl
+  exact_mod_cast hcast
+
+/--
+**Projector form of the Davis–Kahan identity.** For two orthonormal bases `u`,
+`v` of a finite-dimensional inner product space over `𝕜 = ℝ, ℂ` and an index set
+`s`, the squared Frobenius distance (computed in the basis `u`) between the
+orthogonal projections onto `span (v '' s)` and `span (u '' s)` is twice the
+cross overlap sum:
+`∑ₖ ‖(P_v − P_u) uₖ‖² = 2 ∑_{i ∈ s} ∑_{j ∉ s} ‖⟪uᵢ, vⱼ⟫‖²`.
+-/
+theorem sum_norm_sub_starProjection_span_sq_eq (u v : OrthonormalBasis (Fin m) 𝕜 F)
+    (s : Finset (Fin m)) :
+    ∑ k, ‖((Submodule.span 𝕜 (v '' ↑s)).starProjection
+        - (Submodule.span 𝕜 (u '' ↑s)).starProjection) (u k)‖ ^ 2
+      = 2 * ∑ i ∈ s, ∑ j ∈ sᶜ, ‖⟪u i, v j⟫_𝕜‖ ^ 2 := by
+  classical
+  -- Per-`k` reduction: the `k`-th term is a single cross-overlap row.
+  have hQnorm : ∀ k, ‖(Submodule.span 𝕜 (v '' ↑s)).starProjection (u k)‖ ^ 2
+      = ∑ j ∈ s, ‖⟪v j, u k⟫_𝕜‖ ^ 2 :=
+    fun k => Orthonormal.norm_sq_starProjection_span_image v.orthonormal s (u k)
+  have hterm : ∀ k, ‖((Submodule.span 𝕜 (v '' ↑s)).starProjection
+        - (Submodule.span 𝕜 (u '' ↑s)).starProjection) (u k)‖ ^ 2
+      = if k ∈ s then ∑ j ∈ sᶜ, ‖⟪v j, u k⟫_𝕜‖ ^ 2 else ∑ j ∈ s, ‖⟪v j, u k⟫_𝕜‖ ^ 2 := by
     intro k
-    rw [LinearMap.sub_apply, ← real_inner_self_eq_norm_sq, inner_sub_sub_self]
-    rw [real_inner_self_eq_norm_sq, real_inner_self_eq_norm_sq, real_inner_comm
-      (spectralProjection u d (u k)) (spectralProjection v d (u k))]
-    ring
-  -- `‖P_v uₖ‖² = ∑_{j<d} ⟪vⱼ,uₖ⟫²`.
-  have hQnorm : ∀ k, ‖spectralProjection v d (u k)‖ ^ 2 = ∑ j ∈ s, ⟪v j, u k⟫ ^ 2 := by
-    intro k
-    rw [← real_inner_self_eq_norm_sq, hQ k, v.orthonormal.inner_sum]
-    refine Finset.sum_congr rfl fun j _ => ?_
-    simp [pow_two]
-  -- `‖P_u uₖ‖² = [k < d]`.
-  have hPnorm : ∀ k, ‖spectralProjection u d (u k)‖ ^ 2 = if (k : ℕ) < d then 1 else 0 := by
-    intro k
-    rw [hP k]
-    split
-    · simp [u.orthonormal.1 k]
-    · simp
-  -- `⟪P_v uₖ, P_u uₖ⟫ = [k < d] · ∑_{j<d} ⟪vⱼ,uₖ⟫²`.
-  have hcross : ∀ k, ⟪spectralProjection v d (u k), spectralProjection u d (u k)⟫
-      = if (k : ℕ) < d then ∑ j ∈ s, ⟪v j, u k⟫ ^ 2 else 0 := by
-    intro k
-    rw [hP k]
-    split
-    · rw [hQ k, sum_inner]
-      refine Finset.sum_congr rfl fun j _ => ?_
-      rw [real_inner_smul_left, ← pow_two]
-    · simp
-  -- The three component sums.
-  have hsumP : ∑ k, ‖spectralProjection u d (u k)‖ ^ 2 = (s.card : ℝ) := by
-    simp_rw [hPnorm]
-    rw [← Finset.sum_filter, Finset.sum_const, nsmul_eq_mul, mul_one]
-  have hsumQ : ∑ k, ‖spectralProjection v d (u k)‖ ^ 2 = (s.card : ℝ) := by
-    simp_rw [hQnorm, Finset.sum_comm (s := Finset.univ) (t := s)]
-    have hrow : ∀ j ∈ s, ∑ k, ⟪v j, u k⟫ ^ 2 = 1 := by
-      intro j _
-      have hpar := u.sum_sq_norm_inner_right (v j)
-      simp only [Real.norm_eq_abs, sq_abs] at hpar
-      rw [show (1 : ℝ) = ‖v j‖ ^ 2 by rw [v.orthonormal.1 j]; norm_num, ← hpar]
-      exact Finset.sum_congr rfl fun k _ => by rw [real_inner_comm]
-    rw [Finset.sum_congr rfl hrow, Finset.sum_const, nsmul_eq_mul, mul_one]
-  have hsumC : ∑ k, ⟪spectralProjection v d (u k), spectralProjection u d (u k)⟫
-      = ∑ k ∈ s, ∑ j ∈ s, ⟪v j, u k⟫ ^ 2 := by
-    simp_rw [hcross]
-    rw [← Finset.sum_filter]
-  -- The cross-block sum equals `d − ∑_{i<d,j<d} ⟪uᵢ,vⱼ⟫²` (Parseval over `v`).
-  have hsplit : ∑ i ∈ s, ∑ j ∈ t, ⟪u i, v j⟫ ^ 2
-      = (s.card : ℝ) - ∑ k ∈ s, ∑ j ∈ s, ⟪v j, u k⟫ ^ 2 := by
-    have hrow : ∀ i ∈ s, ∑ j ∈ s, ⟪v j, u i⟫ ^ 2 + ∑ j ∈ t, ⟪u i, v j⟫ ^ 2 = 1 := by
+    rw [show (((Submodule.span 𝕜 (v '' ↑s)).starProjection
+          - (Submodule.span 𝕜 (u '' ↑s)).starProjection) (u k))
+        = (Submodule.span 𝕜 (v '' ↑s)).starProjection (u k)
+          - (Submodule.span 𝕜 (u '' ↑s)).starProjection (u k) from rfl,
+      Orthonormal.starProjection_span_image_apply_self u.orthonormal s k]
+    split <;> rename_i hk
+    · -- `k ∈ s`: the term is the residual of `uₖ` against the `v`-span.
+      rw [norm_sub_rev]
+      have hdecomp :=
+        Submodule.norm_sq_eq_add_norm_sq_starProjection (u k) (Submodule.span 𝕜 (v '' ↑s))
+      have hres : u k - (Submodule.span 𝕜 (v '' ↑s)).starProjection (u k)
+          = (Submodule.span 𝕜 (v '' ↑s))ᗮ.starProjection (u k) :=
+        (Submodule.starProjection_orthogonal_val (u k)).symm
+      have hpar : ∑ j, ‖⟪v j, u k⟫_𝕜‖ ^ 2 = 1 := by
+        rw [v.sum_sq_norm_inner_right (u k), u.orthonormal.1 k, one_pow]
+      have hsplit := Finset.sum_add_sum_compl s fun j => ‖⟪v j, u k⟫_𝕜‖ ^ 2
+      have hnorm_one : ‖u k‖ ^ 2 = 1 := by rw [u.orthonormal.1 k, one_pow]
+      rw [hres]
+      rw [hnorm_one, hQnorm k] at hdecomp
+      linarith [hdecomp, hsplit, hpar]
+    · -- `k ∉ s`: the `u`-projection vanishes; the term is the `v`-projection norm.
+      rw [sub_zero, hQnorm k]
+  -- Sum the per-`k` formula and swap the two cross blocks into each other.
+  rw [Finset.sum_congr rfl fun k _ => hterm k, ← Finset.sum_add_sum_compl s]
+  rw [Finset.sum_congr rfl fun k (hk : k ∈ s) => if_pos hk,
+    Finset.sum_congr rfl fun k (hk : k ∈ sᶜ) => if_neg (Finset.mem_compl.mp hk)]
+  -- First block is the target cross sum (after swapping the inner-product slots).
+  have hswap : ∀ (i j : Fin m), ‖⟪v j, u i⟫_𝕜‖ = ‖⟪u i, v j⟫_𝕜‖ := fun i j =>
+    norm_inner_symm (v j) (u i)
+  have hA : ∑ k ∈ s, ∑ j ∈ sᶜ, ‖⟪v j, u k⟫_𝕜‖ ^ 2
+      = ∑ i ∈ s, ∑ j ∈ sᶜ, ‖⟪u i, v j⟫_𝕜‖ ^ 2 :=
+    Finset.sum_congr rfl fun i _ => Finset.sum_congr rfl fun j _ => by rw [hswap i j]
+  -- Second block equals the first: both are `s.card −` the leading-leading sum.
+  have hB : ∑ k ∈ sᶜ, ∑ j ∈ s, ‖⟪v j, u k⟫_𝕜‖ ^ 2
+      = ∑ i ∈ s, ∑ j ∈ sᶜ, ‖⟪u i, v j⟫_𝕜‖ ^ 2 := by
+    rw [Finset.sum_comm]
+    have hrow_v : ∀ j, ∑ k ∈ sᶜ, ‖⟪v j, u k⟫_𝕜‖ ^ 2
+        = 1 - ∑ k ∈ s, ‖⟪v j, u k⟫_𝕜‖ ^ 2 := by
+      intro j
+      have hpar : ∑ k, ‖⟪u k, v j⟫_𝕜‖ ^ 2 = 1 := by
+        rw [u.sum_sq_norm_inner_right (v j), v.orthonormal.1 j, one_pow]
+      have hsplit := Finset.sum_add_sum_compl s fun k => ‖⟪v j, u k⟫_𝕜‖ ^ 2
+      have hpar' : ∑ k, ‖⟪v j, u k⟫_𝕜‖ ^ 2 = 1 := by
+        rw [← hpar]
+        exact Finset.sum_congr rfl fun k _ => by rw [norm_inner_symm]
+      linarith [hsplit, hpar']
+    have hrow_u : ∀ i ∈ s, ∑ j ∈ sᶜ, ‖⟪u i, v j⟫_𝕜‖ ^ 2
+        = 1 - ∑ j ∈ s, ‖⟪u i, v j⟫_𝕜‖ ^ 2 := by
       intro i _
-      have hpar := v.sum_sq_norm_inner_right (u i)
-      simp only [Real.norm_eq_abs, sq_abs] at hpar
-      have hsplit_univ : ∑ j, ⟪v j, u i⟫ ^ 2
-          = ∑ j ∈ s, ⟪v j, u i⟫ ^ 2 + ∑ j ∈ t, ⟪v j, u i⟫ ^ 2 := by
-        rw [← Finset.sum_filter_add_sum_filter_not Finset.univ (fun j : Fin m => (j : ℕ) < d)]
-        congr 1
-        apply Finset.sum_congr ?_ (fun _ _ => rfl)
-        ext j; simp [ht, not_lt]
-      have hcommt : ∑ j ∈ t, ⟪u i, v j⟫ ^ 2 = ∑ j ∈ t, ⟪v j, u i⟫ ^ 2 :=
-        Finset.sum_congr rfl fun j _ => by rw [real_inner_comm]
-      rw [hcommt, ← hsplit_univ, hpar, u.orthonormal.1 i]; norm_num
-    have hsum_one : ∑ i ∈ s, (∑ j ∈ s, ⟪v j, u i⟫ ^ 2 + ∑ j ∈ t, ⟪u i, v j⟫ ^ 2)
-        = (s.card : ℝ) := by
-      rw [Finset.sum_congr rfl hrow, Finset.sum_const, nsmul_eq_mul, mul_one]
-    rw [Finset.sum_add_distrib] at hsum_one
-    linarith [hsum_one]
-  -- Assemble: `∑ₖ ‖(Q−P)uₖ‖² = ∑‖Quₖ‖² − 2∑⟪Quₖ,Puₖ⟫ + ∑‖Puₖ‖² = 2·cross`.
-  calc ∑ k, ‖(spectralProjection v d - spectralProjection u d) (u k)‖ ^ 2
-      = ∑ k, ‖spectralProjection v d (u k)‖ ^ 2
-          - 2 * (∑ k, ⟪spectralProjection v d (u k), spectralProjection u d (u k)⟫)
-          + ∑ k, ‖spectralProjection u d (u k)‖ ^ 2 := by
-        rw [Finset.sum_congr rfl fun k _ => hterm k, Finset.sum_add_distrib,
-          Finset.sum_sub_distrib, ← Finset.mul_sum]
-    _ = 2 * (∑ i ∈ s, ∑ j ∈ t, ⟪u i, v j⟫ ^ 2) := by
-        rw [hsumP, hsumQ, hsumC, hsplit]; ring
+      have hpar : ∑ j, ‖⟪v j, u i⟫_𝕜‖ ^ 2 = 1 := by
+        rw [v.sum_sq_norm_inner_right (u i), u.orthonormal.1 i, one_pow]
+      have hsplit := Finset.sum_add_sum_compl s fun j => ‖⟪u i, v j⟫_𝕜‖ ^ 2
+      have hpar' : ∑ j, ‖⟪u i, v j⟫_𝕜‖ ^ 2 = 1 := by
+        rw [← hpar]
+        exact Finset.sum_congr rfl fun j _ => by rw [norm_inner_symm]
+      linarith [hsplit, hpar']
+    rw [Finset.sum_congr rfl fun j (_ : j ∈ s) => hrow_v j,
+      Finset.sum_congr rfl hrow_u, Finset.sum_sub_distrib, Finset.sum_sub_distrib]
+    congr 1
+    exact Finset.sum_comm.trans (Finset.sum_congr rfl fun i _ =>
+      Finset.sum_congr rfl fun j _ => by rw [norm_inner_symm])
+  rw [hA, hB]
+  ring
 
 /--
-**Davis–Kahan, projector form (real).** The squared Frobenius distance between
-the rank-`d` spectral projectors of two `ε`-operator-close self-adjoint operators
-with eigengap `gap` is at most `2 n ε² / gap²`.
+**Davis–Kahan, projector form.** The squared Frobenius distance between the
+orthogonal projections onto the leading-`d` spectral subspaces of two
+`ε`-operator-close self-adjoint operators with eigengap `gap` is at most
+`2 m ε² / gap²`.  The projections are `Submodule.starProjection` of the spans of
+the leading `d` eigenvectors.
 -/
-theorem sum_norm_sub_spectralProjection_sq_le {T S : F →ₗ[ℝ] F}
-    (hT : T.IsSymmetric) (hS : S.IsSymmetric) (hn : finrank ℝ F = m)
+theorem sum_norm_sub_starProjection_span_sq_le {T S : F →ₗ[𝕜] F}
+    (hT : T.IsSymmetric) (hS : S.IsSymmetric) (hn : finrank 𝕜 F = m)
     (d : ℕ) {gap : ℝ} (hgap_pos : 0 < gap)
     (hgap : ∀ i j : Fin m, (i : ℕ) < d → d ≤ (j : ℕ) →
       gap ≤ |hT.eigenvalues hn i - hS.eigenvalues hn j|)
     {ε : ℝ} (hε : ∀ x : F, ‖(S - T) x‖ ≤ ε * ‖x‖) :
-    ∑ k, ‖(spectralProjection (hS.eigenvectorBasis hn) d
-        - spectralProjection (hT.eigenvectorBasis hn) d) (hT.eigenvectorBasis hn k)‖ ^ 2
+    ∑ k, ‖((Submodule.span 𝕜 (hS.eigenvectorBasis hn ''
+          ↑(Finset.univ.filter fun j : Fin m => (j : ℕ) < d))).starProjection
+        - (Submodule.span 𝕜 (hT.eigenvectorBasis hn ''
+          ↑(Finset.univ.filter fun i : Fin m => (i : ℕ) < d))).starProjection)
+        (hT.eigenvectorBasis hn k)‖ ^ 2
       ≤ 2 * ((m : ℝ) * ε ^ 2 / gap ^ 2) := by
-  rw [sum_norm_sub_spectralProjection_sq_eq]
+  classical
+  rw [sum_norm_sub_starProjection_span_sq_eq]
+  -- The complement of the leading filter is the trailing filter.
+  have hcompl : (Finset.univ.filter fun i : Fin m => (i : ℕ) < d)ᶜ
+      = Finset.univ.filter fun j : Fin m => d ≤ (j : ℕ) := by
+    ext j; simp [not_lt]
+  rw [hcompl]
   have hbound := sum_cross_norm_inner_eigenvectorBasis_sq_le hT hS hn d hgap_pos hgap hε
-  have hb : ∑ i ∈ Finset.univ.filter (fun i : Fin m => (i : ℕ) < d),
-      ∑ j ∈ Finset.univ.filter (fun j : Fin m => d ≤ (j : ℕ)),
-        ⟪hT.eigenvectorBasis hn i, hS.eigenvectorBasis hn j⟫ ^ 2
-      ≤ (m : ℝ) * ε ^ 2 / gap ^ 2 := by
-    refine le_trans (le_of_eq ?_) hbound
-    refine Finset.sum_congr rfl fun i _ => Finset.sum_congr rfl fun j _ => ?_
-    rw [Real.norm_eq_abs, sq_abs]
-  linarith [hb]
+  linarith [hbound]
 
-end RealProjector
+end Projector
 
 end ForMathlib

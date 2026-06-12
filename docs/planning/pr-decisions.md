@@ -95,12 +95,12 @@ PosDef.lean`). **Recommendation:** factorization → `PosDef.lean`; entry helper
 
 ## D-7. PSD — discovered upstream gap (NOT for now)
 
-R2b recon verdict: **no cleaner proof exists** — Mathlib has no rank-factorization
-API (`M = L·R`, `L : m×r`, `R : r×n`, `r = rank`), so the rank-≤d compression must
-be hand-built. The current spectral+`Classical.choose` proof is near-optimal; keep
-it. *Discovered candidate (deferred, net-new):* a general
-`Matrix.exists_mul_eq_of_rank_le` would clean this up and is broadly useful — but
-it is net-new content, so not pursued under the current priority.
+**RESOLVED (Fable, 2026-06-12):** the gap is now filled — candidate #14
+(`ForMathlib/LinearAlgebra/Matrix/RankFactorization.lean`) supplies
+`exists_eq_mul_rank` / `exists_eq_mul_of_rank_le` / `rank_le_iff_exists_eq_mul`,
+and the PSD forward direction is reproved through it (square factorization →
+rank-factor → square factorization), eliminating the `Classical.choose`/embedding
+construction entirely (audit §2.3 discharged).
 
 ---
 
@@ -110,9 +110,11 @@ Per `spectral-pr-decomposition.md`: PR-1 cross-term (`Spectrum.lean` addition),
 then Weyl (`Analysis/InnerProductSpace/CourantFischer.lean`, new file, CF + Weyl
 together — they are one coherent PR). DK is a later PR (and needs R4 first).
 The current 3-file ForMathlib structure already maps to these PRs; **no physical
-re-split is needed.** Decisions: confirm destination files on Zulip;
-`specSubspace`/`spectralProjection` public-vs-private (recommend **private** until
-asked).
+re-split is needed.** **Update (Fable, 2026-06-12):** the PR-7 API decision is
+made — the projector form is redesigned onto `Submodule.starProjection`
+(`spectralProjection` deleted; RCLike; arbitrary `Finset` index sets), so PR-7 is
+no longer blocked on a redesign. Remaining decisions: confirm destination files
+on Zulip; `specSubspace` public-vs-private (recommend **private** until asked).
 
 ---
 

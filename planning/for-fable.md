@@ -67,16 +67,26 @@ proof here uses the already-staged `exists_subseq_tendsto_forall_le_of_approxMin
 `δ = 1/(k+1)`. NOT worth porting the MDS-specific version; the general Berge
 theorem is the real target and should be its own scoped effort. Leave as-is.
 
-## F4. Davis–Kahan: sharp / projector-form sin-Θ — STRENGTHENING (optional)
+## F4. Davis–Kahan: projector-form sin-Θ — ✅ DONE 2026-06-12 (Opus)
 
-Staged `ForMathlib/Analysis/InnerProductSpace/DavisKahan.lean` has the correct
-but loose constant `n ε² / gap²` (documented in-file). The sharp sin-Θ is
-`ε² / gap²` per block, and the canonical statement is in terms of the spectral
-PROJECTORS (`‖P̂ − P‖`), not the eigenvector-overlap sum. Strengthening to the
-projector form / sharp constant is a genuine redesign (needs the projector
-machinery and a tighter per-pair argument). Optional; the current form is a
-valid first contribution. If attempted, keep the existing lemmas (they are
-consumed by `Acharyya2025/RankGap.lean`) and ADD the projector form.
+The canonical projector form is now staged in
+`ForMathlib/Analysis/InnerProductSpace/DavisKahan.lean` (section `RealProjector`,
+over ℝ):
+* `spectralProjection b d` — the rank-`d` orthogonal projector
+  `x ↦ ∑_{i<d} ⟪bᵢ,x⟫ • bᵢ` of an orthonormal basis;
+* `sum_norm_sub_spectralProjection_sq_eq` — the IDENTITY (any two orthonormal
+  bases): `∑ₖ ‖(P_v − P_u) uₖ‖² = 2 · Σ_{i<d,j≥d} ⟪uᵢ,vⱼ⟫²`, i.e. the squared
+  Frobenius distance between the two rank-`d` projectors is twice the
+  cross-block overlap (proof = `‖a−b‖²` expansion + Parseval, no operator
+  algebra / no trace API needed);
+* `sum_norm_sub_spectralProjection_sq_le` — the resulting `‖P̂−P‖_F² ≤ 2nε²/gap²`
+  Davis–Kahan sin-Θ bound (instantiates the eigenbases + the staged cross-block
+  bound).
+
+Remaining (truly optional): the SHARP constant (`ε²/gap²` per block, vs the
+loose `nε²` total cross-energy) and the `RCLike` generalization of the projector
+section (the cross-block bound is already RCLike; only the projector identity is
+ℝ — the conj/re bookkeeping is routine but omitted). Neither blocks anything.
 
 ## F5. `h_conc_meas` measurable-selection seam — ✅ DISCHARGED 2026-06-12 (Fable)
 
@@ -144,11 +154,11 @@ review; both routes are a scoped research task, not mechanical work.
 
 1. ~~F1 (RCLike Gram factorization)~~ — ✅ DONE 2026-06-12 (Opus).
 2. ~~F2 (eigenvalues₀ tail)~~ — ✅ DONE 2026-06-12 (Opus).
-3. **F4** (sharp / projector-form Davis–Kahan) — the remaining genuine
-   ForMathlib strengthening; medium effort (needs the spectral-projector
-   Frobenius identity `‖P̂−P‖_F² = 2·Σ_cross ⟪uᵢ,v̂ⱼ⟫²`).
+3. ~~F4 (projector-form Davis–Kahan)~~ — ✅ DONE 2026-06-12 (Opus).  Only the
+   SHARP constant + RCLike projector generalization remain, both optional.
 4. **F5 residual** (`hmeas_spec`) — scoped research task (see assessment above),
-   not mechanical; leave documented for the domain expert.
+   not mechanical; leave documented for the domain expert.  The single
+   remaining load-bearing item.
 5. **F3** — skip; raise the Berge maximum theorem upstream instead.
 
 Everything else (the whole spectral-perturbation toolkit, probability lemmas,

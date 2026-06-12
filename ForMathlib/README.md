@@ -37,13 +37,13 @@ per-candidate dossiers live in `planning/mathlib-candidates.md`.
 | Staged file | Destination | Candidate (mathlib-candidates.md) |
 | --- | --- | --- |
 | `Analysis/InnerProductSpace/CourantFischer.lean` | new `Mathlib/Analysis/InnerProductSpace/CourantFischer.lean` | #3a Courant–Fischer (both directions) + Weyl's eigenvalue perturbation inequality, `RCLike` |
-| `Analysis/InnerProductSpace/DavisKahan.lean` | new `Mathlib/Analysis/InnerProductSpace/DavisKahan.lean` | Davis–Kahan cross-block (squared sin-Θ) bound `∑ ‖⟪uᵢ,v̂ⱼ⟫‖² ≤ nε²/gap²` + rank-`d`/floor corollary `≤ 4nε²/α²`, `RCLike` |
+| `Analysis/InnerProductSpace/DavisKahan.lean` | new `Mathlib/Analysis/InnerProductSpace/DavisKahan.lean` | Davis–Kahan cross-block (squared sin-Θ) bound `∑ ‖⟪uᵢ,v̂ⱼ⟫‖² ≤ nε²/gap²` + rank-`d`/floor corollary `≤ 4nε²/α²` (`RCLike`); canonical **projector form** `‖P̂−P‖_F² = 2·Σcross ≤ 2nε²/gap²` (ℝ) |
 | `Analysis/InnerProductSpace/GramMatrix.lean` | `Mathlib/Analysis/InnerProductSpace/GramMatrix.lean` | #1 Procrustes rigidity (equal Grams ⇒ linear isometry equiv), generalized to `RCLike` and stated via `Matrix.gram` |
 | `Analysis/InnerProductSpace/NearIsometry.lean` | new `Mathlib/Analysis/InnerProductSpace/NearIsometry.lean` | #6 quantitative polar factor (near-isometry ⇒ isometry within `2δ`), bundled `≃ₗᵢ` + CLM op-norm corollary |
 | `Analysis/InnerProductSpace/Spectrum.lean` | `Mathlib/Analysis/InnerProductSpace/Spectrum.lean` | #3b Davis–Kahan cross-term identity, generalized to `RCLike` |
 | `Analysis/Matrix/EntrywiseOpNorm.lean` | `Mathlib/Analysis/InnerProductSpace/PiL2.lean` + `Mathlib/Analysis/Matrix/Normed.lean` | norm comparisons: `ℓ¹ ≤ √card·ℓ²` (`RCLike`) and entrywise → `ℓ²`-operator-norm `‖toEuclideanLin A x‖ ≤ nε‖x‖` (ℝ) |
 | `Analysis/Matrix/Spectrum.lean` | `Mathlib/Analysis/Matrix/Spectrum.lean` | PSD low-rank sorted-eigenvalue tail `eigenvalues₀ i = 0` for `i ≥ rank` (`RCLike`) |
-| `LinearAlgebra/Matrix/PosDef.lean` | `Mathlib/LinearAlgebra/Matrix/PosDef.lean` | #5 rank-constrained PSD factorization `PosSemidef ∧ rank ≤ d ↔ ∃ A : Matrix (Fin d) n, B = Aᴴ * A` (ℝ; `TODO(RCLike)`) |
+| `LinearAlgebra/Matrix/PosDef.lean` | `Mathlib/LinearAlgebra/Matrix/PosDef.lean` | #5 rank-constrained PSD factorization `PosSemidef ∧ rank ≤ d ↔ ∃ A : Matrix (Fin d) n, B = Aᴴ * A` (`RCLike`) |
 | `MeasureTheory/CompactExists.lean` | `Mathlib/MeasureTheory/Constructions/BorelSpace/` | measurability of a compactly-quantified existential `{ω | ∃ y ∈ S, F y ω ≤ c}` for Carathéodory `F` (no measurable selection) |
 | `MeasureTheory/Function/ConvergenceInMeasure.lean` | `Mathlib/MeasureTheory/Function/ConvergenceInMeasure.lean` | #7 `TendstoInMeasure` from a vanishing rate (general filter, `EDist`, measurability-free) |
 | `MeasureTheory/Measure/Typeclasses/Probability.lean` | `Mathlib/MeasureTheory/Measure/Typeclasses/Probability.lean` | #2a measurability-free `1 − μ sᶜ ≤ μ s` |

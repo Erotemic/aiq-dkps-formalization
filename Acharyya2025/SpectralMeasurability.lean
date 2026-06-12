@@ -9,7 +9,7 @@ CMDS-entrywise-closeness event is Borel — and that event is *deterministically
 contained in the alignment-existence event
 (`AlignedPipeline.alignExists_of_entrywiseClose`), so it serves directly as the
 measurable high-probability sub-event, with no eigenvector measurability ever
-needed.  See `docs/planning/hmeas-spec-discharge.md`.
+needed.  See `docs/planning/historical/hmeas-spec-discharge.md`.
 
 The genuinely-general measurability fact used along the way — that a continuous
 spectral function `Σₖ h(λₖ) uₖuₖᵀ` of a measurable Hermitian-matrix family is

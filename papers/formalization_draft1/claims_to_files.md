@@ -85,7 +85,7 @@ for line-accurate citations in a final submission.
 - `Acharyya2025/AlignedPipeline.lean`: choice-free `AlignExists`, equivalence
   with aligned estimator error, compact-existential measurability.
 - `ForMathlib/MeasureTheory/CompactExists.lean`: `measurableSet_exists_mem_le`.
-- `planning/for-fable.md`: notes on the discharged measurable-selection seam
+- `planning/historical/for-fable.md`: notes on the discharged measurable-selection seam
   and the remaining `hmeas_spec` primitive.
 
 ## Downstream integration

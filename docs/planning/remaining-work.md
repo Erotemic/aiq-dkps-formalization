@@ -1,82 +1,109 @@
 # Remaining work tracker
 
-Consolidated 2026-06-12 (Opus). Single place for the open work after the
-documentation pass, the `hmeas_spec` discharge, the `halign` Form-A reduction,
-and the staging of Mathlib candidates #1–#11. Cross-refs:
-`mathlib-candidates.md` (the candidate dossiers), `for-fable.md` (the F-items),
-`hmeas-spec-discharge.md` (the seam history).
+Fresh as of 2026-06-12 (Opus). The active phase is the **Mathlib-readiness pass**:
+getting the strong staged candidates into *mechanically-droppable-into-a-PR*
+shape. Cross-refs: `mathlib-candidates.md` (candidate dossiers),
+`prep_mathlib_review_and_readiness.md` (the readiness audit),
+`spectral-pr-decomposition.md` (spectral PR plan), `acharyya-plan.md`
+(formalization-phase map — that phase is complete), `historical/` (archived
+completed-phase docs).
 
-Legend — **Fable?**: whether the item is expected to need a Fable session (deep
-new proof / large refactor) vs. doable by Opus. Most items below are
-Opus-doable; Fable is flagged only where genuinely uncertain.
+## Guiding priority (user-directed 2026-06-12)
 
-> **PIVOT 2026-06-12 (user-directed):** the new-contribution track below
-> (sections **A**, **B2b-MDS-rederivation**, **C**) is **SHELVED — explicitly NOT
-> complete.** Work pivots to a **Mathlib-readiness pass** (section **R**):
-> bringing the staged headline candidates to a quality/API standard that would
-> survive human expert review. This is **distinct from Task E** (the actual PR
-> submission / AI-provenance re-authoring, still gated): R covers proof-quality,
-> statement-shape, lemma decomposition, naming, and destination decisions — not
-> namespace-unwrapping, copyright headers, or provenance stripping. Anchored to
-> the AI audit `prep_mathlib_review_and_readiness.md` (commit b3b2569), verified
-> independently (none of the headline results duplicate existing Mathlib).
+> Do **not** spend Fable effort on net-new content Mathlib reviewers may not
+> converge on. Spend effort getting **what we already have** into great,
+> ready-to-mechanically-drop-into-a-PR shape. → The highest-value remaining work
+> is mechanical PR-shaping of the strong candidates (Opus + a few human
+> decisions), **not** Fable. The Fable-leaning items are deferred.
 
 ---
 
-## A. Generalizations of already-staged candidates (existing → stronger)
+## Done ledger (compressed)
 
-These make a staged candidate more PR-worthy; low/medium effort, Opus-doable.
+- **Formalization phase** — complete (see `acharyya-plan.md`; residual sorries are
+  documented superseded scaffolds).
+- **Candidates #1–#13 staged** in `ForMathlib/` (see `mathlib-candidates.md`).
+- **B1** ✅ sample-covariance / empirical-Gram eigenvalue concentration
+  (`MatrixConcentration.lean`, `EntrywiseEigenvalue.lean`, `SampleCovariance.lean`;
+  candidate #12).
+- **B2** ✅ Berge maximum theorem — both halves + finite-family modulus + engine
+  sibling (`Topology/Berge.lean`, `ApproxMinimizer.lean`; candidate #13).
+- **R1/R1b** ✅ Gram rigidity refactor: reusable identity, two-ambient span-level
+  core, thin equiv corollary.
+- **R2** ✅ rank-PSD forward direction extracted; iff is now a combinator.
+- **R3** ✅ spectral-stack PR decomposition plan (`spectral-pr-decomposition.md`).
+- **R3b** ✅ Weyl operator-norm corollary `abs_eigenvalues_sub_le_opNorm`.
+- **Trust artifacts synced** — headline Gram challenge kept simple; new public
+  lemmas tracked in the `Challenge/Inventory/` conformance + leaderboard.
+- **F1–F6** ✅ (the old Fable task list — all done; archived to
+  `historical/for-fable.md`).
 
-| Item | What | Effort | Fable? | Status |
-|---|---|---|---|---|
-| A1 | **#10 → connect to `Matrix.IsHermitian.cfc`**: prove `specTransform h B = cfc h B`, restate `measurable_specTransform` about the recognized `cfc` object. Unifies #9 (general C⋆) and #10 (matrix, no BorelSpace). | M | no | open |
-| A2 | **#10 → RCLike (ℂ)**: generalize `measurable_specTransform` from `Matrix _ _ ℝ` to `RCLike 𝕜`. Rides on A1. | S–M | no | open |
-| A3 | **EntrywiseOpNorm → RCLike** (`norm_toEuclideanLin_le_of_entry_le`, flagged `TODO(RCLike)`); plus loose `n` constant → sharp `√card` (Frobenius). | S | no | open |
-| A4 | **F4 Davis–Kahan projector form**: sharp `ε²/gap²` per-block constant (vs loose `nε²`) + RCLike projector identity (cross-block bound is already RCLike). | M | no | open |
-| A5 | **#6 polar factor sharp constant** `√(1+δ)·δ` (we ship `2δ`, documented). | S | no | open |
-| A6 | **#7 `TendstoInMeasure` → pseudometric** (currently ℝ/EDist specific). | S | no | open |
-
----
-
-## B. New Mathlib contributions (genuine new proof work)
-
-| Item | What | Effort | Fable? | Status |
-|---|---|---|---|---|
-| **B1** | **Sample-covariance / empirical-Gram eigenvalue concentration** (the `halign` eigengap route). | L | no | **✅ DONE** |
-| B1a | ✅ **DONE** — the generic engine (no matrix Bernstein): `ForMathlib.Matrix.abs_sortedEig_sub_le_of_entry_le` (entrywise ⇒ eigenvalue via Weyl), `ForMathlib.measure_exists_entry_gt_le` (entrywise Chebyshev + union bound), `ForMathlib.measure_forall_abs_sortedEig_sub_le_ge` (eigenvalue concentration), `ForMathlib.measure_forall_sortedEig_ge_ge` (eigenvalue **lower bound** — take `η = c/(2n)`). Takes per-entry second-moment bounds as hypotheses (matches the existing dissimilarity-concentration style). Commit `2356fd0`. | — | no | ✅ |
-| B1b | ✅ **DONE** — the iid → per-entry-second-moment layer specializing B1a to the actual *sample covariance* `Σ̂_{kl} = n⁻¹ Σᵢ Vᵢ(k)Vᵢ(l)`. File `ForMathlib/Probability/Moments/SampleCovariance.lean`: `ForMathlib.sampleCovariance` (the empirical covariance), `ForMathlib.integral_sq_sampleCovariance_entry_le` (feeds the coordinate products `Yᵢ = Vᵢ(·)ₖ Vᵢ(·)ₗ` into the scalar `integral_norm_sq_average_sub_of_iid` to get `∫(Σ̂_{kl}−Cov_{kl})² ≤ v/n`), `ForMathlib.isHermitian_sampleCovariance`, and the capstone `ForMathlib.measure_forall_sampleCovariance_sortedEig_ge_ge` (composes the entry bound with the B1a engine `measure_forall_sortedEig_ge_ge`). The product-level iid hypotheses (`MemLp`/`IndepFun`/identical-distribution of the coordinate products) are taken as inputs, matching the existing dissimilarity-concentration style; per-coordinate measurability `∀ i k, Measurable (V i · k)` avoids the `EuclideanSpace` measurable-space friction. | M | no | ✅ |
-| **B2** | ✅ **DONE** (upper-hemicontinuity half, no Fable) — **Berge maximum theorem** for a fixed compact constraint, staged in `ForMathlib/Topology/Berge.lean`: `tendsto_eval_sub_of_isCompact` (uniform conv. on compact from joint continuity), `tendsto_subseq_isMinOn_of_isMinOn` (sequential upper hemicontinuity / closed graph), `upperHemicontinuousAt_isMinOn` (lands on Mathlib's `UpperHemicontinuousAt` via `of_sequences`), `exists_modulus_isMinOn` (uniform `ε`–`δ` modulus = general form of `exists_modulus_pairDist`). Plus engine sibling `exists_subseq_tendsto_isMinOn_of_approxMinOn`. Candidate #13. | L | no | **✅** |
-| B2b | ✅ **DONE** — (i) the *value-function-continuity* half of Berge: `ForMathlib.continuous_iInf_of_isCompact` (`p ↦ ⨅ x ∈ K, g p x` continuous, via a squeeze using `tendsto_eval_sub_of_isCompact`). (ii) The modulus generalized to a **finite family of jointly-continuous closeness invariants** `ForMathlib.exists_modulus_isMinOn_family` (subsumes the affine-invariant `pairDistErr` shape; the metric `exists_modulus_isMinOn` is now its `ι = Unit`, `ρ = dist` corollary). **Finding:** a *literal* re-derivation of `exists_modulus_pairDist` is NOT a clean instantiation — MDS minimizes over the non-compact config space and recovers compactness only via coercive centering into a `Δ`-dependent box; that ingredient is genuinely MDS-specific and not subsumed by the fixed-`K` Berge theorem. Documented honestly at both `exists_modulus_pairDist` and in `Berge.lean`; the bespoke MDS proof is kept. | M | no | **✅** |
+Full repo builds green (8633 jobs); headline ForMathlib files are sorry-free.
 
 ---
 
-## C. Non-Mathlib work (formalization-internal)
+## OPEN WORK, value-ranked for the current priority
+
+### Track 1 — PR-shaping of the strong candidates (DO; high reviewer value; Opus + decisions)
+
+These are the candidates worth driving to drop-ready. "Drop-ready" = statement
+shape final, naming final, minimal imports, destination chosen, decomposed into
+PR-sized files. The *final* submit (namespace unwrap, copyright header, provenance
+moved to PR description) is Task E (gated — see D1); everything up to it is in
+scope now.
+
+| Candidate | Reviewer value | State | Left to drop-ready | Fable? |
+|---|---|---|---|---|
+| **Gram/Procrustes rigidity** | **High** — clean, novel, fundamental (audit A−/B+) | refactored (R1/R1b); modular, general | R6 naming decision; choose destination; minimal-import pass | no |
+| **Weyl perturbation** | **High** — entirely absent upstream, canonical | done + opNorm form (R3b); decomposition planned (R3) | physically split per plan (PR-1 cross-term, PR-4 Weyl); naming; destination | no |
+| **Rank-controlled PSD factorization** | **Good** — novel rank-controlled refinement | modularized (R2) | **R2b recon** (below); naming; destination | recon only |
+
+### Track 2 — cheap recon that could close an item (DO)
 
 | Item | What | Effort | Fable? | Status |
 |---|---|---|---|---|
-| C1 | **Form B — raw-stress Helm bridge.** Alternate `alignmentConsistency_of_*` routed through the eigengap-free asymptotic raw-stress consistency (Acharyya 2024), surfacing the milder `UniquePairProfile` identifiability instead of the eigenvalue stability. Pairs with the spectral Form A as the side-by-side "value of formalization" artifact. | M–L | no | future / opt-in |
-| C2 | **Fully derive `halign`'s eigengap** by feeding B1 into the Helm Form-A bridge (replace the explicit `α ≤ λ_d` HP hypothesis with a derivation from latent-distribution assumptions). Depends on B1. | M | no | blocked on B1 |
+| R2b | **PSD alternate-proof recon.** Survey Mathlib factorization/CFC/rank APIs; verdict on whether a cleaner-than-spectral proof is reachable. Prior: the rank-compression step looks inherent → likely resolves to "keep the spectral proof, justified" and needs **no** Fable. Low risk, high information. | S–M | recon (Opus) | open |
+
+### Track 3 — net-new Fable content (DEFER per priority; revisit only if reviewers want it)
+
+| Item | What | Why deferred | Fable? |
+|---|---|---|---|
+| R4 | **Davis–Kahan redesign** onto `orthogonalProjection`/spectral-subspace API (vs. DKPS index-cutoffs). | Net-new statement + proof; audit §4 says it needs human spectral-analysis review and an API decision — reviewers may not converge. Not worth Fable until DK is a confirmed target. | yes |
+| R5 | **Courant–Fischer full min-max** (canonical min-over-subspaces). | Net-new; Mathlib has only the extremal Rayleigh case, and our directional bounds already suffice for Weyl. Pursue only if a reviewer asks. | yes |
+
+### Track 4 — decisions needing human / Zulip input (R6; prepare options, don't finalize)
+
+- **Gram naming**: audit §1.3 suggests `exists_linearIsometryEquiv_map_eq_of_inner_eq`
+  (the conclusion is a `map_eq`). Kept current name in R1 to avoid churn; decide
+  before PR.
+- **Same-space vs two-space Gram core** as the public face (we have both; core is
+  two-space).
+- **Davis–Kahan formulation** (R4) and **`specSubspace`/`spectralProjection`**
+  public-vs-private (see `spectral-pr-decomposition.md`).
+- **Destination files** for each PR (proposals in the candidate/decomposition docs;
+  confirm via Zulip).
 
 ---
 
-## R. Mathlib-readiness pass (ACTIVE TRACK — quality for expert review, NOT Task E)
+## C. Formalization-internal follow-ups (optional, not PR work)
 
-Goal: bring the four **headline** candidates to a standard a Mathlib reviewer
-would accept on quality grounds (statement shape, lemma decomposition, naming,
-API fit, destination). Stops short of PR mechanics (D1/Task E). Independent
-Mathlib check confirms all four are non-duplicative.
+| Item | What | Status |
+|---|---|---|
+| C1 | **Form B — raw-stress Helm bridge** (alternate `alignmentConsistency_of_*` via eigengap-free raw-stress consistency, surfacing `UniquePairProfile`). Side-by-side with spectral Form A as a "value of formalization" artifact. | future / opt-in |
+| C2 | **Derive `halign`'s eigengap** by feeding B1 into the Helm Form-A bridge (replace the explicit `α ≤ λ_d` hypothesis). B1 is done, so this is now unblocked. | open (opt-in) |
 
-| Item | What | Effort | Fable? | Status |
-|---|---|---|---|---|
-| R1 | ✅ **DONE** — **Gram/Procrustes rigidity** refactored (`ForMathlib/Analysis/InnerProductSpace/GramMatrix.lean`). Extracted the reusable identity `inner_linearCombination_linearCombination` (inner product of two finite linear combinations over Gram data; no finiteness). Split out the **span-level core** `exists_linearIsometry_of_inner_eq` — equal inner products ⟹ a `LinearIsometry` from `span 𝕜 (range φ)` into `E` with `L (φ i) = ψ i`, needing **no finite-dimensionality** (strictly more general; addresses audit §1.2). `exists_linearIsometryEquiv_of_inner_eq` is now a thin finite-dim corollary (extend + surjectivity upgrade); `Matrix.gram` iff unchanged. Public names preserved (no downstream breakage); full build green, no sorries, ≤100-char lines. | M | no | **✅** |
-| R1b | ✅ **DONE** — Gram **two-ambient-space** generalization. `exists_linearIsometry_of_inner_eq` now takes `φ : ι → E`, `ψ : ι → F` (two possibly-different inner product spaces over `𝕜`) and produces a `LinearIsometry` from `span 𝕜 (range φ)` into `F` (audit §1.1). Pure space-agnostic generalization of the proof (just the `Tψ`/`f₀`/`f`/`Lr` codomains went `E → F`); the same-space equiv corollary specializes it with `F := E` unchanged. The two-space **equiv** form (`E ≃ₗᵢ F` under `finrank E = finrank F`) is NOT included — it needs a cross-space isometry-extension of complements that Mathlib lacks (`LinearIsometry.extend` is same-space only); noted as optional future, not required by the audit. Full build green, no sorries. | M | no | **✅** |
-| R2 | ✅ **DONE** — **Rank-controlled PSD factorization** modularized (`ForMathlib/LinearAlgebra/Matrix/PosDef.lean`). Extracted the substantive spectral forward direction as `exists_conjTranspose_mul_self_of_posSemidef_of_rank_le`; the iff `posSemidef_and_rank_le_iff_exists_conjTranspose_mul_self` is now a thin combinator over it + the elementary converse. **Names kept** — both the iff and `isHermitian_entry_eq_sum_eigenvalues` are used downstream (`Acharyya2025/GramRealization.lean`, `Challenge/*`), so renaming (audit §2.4) and relocating the entry helper (audit §2.2) are deferred to R6/Task E. Build green, no sorries. | M | no | **✅** |
-| R2b | PSD **alternate proof exploration** through existing Mathlib factorization/CFC APIs (vs. the hand-rolled embedding+`Classical.choose`). **Uncertain payoff** — the rank-compression step looks largely inherent; may end up justifying the spectral proof instead. | M–L | **likely** (exploratory) | open |
-| R3 | ✅ **DONE (plan)** — **Spectral stack PR decomposition**: produced `docs/planning/spectral-pr-decomposition.md` with the dependency graph and 7 PR-sized pieces (cross-term → CF diagonalization → CF directional → Weyl → DK cross-block → DK rank-floor → DK projector). Files **not physically split** (premature; destinations are Zulip/R6 decisions); PR-7 projector flagged as Fable/R4. | M | no | **✅** (plan) |
-| R3b | ✅ **DONE** — **Weyl operator-norm corollary** `abs_eigenvalues_sub_le_opNorm` (`CourantFischer.lean`): `|λₖ(T) − λₖ(S)| ≤ ‖T − S‖` via `LinearMap.toContinuousLinearMap` + `ContinuousLinearMap.le_opNorm`, alongside the existing hypothesis form. | S | no | **✅** |
-| R4 | **Davis–Kahan redesign** to a reusable statement in terms of spectral subspaces / `orthogonalProjection` rather than DKPS index-cutoffs (audit §4). Genuine new statement + proof; clearest Fable item. | L | **yes** | open |
-| R5 | **Courant–Fischer full min-max** (intermediate eigenvalues, canonical min-over-subspaces form) if reviewers want the variational statement vs. our directional bounds. Mathlib has only the extremal (iSup/iInf Rayleigh) case. | L | **yes** | open (defer; decide via Zulip) |
-| R6 | **Statement-shape decisions needing human/Zulip input** (NOT auto-resolvable): same-space vs two-space Gram core; Davis–Kahan formulation; destination files for each. Prepare drafted alternatives, don't unilaterally finalize. | — | — | prepare options |
+(Also archived from `acharyya-plan.md`: optional strengthenings — sub-Gaussian
+tails vs Chebyshev, sufficient conditions for `UniquePairProfile`, Helm per-ω
+capstone.)
+
+---
+
+## A. Optional generalizations of staged candidates (low priority)
+
+Make a staged candidate marginally stronger; none are reviewer-blocking. Deferred
+under the current priority. Examples: #10 → `cfc`/RCLike (A1/A2); EntrywiseOpNorm
+→ RCLike + sharp √card (A3); polar-factor sharp constant (A5); TendstoInMeasure →
+pseudometric (A6). Full list preserved in git history (pre-2026-06-12 version).
 
 ---
 
@@ -84,36 +111,5 @@ Mathlib check confirms all four are non-duplicative.
 
 | Item | Note |
 |---|---|
-| D1 | **Task E — submit the Mathlib PRs** (re-author candidates #1–#13 per the AI-contribution policy: unwrap `ForMathlib` namespace, copyright headers, strip AI-provenance comments, PR mechanics). **Gated:** hold until a domain expert reviews the repo. Distinct from the R track above. |
-| D2 | `for-fable.md` F1/F2/F4/F5/F6 — DONE. F3 = B2. |
-
----
-
-## Working order
-
-1. ✅ **B1 — sample-covariance eigenvalue concentration** (B1a engine + B1b iid layer).
-2. ✅ **B2 — Berge maximum theorem** (UHC half + value-function half + finite-family modulus + engine sibling).
-3. ⏸ **A / C / B2b-MDS-rederivation — SHELVED, not complete** (see PIVOT banner).
-4. ▶ **R — Mathlib-readiness pass** (active). Opus-level items **all done**:
-   R1 ✅, R1b ✅, R2 ✅, R3 ✅ (plan), R3b ✅. Remaining are the Fable-leaning
-   **R2b** (PSD alternate-proof exploration), **R4** (Davis–Kahan projector
-   redesign), **R5** (canonical Courant–Fischer min-max), and the **R6** human/
-   Zulip decisions (naming, statement shapes, destination files) — see
-   `spectral-pr-decomposition.md` and the R6 note below.
-
-### R-track trust-artifact sync (done 2026-06-12)
-Headline Gram challenge (`Challenge/Gram/`) kept simple/unchanged (equiv + `gram`
-iff). New public results from the readiness pass added to the **Inventory**
-challenge instead: `inner_linearCombination_linearCombination` and the span-level
-core `exists_linearIsometry_of_inner_eq` (stated at full generality via
-`omit [FiniteDimensional]`) in `Inventory/Conformance.lean`; `#print axioms`
-checks for those plus `exists_conjTranspose_mul_self_of_posSemidef_of_rank_le`
-and `abs_eigenvalues_sub_le_opNorm` in `Inventory/Leaderboard.lean`. No downstream
-DKPS code needed changes (public names/signatures preserved; `Procrustes.lean`
-consumes the equiv unchanged).
-
-### R-track naming note (R6, prepared option — NOT yet applied)
-Audit §1.3 suggests `exists_linearIsometryEquiv_map_eq_of_inner_eq` (the
-conclusion is a `map_eq`) over the current `exists_linearIsometryEquiv_of_inner_eq`.
-Kept the current names in R1 to avoid churn / preserve downstream references;
-surface for human decision before PR.
+| D1 | **Task E — submit the Mathlib PRs**: the final mechanical re-authoring per the AI-contribution policy (unwrap `ForMathlib` namespace, copyright headers, move AI-provenance from code comments to the PR description) + actual PR submission. **Gated** until a domain expert reviews the repo. Track 1 brings everything *up to* this line. |
+| D2 | Old Fable list `historical/for-fable.md` F1–F6 — all DONE. |

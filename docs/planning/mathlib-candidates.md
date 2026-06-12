@@ -86,7 +86,7 @@ two facts the bridge uses (`measurable_cmds_matrix`,
 (`measurableSet_alignExists_inter` etc.) was unused by the discharge — its general
 core is now the staged #10.  Note: the final `hmeas_spec` discharge uses neither #9
 nor #10 (it goes through the deterministic CMDS-entrywise route); these are kept as
-general staged results.  See `docs/planning/hmeas-spec-discharge.md`.
+general staged results.  See `docs/planning/historical/hmeas-spec-discharge.md`.
 
 **Candidate #12 — sample-covariance / empirical-Gram eigenvalue concentration
 (`halign` route): NOW STAGED.**  Mathlib has no sample-covariance eigenvalue
@@ -184,9 +184,9 @@ global minimizer; the elementary "recovery" half of Γ-convergence).
 (the MDS-specific coercivity / compact-box construction stays local).  The rest
 of RawStress is wrappers (`abs_sqrt_rawStress_sub_le` = reverse triangle;
 `mds_nonempty` = coercivity + `IsCompact.exists_isMinOn`) or the Berge-maximum
-argmin modulus `exists_modulus_pairDist` — see `planning/for-fable.md` F3.
+argmin modulus `exists_modulus_pairDist` — see `planning/historical/for-fable.md` F3.
 
-Remaining non-trivial items are catalogued in `planning/for-fable.md` (RCLike
+Remaining non-trivial items are catalogued in `planning/historical/for-fable.md` (RCLike
 Gram factorization, eigenvalues₀ tail, Berge/argmin modulus, sharp Davis–Kahan,
 the `h_conc_meas` measurable-selection seam) — all either blocked on upstream
 API or requiring substantial new proofs.

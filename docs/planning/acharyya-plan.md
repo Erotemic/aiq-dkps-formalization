@@ -1,7 +1,16 @@
 # Acharyya DKPS formalization plan
 
-Active planning document. Companion: `acharyya-graveyard.md` (approaches tried and
-abandoned, so we and other agents don't re-visit them).
+> **STATUS (2026-06-12): formalization phase COMPLETE.** All milestone work
+> packages below are checked off; remaining sorries are documented SUPERSEDED
+> scaffold records, not live work. Kept in place (not archived) because ~8
+> `Acharyya2024/` and `Acharyya2025/` source files cite it as the formalization
+> map. **Active work has moved to the Mathlib-readiness phase — see
+> `remaining-work.md`** (current tracker) and
+> `prep_mathlib_review_and_readiness.md` (readiness audit). The "optional
+> strengthenings" near the end are reflected in `remaining-work.md` §C.
+
+Companion: `acharyya-graveyard.md` (approaches tried and abandoned, so we and
+other agents don't re-visit them).
 
 Last updated: 2026-06-11 (Claude Fable 5 session, model id claude-fable-5[1m]).
 

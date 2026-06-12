@@ -496,4 +496,115 @@ theorem Theorem2_part2_of_response_mean
     haligned hmeas_spec h_c_tendsto h_c_nonneg f_ref score Qstar Qsub hm γ
     indexOf ψ ψHat h_lipQ h_gamma_pos hψ hψHat h_cover h_cover_meas hMSE_Q_pos
 
+/--
+**Query efficiency from iid second moments (Theorem 2 Part 2, fully grounded).**
+
+The literal bottom of the paper's concentration chain.  This is
+`Theorem2_part2_of_response_mean` with the response-mean closeness event
+`hmean` itself *derived* — via Chebyshev + a union bound
+(`Acharyya2025.RateChain.highProb_uniformResponseMeanClose_of_secondMoment`) —
+from per-model second-moment bounds `∫ ‖X̄ᵤ ᵢ − μᵢ‖² ≤ σ2 u` with vanishing
+Chebyshev ratio `n · σ2 u / (η u)² → 0`.  So the entire query-efficiency
+conclusion now follows from iid second-moment hypotheses on the response means
+(the only honest probabilistic input the paper assumes), together with the
+spectral structure and the genuine Quench assumptions.
+
+The residual honest primitives remain `hmeas_spec` (raw response-based spectral
+embedding measurability) and the model coverage `h_cover`.
+
+Formalized by Claude Opus 4.8 (claude-opus-4-8[1m]).
+-/
+theorem Theorem2_part2_of_second_moment
+    [DecidableEq Q]
+    (Pf : Measure (Model Q X)) [IsProbabilityMeasure Pf]
+    (μ : Nat → Measure Ω) (hμ : ∀ k, IsProbabilityMeasure (μ k))
+    {n m p d : Nat} (hn : 0 < n) (hd : d ≤ n)
+    (Xbar : Nat → Ω → Fin n → Acharyya2024.Mat m p) (μvec : Fin n → Acharyya2024.Mat m p)
+    (hB : (Acharyya2025.MathlibBridge.disMatToMatrix
+        (Acharyya2025.Deterministic.classicalMDSMatrix
+          (Acharyya2024.responseDist μvec))).PosSemidef)
+    (hrank : (Acharyya2025.MathlibBridge.disMatToMatrix
+        (Acharyya2025.Deterministic.classicalMDSMatrix
+          (Acharyya2024.responseDist μvec))).rank ≤ d)
+    {α Λ : Real} (hα_pos : 0 < α)
+    (hfloor : ∀ i : Fin n, (i : ℕ) < d →
+      α ≤ Acharyya2025.MatrixPerturbation.sortedEigenvalues hB.isHermitian i)
+    (hΛ : ∀ l, Acharyya2025.MatrixPerturbation.sortedEigenvalues hB.isHermitian l ≤ Λ)
+    (ψFinite : Config n d)
+    (hψFinite : ∀ i j, (∑ k, ψFinite i k * ψFinite j k)
+      = Acharyya2025.Deterministic.classicalMDSMatrix (Acharyya2024.responseDist μvec) i j)
+    (η R : Nat → Real)
+    (hrate_nonneg : ∀ u, 0 ≤ Acharyya2025.Bridge.cmdsEntrywiseRate n m (R u) (η u))
+    (hsmall : ∀ u,
+      (n : Real) * Acharyya2025.Bridge.cmdsEntrywiseRate n m (R u) (η u) ≤ α / 2)
+    (hpolar : ∀ u, (d : Real) *
+      (4 * (n : Real) *
+        ((n : Real) * Acharyya2025.Bridge.cmdsEntrywiseRate n m (R u) (η u))^2 / α^2)
+        ≤ 1/2)
+    (hrate_zero : Filter.Tendsto
+      (fun u => (n : Real) * Acharyya2025.Bridge.cmdsEntrywiseRate n m (R u) (η u))
+      Filter.atTop (nhds 0))
+    -- iid second-moment hypotheses (replacing the assumed response-mean event):
+    (σ2 : Nat → Real)
+    (hint : ∀ u (i : Fin n), Integrable (fun ω => ‖Xbar u ω i - μvec i‖ ^ 2) (μ u))
+    (hσ2 : ∀ u (i : Fin n), ∫ ω, ‖Xbar u ω i - μvec i‖ ^ 2 ∂(μ u) ≤ σ2 u)
+    (hη_pos : ∀ u, 0 < η u)
+    (hratio : Filter.Tendsto (fun u => (n : Real) * σ2 u / (η u) ^ 2) Filter.atTop (nhds 0))
+    (hsample_bound : ∀ u ω i j, |Acharyya2024.responseDist (Xbar u ω) i j| ≤ R u)
+    (hpopulation_bound : ∀ u i j, |Acharyya2024.responseDist μvec i j| ≤ R u)
+    (indexOf : Model Q X → Fin n)
+    (ψ : Model Q X → Vec d)
+    (ψHat : Nat → Ω → Model Q X → Vec d)
+    (hψ : ∀ f, ψ f = ψFinite (indexOf f))
+    (hψHat : ∀ u ω f, ψHat u ω f =
+      Acharyya2025.AlignedPipeline.alignedSpectralConfig hd
+        (fun u ω => Acharyya2024.responseDist (Xbar u ω))
+        (fun u ω => Acharyya2025.AlignedPipeline.isHermitian_disMatToMatrix_classicalMDSMatrix_responseDist
+          (Xbar u ω))
+        ψFinite
+        (fun u => Acharyya2025.ConfigPerturbation.configBound n d α Λ
+          ((n : Real) * Acharyya2025.Bridge.cmdsEntrywiseRate n m (R u) (η u))) u ω
+        (indexOf f))
+    (f_ref : ∀ k, Ω → Fin k → Model Q X)
+    (score : Model Q X → Finset Q → ℝ)
+    (Qstar Qsub : Finset Q)
+    (hm : Qsub.card < Qstar.card)
+    (γ : ℝ)
+    (h_lipQ : ∀ (f f' : Model Q X),
+      |score f Qstar - score f' Qstar| ≤ γ * ‖ψ f - ψ f'‖)
+    (h_gamma_pos : 0 < γ)
+    (hmeas_spec : ∀ (k : Nat) (i : Fin n), Measurable (fun ω =>
+      Acharyya2025.ConfigPerturbation.spectralConfig
+        (Matrix.toEuclideanLin (Acharyya2025.MathlibBridge.disMatToMatrix
+          (Acharyya2025.Deterministic.classicalMDSMatrix
+            (Acharyya2024.responseDist (Xbar k ω)))))
+        (Acharyya2025.MatrixPerturbation.opSym
+          (Acharyya2025.AlignedPipeline.isHermitian_disMatToMatrix_classicalMDSMatrix_responseDist
+            (Xbar k ω))) hd i))
+    (h_cover : ∀ ρ > 0,
+      _root_.HighProbAtTop μ hμ
+        (fun k => {ω | ∀ f, ∃ i, ‖ψ (f_ref k ω i) - ψ f‖ ≤ ρ}))
+    (h_cover_meas : ∀ ρ > 0, ∀ k,
+      MeasurableSet {ω | ∀ f, ∃ i, ‖ψ (f_ref k ω i) - ψ f‖ ≤ ρ})
+    (hMSE_Q_pos :
+      0 < MSE (Q := Q) (X := X) Pf (yFull score Qstar)
+        (yQ (Q := Q) (X := X) score Qsub)) :
+    ∀ δ : ENNReal, 0 < δ →
+      ∃ k : ℕ,
+        (μ k) {ω |
+          MSE (Q := Q) (X := X) Pf (yFull score Qstar)
+            (fun f => yNN_paper (d := d)
+              (fun u ω (_ : Finset Q) f => ψHat u ω f) f_ref score Qstar Qsub k ω f)
+          ≤ MSE (Q := Q) (X := X) Pf (yFull score Qstar)
+              (yQ (Q := Q) (X := X) score Qsub)} ≥ 1 - δ := by
+  -- Derive the response-mean closeness event from second moments (Chebyshev).
+  haveI : ∀ u, IsProbabilityMeasure (μ u) := hμ
+  have hmean :=
+    Acharyya2025.RateChain.highProb_uniformResponseMeanClose_of_secondMoment
+      μ Xbar μvec σ2 η hint hσ2 hη_pos hratio
+  exact Theorem2_part2_of_response_mean Pf μ hμ hn hd Xbar μvec hB hrank hα_pos hfloor hΛ
+    ψFinite hψFinite η R hrate_nonneg hsmall hpolar hrate_zero hmean hsample_bound
+    hpopulation_bound indexOf ψ ψHat hψ hψHat f_ref score Qstar Qsub hm γ h_lipQ
+    h_gamma_pos hmeas_spec h_cover h_cover_meas hMSE_Q_pos
+
 end DkpsQuench.AcharyyaBridge

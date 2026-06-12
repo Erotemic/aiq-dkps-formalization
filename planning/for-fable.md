@@ -100,9 +100,12 @@ The shared sub-event/measurability + Theorem-2 machinery was extracted into the
 reusable `quench_part2_from_aligned_configError_hp` (both capstones feed it).
 The residual primitives are unchanged: `hmeas_spec` (raw response-based spectral
 embedding measurability — see F5 residual) and the model coverage `h_cover`.
-Possible further step: a `_of_second_moment` capstone deriving the response-mean
-event itself from iid second moments via
-`RateChain.highProb_uniformResponseMeanClose_of_secondMoment`.
+Completed further: `Theorem2_part2_of_second_moment` derives the response-mean
+event itself from iid second-moment bounds `∫ ‖X̄ᵢ − μᵢ‖² ≤ σ2` with vanishing
+Chebyshev ratio, via `RateChain.highProb_uniformResponseMeanClose_of_secondMoment`.
+The DkpsQuench query-efficiency conclusion now follows end-to-end from the
+literal bottom of the chain (iid second moments) + spectral structure + the
+genuine Quench assumptions; only `hmeas_spec` and `h_cover` remain primitive.
 
 ## F5. `h_conc_meas` measurable-selection seam — ✅ DISCHARGED 2026-06-12 (Fable)
 

@@ -26,14 +26,14 @@ determined exactly up to an orthogonal (unitary) transformation.
 * `ForMathlib.inner_linearCombination_linearCombination`: the inner product of two
   finite linear combinations of a vector family, expanded over the family's Gram
   data.  (Reusable; independent of the rigidity statement.)
-* `ForMathlib.exists_linearIsometry_of_inner_eq`: the **span-level core** — for
+* `ForMathlib.exists_linearIsometry_map_eq_of_inner_eq`: the **span-level core** — for
   families `φ : ι → E`, `ψ : ι → F` in two (possibly different) inner product
   spaces over `𝕜`, equal pairwise inner products give a linear isometry from
   `span 𝕜 (range φ)` into `F` sending each `φ i` to `ψ i`.  No finiteness is
   needed.
 * `ForMathlib.exists_linearIsometryEquiv_map_eq_of_inner_eq`: in finite dimension, the
   core extends to a linear isometry *equivalence* of the ambient space.
-* `ForMathlib.Matrix.gram_eq_gram_iff_exists_linearIsometryEquiv`: the same
+* `ForMathlib.Matrix.gram_eq_gram_iff_exists_linearIsometryEquiv_map_eq`: the same
   statement packaged as a characterization of `Matrix.gram` equality.
 
 ## References
@@ -79,7 +79,7 @@ coincide.  The map is built as `φ i ↦ ψ i` on `span 𝕜 (range φ)` (the ra
 `φ`'s linear-combination map); equality of inner products makes it well defined
 (`ker Tφ ≤ ker Tψ`) and norm preserving.
 -/
-theorem exists_linearIsometry_of_inner_eq {φ : ι → E} {ψ : ι → F}
+theorem exists_linearIsometry_map_eq_of_inner_eq {φ : ι → E} {ψ : ι → F}
     (h : ∀ i j, ⟪φ i, φ j⟫_𝕜 = ⟪ψ i, ψ j⟫_𝕜) :
     ∃ L : (Submodule.span 𝕜 (Set.range φ)) →ₗᵢ[𝕜] F,
       ∀ i, L ⟨φ i, Submodule.subset_span ⟨i, rfl⟩⟩ = ψ i := by
@@ -151,7 +151,7 @@ finite-dimensional inner product space have equal pairwise inner products, then
 there is a linear isometry equivalence `W` of `E` with `W (φ i) = ψ i` for every
 `i`.
 
-This extends the span-level core `exists_linearIsometry_of_inner_eq` to a
+This extends the span-level core `exists_linearIsometry_map_eq_of_inner_eq` to a
 self-equivalence: the isometry on `span 𝕜 (range φ)` extends to `E` by
 `LinearIsometry.extend`, and finite dimensionality upgrades the resulting
 injective self-map to an equivalence.
@@ -159,7 +159,7 @@ injective self-map to an equivalence.
 theorem exists_linearIsometryEquiv_map_eq_of_inner_eq {φ ψ : ι → E}
     (h : ∀ i j, ⟪φ i, φ j⟫_𝕜 = ⟪ψ i, ψ j⟫_𝕜) :
     ∃ W : E ≃ₗᵢ[𝕜] E, ∀ i, W (φ i) = ψ i := by
-  obtain ⟨L, hL⟩ := exists_linearIsometry_of_inner_eq h
+  obtain ⟨L, hL⟩ := exists_linearIsometry_map_eq_of_inner_eq h
   -- Extend `L` to a self-isometry of `E`, then upgrade to an equivalence.
   set W₀ : E →ₗᵢ[𝕜] E := L.extend with hW₀
   have hW₀_surj : Function.Surjective W₀ :=
@@ -178,7 +178,7 @@ open _root_.Matrix
 finite-dimensional inner product space have equal Gram matrices if and only if
 a linear isometry equivalence of the ambient space maps one family to the other.
 -/
-theorem gram_eq_gram_iff_exists_linearIsometryEquiv {φ ψ : ι → E} :
+theorem gram_eq_gram_iff_exists_linearIsometryEquiv_map_eq {φ ψ : ι → E} :
     gram 𝕜 φ = gram 𝕜 ψ ↔ ∃ W : E ≃ₗᵢ[𝕜] E, ∀ i, W (φ i) = ψ i := by
   constructor
   · intro hg

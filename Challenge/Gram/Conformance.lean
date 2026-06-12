@@ -42,7 +42,7 @@ open _root_.Matrix
 finite-dimensional inner product space have equal Gram matrices if and only if
 a linear isometry equivalence of the ambient space maps one family to the other.
 -/
-theorem gram_eq_gram_iff_exists_linearIsometryEquiv {φ ψ : ι → E} :
+theorem gram_eq_gram_iff_exists_linearIsometryEquiv_map_eq {φ ψ : ι → E} :
     gram 𝕜 φ = gram 𝕜 ψ ↔ ∃ W : E ≃ₗᵢ[𝕜] E, ∀ i, W (φ i) = ψ i := by
   sorry
 

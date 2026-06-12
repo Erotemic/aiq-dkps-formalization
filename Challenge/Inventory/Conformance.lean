@@ -597,12 +597,12 @@ determined exactly up to an orthogonal (unitary) transformation.
 
 * `ForMathlib.inner_linearCombination_linearCombination`: the inner product of two
   finite linear combinations of a vector family, expanded over its Gram data.
-* `ForMathlib.exists_linearIsometry_of_inner_eq`: the span-level core (two
+* `ForMathlib.exists_linearIsometry_map_eq_of_inner_eq`: the span-level core (two
   possibly-different ambient spaces, no finiteness) — equal pairwise inner
   products give a linear isometry from `span 𝕜 (range φ)` into `F`.
 * `ForMathlib.exists_linearIsometryEquiv_map_eq_of_inner_eq`: equal pairwise inner
   products yield a linear isometry equivalence mapping one family to the other.
-* `ForMathlib.Matrix.gram_eq_gram_iff_exists_linearIsometryEquiv`: the same
+* `ForMathlib.Matrix.gram_eq_gram_iff_exists_linearIsometryEquiv_map_eq`: the same
   statement packaged as a characterization of `Matrix.gram` equality.
 
 ## References
@@ -655,7 +655,7 @@ possibly-different inner product spaces over `𝕜` with equal pairwise inner
 products, a linear isometry from `span 𝕜 (range φ)` into `F` sends `φ i ↦ ψ i`.
 No finiteness of `ι`, `E`, or `F` is required.
 -/
-theorem exists_linearIsometry_of_inner_eq {F : Type*} [NormedAddCommGroup F]
+theorem exists_linearIsometry_map_eq_of_inner_eq {F : Type*} [NormedAddCommGroup F]
     [InnerProductSpace 𝕜 F] {φ : ι → E} {ψ : ι → F}
     (h : ∀ i j, ⟪φ i, φ j⟫_𝕜 = ⟪ψ i, ψ j⟫_𝕜) :
     ∃ L : (Submodule.span 𝕜 (Set.range φ)) →ₗᵢ[𝕜] F,
@@ -672,7 +672,7 @@ finite-dimensional inner product space have equal Gram matrices if and only if
 a linear isometry equivalence of the ambient space maps one family to the
 other.
 -/
-theorem gram_eq_gram_iff_exists_linearIsometryEquiv {φ ψ : ι → E} :
+theorem gram_eq_gram_iff_exists_linearIsometryEquiv_map_eq {φ ψ : ι → E} :
     gram 𝕜 φ = gram 𝕜 ψ ↔ ∃ W : E ≃ₗᵢ[𝕜] E, ∀ i, W (φ i) = ψ i := by
   sorry
 end Matrix

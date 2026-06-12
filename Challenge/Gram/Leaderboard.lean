@@ -8,4 +8,4 @@ stated in `Challenge/Gram/Conformance.lean`.
 import ForMathlib.Analysis.InnerProductSpace.GramMatrix
 
 #print axioms ForMathlib.exists_linearIsometryEquiv_map_eq_of_inner_eq
-#print axioms ForMathlib.Matrix.gram_eq_gram_iff_exists_linearIsometryEquiv
+#print axioms ForMathlib.Matrix.gram_eq_gram_iff_exists_linearIsometryEquiv_map_eq

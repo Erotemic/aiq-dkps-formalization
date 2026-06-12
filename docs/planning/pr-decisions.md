@@ -14,7 +14,7 @@ Task E (gated). This doc just fixes *what* the final shapes should be.
 ## D-1. Gram — public face / which theorem leads
 
 **Question.** We have three Gram results: the span-level core
-`exists_linearIsometry_of_inner_eq` (two spaces, no finiteness), the finite-dim
+`exists_linearIsometry_map_eq_of_inner_eq` (two spaces, no finiteness), the finite-dim
 ambient equivalence `exists_linearIsometryEquiv_of_inner_eq`, and the
 `Matrix.gram` iff. Which is the headline of the PR?
 
@@ -36,17 +36,21 @@ conclusion is a `map_eq`.
 |---|---|---|
 | `exists_linearIsometryEquiv_of_inner_eq` | `exists_linearIsometryEquiv_map_eq_of_inner_eq` | `..._apply_eq_of_inner_eq` |
 
-- **Recommendation:** adopt `exists_linearIsometryEquiv_map_eq_of_inner_eq` (the
-  `map_eq` suffix is the Mathlib idiom for "∃ f, ∀ i, f xᵢ = yᵢ"). Keep
-  `exists_linearIsometry_of_inner_eq` and `inner_linearCombination_linearCombination`
-  as-is (already idiomatic).
-- ✅ **APPLIED 2026-06-12** (user-directed: get names right before Task E).
-  Renamed across `GramMatrix.lean` and the `Challenge/Gram/` +
-  `Challenge/Inventory/` conformance & leaderboard files; the `ForMathlib.`-qualified
-  call in `Acharyya2025/Procrustes.lean` was repointed. The DKPS ℝ-wrapper
-  `Acharyya2025.exists_linearIsometryEquiv_of_inner_eq` deliberately **keeps its own
-  name** (it is a downstream convenience, not a Mathlib candidate; its docstring
-  says so). Full build green.
+- **Recommendation:** make the whole Gram family use the `map_eq` descriptor
+  uniformly (the Mathlib idiom for "∃ f, ∀ i, f xᵢ = yᵢ").
+- ✅ **APPLIED 2026-06-12** (user-directed: pristine, fully-consistent Mathlib
+  names before Task E). All three existence statements now read uniformly:
+  `exists_linearIsometry_map_eq_of_inner_eq` (core),
+  `exists_linearIsometryEquiv_map_eq_of_inner_eq` (equiv),
+  `gram_eq_gram_iff_exists_linearIsometryEquiv_map_eq` (iff);
+  `inner_linearCombination_linearCombination` unchanged. Updated `GramMatrix.lean`
+  and the `Challenge/Gram/` + `Challenge/Inventory/` conformance & leaderboard
+  files; repointed the `ForMathlib.`-qualified call in `Procrustes.lean`.
+- **Wrapper policy (user-directed):** Mathlib-candidate names must be pristine
+  with no inconsistency; any non-standard convenience name lives **downstream** as
+  a wrapper in the DKPS libs. The only such wrapper is
+  `Acharyya2025.exists_linearIsometryEquiv_of_inner_eq` (the ℝ-instantiation kept
+  for DKPS call-sites). Full build green.
 
 ## D-3. Gram — destination file
 
@@ -127,7 +131,7 @@ authoritative; do not trim further out-of-tree.
 | Decision | Recommendation | Status |
 |---|---|---|
 | D-1 face | span-level core leads | satisfied (core already presented first) |
-| D-2 Gram name | `..._map_eq_of_inner_eq` | ✅ APPLIED 2026-06-12 |
+| D-2 Gram name | whole family uniform `map_eq` (core + equiv + iff) | ✅ APPLIED 2026-06-12 |
 | D-3 Gram dest | existing `GramMatrix.lean` | accepted; move at PR time |
 | D-4 PSD name | forward in `PosSemidef` namespace | ✅ APPLIED 2026-06-12 |
 | D-5 helper loc | move to `Spectrum.lean` | accepted; move at PR time (name unchanged) |

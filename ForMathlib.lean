@@ -7,6 +7,7 @@ workflow and `planning/mathlib-candidates.md` for the ranked candidate list.
 -/
 
 import ForMathlib.Analysis.InnerProductSpace.CourantFischer
+import ForMathlib.Analysis.InnerProductSpace.DavisKahan
 import ForMathlib.Analysis.InnerProductSpace.GramMatrix
 import ForMathlib.Analysis.InnerProductSpace.NearIsometry
 import ForMathlib.Analysis.InnerProductSpace.Spectrum

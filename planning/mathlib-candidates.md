@@ -63,11 +63,22 @@ generalization (typically ℝ → `RCLike 𝕜`, restating in Mathlib idiom);
 | 5 | Rank-constrained PSD Gram realization (`PosSemidef ∧ rank ≤ d ↔ ∃ A : Matrix (Fin d) n 𝕜, B = Aᴴ*A`) + `eigenvalues₀` tail-vanishing | `Acharyya2025/GramRealization.lean:96`, `MatrixPerturbation.lean:130` | M | `GramMatrix.lean` / `Analysis/Matrix/Spectrum.lean` |
 | 6 | Quantitative polar factor (near-isometry ⇒ isometry within 2δ, no CFC/SVD) | `Acharyya2025/PolarFactor.lean:93` | M | new `Analysis/InnerProductSpace/NearIsometry.lean` |
 | 7 | `TendstoInMeasure` constructor from a vanishing high-probability rate | `Acharyya2024/WellKnown.lean:112` | S–M | `MeasureTheory/Function/ConvergenceInMeasure.lean` |
+| 8 | Davis–Kahan cross-block (squared sin-Θ) bound + rank-`d`/floor corollary | `Acharyya2025/DavisKahan.lean:135`, `RankGap.lean:42,78` | M | new `Analysis/InnerProductSpace/DavisKahan.lean` |
 
-**Deliberately deferred** (real gaps, but redesign expected): the Davis–Kahan
-cross-block theorem itself (`n·ε²/gap²` constant is crude — contribute the
-S-grade cross-term identity now, see §3b, the theorem later in projector
-form); ℓ²-opNorm vs Frobenius vs entrywise norm comparisons (verified absent
+**Update 2026-06-12 (Opus session):** candidate #8 (Davis–Kahan cross-block
+bound) is now STAGED, RCLike-general, in
+`ForMathlib/Analysis/InnerProductSpace/DavisKahan.lean` —
+`sum_norm_inner_eigenvectorBasis_map_sub_sq_le` (total cross-energy `≤ nε²`),
+`sum_cross_norm_inner_eigenvectorBasis_sq_le` (the sin-Θ bound `≤ nε²/gap²`),
+and `…_of_rank_floor` (the `≤ 4nε²/α²` corollary under PSD rank-`d` + spectral
+floor).  The earlier "deferred / needs redesign" note is superseded: the crude
+`n·ε²/gap²` constant is documented in-file, the result is correct and
+self-contained, and the cleaner projector-form sin-Θ remains a possible future
+strengthening.  `Acharyya2025/DavisKahan.lean` and `RankGap.lean` are now thin
+ℝ-instantiation wrappers.
+
+**Deliberately deferred** (real gaps, but redesign expected):
+ℓ²-opNorm vs Frobenius vs entrywise norm comparisons (verified absent
 upstream, but mostly scoped-instance plumbing — best as a dedicated
 norm-comparison PR: `Matrix.l2_opNorm_le_frobenius` + entrywise corollary);
 argmin-set stability behind `exists_modulus_pairDist` (Mathlib just gained

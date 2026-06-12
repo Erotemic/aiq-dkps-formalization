@@ -37,6 +37,7 @@ Formalized by Claude Fable 5 (claude-fable-5[1m]).
 
 import Mathlib
 import ForMathlib.Analysis.InnerProductSpace.Spectrum
+import ForMathlib.Analysis.InnerProductSpace.DavisKahan
 import Acharyya2025.Weyl
 
 open scoped BigOperators RealInnerProductSpace InnerProductSpace
@@ -86,37 +87,9 @@ theorem sum_inner_map_sq_le
     ∑ i : Fin n, ∑ j : Fin n,
       (⟪hT.eigenvectorBasis hn i, (S - T) (hS.eigenvectorBasis hn j)⟫_ℝ)^2
       ≤ (n : ℝ) * ε^2 := by
-  set u := hT.eigenvectorBasis hn with hu
-  set v := hS.eigenvectorBasis hn with hv
-  -- Swap the order of summation so Parseval (over `i`) is the inner sum.
-  rw [Finset.sum_comm]
-  -- For each `j`, the inner sum over `i` equals `‖(S − T) ûⱼ‖²`.
-  have hinner : ∀ j : Fin n,
-      ∑ i : Fin n, (⟪u i, (S - T) (v j)⟫_ℝ)^2 = ‖(S - T) (v j)‖^2 := by
-    intro j
-    rw [← Acharyya2025.Weyl.sum_repr_sq_eq_norm_sq u ((S - T) (v j))]
-    refine Finset.sum_congr rfl ?_
-    intro i _
-    rw [u.repr_apply_apply]
-  -- Each `‖(S − T) ûⱼ‖²` is at most `ε²` since `ûⱼ` is a unit vector.
-  have hunit : ∀ j : Fin n, ‖v j‖ = 1 := fun j => by rw [hv]; exact v.orthonormal.1 j
-  have hbound : ∀ j ∈ (Finset.univ : Finset (Fin n)),
-      ‖(S - T) (v j)‖^2 ≤ ε^2 := by
-    intro j _
-    have h1 : ‖(S - T) (v j)‖ ≤ ε := by
-      have := hε (v j)
-      rwa [hunit j, mul_one] at this
-    have h0 : 0 ≤ ‖(S - T) (v j)‖ := norm_nonneg _
-    rw [sq, sq]
-    exact mul_self_le_mul_self h0 h1
-  calc ∑ j : Fin n, ∑ i : Fin n, (⟪u i, (S - T) (v j)⟫_ℝ)^2
-      = ∑ j : Fin n, ‖(S - T) (v j)‖^2 := by
-        refine Finset.sum_congr rfl ?_
-        intro j _
-        rw [hinner j]
-    _ ≤ ∑ _j : Fin n, ε^2 := Finset.sum_le_sum hbound
-    _ = (n : ℝ) * ε^2 := by
-        rw [Finset.sum_const, Finset.card_univ, Fintype.card_fin, nsmul_eq_mul]
+  -- Thin ℝ-instantiation of the Mathlib-staged RCLike version.
+  have h := ForMathlib.sum_norm_inner_eigenvectorBasis_map_sub_sq_le hT hS hn hε
+  simpa [Real.norm_eq_abs, sq_abs] using h
 
 /-! ### Step (b): the Davis–Kahan cross-block bound
 
@@ -143,84 +116,8 @@ theorem sum_cross_inner_sq_le
       ∑ j ∈ Finset.univ.filter (fun j : Fin n => d ≤ (j : Nat)),
         (⟪hT.eigenvectorBasis hn i, hS.eigenvectorBasis hn j⟫_ℝ)^2
       ≤ (n : ℝ) * ε^2 / gap^2 := by
-  classical
-  set u := hT.eigenvectorBasis hn with hu
-  set v := hS.eigenvectorBasis hn with hv
-  -- Per-pair: `gap² ⟪uᵢ, ûⱼ⟫² ≤ ⟪uᵢ, (S − T) ûⱼ⟫²` for cross pairs.
-  have hpair : ∀ i j : Fin n, (i : Nat) < d → d ≤ (j : Nat) →
-      gap^2 * (⟪u i, v j⟫_ℝ)^2
-        ≤ (⟪u i, (S - T) (v j)⟫_ℝ)^2 := by
-    intro i j hi hj
-    have hg : gap ≤ |hT.eigenvalues hn i - hS.eigenvalues hn j| := hgap i j hi hj
-    -- `gap² ≤ (λᵢ − λ̂ⱼ)²`
-    have hsq : gap^2 ≤ (hS.eigenvalues hn j - hT.eigenvalues hn i)^2 := by
-      have h0 : (0 : ℝ) ≤ gap := le_of_lt hgap_pos
-      have := mul_self_le_mul_self h0 hg
-      rw [← sq, ← sq, sq_abs] at this
-      -- `(λᵢ − λ̂ⱼ)² = (λ̂ⱼ − λᵢ)²`
-      have hflip : (hT.eigenvalues hn i - hS.eigenvalues hn j)^2
-          = (hS.eigenvalues hn j - hT.eigenvalues hn i)^2 := by ring
-      rwa [hflip] at this
-    -- multiply through by `⟪uᵢ, ûⱼ⟫² ≥ 0` and rewrite the RHS via step (a)
-    have hmul : gap^2 * (⟪u i, v j⟫_ℝ)^2
-        ≤ (hS.eigenvalues hn j - hT.eigenvalues hn i)^2 * (⟪u i, v j⟫_ℝ)^2 :=
-      mul_le_mul_of_nonneg_right hsq (sq_nonneg _)
-    calc gap^2 * (⟪u i, v j⟫_ℝ)^2
-        ≤ (hS.eigenvalues hn j - hT.eigenvalues hn i)^2 * (⟪u i, v j⟫_ℝ)^2 := hmul
-      _ = ((hS.eigenvalues hn j - hT.eigenvalues hn i) * ⟪u i, v j⟫_ℝ)^2 := by ring
-      _ = (⟪u i, (S - T) (v j)⟫_ℝ)^2 := by
-          rw [hu, hv, inner_eigenvector_map_sub_eq hT hS hn i j]
-  -- Sum the per-pair bound over the cross block.
-  have hcross : gap^2 * (∑ i ∈ Finset.univ.filter (fun i : Fin n => (i : Nat) < d),
-        ∑ j ∈ Finset.univ.filter (fun j : Fin n => d ≤ (j : Nat)),
-          (⟪u i, v j⟫_ℝ)^2)
-      ≤ ∑ i ∈ Finset.univ.filter (fun i : Fin n => (i : Nat) < d),
-          ∑ j ∈ Finset.univ.filter (fun j : Fin n => d ≤ (j : Nat)),
-            (⟪u i, (S - T) (v j)⟫_ℝ)^2 := by
-    rw [Finset.mul_sum]
-    refine Finset.sum_le_sum ?_
-    intro i hi
-    rw [Finset.mul_sum]
-    refine Finset.sum_le_sum ?_
-    intro j hj
-    exact hpair i j (Finset.mem_filter.mp hi).2 (Finset.mem_filter.mp hj).2
-  -- Bound the cross-block RHS by the full double sum (all terms nonneg).
-  -- First extend the inner sum from the `j`-filter to all of `Fin n`, then the
-  -- outer sum from the `i`-filter to all of `Fin n`.
-  have hsub : ∑ i ∈ Finset.univ.filter (fun i : Fin n => (i : Nat) < d),
-        ∑ j ∈ Finset.univ.filter (fun j : Fin n => d ≤ (j : Nat)),
-          (⟪u i, (S - T) (v j)⟫_ℝ)^2
-      ≤ ∑ i : Fin n, ∑ j : Fin n, (⟪u i, (S - T) (v j)⟫_ℝ)^2 := by
-    calc ∑ i ∈ Finset.univ.filter (fun i : Fin n => (i : Nat) < d),
-            ∑ j ∈ Finset.univ.filter (fun j : Fin n => d ≤ (j : Nat)),
-              (⟪u i, (S - T) (v j)⟫_ℝ)^2
-        ≤ ∑ i ∈ Finset.univ.filter (fun i : Fin n => (i : Nat) < d),
-            ∑ j : Fin n, (⟪u i, (S - T) (v j)⟫_ℝ)^2 := by
-          refine Finset.sum_le_sum ?_
-          intro i _
-          refine Finset.sum_le_sum_of_subset_of_nonneg (Finset.filter_subset _ _) ?_
-          intro j _ _
-          exact sq_nonneg _
-      _ ≤ ∑ i : Fin n, ∑ j : Fin n, (⟪u i, (S - T) (v j)⟫_ℝ)^2 := by
-          refine Finset.sum_le_sum_of_subset_of_nonneg (Finset.filter_subset _ _) ?_
-          intro i _ _
-          exact Finset.sum_nonneg (fun j _ => sq_nonneg _)
-  -- Chain: gap² · CROSS ≤ full cross-energy ≤ n ε².
-  have htotal : gap^2 * (∑ i ∈ Finset.univ.filter (fun i : Fin n => (i : Nat) < d),
-        ∑ j ∈ Finset.univ.filter (fun j : Fin n => d ≤ (j : Nat)),
-          (⟪u i, v j⟫_ℝ)^2)
-      ≤ (n : ℝ) * ε^2 := by
-    calc gap^2 * (∑ i ∈ Finset.univ.filter (fun i : Fin n => (i : Nat) < d),
-            ∑ j ∈ Finset.univ.filter (fun j : Fin n => d ≤ (j : Nat)),
-              (⟪u i, v j⟫_ℝ)^2)
-        ≤ ∑ i ∈ Finset.univ.filter (fun i : Fin n => (i : Nat) < d),
-            ∑ j ∈ Finset.univ.filter (fun j : Fin n => d ≤ (j : Nat)),
-              (⟪u i, (S - T) (v j)⟫_ℝ)^2 := hcross
-      _ ≤ ∑ i : Fin n, ∑ j : Fin n, (⟪u i, (S - T) (v j)⟫_ℝ)^2 := hsub
-      _ ≤ (n : ℝ) * ε^2 := by
-          rw [hu, hv]; exact sum_inner_map_sq_le hT hS hn hε
-  -- Divide by `gap² > 0`.
-  rw [le_div_iff₀ (by positivity : (0 : ℝ) < gap^2), mul_comm]
-  exact htotal
+  -- Thin ℝ-instantiation of the Mathlib-staged RCLike version.
+  have h := ForMathlib.sum_cross_norm_inner_eigenvectorBasis_sq_le hT hS hn d hgap_pos hgap hε
+  simpa [Real.norm_eq_abs, sq_abs] using h
 
 end Acharyya2025.DavisKahan

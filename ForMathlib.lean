@@ -14,6 +14,7 @@ import ForMathlib.Analysis.InnerProductSpace.Spectrum
 import ForMathlib.Analysis.Matrix.EntrywiseOpNorm
 import ForMathlib.Analysis.Matrix.Spectrum
 import ForMathlib.LinearAlgebra.Matrix.PosDef
+import ForMathlib.MeasureTheory.CfcMeasurable
 import ForMathlib.MeasureTheory.CompactExists
 import ForMathlib.MeasureTheory.Function.ConvergenceInMeasure
 import ForMathlib.MeasureTheory.Measure.Typeclasses.Probability

@@ -31,7 +31,7 @@ determined exactly up to an orthogonal (unitary) transformation.
   spaces over `𝕜`, equal pairwise inner products give a linear isometry from
   `span 𝕜 (range φ)` into `F` sending each `φ i` to `ψ i`.  No finiteness is
   needed.
-* `ForMathlib.exists_linearIsometryEquiv_of_inner_eq`: in finite dimension, the
+* `ForMathlib.exists_linearIsometryEquiv_map_eq_of_inner_eq`: in finite dimension, the
   core extends to a linear isometry *equivalence* of the ambient space.
 * `ForMathlib.Matrix.gram_eq_gram_iff_exists_linearIsometryEquiv`: the same
   statement packaged as a characterization of `Matrix.gram` equality.
@@ -156,7 +156,7 @@ self-equivalence: the isometry on `span 𝕜 (range φ)` extends to `E` by
 `LinearIsometry.extend`, and finite dimensionality upgrades the resulting
 injective self-map to an equivalence.
 -/
-theorem exists_linearIsometryEquiv_of_inner_eq {φ ψ : ι → E}
+theorem exists_linearIsometryEquiv_map_eq_of_inner_eq {φ ψ : ι → E}
     (h : ∀ i j, ⟪φ i, φ j⟫_𝕜 = ⟪ψ i, ψ j⟫_𝕜) :
     ∃ W : E ≃ₗᵢ[𝕜] E, ∀ i, W (φ i) = ψ i := by
   obtain ⟨L, hL⟩ := exists_linearIsometry_of_inner_eq h
@@ -182,7 +182,7 @@ theorem gram_eq_gram_iff_exists_linearIsometryEquiv {φ ψ : ι → E} :
     gram 𝕜 φ = gram 𝕜 ψ ↔ ∃ W : E ≃ₗᵢ[𝕜] E, ∀ i, W (φ i) = ψ i := by
   constructor
   · intro hg
-    refine exists_linearIsometryEquiv_of_inner_eq fun i j => ?_
+    refine exists_linearIsometryEquiv_map_eq_of_inner_eq fun i j => ?_
     rw [← gram_apply (𝕜 := 𝕜) φ i j, ← gram_apply (𝕜 := 𝕜) ψ i j, hg]
   · rintro ⟨W, hW⟩
     ext i j

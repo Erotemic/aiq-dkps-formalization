@@ -46,7 +46,7 @@ Both #5 follow-ups are now resolved (Opus, 2026-06-12):
   left (retiring it is a large, zero-benefit refactor).
 * **#5 proof shape (R2b recon, Opus 2026-06-12)** — VERDICT: keep the spectral
   proof. The hard direction was modularized (forward lemma
-  `exists_conjTranspose_mul_self_of_posSemidef_of_rank_le` + thin iff). A recon of
+  `PosSemidef.exists_conjTranspose_mul_self_of_rank_le` + thin iff). A recon of
   Mathlib's factorization APIs found **no cleaner route**: Mathlib has the PSD
   square root (`CFC.sqrt`) but **no rank-factorization** (`M = L·R`, `r = rank`),
   so the rank-`≤d` compression into `Fin d` is inherently hand-built. The current
@@ -224,7 +224,7 @@ proof).
 
 ### 1. Procrustes rigidity — best spectral value/effort
 
-`exists_linearIsometryEquiv_of_inner_eq` (`Acharyya2025/Procrustes.lean:49`):
+`exists_linearIsometryEquiv_map_eq_of_inner_eq` (`Acharyya2025/Procrustes.lean:49`):
 families `φ ψ : ι → E` (arbitrary index, `E` finite-dim real IPS) with
 `⟪φ i, φ j⟫ = ⟪ψ i, ψ j⟫` are related by `W : E ≃ₗᵢ[ℝ] E` with `W (φ i) = ψ i`.
 Proof: `Finsupp.linearCombination` kernel comparison + `LinearIsometry.extend`.

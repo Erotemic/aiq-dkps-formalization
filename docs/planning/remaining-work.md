@@ -79,13 +79,13 @@ scope now.
 
 ### Track 4 — decisions needing human / Zulip input (R6)
 
-**Prepared with recommendations in `pr-decisions.md`** (D-1…D-9): Gram public
-face + naming + destination; PSD naming + helper location + destination; spectral
-destinations + helper visibility; import minimization (defer to in-tree PR time).
-All recommendations are low-risk; the only non-trivial mechanical cost is the
-Gram equiv rename (≈6 files). None require Fable. → **Awaiting user/Zulip sign-off**;
-once chosen, application is mechanical (rename + reference updates / file moves)
-and belongs to Task E.
+**Prepared with recommendations in `pr-decisions.md`** (D-1…D-9). **Naming
+decisions APPLIED 2026-06-12** (user-directed — get names right before Task E):
+D-2 Gram equiv → `exists_linearIsometryEquiv_map_eq_of_inner_eq`; D-4 PSD forward
+→ `Matrix.PosSemidef.exists_conjTranspose_mul_self_of_rank_le`. Build green. The
+remaining items (D-3/D-5/D-6 file moves — names unchanged; D-8 Zulip destinations;
+D-9 in-tree imports) don't change declaration names and are safely left for the
+mechanical Task-E pass / Zulip. None require Fable.
 
 ---
 

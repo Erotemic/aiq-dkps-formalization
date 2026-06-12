@@ -600,7 +600,7 @@ determined exactly up to an orthogonal (unitary) transformation.
 * `ForMathlib.exists_linearIsometry_of_inner_eq`: the span-level core (two
   possibly-different ambient spaces, no finiteness) — equal pairwise inner
   products give a linear isometry from `span 𝕜 (range φ)` into `F`.
-* `ForMathlib.exists_linearIsometryEquiv_of_inner_eq`: equal pairwise inner
+* `ForMathlib.exists_linearIsometryEquiv_map_eq_of_inner_eq`: equal pairwise inner
   products yield a linear isometry equivalence mapping one family to the other.
 * `ForMathlib.Matrix.gram_eq_gram_iff_exists_linearIsometryEquiv`: the same
   statement packaged as a characterization of `Matrix.gram` equality.
@@ -633,7 +633,7 @@ map of `φ`), shows it is an isometry there using the equal inner products,
 extends it to all of `E` by `LinearIsometry.extend`, and upgrades the result to
 an equivalence by finite dimensionality.
 -/
-theorem exists_linearIsometryEquiv_of_inner_eq {φ ψ : ι → E}
+theorem exists_linearIsometryEquiv_map_eq_of_inner_eq {φ ψ : ι → E}
     (h : ∀ i j, ⟪φ i, φ j⟫_𝕜 = ⟪ψ i, ψ j⟫_𝕜) :
     ∃ W : E ≃ₗᵢ[𝕜] E, ∀ i, W (φ i) = ψ i := by
   sorry

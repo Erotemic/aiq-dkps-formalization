@@ -50,7 +50,7 @@ import ForMathlib.Topology.Berge
 #print axioms ForMathlib.spectralProjection_apply_self
 #print axioms ForMathlib.sum_norm_sub_spectralProjection_sq_eq
 #print axioms ForMathlib.sum_norm_sub_spectralProjection_sq_le
-#print axioms ForMathlib.exists_linearIsometryEquiv_of_inner_eq
+#print axioms ForMathlib.exists_linearIsometryEquiv_map_eq_of_inner_eq
 #print axioms ForMathlib.Matrix.gram_eq_gram_iff_exists_linearIsometryEquiv
 #print axioms ForMathlib.inner_linearCombination_linearCombination
 #print axioms ForMathlib.exists_linearIsometry_of_inner_eq
@@ -60,7 +60,7 @@ import ForMathlib.Topology.Berge
 #print axioms ForMathlib.Matrix.PosSemidef.eigenvalues₀_eq_zero_of_le
 #print axioms ForMathlib.Matrix.isHermitian_entry_eq_sum_eigenvalues
 #print axioms ForMathlib.Matrix.posSemidef_and_rank_le_iff_exists_conjTranspose_mul_self
-#print axioms ForMathlib.Matrix.exists_conjTranspose_mul_self_of_posSemidef_of_rank_le
+#print axioms ForMathlib.Matrix.PosSemidef.exists_conjTranspose_mul_self_of_rank_le
 #print axioms ForMathlib.measurable_of_iUnion_restrict
 #print axioms ForMathlib.measurable_cfc_comp
 #print axioms ForMathlib.measurableSet_exists_mem_le

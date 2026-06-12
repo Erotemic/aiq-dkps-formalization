@@ -27,7 +27,7 @@ together with `rank_conjTranspose_mul_self` and `rank_le_height`.
 
 ## Main results
 
-* `ForMathlib.Matrix.exists_conjTranspose_mul_self_of_posSemidef_of_rank_le`: the
+* `ForMathlib.Matrix.PosSemidef.exists_conjTranspose_mul_self_of_rank_le`: the
   spectral forward direction (PSD of rank `≤ d` factors as `Aᴴ * A` with `A` a
   `d × n` matrix).
 * `ForMathlib.Matrix.posSemidef_and_rank_le_iff_exists_conjTranspose_mul_self`:
@@ -91,7 +91,7 @@ The construction is spectral: `B = Σ_k λ_k uₖ uₖᴴ` with `λ_k ≥ 0` and
 nonzero eigenvalues; scaling each nonzero eigenvector by `√λ_k` and packing the
 `rank B ≤ d` resulting coordinates into `d` rows yields `A`.
 -/
-theorem exists_conjTranspose_mul_self_of_posSemidef_of_rank_le
+theorem PosSemidef.exists_conjTranspose_mul_self_of_rank_le
     {d : ℕ} {B : Matrix (Fin n) (Fin n) 𝕜} (hB : B.PosSemidef) (hrank : B.rank ≤ d) :
     ∃ A : Matrix (Fin d) (Fin n) 𝕜, B = Aᴴ * A := by
   classical
@@ -189,13 +189,13 @@ theorem exists_conjTranspose_mul_self_of_posSemidef_of_rank_le
 semidefinite with rank at most `d` if and only if `B = Aᴴ * A` for some
 `A : Matrix (Fin d) (Fin n) 𝕜` (equivalently, `B` is the Gram matrix of `n`
 points in `𝕜^d`).  Splits into the spectral forward direction
-`exists_conjTranspose_mul_self_of_posSemidef_of_rank_le` and the elementary
+`PosSemidef.exists_conjTranspose_mul_self_of_rank_le` and the elementary
 converse (`posSemidef_conjTranspose_mul_self` + `rank_conjTranspose_mul_self`).
 -/
 theorem posSemidef_and_rank_le_iff_exists_conjTranspose_mul_self
     {d : ℕ} (B : Matrix (Fin n) (Fin n) 𝕜) :
     (B.PosSemidef ∧ B.rank ≤ d) ↔ ∃ A : Matrix (Fin d) (Fin n) 𝕜, B = Aᴴ * A := by
-  refine ⟨fun h => exists_conjTranspose_mul_self_of_posSemidef_of_rank_le h.1 h.2, ?_⟩
+  refine ⟨fun h => PosSemidef.exists_conjTranspose_mul_self_of_rank_le h.1 h.2, ?_⟩
   rintro ⟨A, rfl⟩
   refine ⟨posSemidef_conjTranspose_mul_self A, ?_⟩
   rw [rank_conjTranspose_mul_self]

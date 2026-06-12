@@ -28,7 +28,7 @@ finite-dimensional inner product space have equal pairwise inner products,
 then there is a linear isometry equivalence `W` of `E` with `W (φ i) = ψ i`
 for every `i`.
 -/
-theorem exists_linearIsometryEquiv_of_inner_eq {φ ψ : ι → E}
+theorem exists_linearIsometryEquiv_map_eq_of_inner_eq {φ ψ : ι → E}
     (h : ∀ i j, ⟪φ i, φ j⟫_𝕜 = ⟪ψ i, ψ j⟫_𝕜) :
     ∃ W : E ≃ₗᵢ[𝕜] E, ∀ i, W (φ i) = ψ i := by
   sorry

@@ -40,11 +40,13 @@ conclusion is a `map_eq`.
   `map_eq` suffix is the Mathlib idiom for "∃ f, ∀ i, f xᵢ = yᵢ"). Keep
   `exists_linearIsometry_of_inner_eq` and `inner_linearCombination_linearCombination`
   as-is (already idiomatic).
-- **Coupling (non-trivial):** the equiv name is referenced by
-  `Acharyya2025/Procrustes.lean`, `Challenge/Gram/{Conformance,Leaderboard}.lean`,
-  `Challenge/Inventory/{Conformance,Leaderboard}.lean`. A rename must update all of
-  these (mechanical, ~6 files). **Because of this coupling, hold the rename until
-  PR time (Task E)** rather than churn now — but fix the target name here.
+- ✅ **APPLIED 2026-06-12** (user-directed: get names right before Task E).
+  Renamed across `GramMatrix.lean` and the `Challenge/Gram/` +
+  `Challenge/Inventory/` conformance & leaderboard files; the `ForMathlib.`-qualified
+  call in `Acharyya2025/Procrustes.lean` was repointed. The DKPS ℝ-wrapper
+  `Acharyya2025.exists_linearIsometryEquiv_of_inner_eq` deliberately **keeps its own
+  name** (it is a downstream convenience, not a Mathlib candidate; its docstring
+  says so). Full build green.
 
 ## D-3. Gram — destination file
 
@@ -66,10 +68,12 @@ Coupling: none.
 - **Recommendation:** put the forward lemma in the `Matrix.PosSemidef` namespace so
   `hB.exists_conjTranspose_mul_self_of_rank_le hrank` works by dot notation; keep
   the iff name (it is searchable and the convention for `↔`).
-- **Coupling:** the iff is used by `Acharyya2025/GramRealization.lean` and the
-  Challenge suites; the forward lemma is new. Renaming/moving-namespace the forward
-  lemma is low-coupling (only `#print axioms` in `Inventory/Leaderboard.lean`).
-  Hold until PR time.
+- ✅ **APPLIED 2026-06-12.** Forward lemma is now
+  `ForMathlib.Matrix.PosSemidef.exists_conjTranspose_mul_self_of_rank_le` (drops the
+  now-redundant `_of_posSemidef`); at PR time `ForMathlib.` strips to
+  `Matrix.PosSemidef.…` and `hB.…` dot notation works. The iff calls it as
+  `PosSemidef.exists_conjTranspose_mul_self_of_rank_le h.1 h.2`; `#print axioms` in
+  `Inventory/Leaderboard.lean` updated. Iff name kept. Full build green.
 
 ## D-5. PSD — entry-helper location
 
@@ -120,16 +124,18 @@ authoritative; do not trim further out-of-tree.
 
 ## Summary — what unblocks "drop-ready"
 
-| Decision | Recommendation | Apply when |
+| Decision | Recommendation | Status |
 |---|---|---|
-| D-1 face | span-level core leads | PR time |
-| D-2 Gram name | `..._map_eq_of_inner_eq` | PR time (6-file rename) |
-| D-3 Gram dest | existing `GramMatrix.lean` | PR time |
-| D-4 PSD name | forward in `PosSemidef` namespace | PR time |
-| D-5 helper loc | move to `Spectrum.lean` | PR time |
-| D-6 PSD dest | `PosDef.lean` | PR time |
+| D-1 face | span-level core leads | satisfied (core already presented first) |
+| D-2 Gram name | `..._map_eq_of_inner_eq` | ✅ APPLIED 2026-06-12 |
+| D-3 Gram dest | existing `GramMatrix.lean` | accepted; move at PR time |
+| D-4 PSD name | forward in `PosSemidef` namespace | ✅ APPLIED 2026-06-12 |
+| D-5 helper loc | move to `Spectrum.lean` | accepted; move at PR time (name unchanged) |
+| D-6 PSD dest | `PosDef.lean` | accepted; PR time |
 | D-8 spectral dest | confirm on Zulip; helpers private | Zulip |
-| D-9 imports | in-tree shake | PR time |
+| D-9 imports | in-tree shake | accepted; PR time |
 
-All recommendations are low-risk; the only non-trivial mechanical cost is the
-D-2 rename (≈6 files). None require Fable.
+Naming decisions (D-2, D-4) are **applied**; the remaining items are file
+moves / destination confirmations whose declaration *names* don't change, so they
+are safely left for the mechanical Task-E pass (D-5/D-6) or Zulip (D-8). None
+require Fable.

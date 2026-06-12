@@ -77,10 +77,19 @@ self-contained, and the cleaner projector-form sin-Θ remains a possible future
 strengthening.  `Acharyya2025/DavisKahan.lean` and `RankGap.lean` are now thin
 ℝ-instantiation wrappers.
 
+**Update 2026-06-12 (Opus session, cont.):** the norm-comparison item is now
+STAGED in `ForMathlib/Analysis/Matrix/EntrywiseOpNorm.lean`:
+`sum_norm_le_sqrt_card_mul_norm` (the `ℓ¹ ≤ √card · ℓ²` bound on
+`EuclideanSpace 𝕜 ι`, `RCLike`, absent upstream — only the
+`sq_sum_le_card_mul_sum_sq` Chebyshev kernel exists) and
+`norm_toEuclideanLin_le_of_entry_le` (entrywise sup `≤ ε` gives Euclidean
+operator bound `‖toEuclideanLin A x‖ ≤ nε‖x‖`, ℝ — Mathlib has the full
+`l2_opNorm` API but no entrywise/Frobenius comparison).
+`Acharyya2025/OperatorBridge.lean` rewired to consume both.  Two follow-ups:
+the `n` constant is loose (Frobenius gives `√card`), and the matrix bound is
+ℝ-only (`TODO(RCLike)` in-file).
+
 **Deliberately deferred** (real gaps, but redesign expected):
-ℓ²-opNorm vs Frobenius vs entrywise norm comparisons (verified absent
-upstream, but mostly scoped-instance plumbing — best as a dedicated
-norm-comparison PR: `Matrix.l2_opNorm_le_frobenius` + entrywise corollary);
 argmin-set stability behind `exists_modulus_pairDist` (Mathlib just gained
 `Topology/Semicontinuity/Hemicontinuity.lean` with no Berge maximum theorem —
 raise as a feature request to its author rather than port our MDS-specific

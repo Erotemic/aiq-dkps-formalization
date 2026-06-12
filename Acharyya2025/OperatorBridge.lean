@@ -22,6 +22,7 @@ Formalized by Claude Fable 5 (claude-fable-5[1m]).
 
 import Acharyya2025.MathlibBridge
 import Acharyya2025.Weyl
+import ForMathlib.Analysis.Matrix.EntrywiseOpNorm
 
 open scoped BigOperators RealInnerProductSpace
 open Module (finrank)
@@ -48,24 +49,9 @@ Formalized by Claude Fable 5 (claude-fable-5[1m]).
 -/
 theorem sum_abs_le_sqrt_card_mul_norm {n : Nat} (x : EuclideanSpace Real (Fin n)) :
     ∑ j : Fin n, |x j| ≤ Real.sqrt n * ‖x‖ := by
-  have hcs : (∑ j : Fin n, |x j|) ^ 2 ≤ (n : Real) * ∑ j : Fin n, |x j| ^ 2 := by
-    simpa [Finset.card_univ] using
-      sq_sum_le_card_mul_sum_sq
-        (s := (Finset.univ : Finset (Fin n))) (f := fun j => |x j|)
-  have hnorm : ‖x‖ ^ 2 = ∑ j : Fin n, |x j| ^ 2 := by
-    rw [EuclideanSpace.norm_eq]
-    rw [Real.sq_sqrt (Finset.sum_nonneg fun j _ => sq_nonneg _)]
-    simp [Real.norm_eq_abs]
-  have hsum_nonneg : 0 ≤ ∑ j : Fin n, |x j| :=
-    Finset.sum_nonneg fun j _ => abs_nonneg _
-  have hrhs_nonneg : 0 ≤ Real.sqrt n * ‖x‖ :=
-    mul_nonneg (Real.sqrt_nonneg _) (norm_nonneg _)
-  have hsq : (∑ j : Fin n, |x j|) ^ 2 ≤ (Real.sqrt n * ‖x‖) ^ 2 := by
-    have : (Real.sqrt n * ‖x‖) ^ 2 = (n : Real) * ‖x‖ ^ 2 := by
-      rw [mul_pow, Real.sq_sqrt (by positivity : (0 : Real) ≤ (n : Real))]
-    rw [this, hnorm]
-    exact hcs
-  exact (abs_le_of_sq_le_sq' hsq hrhs_nonneg).2
+  -- Thin ℝ-instantiation of the Mathlib-staged RCLike version.
+  simpa [Real.norm_eq_abs, Fintype.card_fin] using
+    ForMathlib.sum_norm_le_sqrt_card_mul_norm x
 
 /--
 Entrywise closeness gives honest `ℓ² → ℓ²` operator-norm closeness with
@@ -86,64 +72,11 @@ theorem matrixL2OperatorClose_of_entrywise
     (hentry : MatrixEntrywiseClose A B ε) :
     MatrixL2OperatorClose A B ((n : Real) * ε) := by
   intro x
-  rcases Nat.eq_zero_or_pos n with hn | hn
-  · subst hn
-    have hzero : Matrix.toEuclideanLin (A - B) x = 0 := Subsingleton.elim _ _
-    rw [hzero, norm_zero]
-    simp
-  · have hε : 0 ≤ ε := (abs_nonneg _).trans (hentry ⟨0, hn⟩ ⟨0, hn⟩)
-    -- Row-wise bound: |((A-B) ·ᵥ x) i| ≤ ε * Σ |x j| ≤ ε √n ‖x‖.
-    have hrow : ∀ i : Fin n,
-        |(Matrix.toEuclideanLin (A - B) x) i| ≤ ε * (Real.sqrt n * ‖x‖) := by
-      intro i
-      have happ : (Matrix.toEuclideanLin (A - B) x) i
-          = ∑ j : Fin n, (A i j - B i j) * x j := by
-        show ((A - B).mulVec (WithLp.ofLp x)) i = _
-        simp [Matrix.mulVec, dotProduct, Matrix.sub_apply, sub_mul,
-          Finset.sum_sub_distrib]
-      calc
-        |(Matrix.toEuclideanLin (A - B) x) i|
-            = |∑ j : Fin n, (A i j - B i j) * x j| := by rw [happ]
-        _ ≤ ∑ j : Fin n, |(A i j - B i j) * x j| :=
-              Finset.abs_sum_le_sum_abs _ _
-        _ = ∑ j : Fin n, |A i j - B i j| * |x j| := by
-              simp [abs_mul]
-        _ ≤ ∑ j : Fin n, ε * |x j| :=
-              Finset.sum_le_sum fun j _ =>
-                mul_le_mul_of_nonneg_right (hentry i j) (abs_nonneg _)
-        _ = ε * ∑ j : Fin n, |x j| := by rw [Finset.mul_sum]
-        _ ≤ ε * (Real.sqrt n * ‖x‖) :=
-              mul_le_mul_of_nonneg_left (sum_abs_le_sqrt_card_mul_norm x) hε
-    -- Sum the squared rows.
-    have hnorm_sq : ‖Matrix.toEuclideanLin (A - B) x‖ ^ 2
-        ≤ (n : Real) * (ε * (Real.sqrt n * ‖x‖)) ^ 2 := by
-      have hexp : ‖Matrix.toEuclideanLin (A - B) x‖ ^ 2
-          = ∑ i : Fin n, |(Matrix.toEuclideanLin (A - B) x) i| ^ 2 := by
-        rw [EuclideanSpace.norm_eq]
-        rw [Real.sq_sqrt (Finset.sum_nonneg fun i _ => sq_nonneg _)]
-        simp [Real.norm_eq_abs]
-      rw [hexp]
-      calc
-        ∑ i : Fin n, |(Matrix.toEuclideanLin (A - B) x) i| ^ 2
-            ≤ ∑ _i : Fin n, (ε * (Real.sqrt n * ‖x‖)) ^ 2 :=
-              Finset.sum_le_sum fun i _ =>
-                pow_le_pow_left₀ (abs_nonneg _) (hrow i) 2
-        _ = (n : Real) * (ε * (Real.sqrt n * ‖x‖)) ^ 2 := by
-              simp [Finset.sum_const, Finset.card_univ, nsmul_eq_mul]
-    -- Take square roots.
-    have hrhs_nonneg : 0 ≤ (n : Real) * ε * ‖x‖ := by positivity
-    have hsq_eq : ((n : Real) * ε * ‖x‖) ^ 2
-        = (n : Real) * (ε * (Real.sqrt n * ‖x‖)) ^ 2 := by
-      have hs : Real.sqrt (n : Real) * Real.sqrt (n : Real) = (n : Real) :=
-        Real.mul_self_sqrt (by positivity)
-      calc ((n : Real) * ε * ‖x‖) ^ 2
-          = (n : Real) * (((n : Real)) * (ε ^ 2 * ‖x‖ ^ 2)) := by ring
-        _ = (n : Real) * ((Real.sqrt (n : Real) * Real.sqrt (n : Real))
-              * (ε ^ 2 * ‖x‖ ^ 2)) := by rw [hs]
-        _ = (n : Real) * (ε * (Real.sqrt n * ‖x‖)) ^ 2 := by ring
-    have : ‖Matrix.toEuclideanLin (A - B) x‖ ^ 2 ≤ ((n : Real) * ε * ‖x‖) ^ 2 := by
-      rw [hsq_eq]; exact hnorm_sq
-    exact (abs_le_of_sq_le_sq' this hrhs_nonneg).2
+  -- Thin reduction to the Mathlib-staged entrywise -> operator-norm bound,
+  -- applied to the difference matrix `A - B`.
+  have hentry' : ∀ i j, |(A - B) i j| ≤ ε := by
+    intro i j; rw [Matrix.sub_apply]; exact hentry i j
+  exact ForMathlib.norm_toEuclideanLin_le_of_entry_le hentry' x
 
 /--
 A Hermitian (over `ℝ`: symmetric) matrix induces a symmetric operator on

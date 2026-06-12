@@ -11,6 +11,7 @@ import ForMathlib.Analysis.InnerProductSpace.DavisKahan
 import ForMathlib.Analysis.InnerProductSpace.GramMatrix
 import ForMathlib.Analysis.InnerProductSpace.NearIsometry
 import ForMathlib.Analysis.InnerProductSpace.Spectrum
+import ForMathlib.Analysis.Matrix.EntrywiseOpNorm
 import ForMathlib.LinearAlgebra.Matrix.PosDef
 import ForMathlib.MeasureTheory.Function.ConvergenceInMeasure
 import ForMathlib.MeasureTheory.Measure.Typeclasses.Probability

@@ -22,10 +22,18 @@ The challenge files follow the pattern requested by the Mathlib community:
   `ForMathlib` theorem surface. This inventory is not a proposed single PR;
   it is a mechanical audit of what the project can currently certify.
 
-`ForMathlib.Matrix.measurable_specTransform` is intentionally excluded from the
-inventory for now. It comes from the newest spectral-transform / CFC
-measurability work and still needs statement/API review before it should be
-claimed as ready.
+The inventory intentionally excludes a few newest/provisional declarations for
+now:
+
+* `ForMathlib.Matrix.measurable_specTransform` comes from the newest
+  spectral-transform / CFC measurability work and still needs statement/API
+  review before it should be claimed as ready.
+* `ForMathlib.isHermitian_sampleCovariance` and
+  `ForMathlib.measure_forall_sampleCovariance_sortedEig_ge_ge` come from the
+  newest sample-covariance concentration work. The current conformance wrapper
+  is not yet comparator-exact for the Hermitian witness used by the sorted
+  eigenvalue theorem, so these are excluded until they are reviewed and
+  regenerated.
 
 ## Running checks
 
@@ -35,7 +43,8 @@ Install comparator tools once:
 bash scripts/install_comparator_tools.sh
 ```
 
-Run all challenge families:
+Run all challenge families. The script continues through all requested configs
+and prints a pass/fail summary table at the end:
 
 ```bash
 bash scripts/run_challenge_comparator.sh

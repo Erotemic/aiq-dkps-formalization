@@ -78,8 +78,10 @@ import ForMathlib.Topology.Berge
 #print axioms ForMathlib.measure_forall_abs_sortedEig_sub_le_ge
 #print axioms ForMathlib.measure_forall_sortedEig_ge_ge
 #print axioms ForMathlib.integral_sq_sampleCovariance_entry_le
-#print axioms ForMathlib.isHermitian_sampleCovariance
-#print axioms ForMathlib.measure_forall_sampleCovariance_sortedEig_ge_ge
+/- `ForMathlib.isHermitian_sampleCovariance` and
+   `ForMathlib.measure_forall_sampleCovariance_sortedEig_ge_ge` are
+   intentionally excluded from the inventory challenge for now; see
+   `Challenge/Inventory/Conformance.lean`. -/
 #print axioms ForMathlib.exists_subseq_tendsto_forall_le_of_approxMin
 #print axioms ForMathlib.exists_subseq_tendsto_isMinOn_of_approxMinOn
 #print axioms ForMathlib.tendsto_eval_sub_of_isCompact

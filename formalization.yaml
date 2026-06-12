@@ -51,6 +51,8 @@ status:
       - "bash scripts/run_challenge_comparator.sh"
     comparator_configs:
       - "comparator/aiq-gram-rigidity.json"
+      - "comparator/aiq-psd-gram-realization.json"
+      - "comparator/aiq-spectral-perturbation.json"
       - "comparator/aiq-inventory.json"
   scope: >
     The repository formalizes several DKPS-related paper layers and stages
@@ -79,33 +81,37 @@ status:
       expected_axioms: ["propext", "Classical.choice", "Quot.sound"]
       comparator_config: "comparator/aiq-gram-rigidity.json"
     - declaration: "AIQChallenge.psd_rank_le_iff_exists_conjTranspose_mul_self"
-      challenge_file: "Challenge/Gram/Conformance.lean"
-      solution_file: "Challenge/Gram/Leaderboard.lean"
+      challenge_file: "Challenge/PsdGram/Conformance.lean"
+      solution_file: "Challenge/PsdGram/Leaderboard.lean"
       source_declaration: "ForMathlib.Matrix.posSemidef_and_rank_le_iff_exists_conjTranspose_mul_self"
       source_file: "ForMathlib/LinearAlgebra/Matrix/PosDef.lean"
       category: "Rank-controlled PSD Gram realization"
       sorry_count_in_solution: 0
       expected_axioms: ["propext", "Classical.choice", "Quot.sound"]
-      comparator_config: "comparator/aiq-gram-rigidity.json"
+      comparator_config: "comparator/aiq-psd-gram-realization.json"
     - declaration: "AIQChallenge.weyl_abs_eigenvalues_sub_le"
-      challenge_file: "Challenge/Gram/Conformance.lean"
-      solution_file: "Challenge/Gram/Leaderboard.lean"
+      challenge_file: "Challenge/Spectral/Conformance.lean"
+      solution_file: "Challenge/Spectral/Leaderboard.lean"
       source_declaration: "ForMathlib.abs_eigenvalues_sub_le"
       source_file: "ForMathlib/Analysis/InnerProductSpace/CourantFischer.lean"
       category: "Weyl / Courant-Fischer spectral perturbation"
       sorry_count_in_solution: 0
       expected_axioms: ["propext", "Classical.choice", "Quot.sound"]
-      comparator_config: "comparator/aiq-gram-rigidity.json"
+      comparator_config: "comparator/aiq-spectral-perturbation.json"
   inventory_challenge:
     challenge_file: "Challenge/Inventory/Conformance.lean"
     solution_file: "Challenge/Inventory/Leaderboard.lean"
     comparator_config: "comparator/aiq-inventory.json"
-    scope: "Current public theorem surface of ForMathlib selected for comparator inventory; excludes the staged spectral-transform measurability theorem pending API review."
-    theorem_count: 60
+    scope: "Current public theorem surface of ForMathlib selected for comparator inventory; excludes the staged spectral-transform measurability and sample-covariance Hermitian/sorted-eigenvalue theorems pending API review."
+    theorem_count: 58
     expected_axioms: ["propext", "Classical.choice", "Quot.sound"]
     excluded_for_now:
       - declaration: "ForMathlib.Matrix.measurable_specTransform"
         reason: "Recent spectral-transform / CFC measurability staging theorem; not part of the current upstream claim set until its statement/API is reviewed."
+      - declaration: "ForMathlib.isHermitian_sampleCovariance"
+        reason: "Newest sample-covariance staging theorem; conformance wrapper is not yet comparator-exact for the Hermitian witness/API."
+      - declaration: "ForMathlib.measure_forall_sampleCovariance_sortedEig_ge_ge"
+        reason: "Depends on the excluded sample-covariance Hermitian witness; excluded until the sample-covariance API is reviewed."
   additional_upstream_candidates:
     - "Davis-Kahan / sin-theta perturbation bounds"
     - "Entrywise-to-operator-norm and entrywise-to-eigenvalue perturbation"

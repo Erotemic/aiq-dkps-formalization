@@ -4,6 +4,12 @@
 This file imports only Mathlib and states a compact challenge surface for the
 spectral perturbation stack: a cross-term identity, Courant--Fischer/Weyl
 lemmas, and a Davis--Kahan-style cross-block estimate.
+
+The variable sections intentionally mirror the source `ForMathlib` files.  In
+particular, the Courant--Fischer declarations bind `{n : ℕ}` before the
+`[FiniteDimensional 𝕜 E]` instance, matching the elaborated theorem statements
+in `ForMathlib.Analysis.InnerProductSpace.CourantFischer`.  Comparator is
+sensitive to these implicit binder orders.
 -/
 
 import Mathlib
@@ -13,6 +19,10 @@ open Module (finrank)
 open _root_.Matrix
 
 namespace ForMathlib
+
+/-! ## Cross-term identity from `ForMathlib.Analysis.InnerProductSpace.Spectrum` -/
+
+section SpectrumIdentity
 
 open scoped InnerProductSpace
 
@@ -31,6 +41,18 @@ theorem inner_eigenvectorBasis_map_sub_eigenvectorBasis
       = ((hS.eigenvalues hn j - hT.eigenvalues hn i : ℝ) : 𝕜)
           * ⟪hT.eigenvectorBasis hn i, hS.eigenvectorBasis hn j⟫_𝕜 := by
   sorry
+
+end SpectrumIdentity
+
+/-! ## Courant--Fischer / Weyl declarations -/
+
+section CourantFischer
+
+open scoped InnerProductSpace
+open Module (finrank)
+
+variable {𝕜 E : Type*} [RCLike 𝕜] [NormedAddCommGroup E] [InnerProductSpace 𝕜 E] {n : ℕ}
+variable [FiniteDimensional 𝕜 E] {T S : E →ₗ[𝕜] E}
 
 /-- Quadratic form of a symmetric operator expressed in its eigenbasis. -/
 theorem re_inner_map_self_eq_sum_eigenvalues_mul_sq
@@ -59,6 +81,18 @@ theorem abs_eigenvalues_sub_le
     {ε : ℝ} (hε : ∀ x : E, ‖(T - S) x‖ ≤ ε * ‖x‖) (k : Fin n) :
     |hT.eigenvalues hn k - hS.eigenvalues hn k| ≤ ε := by
   sorry
+
+end CourantFischer
+
+/-! ## Davis--Kahan declarations -/
+
+section DavisKahan
+
+open scoped InnerProductSpace BigOperators
+open Module (finrank)
+
+variable {𝕜 E : Type*} [RCLike 𝕜] [NormedAddCommGroup E] [InnerProductSpace 𝕜 E]
+  [FiniteDimensional 𝕜 E] {n : ℕ} {T S : E →ₗ[𝕜] E}
 
 /-- Total cross-energy bound used in Davis--Kahan. -/
 theorem sum_norm_inner_eigenvectorBasis_map_sub_sq_le
@@ -107,5 +141,7 @@ theorem sum_cross_norm_inner_eigenvectorBasis_sq_le_of_rank_floor
         ‖⟪hT.eigenvectorBasis hn i, hS.eigenvectorBasis hn j⟫_𝕜‖ ^ 2
       ≤ 4 * (n : ℝ) * ε ^ 2 / α ^ 2 := by
   sorry
+
+end DavisKahan
 
 end ForMathlib

@@ -83,3 +83,10 @@ Default configs run by `scripts/run_challenge_comparator.sh`:
 * `comparator/aiq-psd-gram-realization.json`
 * `comparator/aiq-spectral-perturbation.json`
 * `comparator/aiq-inventory.json`
+
+## Summary output
+
+`scripts/run_challenge_comparator.sh` runs each requested comparator config and
+prints a final summary table with pass/fail status, exit code, elapsed seconds,
+and config path. The script exits nonzero if any requested config fails, but it
+continues running later configs so failures can be diagnosed independently.

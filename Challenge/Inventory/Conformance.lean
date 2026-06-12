@@ -1345,24 +1345,14 @@ theorem integral_sq_sampleCovariance_entry_le {n d : ℕ} (hn : 0 < n)
     {v : ℝ} (hv : ∫ ω, ‖V ⟨0, hn⟩ ω k * V ⟨0, hn⟩ ω l - Cov k l‖ ^ 2 ∂P ≤ v) :
     ∫ ω, (sampleCovariance V ω k l - Cov k l) ^ 2 ∂P ≤ (n : ℝ)⁻¹ * v := by
   sorry
-omit [MeasurableSpace Ω] in
-/-- The empirical covariance matrix is symmetric (Hermitian over `ℝ`). -/
-theorem isHermitian_sampleCovariance {n d : ℕ}
-    (V : Fin n → Ω → EuclideanSpace ℝ (Fin d)) (ω : Ω) :
-    (sampleCovariance V ω).IsHermitian := by
-  sorry
-theorem measure_forall_sampleCovariance_sortedEig_ge_ge {n d : ℕ}
-    (P : Measure Ω) [IsProbabilityMeasure P]
-    (V : Fin n → Ω → EuclideanSpace ℝ (Fin d))
-    (Cov : Matrix (Fin d) (Fin d) ℝ) (hCovHerm : Cov.IsHermitian)
-    (hVmeas : ∀ i (k : Fin d), Measurable fun ω => V i ω k)
-    (hint : ∀ k l, Integrable (fun ω => (sampleCovariance V ω k l - Cov k l) ^ 2) P)
-    {v η : ℝ} (hη : 0 < η)
-    (hmoment : ∀ k l, ∫ ω, (sampleCovariance V ω k l - Cov k l) ^ 2 ∂P ≤ v) :
-    P {ω | ∀ k : Fin d,
-        Matrix.sortedEig hCovHerm k - (d : ℝ) * η ≤ Matrix.sortedEig (isHermitian_sampleCovariance V ω) k}
-      ≥ 1 - ENNReal.ofReal ((d : ℝ) ^ 2 * v / η ^ 2) := by
-  sorry
+/-!
+`ForMathlib.isHermitian_sampleCovariance` and
+`ForMathlib.measure_forall_sampleCovariance_sortedEig_ge_ge` are intentionally
+excluded from this inventory for now. They come from the newest sample-covariance
+concentration staging work, and the current conformance wrapper is not yet
+comparator-exact for the Hermitian witness used by the sorted-eigenvalue theorem.
+They should be reintroduced after statement/API review.
+-/
 end ForMathlib
 
 /-!

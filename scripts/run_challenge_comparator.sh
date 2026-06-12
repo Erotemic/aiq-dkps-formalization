@@ -9,8 +9,11 @@
 #   bash scripts/run_challenge_comparator.sh --fake-landrun
 #   bash scripts/run_challenge_comparator.sh --config comparator/aiq-gram-rigidity.json
 #   bash scripts/run_challenge_comparator.sh --config comparator/aiq-inventory.json
+#   bash scripts/run_challenge_comparator.sh --only-comparator
 #
-set -euo pipefail
+# The script runs all requested configs, prints a final summary table, and exits
+# nonzero if any config fails.
+set -uo pipefail
 
 CONFIGS=()
 USE_FAKE_LANDRUN=0
@@ -26,6 +29,10 @@ DEFAULT_CONFIGS=(
 while [ "$#" -gt 0 ]; do
     case "$1" in
         --config)
+            if [ "$#" -lt 2 ]; then
+                echo "error: --config requires a path" >&2
+                exit 2
+            fi
             CONFIGS+=("$2")
             shift 2
             ;;
@@ -38,12 +45,12 @@ while [ "$#" -gt 0 ]; do
             shift
             ;;
         -h|--help)
-            sed -n '1,42p' "$0"
+            sed -n '1,45p' "$0"
             exit 0
             ;;
         *)
             echo "error: unknown argument: $1" >&2
-            exit 1
+            exit 2
             ;;
     esac
 done
@@ -53,7 +60,7 @@ if [ "${#CONFIGS[@]}" -eq 0 ]; then
 fi
 
 if git_root="$(git rev-parse --show-toplevel 2>/dev/null)"; then
-    cd "$git_root"
+    cd "$git_root" || exit 2
 fi
 
 TOOL_ROOT="${AIQ_COMPARATOR_TOOL_ROOT:-$HOME/code/lean-tools}"
@@ -77,7 +84,7 @@ for exe in "$COMPARATOR_BIN" "$COMPARATOR_LEAN4EXPORT" "$COMPARATOR_LANDRUN"; do
     if [ ! -x "$exe" ]; then
         echo "error: required executable missing: $exe" >&2
         echo "hint: run: bash scripts/install_comparator_tools.sh" >&2
-        exit 1
+        exit 2
     fi
 done
 
@@ -98,18 +105,25 @@ print(data[sys.argv[2]])
 PY
 }
 
+run_step() {
+    local label="$1"
+    shift
+    echo "$label"
+    "$@"
+}
+
 run_one_config() {
     local CONFIG="$1"
     if [ ! -f "$CONFIG" ]; then
         echo "error: comparator config not found: $CONFIG" >&2
-        exit 1
+        return 2
     fi
 
     local CHALLENGE_MODULE SOLUTION_MODULE CHALLENGE_PATH SOLUTION_PATH
-    CHALLENGE_MODULE="$(json_field "$CONFIG" challenge_module)"
-    SOLUTION_MODULE="$(json_field "$CONFIG" solution_module)"
-    CHALLENGE_PATH="$(module_to_path "$CHALLENGE_MODULE")"
-    SOLUTION_PATH="$(module_to_path "$SOLUTION_MODULE")"
+    CHALLENGE_MODULE="$(json_field "$CONFIG" challenge_module)" || return $?
+    SOLUTION_MODULE="$(json_field "$CONFIG" solution_module)" || return $?
+    CHALLENGE_PATH="$(module_to_path "$CHALLENGE_MODULE")" || return $?
+    SOLUTION_PATH="$(module_to_path "$SOLUTION_MODULE")" || return $?
 
     echo
     echo "======================================================================"
@@ -119,22 +133,61 @@ run_one_config() {
     echo "======================================================================"
 
     if [ "$ONLY_COMPARATOR" -eq 0 ]; then
-        echo "Checking $CHALLENGE_PATH"
-        lake env lean "$CHALLENGE_PATH"
-
-        echo "Checking $SOLUTION_PATH"
-        lake env lean "$SOLUTION_PATH"
-
-        echo "Building $SOLUTION_MODULE"
-        lake build "$SOLUTION_MODULE"
+        run_step "Checking $CHALLENGE_PATH" lake env lean "$CHALLENGE_PATH" || return $?
+        run_step "Checking $SOLUTION_PATH" lake env lean "$SOLUTION_PATH" || return $?
+        run_step "Building $SOLUTION_MODULE" lake build "$SOLUTION_MODULE" || return $?
     fi
 
     echo "Running comparator with config: $CONFIG"
     echo "COMPARATOR_LANDRUN=$COMPARATOR_LANDRUN"
     echo "COMPARATOR_LEAN4EXPORT=$COMPARATOR_LEAN4EXPORT"
-    lake env "$COMPARATOR_BIN" "$CONFIG"
+    lake env "$COMPARATOR_BIN" "$CONFIG" || return $?
 }
 
+SUMMARY_CONFIGS=()
+SUMMARY_STATUS=()
+SUMMARY_SECONDS=()
+SUMMARY_EXIT=()
+
+overall_status=0
 for CONFIG in "${CONFIGS[@]}"; do
-    run_one_config "$CONFIG"
+    start_seconds=$SECONDS
+    if run_one_config "$CONFIG"; then
+        status="PASS"
+        code=0
+    else
+        code=$?
+        status="FAIL"
+        overall_status=1
+    fi
+    elapsed=$((SECONDS - start_seconds))
+    SUMMARY_CONFIGS+=("$CONFIG")
+    SUMMARY_STATUS+=("$status")
+    SUMMARY_SECONDS+=("$elapsed")
+    SUMMARY_EXIT+=("$code")
+
 done
+
+echo
+echo "======================================================================"
+echo "Challenge comparator summary"
+echo "======================================================================"
+printf '%-8s  %-6s  %-7s  %s\n' "STATUS" "EXIT" "SECONDS" "CONFIG"
+printf '%-8s  %-6s  %-7s  %s\n' "------" "----" "-------" "------"
+for i in "${!SUMMARY_CONFIGS[@]}"; do
+    printf '%-8s  %-6s  %-7s  %s\n' \
+        "${SUMMARY_STATUS[$i]}" \
+        "${SUMMARY_EXIT[$i]}" \
+        "${SUMMARY_SECONDS[$i]}" \
+        "${SUMMARY_CONFIGS[$i]}"
+done
+
+if [ "$overall_status" -eq 0 ]; then
+    echo
+    echo "All requested challenge configs passed."
+else
+    echo
+    echo "One or more challenge configs failed. See logs above."
+fi
+
+exit "$overall_status"

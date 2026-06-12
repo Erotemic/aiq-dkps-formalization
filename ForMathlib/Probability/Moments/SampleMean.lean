@@ -2,7 +2,7 @@
 Staged for Mathlib: additions to `Mathlib/Probability/Moments/` (new file
 `SampleMean.lean`).
 
-Formalized by Claude Fable 5 (claude-fable-5[1m]);
+Formalized by Claude Opus 4.8 (claude-opus-4-8[1m]);
 to be re-authored per Mathlib's AI-contribution policy at PR time.
 -/
 

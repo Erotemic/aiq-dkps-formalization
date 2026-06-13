@@ -226,13 +226,10 @@ theorem exists_linearIsometryEquiv_map_eq_of_inner_eq {φ ψ : ι → E}
     (h : ∀ i j, ⟪φ i, φ j⟫_𝕜 = ⟪ψ i, ψ j⟫_𝕜) :
     ∃ W : E ≃ₗᵢ[𝕜] E, ∀ i, W (φ i) = ψ i := by
   obtain ⟨L, hL⟩ := exists_linearIsometry_map_eq_of_inner_eq h
-  -- Extend `L` to a self-isometry of `E`, then upgrade to an equivalence.
-  set W₀ : E →ₗᵢ[𝕜] E := L.extend with hW₀
-  have hW₀_surj : Function.Surjective W₀ :=
-    LinearMap.injective_iff_surjective.mp W₀.injective
-  refine ⟨LinearIsometryEquiv.ofSurjective W₀ hW₀_surj, fun i => ?_⟩
-  rw [LinearIsometryEquiv.coe_ofSurjective, hW₀]
-  rw [show φ i = ((⟨φ i, Submodule.subset_span ⟨i, rfl⟩⟩ :
+  -- Extend `L` to a self-isometry of `E`, then bundle it as an equivalence.
+  refine ⟨L.extend.toLinearIsometryEquiv rfl, fun i => ?_⟩
+  rw [LinearIsometry.coe_toLinearIsometryEquiv,
+    show φ i = ((⟨φ i, Submodule.subset_span ⟨i, rfl⟩⟩ :
       Submodule.span 𝕜 (Set.range φ)) : E) from rfl, L.extend_apply, hL i]
 
 namespace Matrix

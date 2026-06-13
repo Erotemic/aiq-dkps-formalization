@@ -21,13 +21,17 @@ the inclusion `span ψ ↪ F`), the finite-dim ambient equivalence
 `exists_linearIsometryEquiv_map_eq_of_inner_eq`, and the `Matrix.gram` iff.
 
 - ✅ **APPLIED 2026-06-13 (user-directed):** the span-to-span core is now the
-  fundamental theorem (audit §1.2 — "the proof internally constructs an isometry
-  from `span (range φ)` to `span (range ψ)`; that span-level theorem is arguably
-  the fundamental result"); the span-to-ambient form is a one-line corollary
-  (`(span ψ).subtypeₗᵢ.comp L`); the ambient equivalence and `gram` iff are
-  unchanged corollaries. Downstream callers unaffected (the span-to-ambient kept
-  its name/signature). Build green; added to the headline `Challenge/Gram`
-  conformance + leaderboard.
+  fundamental theorem and is a **`LinearIsometryEquiv`**
+  `exists_linearIsometryEquiv_span_map_eq_of_inner_eq` (`span φ ≃ₗᵢ span ψ`, the
+  two spans isometrically isomorphic, codomain the full `span 𝕜 (range ψ)`; audit
+  §1.2). Below it: the `LinearIsometry`
+  `exists_linearIsometry_span_map_eq_of_inner_eq` (`.toLinearIsometry`,
+  compatibility corollary), the span-to-ambient
+  `exists_linearIsometry_map_eq_of_inner_eq` (`(span ψ).subtypeₗᵢ.comp L`), the
+  ambient equivalence, and the `gram` iff — each a thin derivation of the
+  previous. Downstream callers unaffected (all kept names/signatures). Build
+  green; axiom audit clean (propext/Classical.choice/Quot.sound only); added to
+  the headline `Challenge/Gram` conformance + leaderboard + comparator config.
 
 ## D-2. Gram — naming
 

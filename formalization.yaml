@@ -180,6 +180,7 @@ automation:
         - "GPT-5.2 / ChatGPT 5.2 (reported by human coordinator; GPT commits are often not marked in git metadata)"
         - "Harmonic Aristotle (repo comments identify Aristotle-generated Helm scaffolding)"
         - "Codex 5.5 High / GPT-5.5 family labels in repository comments"
+        - "GPT-5.5 Thinking (post-proof critic for Mathlib PR preparation and presentation; not claimed as primary proof author)"
         - "Claude Opus 4.8 (repo comments and git history mark staging/plumbing/generalization work; Opus 4.7/5.7 mentions were typos)"
         - "Claude Fable 5 (repo comments identify many difficult Acharyya and ForMathlib proofs)"
       framework: >
@@ -207,6 +208,15 @@ automation:
         library. This summary combines repository comments/history with
         human-supplied provenance and should be refined as session logs are
         audited.
+      review_and_presentation_assistance: >
+        GPT-5.5 Thinking was used after proof-generation work as a critic and
+        planning assistant for Mathlib PR preparation and presentation. This
+        included theorem-surface triage, readiness audits, comparator/challenge
+        packaging feedback, formalization.yaml refinement, and Zulip/PR-message
+        drafting or editing. This role is distinct from primary Lean proof
+        authorship; suggestions from this review pass are intended to be applied
+        only through human review plus local Lean, lint, build, and comparator
+        validation.
       soundness_gate: >
         Claimed theorem closes are trusted only insofar as they are accepted by
         Lean's kernel and use only allowed axioms. The challenge package exposes

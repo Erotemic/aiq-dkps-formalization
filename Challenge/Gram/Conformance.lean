@@ -34,7 +34,18 @@ theorem inner_linearCombination_linearCombination (v : ι → E) (a b : ι →�
 /--
 **Gram rigidity, span-to-span core.** If two families in possibly different inner
 product spaces have equal pairwise inner products, then the map sending one
-family to the other is a linear isometry from the first span to the second.
+family to the other is a linear isometry *equivalence* of the first span onto the
+second (the codomain is the full submodule `span 𝕜 (range ψ)`).
+-/
+theorem exists_linearIsometryEquiv_span_map_eq_of_inner_eq {φ : ι → E} {ψ : ι → F}
+    (h : ∀ i j, ⟪φ i, φ j⟫_𝕜 = ⟪ψ i, ψ j⟫_𝕜) :
+    ∃ L : (Submodule.span 𝕜 (Set.range φ)) ≃ₗᵢ[𝕜] (Submodule.span 𝕜 (Set.range ψ)),
+      ∀ i, (L ⟨φ i, Submodule.subset_span ⟨i, rfl⟩⟩ : F) = ψ i := by
+  sorry
+
+/--
+**Gram rigidity, span-to-span isometry.** The `LinearIsometry` underlying the
+span-to-span equivalence (compatibility corollary).
 -/
 theorem exists_linearIsometry_span_map_eq_of_inner_eq {φ : ι → E} {ψ : ι → F}
     (h : ∀ i j, ⟪φ i, φ j⟫_𝕜 = ⟪ψ i, ψ j⟫_𝕜) :

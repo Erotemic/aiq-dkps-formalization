@@ -12,6 +12,34 @@ all listed declarations in one PR.
 import Mathlib
 
 /-!
+## Shared local scaffold
+
+The probability/concentration slice states two matrix-eigenvalue concentration
+lemmas whose conclusions use `ForMathlib.Matrix.sortedEig`.  The real project
+definition lives in the matrix-spectral staging files; this challenge module
+imports only Mathlib, so it repeats the small local scaffold needed for the
+theorem statements to elaborate independently.
+-/
+
+open scoped Matrix
+
+namespace ForMathlib.Matrix
+
+variable {n : ℕ}
+
+/-- The symmetric-operator structure of `toEuclideanLin B` for a Hermitian `B`. -/
+noncomputable def opSym {B : Matrix (Fin n) (Fin n) ℝ} (hB : B.IsHermitian) :
+    (Matrix.toEuclideanLin B).IsSymmetric :=
+  Matrix.isSymmetric_toEuclideanLin_iff.mpr hB
+
+/-- The sorted decreasing eigenvalues of `toEuclideanLin B` for Hermitian `B`. -/
+noncomputable def sortedEig {B : Matrix (Fin n) (Fin n) ℝ} (hB : B.IsHermitian) :
+    Fin n → ℝ :=
+  (opSym hB).eigenvalues finrank_euclideanSpace_fin
+
+end ForMathlib.Matrix
+
+/-!
 ## Source: `ForMathlib/MeasureTheory/Measure/Typeclasses/Probability.lean`
 -/
 /-

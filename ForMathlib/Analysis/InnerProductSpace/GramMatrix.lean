@@ -48,10 +48,10 @@ determined exactly up to an orthogonal (unitary) transformation.
 * P. H. Schönemann, *A generalized solution of the orthogonal Procrustes
   problem*, Psychometrika **31** (1966), 1–10 — the (least-squares) Procrustes
   problem, of which this is the exact, zero-residual case.
-* T.-Y. Chien and S. Waldron, *A characterisation of projective unitary
-  equivalence of finite frames*, Linear Algebra Appl. (2015), arXiv:1312.5393 —
-  the frame-theoretic form: finite frames are unitarily equivalent iff their Gram
-  matrices coincide.
+* T.-Y. Chien and S. Waldron, *A Characterization of Projective Unitary
+  Equivalence of Finite Frames and Applications*, SIAM J. Discrete Math. **30**
+  (2016), no. 2, 976–994, arXiv:1312.5393 — the frame-theoretic form: finite
+  frames are unitarily equivalent iff their Gram matrices coincide.
 -/
 
 namespace ForMathlib

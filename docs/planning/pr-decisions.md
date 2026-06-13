@@ -13,19 +13,21 @@ Task E (gated). This doc just fixes *what* the final shapes should be.
 
 ## D-1. Gram — public face / which theorem leads
 
-**Question.** We have three Gram results: the span-level core
-`exists_linearIsometry_map_eq_of_inner_eq` (two spaces, no finiteness), the finite-dim
-ambient equivalence `exists_linearIsometryEquiv_of_inner_eq`, and the
-`Matrix.gram` iff. Which is the headline of the PR?
+**Question.** We now have four Gram results: the **span-to-span core**
+`exists_linearIsometry_span_map_eq_of_inner_eq` (`span φ →ₗᵢ span ψ`, two spaces,
+no finiteness), its **span-to-ambient corollary**
+`exists_linearIsometry_map_eq_of_inner_eq` (`span φ →ₗᵢ F`, the core composed with
+the inclusion `span ψ ↪ F`), the finite-dim ambient equivalence
+`exists_linearIsometryEquiv_map_eq_of_inner_eq`, and the `Matrix.gram` iff.
 
-- **Option A (recommended):** lead with the **span-level core** as the
-  fundamental result (audit §1.2 — "arguably the fundamental result"), with the
-  equivalence and `gram` iff as corollaries. Matches how Mathlib prefers
-  general-core + specialized-corollaries.
-- Option B: keep the ambient equivalence as the headline (most intuitive:
-  "equal Grams ⇒ orthogonal alignment"), core as a supporting lemma.
-
-**Recommendation: A.** Coupling: none (both already exist and build).
+- ✅ **APPLIED 2026-06-13 (user-directed):** the span-to-span core is now the
+  fundamental theorem (audit §1.2 — "the proof internally constructs an isometry
+  from `span (range φ)` to `span (range ψ)`; that span-level theorem is arguably
+  the fundamental result"); the span-to-ambient form is a one-line corollary
+  (`(span ψ).subtypeₗᵢ.comp L`); the ambient equivalence and `gram` iff are
+  unchanged corollaries. Downstream callers unaffected (the span-to-ambient kept
+  its name/signature). Build green; added to the headline `Challenge/Gram`
+  conformance + leaderboard.
 
 ## D-2. Gram — naming
 

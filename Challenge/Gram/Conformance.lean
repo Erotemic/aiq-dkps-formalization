@@ -32,9 +32,19 @@ theorem inner_linearCombination_linearCombination (v : ι → E) (a b : ι →�
   sorry
 
 /--
-**Gram rigidity, span-level core.** If two families in possibly different inner
+**Gram rigidity, span-to-span core.** If two families in possibly different inner
 product spaces have equal pairwise inner products, then the map sending one
-family to the other extends to a linear isometry out of the first span.
+family to the other is a linear isometry from the first span to the second.
+-/
+theorem exists_linearIsometry_span_map_eq_of_inner_eq {φ : ι → E} {ψ : ι → F}
+    (h : ∀ i j, ⟪φ i, φ j⟫_𝕜 = ⟪ψ i, ψ j⟫_𝕜) :
+    ∃ L : (Submodule.span 𝕜 (Set.range φ)) →ₗᵢ[𝕜] (Submodule.span 𝕜 (Set.range ψ)),
+      ∀ i, (L ⟨φ i, Submodule.subset_span ⟨i, rfl⟩⟩ : F) = ψ i := by
+  sorry
+
+/--
+**Gram rigidity, span-to-ambient form.** The span-to-span core composed with the
+inclusion `span 𝕜 (range ψ) ↪ F`.
 -/
 theorem exists_linearIsometry_map_eq_of_inner_eq {φ : ι → E} {ψ : ι → F}
     (h : ∀ i j, ⟪φ i, φ j⟫_𝕜 = ⟪ψ i, ψ j⟫_𝕜) :

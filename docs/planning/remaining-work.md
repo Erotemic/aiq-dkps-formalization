@@ -31,6 +31,12 @@ completed-phase docs).
   sibling (`Topology/Berge.lean`, `ApproxMinimizer.lean`; candidate #13).
 - **R1/R1b** ✅ Gram rigidity refactor: reusable identity, two-ambient span-level
   core, thin equiv corollary.
+- **Gram span-to-span core** ✅ (2026-06-13, user-directed): the fundamental
+  theorem is now `exists_linearIsometry_span_map_eq_of_inner_eq`
+  (`span φ →ₗᵢ span ψ`, audit §1.2); span-to-ambient
+  `exists_linearIsometry_map_eq_of_inner_eq` is a one-line corollary
+  (`(span ψ).subtypeₗᵢ.comp L`), name/signature preserved so downstream and the
+  equiv/`gram`-iff corollaries are untouched. Added to `Challenge/Gram`.
 - **R2** ✅ rank-PSD forward direction extracted; iff is now a combinator.
 - **R3** ✅ spectral-stack PR decomposition plan (`spectral-pr-decomposition.md`).
 - **R3b** ✅ Weyl operator-norm corollary `abs_eigenvalues_sub_le_opNorm`.

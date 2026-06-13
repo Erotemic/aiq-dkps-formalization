@@ -3,10 +3,10 @@
 This repository includes a challenge package for the AI-authored Mathlib-candidate
 lemmas:
 
-- `ChallengeConformance.lean` imports only Mathlib and states the challenge claims
-  with `sorry`.
-- `ChallengeLeaderboard.lean` imports this project and fills those claims.
-- `comparator/aiq-mathlib-candidates.json` configures the comparator run.
+- `Challenge/*/Conformance.lean` imports only Mathlib and states the challenge
+  claims with `sorry`.
+- `Challenge/*/Leaderboard.lean` imports this project and fills those claims.
+- `comparator/*.json` configures comparator runs.
 - `formalization.yaml` records provenance and AI usage notes.
 
 The comparator check needs external tools: `landrun`, `comparator`, and
@@ -45,10 +45,10 @@ bash scripts/run_challenge_comparator.sh
 This performs:
 
 ```bash
-lake env lean ChallengeConformance.lean
-lake env lean ChallengeLeaderboard.lean
-lake build ChallengeLeaderboard
-lake env comparator comparator/aiq-mathlib-candidates.json
+lake env lean Challenge/Gram/Conformance.lean
+lake env lean Challenge/Gram/Leaderboard.lean
+lake build Challenge.Gram.Leaderboard
+lake env comparator comparator/aiq-gram-rigidity.json
 ```
 
 using explicit `COMPARATOR_LANDRUN` and `COMPARATOR_LEAN4EXPORT` paths.
@@ -82,7 +82,17 @@ Default configs run by `scripts/run_challenge_comparator.sh`:
 * `comparator/aiq-gram-rigidity.json`
 * `comparator/aiq-psd-gram-realization.json`
 * `comparator/aiq-spectral-perturbation.json`
-* `comparator/aiq-inventory.json`
+* `comparator/aiq-inventory-probability.json`
+* `comparator/aiq-inventory-operator-spectral.json`
+* `comparator/aiq-inventory-gram-geometry.json`
+* `comparator/aiq-inventory-rank-psd.json`
+* `comparator/aiq-inventory-matrix-spectral.json`
+* `comparator/aiq-inventory-measurability.json`
+* `comparator/aiq-inventory-berge.json`
+
+The legacy aggregate inventory config remains available as
+`comparator/aiq-inventory.json`, but it is no longer part of the default runner
+path. Prefer the split inventory configs for PR planning and failure diagnosis.
 
 ## Summary output
 

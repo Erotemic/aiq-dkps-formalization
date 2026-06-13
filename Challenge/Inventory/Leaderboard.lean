@@ -51,6 +51,7 @@ import ForMathlib.Topology.Berge
 #print axioms ForMathlib.Orthonormal.norm_sq_starProjection_span_image
 #print axioms ForMathlib.sum_norm_sub_starProjection_span_sq_eq
 #print axioms ForMathlib.sum_norm_sub_starProjection_span_sq_le
+#print axioms ForMathlib.exists_linearIsometryEquiv_span_map_eq_of_inner_eq
 #print axioms ForMathlib.exists_linearIsometry_span_map_eq_of_inner_eq
 #print axioms ForMathlib.exists_linearIsometryEquiv_map_eq_of_inner_eq
 #print axioms ForMathlib.Matrix.gram_eq_gram_iff_exists_linearIsometryEquiv_map_eq

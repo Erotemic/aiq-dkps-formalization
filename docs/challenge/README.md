@@ -18,9 +18,31 @@ The challenge files follow the pattern requested by the Mathlib community:
 * `Challenge/PsdGram` — rank-controlled PSD Gram realization.
 * `Challenge/Spectral` — a compact spectral-perturbation stack: cross-term
   identity, Courant--Fischer/Weyl, and Davis--Kahan cross-block estimates.
-* `Challenge/Inventory` — broader experimental inventory of the current
-  `ForMathlib` theorem surface. This inventory is not a proposed single PR;
-  it is a mechanical audit of what the project can currently certify.
+* `Challenge/Inventory/*` — broader experimental inventory split into
+  PR-oriented theorem families. These inventory groups are calibration/audit
+  artifacts, not a proposal to upstream each group exactly as-is.
+
+The PR-oriented inventory groups are:
+
+* `Challenge/Inventory/Probability` — probability-measure, moment, sample-mean,
+  convergence-in-measure, and concentration helper lemmas.
+* `Challenge/Inventory/OperatorSpectral` — inner-product-space spectral
+  identities, Courant--Fischer/Weyl, and Davis--Kahan/projector infrastructure.
+* `Challenge/Inventory/GramGeometry` — Gram rigidity plus quantitative
+  near-isometry / polar-factor style lemmas.
+* `Challenge/Inventory/RankPsd` — matrix rank factorization and PSD Gram
+  realization infrastructure.
+* `Challenge/Inventory/MatrixSpectral` — entrywise operator/eigenvalue bounds
+  and spectral-function polynomial approximation infrastructure.
+* `Challenge/Inventory/Measurability` — CFC measurability and compact
+  existential measurability helpers.
+* `Challenge/Inventory/Berge` — approximate minimizer compactness and
+  Berge-style continuity fragments.
+
+The legacy monolithic `Challenge/Inventory` files and
+`comparator/aiq-inventory.json` are kept as an aggregate audit target, but the
+runner's default path uses the split inventory configs so failures localize to a
+PR-sized theorem family.
 
 The inventory intentionally excludes a few newest/provisional declarations for
 now:
@@ -56,7 +78,8 @@ Run one family:
 bash scripts/run_challenge_comparator.sh --config comparator/aiq-gram-rigidity.json
 bash scripts/run_challenge_comparator.sh --config comparator/aiq-psd-gram-realization.json
 bash scripts/run_challenge_comparator.sh --config comparator/aiq-spectral-perturbation.json
-bash scripts/run_challenge_comparator.sh --config comparator/aiq-inventory.json
+bash scripts/run_challenge_comparator.sh --config comparator/aiq-inventory-rank-psd.json
+bash scripts/run_challenge_comparator.sh --config comparator/aiq-inventory.json  # legacy full inventory
 ```
 
 If real `landrun` is unavailable while debugging, use:

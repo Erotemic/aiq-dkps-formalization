@@ -1,0 +1,29 @@
+{
+  "challenge_module": "Challenge.Inventory.OperatorSpectral.Conformance",
+  "solution_module": "Challenge.Inventory.OperatorSpectral.Leaderboard",
+  "theorem_names": [
+    "ForMathlib.inner_eigenvectorBasis_map_sub_eigenvectorBasis",
+    "ForMathlib.finrank_specSubspace",
+    "ForMathlib.repr_eq_zero_of_mem_specSubspace",
+    "ForMathlib.re_inner_map_self_eq_sum_eigenvalues_mul_sq",
+    "ForMathlib.exists_unit_vector_re_inner_le_eigenvalue",
+    "ForMathlib.forall_unit_vector_eigenvalue_le_re_inner",
+    "ForMathlib.abs_eigenvalues_sub_le",
+    "ForMathlib.abs_eigenvalues_sub_le_opNorm",
+    "ForMathlib.sum_norm_inner_eigenvectorBasis_map_sub_sq_le",
+    "ForMathlib.sum_cross_norm_inner_eigenvectorBasis_sq_le",
+    "ForMathlib.gap_of_rank_floor",
+    "ForMathlib.sum_cross_norm_inner_eigenvectorBasis_sq_le_of_rank_floor",
+    "ForMathlib.Orthonormal.starProjection_span_image_apply",
+    "ForMathlib.Orthonormal.starProjection_span_image_apply_self",
+    "ForMathlib.Orthonormal.norm_sq_starProjection_span_image",
+    "ForMathlib.sum_norm_sub_starProjection_span_sq_eq",
+    "ForMathlib.sum_norm_sub_starProjection_span_sq_le"
+  ],
+  "permitted_axioms": [
+    "propext",
+    "Quot.sound",
+    "Classical.choice"
+  ],
+  "enable_nanoda": false
+}

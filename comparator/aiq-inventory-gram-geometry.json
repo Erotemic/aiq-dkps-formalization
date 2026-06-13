@@ -1,0 +1,20 @@
+{
+  "challenge_module": "Challenge.Inventory.GramGeometry.Conformance",
+  "solution_module": "Challenge.Inventory.GramGeometry.Leaderboard",
+  "theorem_names": [
+    "ForMathlib.inner_linearCombination_linearCombination",
+    "ForMathlib.exists_linearIsometry_span_map_eq_of_inner_eq",
+    "ForMathlib.exists_linearIsometry_map_eq_of_inner_eq",
+    "ForMathlib.exists_linearIsometryEquiv_map_eq_of_inner_eq",
+    "ForMathlib.Matrix.gram_eq_gram_iff_exists_linearIsometryEquiv_map_eq",
+    "ForMathlib.Real.abs_one_sub_inv_sqrt_le",
+    "ForMathlib.LinearMap.exists_linearIsometryEquiv_norm_sub_le",
+    "ForMathlib.ContinuousLinearMap.exists_linearIsometryEquiv_norm_sub_le"
+  ],
+  "permitted_axioms": [
+    "propext",
+    "Quot.sound",
+    "Classical.choice"
+  ],
+  "enable_nanoda": false
+}

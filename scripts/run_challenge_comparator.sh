@@ -8,8 +8,13 @@
 #   bash scripts/run_challenge_comparator.sh
 #   bash scripts/run_challenge_comparator.sh --fake-landrun
 #   bash scripts/run_challenge_comparator.sh --config comparator/aiq-gram-rigidity.json
-#   bash scripts/run_challenge_comparator.sh --config comparator/aiq-inventory.json
+#   bash scripts/run_challenge_comparator.sh --config comparator/aiq-inventory-rank-psd.json
+#   bash scripts/run_challenge_comparator.sh --config comparator/aiq-inventory.json  # legacy full inventory
 #   bash scripts/run_challenge_comparator.sh --only-comparator
+#
+# By default the script runs the three headline configs plus PR-oriented
+# inventory-group configs. The legacy monolithic inventory config remains
+# available via --config comparator/aiq-inventory.json.
 #
 # The script runs all requested configs, prints a final summary table, and exits
 # nonzero if any config fails.
@@ -23,7 +28,13 @@ DEFAULT_CONFIGS=(
     "comparator/aiq-gram-rigidity.json"
     "comparator/aiq-psd-gram-realization.json"
     "comparator/aiq-spectral-perturbation.json"
-    "comparator/aiq-inventory.json"
+    "comparator/aiq-inventory-probability.json"
+    "comparator/aiq-inventory-operator-spectral.json"
+    "comparator/aiq-inventory-gram-geometry.json"
+    "comparator/aiq-inventory-rank-psd.json"
+    "comparator/aiq-inventory-matrix-spectral.json"
+    "comparator/aiq-inventory-measurability.json"
+    "comparator/aiq-inventory-berge.json"
 )
 
 while [ "$#" -gt 0 ]; do

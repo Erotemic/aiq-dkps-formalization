@@ -1,0 +1,23 @@
+{
+  "challenge_module": "Challenge.Inventory.MatrixSpectral.Conformance",
+  "solution_module": "Challenge.Inventory.MatrixSpectral.Leaderboard",
+  "theorem_names": [
+    "ForMathlib.sum_norm_le_sqrt_card_mul_norm",
+    "ForMathlib.norm_toEuclideanLin_le_of_entry_le",
+    "ForMathlib.Matrix.exists_polynomial_uniform_close",
+    "ForMathlib.Matrix.abs_coord_le_norm",
+    "ForMathlib.Matrix.abs_sortedEig_le_of_entry_le",
+    "ForMathlib.Matrix.pow_mulVec_eigenvector",
+    "ForMathlib.Matrix.aeval_mulVec_eigenvector",
+    "ForMathlib.Matrix.mulVec_eigenvectorBasis",
+    "ForMathlib.Matrix.aeval_entry_eq_sum",
+    "ForMathlib.Matrix.abs_specTransform_sub_aeval_le",
+    "ForMathlib.Matrix.abs_sortedEig_sub_le_of_entry_le"
+  ],
+  "permitted_axioms": [
+    "propext",
+    "Quot.sound",
+    "Classical.choice"
+  ],
+  "enable_nanoda": false
+}

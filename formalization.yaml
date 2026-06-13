@@ -51,7 +51,14 @@ status:
       - "comparator/aiq-gram-rigidity.json"
       - "comparator/aiq-psd-gram-realization.json"
       - "comparator/aiq-spectral-perturbation.json"
-      - "comparator/aiq-inventory.json"
+      - "comparator/aiq-inventory-probability.json"
+      - "comparator/aiq-inventory-operator-spectral.json"
+      - "comparator/aiq-inventory-gram-geometry.json"
+      - "comparator/aiq-inventory-rank-psd.json"
+      - "comparator/aiq-inventory-matrix-spectral.json"
+      - "comparator/aiq-inventory-measurability.json"
+      - "comparator/aiq-inventory-berge.json"
+      - "comparator/aiq-inventory.json"  # legacy aggregate audit target
   scope: >
     The repository formalizes several DKPS-related paper layers and stages
     paper-agnostic infrastructure in ForMathlib for potential upstreaming.
@@ -60,19 +67,6 @@ status:
     of the current ForMathlib theorem surface. The inventory is for calibration
     and comparator checking, not a proposal to upstream everything in one PR.
   main_results:
-    - declaration: "ForMathlib.exists_linearIsometry_span_map_eq_of_inner_eq"
-      file: "ForMathlib/Analysis/InnerProductSpace/GramMatrix.lean"
-      sorry_count: 0
-      axioms: ["propext", "Classical.choice", "Quot.sound"]
-      challenge_file: "Challenge/Gram/Conformance.lean"
-      solution_file: "Challenge/Gram/Leaderboard.lean"
-      challenge_declaration: "ForMathlib.exists_linearIsometry_span_map_eq_of_inner_eq"
-      source_declaration: "ForMathlib.exists_linearIsometry_span_map_eq_of_inner_eq"
-      source_file: "ForMathlib/Analysis/InnerProductSpace/GramMatrix.lean"
-      category: "Procrustes / Gram-matrix rigidity"
-      sorry_count_in_solution: 0
-      expected_axioms: ["propext", "Classical.choice", "Quot.sound"]
-      comparator_config: "comparator/aiq-gram-rigidity.json"
     - declaration: "ForMathlib.exists_linearIsometryEquiv_map_eq_of_inner_eq"
       file: "ForMathlib/Analysis/InnerProductSpace/GramMatrix.lean"
       sorry_count: 0
@@ -139,6 +133,35 @@ status:
         reason: "Newest sample-covariance staging theorem; conformance wrapper is not yet comparator-exact for the Hermitian witness/API."
       - declaration: "ForMathlib.measure_forall_sampleCovariance_sortedEig_ge_ge"
         reason: "Depends on the excluded sample-covariance Hermitian witness; excluded until the sample-covariance API is reviewed."
+  inventory_groups:
+    - name: "probability"
+      comparator_config: "comparator/aiq-inventory-probability.json"
+      theorem_count: 13
+      scope: "Probability measure, second-moment, sample-mean, convergence-in-measure, and concentration helpers."
+    - name: "operator-spectral"
+      comparator_config: "comparator/aiq-inventory-operator-spectral.json"
+      theorem_count: 17
+      scope: "Finite-dimensional spectral identities, Courant--Fischer/Weyl, Davis--Kahan, and projection infrastructure."
+    - name: "gram-geometry"
+      comparator_config: "comparator/aiq-inventory-gram-geometry.json"
+      theorem_count: 8
+      scope: "Gram rigidity and quantitative near-isometry / polar-factor infrastructure."
+    - name: "rank-psd"
+      comparator_config: "comparator/aiq-inventory-rank-psd.json"
+      theorem_count: 8
+      scope: "Matrix rank factorization and rank-controlled PSD Gram realization."
+    - name: "matrix-spectral"
+      comparator_config: "comparator/aiq-inventory-matrix-spectral.json"
+      theorem_count: 11
+      scope: "Entrywise operator/eigenvalue bounds and spectral-function polynomial approximation infrastructure."
+    - name: "measurability"
+      comparator_config: "comparator/aiq-inventory-measurability.json"
+      theorem_count: 3
+      scope: "CFC measurability and compact-existential measurability helpers."
+    - name: "berge"
+      comparator_config: "comparator/aiq-inventory-berge.json"
+      theorem_count: 8
+      scope: "Approximate minimizer compactness and Berge-style continuity fragments."
   additional_upstream_candidates:
     - "Davis-Kahan / sin-theta perturbation bounds"
     - "Entrywise-to-operator-norm and entrywise-to-eigenvalue perturbation"
@@ -172,9 +195,6 @@ review:
 
 alignment:
   statements:
-    - informal: "Equal pairwise inner products give a canonical isometry from the span of one family to the span of the other."
-      lean: "ForMathlib.exists_linearIsometry_span_map_eq_of_inner_eq"
-      status: "proved by the downstream ForMathlib staging library"
     - informal: "Finite configurations with equal pairwise inner products are equivalent up to a linear isometry."
       lean: "ForMathlib.exists_linearIsometryEquiv_map_eq_of_inner_eq"
       status: "proved by the downstream ForMathlib staging library"
@@ -249,8 +269,15 @@ challenge_packages:
     - comparator/aiq-gram-rigidity.json
     - comparator/aiq-psd-gram-realization.json
     - comparator/aiq-spectral-perturbation.json
-    - comparator/aiq-inventory.json
+    - comparator/aiq-inventory-probability.json
+    - comparator/aiq-inventory-operator-spectral.json
+    - comparator/aiq-inventory-gram-geometry.json
+    - comparator/aiq-inventory-rank-psd.json
+    - comparator/aiq-inventory-matrix-spectral.json
+    - comparator/aiq-inventory-measurability.json
+    - comparator/aiq-inventory-berge.json
+    - comparator/aiq-inventory.json  # legacy aggregate audit target
   note: >-
     Dedicated challenge families are separated so Mathlib reviewers can inspect
     and run the Gram/Procrustes, PSD Gram realization, spectral perturbation,
-    and broader inventory claims independently.
+    and broader PR-oriented inventory groups independently.

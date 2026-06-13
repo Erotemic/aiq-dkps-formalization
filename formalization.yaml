@@ -60,6 +60,19 @@ status:
     of the current ForMathlib theorem surface. The inventory is for calibration
     and comparator checking, not a proposal to upstream everything in one PR.
   main_results:
+    - declaration: "ForMathlib.exists_linearIsometry_span_map_eq_of_inner_eq"
+      file: "ForMathlib/Analysis/InnerProductSpace/GramMatrix.lean"
+      sorry_count: 0
+      axioms: ["propext", "Classical.choice", "Quot.sound"]
+      challenge_file: "Challenge/Gram/Conformance.lean"
+      solution_file: "Challenge/Gram/Leaderboard.lean"
+      challenge_declaration: "ForMathlib.exists_linearIsometry_span_map_eq_of_inner_eq"
+      source_declaration: "ForMathlib.exists_linearIsometry_span_map_eq_of_inner_eq"
+      source_file: "ForMathlib/Analysis/InnerProductSpace/GramMatrix.lean"
+      category: "Procrustes / Gram-matrix rigidity"
+      sorry_count_in_solution: 0
+      expected_axioms: ["propext", "Classical.choice", "Quot.sound"]
+      comparator_config: "comparator/aiq-gram-rigidity.json"
     - declaration: "ForMathlib.exists_linearIsometryEquiv_map_eq_of_inner_eq"
       file: "ForMathlib/Analysis/InnerProductSpace/GramMatrix.lean"
       sorry_count: 0
@@ -117,7 +130,7 @@ status:
     solution_file: "Challenge/Inventory/Leaderboard.lean"
     comparator_config: "comparator/aiq-inventory.json"
     scope: "Current public theorem surface of ForMathlib selected for comparator inventory; excludes the staged spectral-transform measurability and sample-covariance Hermitian/sorted-eigenvalue theorems pending API review."
-    theorem_count: 67
+    theorem_count: 68
     expected_axioms: ["propext", "Classical.choice", "Quot.sound"]
     excluded_for_now:
       - declaration: "ForMathlib.Matrix.measurable_specTransform"
@@ -159,6 +172,9 @@ review:
 
 alignment:
   statements:
+    - informal: "Equal pairwise inner products give a canonical isometry from the span of one family to the span of the other."
+      lean: "ForMathlib.exists_linearIsometry_span_map_eq_of_inner_eq"
+      status: "proved by the downstream ForMathlib staging library"
     - informal: "Finite configurations with equal pairwise inner products are equivalent up to a linear isometry."
       lean: "ForMathlib.exists_linearIsometryEquiv_map_eq_of_inner_eq"
       status: "proved by the downstream ForMathlib staging library"

@@ -39,8 +39,8 @@ sources:
 
 status:
   repository_build:
-    last_user_reported_build: "Earlier state: lake build completed successfully on 8626 jobs. Latest challenge state must be re-run after the Fable Gram/Davis-Kahan refactor and metadata sync."
-    last_user_reported_challenge_summary: "Before the Fable Gram/Davis-Kahan refactor, scripts/run_challenge_comparator.sh reported PASS for all requested challenge configs. Re-run after this metadata sync before citing the new state."
+    last_user_reported_build: "Earlier state: lake build completed successfully on 8626 jobs. Latest user-reported build after Gram span-to-span equivalence promotion: lake build completed successfully on 8634 jobs; re-run comparator after this bookkeeping sync before citing challenge status."
+    last_user_reported_challenge_summary: "Before the latest bookkeeping sync, the dedicated headline and inventory-group comparator configs were being iterated locally; re-run scripts/run_challenge_comparator.sh after applying this metadata update before citing the new state."
     challenge_commands:
       - "lake env lean Challenge/Gram/Conformance.lean"
       - "lake env lean Challenge/Gram/Leaderboard.lean"
@@ -67,6 +67,19 @@ status:
     of the current ForMathlib theorem surface. The inventory is for calibration
     and comparator checking, not a proposal to upstream everything in one PR.
   main_results:
+    - declaration: "ForMathlib.exists_linearIsometryEquiv_span_map_eq_of_inner_eq"
+      file: "ForMathlib/Analysis/InnerProductSpace/GramMatrix.lean"
+      sorry_count: 0
+      axioms: ["propext", "Classical.choice", "Quot.sound"]
+      challenge_file: "Challenge/Gram/Conformance.lean"
+      solution_file: "Challenge/Gram/Leaderboard.lean"
+      challenge_declaration: "ForMathlib.exists_linearIsometryEquiv_span_map_eq_of_inner_eq"
+      source_declaration: "ForMathlib.exists_linearIsometryEquiv_span_map_eq_of_inner_eq"
+      source_file: "ForMathlib/Analysis/InnerProductSpace/GramMatrix.lean"
+      category: "Procrustes / Gram-matrix rigidity"
+      sorry_count_in_solution: 0
+      expected_axioms: ["propext", "Classical.choice", "Quot.sound"]
+      comparator_config: "comparator/aiq-gram-rigidity.json"
     - declaration: "ForMathlib.exists_linearIsometryEquiv_map_eq_of_inner_eq"
       file: "ForMathlib/Analysis/InnerProductSpace/GramMatrix.lean"
       sorry_count: 0
@@ -124,7 +137,7 @@ status:
     solution_file: "Challenge/Inventory/Leaderboard.lean"
     comparator_config: "comparator/aiq-inventory.json"
     scope: "Current public theorem surface of ForMathlib selected for comparator inventory; excludes the staged spectral-transform measurability and sample-covariance Hermitian/sorted-eigenvalue theorems pending API review."
-    theorem_count: 68
+    theorem_count: 69
     expected_axioms: ["propext", "Classical.choice", "Quot.sound"]
     excluded_for_now:
       - declaration: "ForMathlib.Matrix.measurable_specTransform"
@@ -144,7 +157,7 @@ status:
       scope: "Finite-dimensional spectral identities, Courant--Fischer/Weyl, Davis--Kahan, and projection infrastructure."
     - name: "gram-geometry"
       comparator_config: "comparator/aiq-inventory-gram-geometry.json"
-      theorem_count: 8
+      theorem_count: 9
       scope: "Gram rigidity and quantitative near-isometry / polar-factor infrastructure."
     - name: "rank-psd"
       comparator_config: "comparator/aiq-inventory-rank-psd.json"
@@ -195,6 +208,9 @@ review:
 
 alignment:
   statements:
+    - informal: "Two vector families with equal pairwise inner products have isometrically equivalent generated spans."
+      lean: "ForMathlib.exists_linearIsometryEquiv_span_map_eq_of_inner_eq"
+      status: "proved by the downstream ForMathlib staging library"
     - informal: "Finite configurations with equal pairwise inner products are equivalent up to a linear isometry."
       lean: "ForMathlib.exists_linearIsometryEquiv_map_eq_of_inner_eq"
       status: "proved by the downstream ForMathlib staging library"

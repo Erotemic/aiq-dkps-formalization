@@ -12,7 +12,7 @@ Mathlib PR should contain exactly this set of declarations.
 |---|---:|---:|---|
 | `Probability` | `comparator/aiq-inventory-probability.json` | 13 | Probability, moments, and concentration |
 | `OperatorSpectral` | `comparator/aiq-inventory-operator-spectral.json` | 17 | Operator spectral perturbation and projections |
-| `GramGeometry` | `comparator/aiq-inventory-gram-geometry.json` | 8 | Gram geometry and near-isometry |
+| `GramGeometry` | `comparator/aiq-inventory-gram-geometry.json` | 9 | Gram geometry and near-isometry |
 | `RankPsd` | `comparator/aiq-inventory-rank-psd.json` | 8 | Rank factorization and PSD Gram realization |
 | `MatrixSpectral` | `comparator/aiq-inventory-matrix-spectral.json` | 11 | Matrix spectral functions and entrywise eigenvalue bounds |
 | `Measurability` | `comparator/aiq-inventory-measurability.json` | 3 | Measurability and compact-existential infrastructure |

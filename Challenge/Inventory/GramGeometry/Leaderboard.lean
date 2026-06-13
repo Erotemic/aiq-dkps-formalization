@@ -9,6 +9,7 @@ import ForMathlib.Analysis.InnerProductSpace.NearIsometry
 
 /-! Axiom audit commands for this inventory group. -/
 #print axioms ForMathlib.inner_linearCombination_linearCombination
+#print axioms ForMathlib.exists_linearIsometryEquiv_span_map_eq_of_inner_eq
 #print axioms ForMathlib.exists_linearIsometry_span_map_eq_of_inner_eq
 #print axioms ForMathlib.exists_linearIsometry_map_eq_of_inner_eq
 #print axioms ForMathlib.exists_linearIsometryEquiv_map_eq_of_inner_eq

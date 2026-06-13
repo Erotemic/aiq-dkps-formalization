@@ -3,6 +3,7 @@
   "solution_module": "Challenge.Inventory.GramGeometry.Leaderboard",
   "theorem_names": [
     "ForMathlib.inner_linearCombination_linearCombination",
+    "ForMathlib.exists_linearIsometryEquiv_span_map_eq_of_inner_eq",
     "ForMathlib.exists_linearIsometry_span_map_eq_of_inner_eq",
     "ForMathlib.exists_linearIsometry_map_eq_of_inner_eq",
     "ForMathlib.exists_linearIsometryEquiv_map_eq_of_inner_eq",

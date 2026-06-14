@@ -4,8 +4,11 @@ Staged for Mathlib: additions to `Mathlib/Analysis/InnerProductSpace/GramMatrix.
 Formalized by Claude Fable 5 (claude-fable-5[1m]); refactored into a
 span-to-span core plus corollaries by Claude Opus 4.8 (claude-opus-4-8[1m]).
 The span-to-span proof was then "folded" (rewrite-friendly local lemmas +
-`simp`/`simpa` for bookkeeping) following review suggestions by @wwylele on the
-Mathlib PR; applied here by Claude Opus 4.8 to stay in sync with the fork.
+`simp`/`simpa` for bookkeeping) and, following further review by @wwylele,
+turned into a `def` (`linearIsometryEquivSpanOfInnerEq`, built via
+`LinearEquiv.isometryOfInner` on the quotient/range equivalence) with an
+`@[simp]` apply lemma, keeping `exists_…` as a thin corollary.  Applied here by
+Claude Opus 4.8 to stay in sync with the Mathlib fork.
 To be re-authored per Mathlib's AI-contribution policy at PR time.
 -/
 
@@ -79,88 +82,77 @@ theorem inner_linearCombination_linearCombination (v : ι → E) (a b : ι →�
   refine Finsupp.sum_congr fun j _ => ?_
   rw [inner_smul_left, inner_smul_right, ← mul_assoc]
 
-/--
-**Gram rigidity, span-to-span core.** If a family `φ : ι → E` in one inner product
-space and a family `ψ : ι → F` in another (over the same `𝕜`) have equal pairwise
-inner products `⟪φ i, φ j⟫ = ⟪ψ i, ψ j⟫`, then the map `φ i ↦ ψ i` extends to a
-linear isometry *equivalence* `L` of the span of the `φ i` onto the span of the
-`ψ i`, with `L (φ i) = ψ i` for every `i`.
+section
+variable {φ : ι → E} {ψ : ι → F} (h : ∀ i j, ⟪φ i, φ j⟫_𝕜 = ⟪ψ i, ψ j⟫_𝕜)
+include h
 
-The codomain is the full submodule `span 𝕜 (range ψ)`: the map is onto it (its
-image is the span of the `ψ i`), so the two spans are isometrically isomorphic.
+/-- For families `φ`, `ψ` with equal pairwise inner products, the maps of linear combinations
+`∑ cᵢ • φ i` and `∑ cᵢ • ψ i` have equal pairwise inner products. -/
+theorem inner_linearCombination_eq_of_inner_eq (c c' : ι →₀ 𝕜) :
+    ⟪Finsupp.linearCombination 𝕜 φ c, Finsupp.linearCombination 𝕜 φ c'⟫_𝕜
+      = ⟪Finsupp.linearCombination 𝕜 ψ c, Finsupp.linearCombination 𝕜 ψ c'⟫_𝕜 := by
+  simp [inner_linearCombination_linearCombination, h]
 
-No finiteness of `ι`, `E`, or `F` is required, and the two ambient spaces need not
-coincide.  The map is `φ i ↦ ψ i` on `span 𝕜 (range φ)` (the range of `φ`'s
-linear-combination map); equality of inner products makes it well defined
-(`ker Tφ ≤ ker Tψ`) and norm preserving, it lands in `span 𝕜 (range ψ)` (the range
-of `ψ`'s linear-combination map), and it is surjective onto that span.
--/
-theorem exists_linearIsometryEquiv_span_map_eq_of_inner_eq {φ : ι → E} {ψ : ι → F}
-    (h : ∀ i j, ⟪φ i, φ j⟫_𝕜 = ⟪ψ i, ψ j⟫_𝕜) :
+/-- Families with equal pairwise inner products have linear-combination maps with equal kernels:
+`∑ cᵢ • φ i = 0 ↔ ∑ cᵢ • ψ i = 0`. -/
+theorem ker_linearCombination_eq_of_inner_eq :
+    LinearMap.ker (Finsupp.linearCombination 𝕜 φ)
+      = LinearMap.ker (Finsupp.linearCombination 𝕜 ψ) := by
+  ext c
+  rw [LinearMap.mem_ker, LinearMap.mem_ker,
+    ← inner_self_eq_zero (𝕜 := 𝕜) (x := Finsupp.linearCombination 𝕜 φ c),
+    inner_linearCombination_eq_of_inner_eq h c c, inner_self_eq_zero]
+
+/-- **Gram rigidity, span-to-span core.** The (unique) linear isometry equivalence
+`span 𝕜 (range φ) ≃ₗᵢ span 𝕜 (range ψ)` sending each `φ i` to `ψ i`, when the families `φ`, `ψ`
+(in possibly different inner product spaces over `𝕜`) have equal pairwise inner products.  It is
+the map of linear combinations `∑ cᵢ • φ i ↦ ∑ cᵢ • ψ i` (well defined since the two
+linear-combination maps have equal kernels), transported to the spans and upgraded to an isometry
+via `LinearEquiv.isometryOfInner`.  No finiteness is required, and the ambient spaces need not
+coincide.
+
+It is the unique such isometry: a linear isometry equivalence of the spans sending `φ i ↦ ψ i` is
+determined on the spanning family `φ` (`LinearMap.eqOn_span`). -/
+noncomputable def linearIsometryEquivSpanOfInnerEq :
+    (Submodule.span 𝕜 (Set.range φ)) ≃ₗᵢ[𝕜] (Submodule.span 𝕜 (Set.range ψ)) :=
+  (LinearIsometryEquiv.ofEq _ _ (Finsupp.range_linearCombination 𝕜)).symm.trans
+    ((((Finsupp.linearCombination 𝕜 φ).quotKerEquivRange.symm.trans
+        ((Submodule.quotEquivOfEq _ _ (ker_linearCombination_eq_of_inner_eq h)).trans
+          (Finsupp.linearCombination 𝕜 ψ).quotKerEquivRange)).isometryOfInner fun x y => by
+        obtain ⟨_, c, rfl⟩ := x
+        obtain ⟨_, c', rfl⟩ := y
+        simp only [LinearEquiv.trans_apply, LinearMap.quotKerEquivRange_symm_apply_image,
+          Submodule.mkQ_apply, Submodule.quotEquivOfEq_mk, LinearMap.quotKerEquivRange_apply_mk,
+          Submodule.coe_inner]
+        exact (inner_linearCombination_eq_of_inner_eq h c c').symm).trans
+      (LinearIsometryEquiv.ofEq _ _ (Finsupp.range_linearCombination 𝕜)))
+
+@[simp]
+theorem linearIsometryEquivSpanOfInnerEq_apply (i : ι) :
+    (linearIsometryEquivSpanOfInnerEq h ⟨φ i, Submodule.subset_span ⟨i, rfl⟩⟩ : F) = ψ i := by
+  simp only [linearIsometryEquivSpanOfInnerEq, LinearIsometryEquiv.trans_apply]
+  rw [show ((LinearIsometryEquiv.ofEq _ _ (Finsupp.range_linearCombination 𝕜 (v := φ))).symm
+        ⟨φ i, Submodule.subset_span ⟨i, rfl⟩⟩ :
+        LinearMap.range (Finsupp.linearCombination 𝕜 φ))
+      = ⟨Finsupp.linearCombination 𝕜 φ (Finsupp.single i 1), LinearMap.mem_range_self _ _⟩
+      from Subtype.ext (by simp)]
+  simp only [LinearEquiv.coe_isometryOfInner, LinearEquiv.trans_apply,
+    LinearMap.quotKerEquivRange_symm_apply_image, Submodule.mkQ_apply, Submodule.quotEquivOfEq_mk,
+    LinearMap.quotKerEquivRange_apply_mk, LinearIsometryEquiv.coe_ofEq_apply]
+  simp [Finsupp.linearCombination_single]
+
+/-- **Gram rigidity, span-to-span core (existence form).** If a family `φ : ι → E` and a family
+`ψ : ι → F` in two inner product spaces over `𝕜` have equal pairwise inner products, then the map
+`φ i ↦ ψ i` extends to a linear isometry equivalence of the span of the `φ i` onto the span of the
+`ψ i`.  See `linearIsometryEquivSpanOfInnerEq` for the construction.  No finiteness is required,
+and the ambient spaces need not coincide. -/
+theorem exists_linearIsometryEquiv_span_map_eq_of_inner_eq :
     ∃ L :
       (Submodule.span 𝕜 (Set.range φ)) ≃ₗᵢ[𝕜] (Submodule.span 𝕜 (Set.range ψ)),
-      ∀ i, (L ⟨φ i, Submodule.subset_span ⟨i, rfl⟩⟩ : F) = ψ i := by
-  -- Linear-combination maps of the two families.
-  set Tφ : (ι →₀ 𝕜) →ₗ[𝕜] E := Finsupp.linearCombination 𝕜 φ with hTφ
-  set Tψ : (ι →₀ 𝕜) →ₗ[𝕜] F := Finsupp.linearCombination 𝕜 ψ with hTψ
-  -- The two maps preserve the same inner products on all linear combinations.
-  have key (c c' : ι →₀ 𝕜) : ⟪Tφ c, Tφ c'⟫_𝕜 = ⟪Tψ c, Tψ c'⟫_𝕜 := by
-    simp [hTφ, hTψ, inner_linearCombination_linearCombination, h]
-  -- Equal norms, hence `ker Tφ ≤ ker Tψ`.
-  have norm_eq (c : ι →₀ 𝕜) : ‖Tψ c‖ = ‖Tφ c‖ := by
-    rw [← sq_eq_sq₀ (norm_nonneg _) (norm_nonneg _), norm_sq_eq_re_inner (𝕜 := 𝕜),
-      norm_sq_eq_re_inner (𝕜 := 𝕜), key]
-  have hker : LinearMap.ker Tφ ≤ LinearMap.ker Tψ := by
-    intro c hc
-    rw [LinearMap.mem_ker, ← norm_eq_zero] at ⊢ hc
-    rw [norm_eq, hc]
-  -- Factor `Tψ` through `(ι →₀ 𝕜) ⧸ ker Tφ ≃ range Tφ` to get `f : range Tφ → F`.
-  set f₀ : ((ι →₀ 𝕜) ⧸ LinearMap.ker Tφ) →ₗ[𝕜] F :=
-    (LinearMap.ker Tφ).liftQ Tψ hker with hf₀
-  set f : (LinearMap.range Tφ) →ₗ[𝕜] F :=
-    f₀.comp (Tφ.quotKerEquivRange.symm.toLinearMap) with hf
-  have hf_apply (c : ι →₀ 𝕜) : f ⟨Tφ c, LinearMap.mem_range_self Tφ c⟩ = Tψ c := by
-    simp [hf, hf₀]
-  -- `f` is norm preserving and lands in `range Tψ`.
-  have hf_isom (s : LinearMap.range Tφ) : ‖f s‖ = ‖s‖ := by
-    obtain ⟨_, c, rfl⟩ := s
-    simp [hf_apply, norm_eq]
-  have hf_mem (s : LinearMap.range Tφ) : f s ∈ LinearMap.range Tψ := by
-    obtain ⟨_, c, rfl⟩ := s
-    simp [hf_apply]
-  -- Corestrict `f` to `range Tψ` as a linear isometry.
-  set f' : (LinearMap.range Tφ) →ₗ[𝕜] (LinearMap.range Tψ) :=
-    LinearMap.codRestrict (LinearMap.range Tψ) f hf_mem with hf'
-  have hf'_isom (s : LinearMap.range Tφ) : ‖f' s‖ = ‖s‖ := by
-    simpa [Submodule.coe_norm (f' s), hf', LinearMap.codRestrict_apply] using hf_isom s
-  set Lr : (LinearMap.range Tφ) →ₗᵢ[𝕜] (LinearMap.range Tψ) :=
-    ⟨f', hf'_isom⟩ with hLr
-  -- `Lr` is surjective: `t = Tψ c` is the image of `Tφ c`.
-  have hsurj : Function.Surjective Lr := by
-    rintro ⟨_, c, rfl⟩
-    refine ⟨⟨Tφ c, LinearMap.mem_range_self Tφ c⟩, Subtype.ext ?_⟩
-    simp [hLr, hf', hf_apply]
-  -- Transport both sides along `range T = span (range ·)`.
-  have hrangeφ : LinearMap.range Tφ = Submodule.span 𝕜 (Set.range φ) := by
-    simpa [hTφ] using Finsupp.range_linearCombination 𝕜
-  have hrangeψ : LinearMap.range Tψ = Submodule.span 𝕜 (Set.range ψ) := by
-    simpa [hTψ] using Finsupp.range_linearCombination 𝕜
-  refine ⟨((LinearIsometryEquiv.ofEq _ _ hrangeφ).symm.trans
-      (LinearIsometryEquiv.ofSurjective Lr hsurj)).trans
-      (LinearIsometryEquiv.ofEq _ _ hrangeψ), fun i => ?_⟩
-  -- Carrier bookkeeping: `(L ⟨φ i, _⟩ : F) = f ⟨φ i, _⟩ = ψ i`.
-  have hmemRφ : φ i ∈ LinearMap.range Tφ := by
-    simpa [hrangeφ] using Submodule.mem_span_of_mem (Set.mem_range_self i)
-  have htransφ : (LinearIsometryEquiv.ofEq _ _ hrangeφ).symm
-      ⟨φ i, Submodule.subset_span ⟨i, rfl⟩⟩ = ⟨φ i, hmemRφ⟩ := Subtype.ext rfl
-  have hfφ : f ⟨φ i, hmemRφ⟩ = ψ i := by
-    have hsubtype : (⟨φ i, hmemRφ⟩ : LinearMap.range Tφ)
-        = ⟨Tφ (Finsupp.single i 1), LinearMap.mem_range_self Tφ _⟩ :=
-      Subtype.ext (by simp [hTφ])
-    simp [hsubtype, hf_apply, hTψ]
-  simp only [LinearIsometryEquiv.trans_apply]
-  rw [LinearIsometryEquiv.coe_ofEq_apply, htransφ, LinearIsometryEquiv.coe_ofSurjective]
-  simp [hLr, hf', hfφ]
+      ∀ i, (L ⟨φ i, Submodule.subset_span ⟨i, rfl⟩⟩ : F) = ψ i :=
+  ⟨linearIsometryEquivSpanOfInnerEq h, linearIsometryEquivSpanOfInnerEq_apply h⟩
+
+end
 
 /--
 **Gram rigidity, span-to-span isometry.** The `LinearIsometry` underlying the

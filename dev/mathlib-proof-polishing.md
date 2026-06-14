@@ -5,6 +5,15 @@ Distilled from reviewer feedback (`@wwylele`, PR #40567, `GramMatrix.lean`,
 when polishing any proof for upstream (ForMathlib candidates first; the DKPS
 paper proofs later). Read this before a polishing pass.
 
+> **Tooling.** For the mechanical golf/style rules (extracted from thousands of
+> merged Mathlib PRs) we use the vendored `mathlib-quality` skill. See
+> [`mathlib-quality-adapter.md`](mathlib-quality-adapter.md) for *how to run it
+> in this repo* — the key house-rule being that staging files **keep their
+> AI-authorship provenance header** (the no-provenance/copyright-header swap is
+> fork/PR-time only). This file remains the home for the *judgment* lessons
+> (∃→def, fold-vs-don't, terminology, placement) that the mechanical rules don't
+> cover.
+
 > ⚠️ **Provenance — read this first.** The reviewer's *actual* message was the
 > worked before→after **examples** plus one line: *"This is to show you how you
 > can 'fold' proofs. This might not be the final optimal proof yet. You should

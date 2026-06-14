@@ -2,8 +2,9 @@
 Staged for Mathlib: the Berge maximum theorem (upper hemicontinuity of the
 parametric argmin correspondence over a fixed compact feasible set).
 
-Formalized by Claude Opus 4.8 (claude-opus-4-8[1m]);
-to be re-authored per Mathlib's AI-contribution policy at PR time.
+Formalized by Claude Opus 4.8 (claude-opus-4-8[1m]); golfed a terminal
+`simp only [Function.comp_apply]; exact …` to `simpa using …` (rule 1.15).
+To be re-authored per Mathlib's AI-contribution policy at PR time.
 -/
 
 import ForMathlib.Topology.ApproxMinimizer
@@ -219,8 +220,7 @@ theorem continuous_iInf_of_isCompact [FirstCountableTopology P]
     have := hVle p₀ (xseq k) (hxseqK k)
     rw [hV]; linarith
   · -- `V (p k) ≤ g (p k) x₀`
-    simp only [Function.comp_apply]
-    exact hVle (p k) x₀ hx₀K
+    simpa using hVle (p k) x₀ hx₀K
 
 /-- **Berge's maximum theorem, uniform `ε`–`δ` modulus form.**
 With `P` a (pseudo)metric space, `g` jointly continuous, `K` a fixed compact set,

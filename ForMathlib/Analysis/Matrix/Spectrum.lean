@@ -1,8 +1,9 @@
 /-
 Staged for Mathlib: addition to `Mathlib/Analysis/Matrix/Spectrum.lean`.
 
-Formalized by Claude Opus 4.8 (claude-opus-4-8[1m]);
-to be re-authored per Mathlib's AI-contribution policy at PR time.
+Formalized by Claude Opus 4.8 (claude-opus-4-8[1m]); golfed (drop unused
+`set … with`, `intro;exact` → term mode) per the `mathlib-quality` rules.
+To be re-authored per Mathlib's AI-contribution policy at PR time.
 -/
 
 import Mathlib.Analysis.Matrix.Spectrum
@@ -41,7 +42,7 @@ theorem PosSemidef.eigenvalues₀_eq_zero_of_le {B : Matrix n n 𝕜}
     (hB : B.PosSemidef) {d : ℕ} (hrank : B.rank ≤ d)
     (i : Fin (Fintype.card n)) (hi : d ≤ (i : ℕ)) :
     hB.isHermitian.eigenvalues₀ i = 0 := by
-  set hH := hB.isHermitian with hHdef
+  set hH := hB.isHermitian
   -- The index equivalence `eigenvalues₀ = eigenvalues ∘ e` from the definition.
   set e : Fin (Fintype.card n) ≃ n :=
     Fintype.equivOfCardEq (Fintype.card_fin (Fintype.card n)) with he
@@ -57,9 +58,8 @@ theorem PosSemidef.eigenvalues₀_eq_zero_of_le {B : Matrix n n 𝕜}
   have hpos_le : ∀ k, k ≤ i → 0 < hH.eigenvalues₀ k := fun k hk =>
     lt_of_lt_of_le hipos (hH.eigenvalues₀_antitone hk)
   -- The `i + 1` leading indices all lie in the nonzero-eigenvalue Finset.
-  have hsub : Finset.Iic i ⊆ Finset.univ.filter (fun k => hH.eigenvalues₀ k ≠ 0) := by
-    intro k hk
-    exact Finset.mem_filter.mpr ⟨Finset.mem_univ _,
+  have hsub : Finset.Iic i ⊆ Finset.univ.filter (fun k => hH.eigenvalues₀ k ≠ 0) :=
+    fun k hk => Finset.mem_filter.mpr ⟨Finset.mem_univ _,
       ne_of_gt (hpos_le k (Finset.mem_Iic.mp hk))⟩
   have hcard_le : (i : ℕ) + 1 ≤ (Finset.univ.filter (fun k => hH.eigenvalues₀ k ≠ 0)).card := by
     calc (i : ℕ) + 1 = (Finset.Iic i).card := by rw [Fin.card_Iic]

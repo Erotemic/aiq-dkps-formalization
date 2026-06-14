@@ -18,7 +18,7 @@ To be re-authored per Mathlib's AI-contribution policy at PR time.
 import Mathlib.Analysis.InnerProductSpace.GramMatrix
 import Mathlib.Analysis.InnerProductSpace.PiL2
 import Mathlib.LinearAlgebra.Isomorphisms
-import ForMathlib.Analysis.InnerProductSpace.Orthonormal
+import ForMathlib.Analysis.InnerProductSpace.Basic
 
 /-! # Gram matrix rigidity
 

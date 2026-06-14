@@ -1,22 +1,25 @@
 /-
-Staged for Mathlib: additions to `Mathlib/Analysis/InnerProductSpace/Orthonormal.lean`.
+Staged for Mathlib: addition to `Mathlib/Analysis/InnerProductSpace/Basic.lean`.
 
-Formalized by Claude Fable 5 (claude-fable-5[1m]); relocated here from the
-Gram-matrix staging file by Claude Opus 4.8 (claude-opus-4-8[1m]) to mirror the
-Mathlib fork, where the lemma lives in `Orthonormal.lean` (next to the other
-`Finsupp`/inner-product machinery it is built from) rather than in `GramMatrix.lean`
-— it is a general inner-product identity, independent of Gram matrices.
+Formalized by Claude Fable 5 (claude-fable-5[1m]).  Placement history: originally
+in the Gram-matrix staging file, then moved to `Orthonormal.lean` to sit by the
+`Finsupp`/inner-product machinery; following @wwylele's review (PR #40567) it
+moved here to `Basic.lean` — the lemma involves no `Orthonormal`, and `Basic`
+already hosts `Finsupp.sum_inner` / `Finsupp.inner_sum` (its dependencies) and
+`open`s `Finsupp` + `ComplexConjugate`, so no new import is needed.
 To be re-authored per Mathlib's AI-contribution policy at PR time.
 -/
 
-import Mathlib.Analysis.InnerProductSpace.Orthonormal
+import Mathlib.Analysis.InnerProductSpace.Basic
 
 /-! # Inner products of linear combinations
 
 A general identity expanding the inner product of two finite linear combinations of a
 vector family over the family's pairwise inner products `⟪v i, v j⟫`.  It involves no
-Gram matrix and no rigidity hypothesis; it is the reusable algebraic core behind the
-Gram-rigidity development in `Mathlib/Analysis/InnerProductSpace/GramMatrix.lean`.
+orthonormality, no Gram matrix, and no rigidity hypothesis; it is the reusable algebraic
+core behind the Gram-rigidity development in
+`Mathlib/Analysis/InnerProductSpace/GramMatrix.lean`, and belongs next to
+`Finsupp.sum_inner` / `Finsupp.inner_sum`.
 
 ## Main results
 

@@ -15,9 +15,10 @@ The two subtrees:
 
 ```text
 dev/
-  SEARCH.md               # How to search engineering memory
-  benchmark-candidates/   # Distilled hard questions from real formalization/comparator mistakes
-  journals/               # Postmortems of bugs that took real effort to diagnose
+  SEARCH.md                   # How to search engineering memory
+  mathlib-proof-polishing.md  # Reference: "folding" proofs to Mathlib style (read before a polishing pass)
+  benchmark-candidates/       # Distilled hard questions from real formalization/comparator mistakes
+  journals/                   # Postmortems of bugs that took real effort to diagnose
 ```
 
 `dev/` is **not** a planning tracker (use `docs/planning/`), **not** the
@@ -93,6 +94,18 @@ journals/
   index.md             # Symptom router
   lessons_learned.md   # Aggregate entries, newest first
 ```
+
+---
+
+## `dev/mathlib-proof-polishing.md`
+
+A standalone **reference** (not a postmortem, not a test question) distilling how
+to "fold" a proof to Mathlib reviewer standard: replace low-level tactic traces
+with rewrite-friendly local lemmas and delegate bookkeeping to `simp`/`simpa`.
+Read it before a polishing pass on any upstream-bound proof (ForMathlib
+candidates first; the DKPS paper proofs later). It pairs with benchmark question
+Q4 (the fold-this-proof capability test). Distilled from real reviewer feedback,
+so it reflects what an actual Mathlib maintainer asked for.
 
 ---
 

@@ -19,6 +19,12 @@ replacement for grep (see [`../SEARCH.md`](../SEARCH.md)).
 |---|---|
 | Using a `grep sorry` (matching comment prose) as the trust boundary for sorry-freeness instead of `#print axioms` | [`lean-questions.md`](lean-questions.md) Q3 |
 
+## Proof style / Mathlib-readiness
+
+| Failure class | Read |
+|---|---|
+| Verbose manual tactic traces (`Finsupp.sum_congr`, `change`, subtype `rw`) instead of rewrite-friendly local lemmas + `simp`/`simpa` ("folding") | [`lean-questions.md`](lean-questions.md) Q4, [`../mathlib-proof-polishing.md`](../mathlib-proof-polishing.md) |
+
 ## How to extend
 
 Add a row here when you add a question. Prefer routing by the **invariant** (what

@@ -10,6 +10,7 @@ upstream refactor, or see an error that feels familiar.
 | A check failed that the build did *not* (comparator, `#print axioms`, kernel) | `dev/journals/` first |
 | Confusing Lean error / elaboration / instance / universe symptom | `dev/journals/` |
 | About to restate a theorem, slim a conformance, pick a leaf, minimize imports | `dev/benchmark-candidates/` |
+| About to polish a proof for upstream (fold tactic traces into `simp`-friendly lemmas) | `dev/mathlib-proof-polishing.md` |
 | Choosing/relating a Mathlib lemma, checking a gap, naming | both |
 | Module-system (`public import`, `@[expose]`), import direction/cycles | both |
 | Provenance / fork↔staging sync / AI-authorship stripping | both |

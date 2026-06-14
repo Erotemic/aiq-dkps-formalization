@@ -218,3 +218,86 @@ A wrong "the papers are broken" report can trigger pointless recovery work
 (reverting, hunting git history) over a non-existent problem. The trap is using
 the cheap, lossy tool for a question the precise tool answers crisply — and the
 domain *has* the precise tool one keystroke away.
+
+---
+
+## Q4 — Fold a verbose isometry proof into rewrite-friendly local lemmas
+
+Date: 2026-06-14 · Tags: `proof-folding`, `simp-normal-form`,
+`rewrite-friendly-have`, `mathlib-style` · Source: reviewer `@wwylele`, PR #40567
+
+**Level A — pre-error operation.** (The "mistake" being tested is *writing the
+verbose form in the first place* — i.e. a model that produces manual
+`Finsupp.sum_congr` / `change` / subtype-`rw` scripts instead of delegating to
+`simp`.)
+
+You proved Gram rigidity with a chain of `have`s whose bodies are low-level
+tactic traces. A Mathlib reviewer asks you to **fold** them: keep the named
+mathematical facts, but state each as a rewrite-friendly local lemma and let
+`simp`/`simpa` do the bookkeeping. Fold these (representative samples), and state
+the *general principle* that makes the folds work:
+
+```lean
+have key : ∀ c c' : ι →₀ 𝕜, ⟪Tφ c, Tφ c'⟫_𝕜 = ⟪Tψ c, Tψ c'⟫_𝕜 := by
+  intro c c'
+  rw [hTφ, hTψ, inner_linearCombination_linearCombination,
+    inner_linearCombination_linearCombination]
+  refine Finsupp.sum_congr fun i _ => Finsupp.sum_congr fun j _ => ?_
+  rw [h i j]
+
+have hker : LinearMap.ker Tφ ≤ LinearMap.ker Tψ := by
+  intro c hc
+  have hφ0 : Tφ c = 0 := by simpa [LinearMap.mem_ker] using hc
+  have : ‖Tψ c‖ = 0 := by rw [norm_eq c, hφ0, norm_zero]
+  simpa [LinearMap.mem_ker] using norm_eq_zero.mp this
+
+-- and a closing bookkeeping step:
+change ((f' ⟨φ i, hmemRφ⟩ : LinearMap.range Tψ) : F) = ψ i
+rw [hf', LinearMap.codRestrict_apply]
+exact hfφ
+```
+
+### Expected answer
+
+Parameterize each `have` and replace the trace with `simp`/`simpa`:
+
+```lean
+have key (c c' : ι →₀ 𝕜) : ⟪Tφ c, Tφ c'⟫_𝕜 = ⟪Tψ c, Tψ c'⟫_𝕜 := by
+  simp [hTφ, hTψ, inner_linearCombination_linearCombination, h]
+
+have hker : LinearMap.ker Tφ ≤ LinearMap.ker Tψ := by
+  intro c hc
+  rw [LinearMap.mem_ker, ← norm_eq_zero] at ⊢ hc   -- common normal form: both = 0
+  rw [norm_eq, hc]
+
+-- closing step:
+simp [hLr, hf', hfφ]
+```
+
+**The principle:** `simp` uses a local lemma's **type**, not its proof, as a
+rewrite rule. A parameterized `have foo (x) : LHS x = RHS x` becomes
+`LHS ?x ↦ RHS ?x`, so shape the LHS to match the complicated subterms that appear
+downstream; then `simp [foo, …]` rewrites them in place. Three recurring folds:
+(a) `simp [..., h]` instead of manual `Finsupp.sum_congr` + `rw [h i j]`;
+(b) rewrite hypothesis *and* goal into a **common normal form** (here `norm = 0`),
+then the hypothesis applies directly; (c) `simp`/`simpa [local_defs, apply_lemmas]`
+for standard constructions (`codRestrict_apply`, `liftQ_apply`, `mkQ_apply`,
+subtype coercions, range/span transport) instead of `change`/`show`/manual `rw`.
+
+Guardrails: don't ship a bare `simp` — pin it with `simp?`; if a fold won't
+instantiate, inspect the missing simp lemma rather than reverting; keep the named
+locals (readability over golf); recompile after each fold.
+
+Full principles + before/after table: [`../mathlib-proof-polishing.md`](../mathlib-proof-polishing.md).
+
+### Why this matters as a benchmark
+
+- **It's a *capability*, not a gotcha.** Mathlib-quality contribution requires
+  writing proofs that read as the argument with bookkeeping delegated — a model
+  that only emits long `rw`/`change` traces produces correct-but-unmergeable
+  proofs. The fold is gradeable (it compiles or not) and the principle is
+  statable.
+- **Pre-error framing.** The strongest version asks the model to *write the
+  folded form directly* from the math sketch, not to repair the verbose one.
+- **Transferable:** the "parameterized `have` as a `simp` rewrite rule" idiom and
+  "common normal form" technique apply to any Mathlib proof, not just this one.

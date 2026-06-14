@@ -101,7 +101,6 @@ theorem dissimilarity_convergesInProbability_of_secondMoment
     -- response-dissimilarity matrices converges to 0 in probability (Theorem 2's ‖D − ∆‖_F →P 0).
     ConvergesInProbabilityZero P
       (fun r ω => frobSub (responseDist (Xbar r ω)) (responseDist μ)) := by
-  classical
   intro ε hε
   -- Reduce the metric goal to a measure-of-bad-set statement.
   -- dist (frobSub ...) 0 = |frobSub ... - 0| = frobSub ... (it is a sqrt, ≥ 0).

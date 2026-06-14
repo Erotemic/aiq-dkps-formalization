@@ -108,7 +108,6 @@ lemma tightness_helper {Ω : Type*} [MeasurableSpace Ω]
     (Y : Ω → S) (h_meas_Y : Measurable Y) :
     -- Conclusion: the law of `Y` is tight (compact `K` capturing all but `ε` of the mass).
     ∀ ε : ENNReal, 0 < ε → ∃ K : Set S, IsCompact K ∧ P {ω | Y ω ∉ K} < ε := by
-  classical
   intro ε ε_pos
 
   -- pushforward

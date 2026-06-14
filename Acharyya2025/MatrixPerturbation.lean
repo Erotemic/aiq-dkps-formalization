@@ -163,7 +163,6 @@ theorem sortedEigenvalues_tail_eq_zero {B : Matrix (Fin n) (Fin n) ℝ}
     {d : ℕ} (hrank : B.rank ≤ d) :       -- rank bound: rank(B) ≤ d (Assumption 1)
     -- Conclusion: every sorted eigenvalue at index ≥ d is zero (the rank-d tail vanishes).
     ∀ j : Fin n, d ≤ (j : ℕ) → sortedEigenvalues hB.isHermitian j = 0 := by
-  classical
   intro j hj
   by_contra hne
   -- the `j`-th eigenvalue is strictly positive.
@@ -289,7 +288,6 @@ private theorem sum_castLE_eq_filter {d : ℕ} (hd : d ≤ n) (f : Fin n → ℝ
     -- Conclusion: a sum over the first d indices equals the filtered sum {j < d}.
     ∑ m : Fin d, f (Fin.castLE hd m)
       = ∑ j ∈ Finset.univ.filter (fun j : Fin n => (j : ℕ) < d), f j := by
-  classical
   refine Finset.sum_bij'
     (fun (m : Fin d) _ => Fin.castLE hd m)
     (fun (j : Fin n) hj => ⟨(j : ℕ), (Finset.mem_filter.mp hj).2⟩)
@@ -314,7 +312,6 @@ theorem gram_spectralConfig_eq {d : ℕ} (hd : d ≤ n)
       (∑ k : Fin d, spectralConfig (Matrix.toEuclideanLin B) (opSym hB.isHermitian) hd i k
           * spectralConfig (Matrix.toEuclideanLin B) (opSym hB.isHermitian) hd j k)
         = B i j := by
-  classical
   intro i j
   set hS := opSym hB.isHermitian with hSdef
   set u := hS.eigenvectorBasis hn_eq with hu
@@ -405,7 +402,6 @@ theorem exists_isometry_configError_le_of_entrywise_close
       Acharyya2024.ConfigError
         (fun i => W (spectralConfig (Matrix.toEuclideanLin Bhat) (opSym hBhat) hd i)) ψ
         ≤ configBound n d α Λ ((n : ℝ) * η) := by
-  classical
   set T := Matrix.toEuclideanLin B with hTdef
   set S := Matrix.toEuclideanLin Bhat with hSdef
   set hT := opSym hB.isHermitian with hTsym

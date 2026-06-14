@@ -86,7 +86,6 @@ private theorem sum_castLE_eq_filter (hd : d ≤ n) (f : Fin n → ℝ) :
     -- Conclusion: the two indexings of the leading `d`-block give the same sum.
     ∑ m : Fin d, f (Fin.castLE hd m)
       = ∑ j ∈ Finset.univ.filter (fun j : Fin n => (j : ℕ) < d), f j := by
-  classical
   refine Finset.sum_bij'
     (fun (m : Fin d) _ => Fin.castLE hd m)
     (fun (j : Fin n) hj => ⟨(j : ℕ), (Finset.mem_filter.mp hj).2⟩)
@@ -238,7 +237,6 @@ private theorem tailS_le (hd : d ≤ n) (hT : T.IsSymmetric) (hS : S.IsSymmetric
     ∑ j ∈ Finset.univ.filter (fun j : Fin n => d ≤ (j : ℕ)),
         (⟪hT.eigenvectorBasis hn_eq j, hS.eigenvectorBasis hn_eq (Fin.castLE hd k)⟫_ℝ)^2
       ≤ 4 * (n : ℝ) * ε^2 / α^2 := by
-  classical
   -- Rewrite the column (with `u_j` first, `v_{castLE k}` second) into the
   -- `crossSamp` orientation (`v` leading, `u` trailing) via `real_inner_comm`.
   have hcomm : ∑ j ∈ Finset.univ.filter (fun j : Fin n => d ≤ (j : ℕ)),
@@ -467,7 +465,6 @@ private theorem norm_sq_smul_sum_orthonormal {m p : ℕ}
     {v : Fin p → EuclideanSpace ℝ (Fin m)} (hv : Orthonormal ℝ v) (c : Fin p → ℝ) :
     -- Conclusion: the squared norm of an orthonormal combination is the coefficient energy.
     ‖∑ k, c k • v k‖^2 = ∑ k, (c k)^2 := by
-  classical
   rw [← real_inner_self_eq_norm_sq, sum_inner]
   have key := hv.inner_left_right_finset (s := (Finset.univ : Finset (Fin p)))
     (a := fun i j => c i * c j)
@@ -500,7 +497,6 @@ private theorem defect_repr (hT : T.IsSymmetric) (hS : S.IsSymmetric) (hd : d �
       = if d ≤ (j : ℕ)
           then - ⟪hS.eigenvectorBasis hn_eq j, hT.eigenvectorBasis hn_eq (Fin.castLE hd l)⟫_ℝ
           else 0 := by
-  classical
   set v := hS.eigenvectorBasis hn_eq with hv
   set u := hT.eigenvectorBasis hn_eq with hu
   set Q := Acharyya2025.Overlap.overlap hT hS hn_eq hd with hQ
@@ -557,7 +553,6 @@ private theorem defect_norm_sq (hT : T.IsSymmetric) (hS : S.IsSymmetric) (hd : d
         - hT.eigenvectorBasis hn_eq (Fin.castLE hd l)‖^2
       = ∑ j ∈ Finset.univ.filter (fun j : Fin n => d ≤ (j : ℕ)),
           (⟪hS.eigenvectorBasis hn_eq j, hT.eigenvectorBasis hn_eq (Fin.castLE hd l)⟫_ℝ)^2 := by
-  classical
   set w := (∑ k, (Acharyya2025.Overlap.overlap hT hS hn_eq hd) k l
           • hS.eigenvectorBasis hn_eq (Fin.castLE hd k))
         - hT.eigenvectorBasis hn_eq (Fin.castLE hd l) with hw
@@ -644,7 +639,6 @@ private theorem term3_norm_sq_le (hd : d ≤ n) (hT : T.IsSymmetric) (hS : S.IsS
     (hε : ∀ x, ‖(S - T) x‖ ≤ ε * ‖x‖) (hsmall : ε ≤ α / 2) :
     -- Conclusion: the Term-3 Frobenius energy is `≤ Λ · 4nε²/α²`.
     ‖term3vec hT hS hd‖^2 ≤ Λ * (4 * (n : ℝ) * ε^2 / α^2) := by
-  classical
   -- `0 ≤ Λ`: when `n = 0` both sides vanish; otherwise eigenvalue `0` witnesses it.
   rcases Nat.eq_zero_or_pos n with hn0 | hnpos
   · subst hn0
@@ -791,7 +785,6 @@ private theorem term2_norm_sq_le (hd : d ≤ n) (hT : T.IsSymmetric) (hS : S.IsS
     (hε : ∀ x, ‖(S - T) x‖ ≤ ε * ‖x‖) (hsmall : ε ≤ α / 2) :
     -- Conclusion: the Term-2 Frobenius energy is `≤ d²·(ε/√(α/2))²`.
     ‖term2vec hT hS hd‖^2 ≤ (d : ℝ)^2 * (ε / Real.sqrt (α / 2))^2 := by
-  classical
   set c := fun (k l : Fin d) => (Acharyya2025.Overlap.overlap hT hS hn_eq hd) k l
       * (Real.sqrt (lamHat hS hd k) - Real.sqrt (lamPop hT hd l)) with hc
   -- `‖t2‖² = ∑_l ∑_k c_{kl}²` via Parseval per `l`.
@@ -862,7 +855,6 @@ private theorem sum_norm_sq_spectralConfig_le (hd : d ≤ n) (hT : T.IsSymmetric
     (hε : ∀ x, ‖(S - T) x‖ ≤ ε * ‖x‖) (hsmall : ε ≤ α / 2) :
     -- Conclusion: the sample embedding's total energy is `≤ d(Λ+ε)`.
     ∑ i : Fin n, ‖spectralConfig S hS hd i‖^2 ≤ (d : ℝ) * (Λ + ε) := by
-  classical
   -- each top-block sample eigenvalue is `≥ α/2 ≥ 0`, so `(√λ̂_k)² = λ̂_k`.
   have hsqrtsq : ∀ k : Fin d, (Real.sqrt (lamHat hS hd k))^2 = lamHat hS hd k :=
     fun k => Real.sq_sqrt (le_trans (by positivity) (sample_eig_lb hd hT hS hα hε hsmall k))
@@ -968,7 +960,6 @@ theorem exists_isometry_configError_spectralConfig_le
       (∀ x y, ⟪W x, W y⟫_ℝ = ⟪x, y⟫_ℝ) ∧
       Acharyya2024.ConfigError (fun i => W (spectralConfig S hS hd i)) (spectralConfig T hT hd)
         ≤ configBound n d α Λ ε := by
-  classical
   set δ : ℝ := (d : ℝ) * (4 * (n : ℝ) * ε^2 / α^2) with hδ
   have hδ0 : 0 ≤ δ := by rw [hδ]; positivity
   -- The near-isometry `M` and its Gram-deviation bound feed the polar factor.

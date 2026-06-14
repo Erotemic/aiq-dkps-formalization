@@ -53,7 +53,6 @@ theorem isHermitian_entry_eq_sum_eigenvalues {n : Nat}
     -- `Σ_k λ_k · U i k · U j k` (entrywise spectral decomposition).
     B i j = ∑ k : Fin n,
       hB.eigenvalues k * (hB.eigenvectorUnitary i k) * (hB.eigenvectorUnitary j k) := by
-  classical
   -- Spectral theorem: B = U * diagonal(λ) * star U.
   have hspec := hB.spectral_theorem
   -- Rewrite the (i, j) entry using the conjugation form.

@@ -86,7 +86,6 @@ Formalized by Claude Fable 5 (claude-fable-5[1m]).
 -- Conclusion: the classical-MDS (double-centered) matrix of `D` is symmetric.
 theorem symmetricDisMat_classicalMDSMatrix {n : Nat} {D : DisMat n}
     (hD : SymmetricDisMat D) : SymmetricDisMat (classicalMDSMatrix D) := by
-  classical
   -- abbreviation for the squared matrix (kept as a literal lambda).
   let A : DisMat n := fun i j => (D i j)^2
   -- The squared matrix is symmetric.
@@ -265,7 +264,6 @@ theorem measurableSet_setOf_alignExists {n d : Nat} (hd : d ≤ n)
         (opSym (hsym u ω)) hd i)) :
     -- Conclusion: the alignment-existence event `{ω | AlignExists …}` is measurable.
     MeasurableSet {ω | AlignExists hd Dhat hsym ψ c u ω} := by
-  classical
   set spec : Ω → Fin n → EuclideanSpace ℝ (Fin d) := fun ω i =>
     spectralConfig
       (Matrix.toEuclideanLin (disMatToMatrix (classicalMDSMatrix (Dhat u ω))))

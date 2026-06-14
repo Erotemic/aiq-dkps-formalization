@@ -101,7 +101,6 @@ Role: internal helper / reindexing bookkeeping. -/
 private theorem sum_castLE_eq_sum_filter_lt (hd : d ≤ n) (f : Fin n → ℝ) :
     ∑ m : Fin d, f (Fin.castLE hd m)
       = ∑ j ∈ Finset.univ.filter (fun j : Fin n => (j : Nat) < d), f j := by
-  classical
   refine Finset.sum_bij'
     (fun (m : Fin d) _ => Fin.castLE hd m)
     (fun (j : Fin n) hj => ⟨(j : Nat), (Finset.mem_filter.mp hj).2⟩)
@@ -154,7 +153,6 @@ private theorem inner_eigenvectorBasis_castLE
     ⟪hT.eigenvectorBasis hn (Fin.castLE hd k),
         hT.eigenvectorBasis hn (Fin.castLE hd l)⟫_ℝ
       = if k = l then (1 : ℝ) else 0 := by
-  classical
   have hortho := (hT.eigenvectorBasis hn).orthonormal
   rw [orthonormal_iff_ite.mp hortho (Fin.castLE hd k) (Fin.castLE hd l)]
   by_cases h : k = l
@@ -183,7 +181,6 @@ theorem abs_overlapT_mul_overlap_sub_one_le
             (⟪hS.eigenvectorBasis hn j, hT.eigenvectorBasis hn (Fin.castLE hd k)⟫_ℝ)^2)
         * Real.sqrt (∑ j ∈ Finset.univ.filter (fun j : Fin n => d ≤ (j : Nat)),
             (⟪hS.eigenvectorBasis hn j, hT.eigenvectorBasis hn (Fin.castLE hd l)⟫_ℝ)^2) := by
-  classical
   set u := hT.eigenvectorBasis hn with hu
   set v := hS.eigenvectorBasis hn with hv
   -- abbreviations for the trailing/leading coordinate functions

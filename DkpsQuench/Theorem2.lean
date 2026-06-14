@@ -65,7 +65,6 @@ noncomputable def yNN_paper
   (Qstar Qsub : Finset Q)
   (n : ℕ) (ω : Ω) (f : Model Q X) : ℝ :=
 by
-  classical
   by_cases hn : n > 0
   · -- NN index in estimated perspective space for this `Qsub`
     let ψHat_ref : Fin n → Vec d := fun i => ψHat n ω Qsub (f_ref n ω i)
@@ -127,7 +126,6 @@ theorem highProb_mse_nn_le
           (fun f => yNN_paper (d := d) ψHat f_ref score Qstar Qsub n ω f)
         ≤ ε} ≥ 1 - δ := by
   intro ε hε δ hδ
-  classical
 
   -- Package the fixed-Qsub Lipschitz hypothesis into `LipschitzScore` expected by `highProb_mse_le_of_concentration`.
   have h_lip_const :
@@ -398,7 +396,6 @@ theorem highProb_mse_nn_le_of_subevent
           (fun f => yNN_paper (d := d) ψHat f_ref score Qstar Qsub n ω f)
         ≤ ε} ≥ 1 - δ := by
   intro ε hε δ hδ
-  classical
   have h_lip_const :
       LipschitzScore (Q := Q) (X := X) (d := d) γ
         (fun (_ : Finset Q) (f : Model Q X) => ψ Qsub f)

@@ -155,7 +155,6 @@ Formalized by Codex 5.5 High, per user-observed model label.
 theorem norm_config_le_ConfigError {n d : Nat} (ψhat ψ : Config n d) (i : Fin n) :
     -- Conclusion: the single-model error is at most the total configuration error.
     ‖ψhat i - ψ i‖ ≤ ConfigError ψhat ψ := by
-  classical
   unfold ConfigError
   exact Finset.single_le_sum (fun j _ => norm_nonneg (ψhat j - ψ j)) (Finset.mem_univ i)
 
@@ -245,7 +244,6 @@ theorem frobSub_responseDist_le_sum_errors
     frobSub (responseDist Xbar) (responseDist μ)
       ≤ ∑ i : Fin n, ∑ j : Fin n,
           ((m : Real)⁻¹) * (‖Xbar i - μ i‖ + ‖Xbar j - μ j‖) := by
-  classical
   let diff : Fin n × Fin n → Real :=
     fun ij => responseDistEntry Xbar ij.1 ij.2 - responseDistEntry μ ij.1 ij.2
   have h_l2_l1 : Real.sqrt (∑ ij : Fin n × Fin n, (diff ij)^2)

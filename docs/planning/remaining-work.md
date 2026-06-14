@@ -1,6 +1,6 @@
 # Remaining work tracker
 
-Fresh as of 2026-06-12 (Opus). The active phase is the **Mathlib-readiness pass**:
+Fresh as of 2026-06-14 (Opus). The active phase is the **Mathlib-readiness pass**:
 getting the strong staged candidates into *mechanically-droppable-into-a-PR*
 shape. Cross-refs: `mathlib-candidates.md` (candidate dossiers),
 `prep_mathlib_review_and_readiness.md` (the readiness audit),
@@ -37,12 +37,19 @@ completed-phase docs).
   §1.2); below it the `LinearIsometry` `exists_linearIsometry_span_map_eq_of_inner_eq`
   (compatibility corollary), span-to-ambient, ambient-equiv, and `gram`-iff are
   thin derivations — all names/signatures preserved so downstream is untouched.
-  Axiom audit clean. Added to `Challenge/Gram` + comparator config.
+  Axiom audit clean. (Challenge home is now `Challenge/MathlibCandidate/GramRigidity/`
+  after the 2026-06-14 restructure.)
 - **R2** ✅ rank-PSD forward direction extracted; iff is now a combinator.
 - **R3** ✅ spectral-stack PR decomposition plan (`spectral-pr-decomposition.md`).
 - **R3b** ✅ Weyl operator-norm corollary `abs_eigenvalues_sub_le_opNorm`.
-- **Trust artifacts synced** — headline Gram challenge kept simple; new public
-  lemmas tracked in the `Challenge/Inventory/` conformance + leaderboard.
+- **Challenge layer restructured** ✅ (2026-06-14, user-directed): the old
+  headline (`Challenge/Gram`/`PsdGram`/`Spectral`) + `Challenge/Inventory/*`
+  split (and the 69-theorem aggregate) is replaced by two families —
+  `Challenge/MathlibCandidate/` (the focused upstream push: GramRigidity,
+  CourantFischerWeyl, DavisKahan) and `Challenge/MathlibPending/` (proven but
+  held back). Each challenge lists only leaf theorems; comparator configs are
+  `comparator/{candidate,pending}-*.json`. The four DKPS papers are documented,
+  not comparator challenges. Authoritative map: `Challenge/README.md`.
 - **R2b** ✅ recon verdict: keep the spectral PSD proof (no cleaner route exists;
   no Fable). **Minimal imports**: one safe trim (`Star.Real` from `PosDef.lean`);
   shake is unreliable out-of-tree, rest deferred to in-tree PR time.

@@ -9,6 +9,13 @@ applied yet. Downstream-coupling noted so the cost of each is clear.
 Convention reminder: the actual rename/move + the AI-provenance re-authoring is
 Task E (gated). This doc just fixes *what* the final shapes should be.
 
+> **Note (2026-06-14):** the challenge layer was restructured into
+> `Challenge/MathlibCandidate/` + `Challenge/MathlibPending/` (see
+> `Challenge/README.md`). Older `Challenge/Gram`, `Challenge/PsdGram`,
+> `Challenge/Spectral`, and `Challenge/Inventory/*` paths mentioned below are
+> historical; the live homes are the candidate/pending folders and
+> `comparator/{candidate,pending}-*.json`.
+
 ---
 
 ## D-1. Gram — public face / which theorem leads
@@ -91,7 +98,9 @@ Coupling: none.
 lives in `PosDef.lean`. Audit §2.2: it belongs in a spectrum-focused home
 (`Mathlib/Analysis/Matrix/Spectrum.lean`). **Recommendation:** move it to the
 spectrum file at PR time; it is a general spectral fact, not PSD-specific.
-Coupling: referenced by `Challenge/*` (`#print axioms`) — update those paths.
+Coupling: post-restructure it is no longer a separately-listed challenge leaf (it
+is covered transitively by the RankPsdRealization leaf), so no `#print axioms`
+path needs updating; just move the source declaration at PR time.
 
 ## D-6. PSD — destination
 

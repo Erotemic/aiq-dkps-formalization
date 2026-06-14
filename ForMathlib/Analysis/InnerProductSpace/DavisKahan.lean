@@ -4,7 +4,10 @@ Staged for Mathlib: additions to `Mathlib/Analysis/InnerProductSpace/` (new file
 
 Formalized by Claude Opus 4.8 (claude-opus-4-8[1m]); projector section
 redesigned onto `Submodule.starProjection` (RCLike, arbitrary index subsets)
-by Claude Fable 5 (claude-fable-5[1m]).
+by Claude Fable 5 (claude-fable-5[1m]).  Golfed/polished to Mathlib style by
+Claude Opus 4.8 following the `mathlib-quality` rules (drop unused `set … with`
+bindings; the symmetric block-counting step of the projector identity extracted
+to the private `sum_inner_sq_compl_block_eq`).
 To be re-authored per Mathlib's AI-contribution policy at PR time.
 -/
 
@@ -76,8 +79,8 @@ theorem sum_norm_inner_eigenvectorBasis_map_sub_sq_le
     ∑ i : Fin n, ∑ j : Fin n,
       ‖⟪hT.eigenvectorBasis hn i, (S - T) (hS.eigenvectorBasis hn j)⟫_𝕜‖ ^ 2
       ≤ (n : ℝ) * ε ^ 2 := by
-  set u := hT.eigenvectorBasis hn with hu
-  set v := hS.eigenvectorBasis hn with hv
+  set u := hT.eigenvectorBasis hn
+  set v := hS.eigenvectorBasis hn
   -- Swap the order of summation so Parseval (over `i`) is the inner sum.
   rw [Finset.sum_comm]
   have hinner : ∀ j : Fin n,
@@ -323,6 +326,41 @@ theorem Orthonormal.norm_sq_starProjection_span_image {ι : Type*} {w : ι → F
 
 variable [FiniteDimensional 𝕜 F] {m : ℕ}
 
+omit [FiniteDimensional 𝕜 F] in
+/-- Symmetric block-counting identity for two orthonormal bases `u`, `v` and an
+index set `s`: the squared overlaps summed over the `(sᶜ, s)` block equal those
+summed over the `(s, sᶜ)` block.  Both equal `s.card` minus the leading–leading
+overlap sum, by Parseval (each row of overlaps sums to `1`). -/
+private theorem sum_inner_sq_compl_block_eq (u v : OrthonormalBasis (Fin m) 𝕜 F)
+    (s : Finset (Fin m)) :
+    ∑ k ∈ sᶜ, ∑ j ∈ s, ‖⟪v j, u k⟫_𝕜‖ ^ 2 = ∑ i ∈ s, ∑ j ∈ sᶜ, ‖⟪u i, v j⟫_𝕜‖ ^ 2 := by
+  rw [Finset.sum_comm]
+  have hrow_v : ∀ j, ∑ k ∈ sᶜ, ‖⟪v j, u k⟫_𝕜‖ ^ 2
+      = 1 - ∑ k ∈ s, ‖⟪v j, u k⟫_𝕜‖ ^ 2 := by
+    intro j
+    have hpar : ∑ k, ‖⟪u k, v j⟫_𝕜‖ ^ 2 = 1 := by
+      rw [u.sum_sq_norm_inner_right (v j), v.orthonormal.1 j, one_pow]
+    have hsplit := Finset.sum_add_sum_compl s fun k => ‖⟪v j, u k⟫_𝕜‖ ^ 2
+    have hpar' : ∑ k, ‖⟪v j, u k⟫_𝕜‖ ^ 2 = 1 := by
+      rw [← hpar]
+      exact Finset.sum_congr rfl fun k _ => by rw [norm_inner_symm]
+    linarith [hsplit, hpar']
+  have hrow_u : ∀ i ∈ s, ∑ j ∈ sᶜ, ‖⟪u i, v j⟫_𝕜‖ ^ 2
+      = 1 - ∑ j ∈ s, ‖⟪u i, v j⟫_𝕜‖ ^ 2 := by
+    intro i _
+    have hpar : ∑ j, ‖⟪v j, u i⟫_𝕜‖ ^ 2 = 1 := by
+      rw [v.sum_sq_norm_inner_right (u i), u.orthonormal.1 i, one_pow]
+    have hsplit := Finset.sum_add_sum_compl s fun j => ‖⟪u i, v j⟫_𝕜‖ ^ 2
+    have hpar' : ∑ j, ‖⟪u i, v j⟫_𝕜‖ ^ 2 = 1 := by
+      rw [← hpar]
+      exact Finset.sum_congr rfl fun j _ => by rw [norm_inner_symm]
+    linarith [hsplit, hpar']
+  rw [Finset.sum_congr rfl fun j (_ : j ∈ s) => hrow_v j,
+    Finset.sum_congr rfl hrow_u, Finset.sum_sub_distrib, Finset.sum_sub_distrib]
+  congr 1
+  exact Finset.sum_comm.trans (Finset.sum_congr rfl fun i _ =>
+    Finset.sum_congr rfl fun j _ => by rw [norm_inner_symm])
+
 /--
 **Projector form of the Davis–Kahan identity.** For two orthonormal bases `u`,
 `v` of a finite-dimensional inner product space over `𝕜 = ℝ, ℂ` and an index set
@@ -376,35 +414,9 @@ theorem sum_norm_sub_starProjection_span_sq_eq (u v : OrthonormalBasis (Fin m) �
   have hA : ∑ k ∈ s, ∑ j ∈ sᶜ, ‖⟪v j, u k⟫_𝕜‖ ^ 2
       = ∑ i ∈ s, ∑ j ∈ sᶜ, ‖⟪u i, v j⟫_𝕜‖ ^ 2 :=
     Finset.sum_congr rfl fun i _ => Finset.sum_congr rfl fun j _ => by rw [hswap i j]
-  -- Second block equals the first: both are `s.card −` the leading-leading sum.
+  -- Second block equals the first by the symmetric block-counting identity.
   have hB : ∑ k ∈ sᶜ, ∑ j ∈ s, ‖⟪v j, u k⟫_𝕜‖ ^ 2
-      = ∑ i ∈ s, ∑ j ∈ sᶜ, ‖⟪u i, v j⟫_𝕜‖ ^ 2 := by
-    rw [Finset.sum_comm]
-    have hrow_v : ∀ j, ∑ k ∈ sᶜ, ‖⟪v j, u k⟫_𝕜‖ ^ 2
-        = 1 - ∑ k ∈ s, ‖⟪v j, u k⟫_𝕜‖ ^ 2 := by
-      intro j
-      have hpar : ∑ k, ‖⟪u k, v j⟫_𝕜‖ ^ 2 = 1 := by
-        rw [u.sum_sq_norm_inner_right (v j), v.orthonormal.1 j, one_pow]
-      have hsplit := Finset.sum_add_sum_compl s fun k => ‖⟪v j, u k⟫_𝕜‖ ^ 2
-      have hpar' : ∑ k, ‖⟪v j, u k⟫_𝕜‖ ^ 2 = 1 := by
-        rw [← hpar]
-        exact Finset.sum_congr rfl fun k _ => by rw [norm_inner_symm]
-      linarith [hsplit, hpar']
-    have hrow_u : ∀ i ∈ s, ∑ j ∈ sᶜ, ‖⟪u i, v j⟫_𝕜‖ ^ 2
-        = 1 - ∑ j ∈ s, ‖⟪u i, v j⟫_𝕜‖ ^ 2 := by
-      intro i _
-      have hpar : ∑ j, ‖⟪v j, u i⟫_𝕜‖ ^ 2 = 1 := by
-        rw [v.sum_sq_norm_inner_right (u i), u.orthonormal.1 i, one_pow]
-      have hsplit := Finset.sum_add_sum_compl s fun j => ‖⟪u i, v j⟫_𝕜‖ ^ 2
-      have hpar' : ∑ j, ‖⟪u i, v j⟫_𝕜‖ ^ 2 = 1 := by
-        rw [← hpar]
-        exact Finset.sum_congr rfl fun j _ => by rw [norm_inner_symm]
-      linarith [hsplit, hpar']
-    rw [Finset.sum_congr rfl fun j (_ : j ∈ s) => hrow_v j,
-      Finset.sum_congr rfl hrow_u, Finset.sum_sub_distrib, Finset.sum_sub_distrib]
-    congr 1
-    exact Finset.sum_comm.trans (Finset.sum_congr rfl fun i _ =>
-      Finset.sum_congr rfl fun j _ => by rw [norm_inner_symm])
+      = ∑ i ∈ s, ∑ j ∈ sᶜ, ‖⟪u i, v j⟫_𝕜‖ ^ 2 := sum_inner_sq_compl_block_eq u v s
   rw [hA, hB]
   ring
 

@@ -18,6 +18,7 @@ To be re-authored per Mathlib's AI-contribution policy at PR time.
 import Mathlib.Analysis.InnerProductSpace.GramMatrix
 import Mathlib.Analysis.InnerProductSpace.PiL2
 import Mathlib.LinearAlgebra.Isomorphisms
+import ForMathlib.Analysis.InnerProductSpace.Orthonormal
 
 /-! # Gram matrix rigidity
 
@@ -28,9 +29,6 @@ the hypothesis can be packaged as equality of `Matrix.gram` matrices.
 
 ## Main results
 
-* `ForMathlib.inner_linearCombination_linearCombination`: the inner product of two
-  finite linear combinations of a vector family, expanded over the family's Gram
-  data.  (Reusable; independent of the rigidity statement.)
 * `ForMathlib.linearIsometryEquivSpanOfInnerEq`: the **span-to-span core** — for
   families `φ : ι → E`, `ψ : ι → F` in two (possibly different) inner product
   spaces over `𝕜` with equal pairwise inner products, the (unique) linear isometry
@@ -58,21 +56,6 @@ open scoped InnerProductSpace
 
 variable {𝕜 E F ι : Type*} [RCLike 𝕜] [NormedAddCommGroup E] [InnerProductSpace 𝕜 E]
   [NormedAddCommGroup F] [InnerProductSpace 𝕜 F]
-
-/--
-The inner product of two finite linear combinations `Σ aᵢ • v i` and `Σ bⱼ • v j`
-of a vector family `v`, expanded over the family's Gram data
-`⟪v i, v j⟫`:
-`⟪Σ aᵢ • vᵢ, Σ bⱼ • vⱼ⟫ = Σᵢ Σⱼ conj aᵢ * bⱼ * ⟪vᵢ, vⱼ⟫`.
--/
-theorem inner_linearCombination_linearCombination (v : ι → E) (a b : ι →₀ 𝕜) :
-    ⟪Finsupp.linearCombination 𝕜 v a, Finsupp.linearCombination 𝕜 v b⟫_𝕜
-      = a.sum fun i s => b.sum fun j t => starRingEnd 𝕜 s * t * ⟪v i, v j⟫_𝕜 := by
-  rw [Finsupp.linearCombination_apply, Finsupp.linearCombination_apply, Finsupp.sum_inner]
-  refine Finsupp.sum_congr fun i _ => ?_
-  rw [Finsupp.inner_sum]
-  refine Finsupp.sum_congr fun j _ => ?_
-  rw [inner_smul_left, inner_smul_right, ← mul_assoc]
 
 section
 variable {φ : ι → E} {ψ : ι → F} (h : ∀ i j, ⟪φ i, φ j⟫_𝕜 = ⟪ψ i, ψ j⟫_𝕜)

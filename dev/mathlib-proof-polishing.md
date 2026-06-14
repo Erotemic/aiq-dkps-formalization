@@ -161,9 +161,14 @@ existence. The Mathlib idiom:
    `isometryOf…` constructor, an **`@[simp]` apply lemma** (the computation rule
    on generators), a `coe`/`_toLinearEquiv` rfl-lemma, and **no separate
    uniqueness theorem** — uniqueness is the *justification* for the def
-   (recovered via `ext` / `LinearMap.eqOn_span`), not a lemma you state. Keep the
-   old `exists_…` as a **one-line corollary** so downstream callers are
-   untouched. *Read the surrounding code to find this; don't invent names.*
+   (recovered via `ext` / `LinearMap.eqOn_span`), not a lemma you state. **Do not
+   keep an `exists_…` existence wrapper alongside the `def`.** *(An earlier draft
+   of this doc said to keep it as a one-line corollary "so downstream callers are
+   untouched"; @wwylele's follow-up review deleted it — see "Maintainer follow-up"
+   below. The `def` + its `@[simp]` apply lemma fully subsume `∃ L, ∀ i, L (φ i) =
+   ψ i`; a caller who wants the existence form writes `⟨theDef …, theDef_apply …⟩`
+   inline. `Orthonormal.equiv` ships no such wrapper either.)* *Read the
+   surrounding code to find this; don't invent names.*
 
 2. **`…OfInner` / `…OfBijective` separate "it's a (bi)linear map" from "it's an
    isometry."** `LinearEquiv.isometryOfInner (e) (h : ∀ x y, ⟪e x, e y⟫ = ⟪x, y⟫)`
@@ -202,6 +207,48 @@ existence. The Mathlib idiom:
 
 The payoff: the def is shorter than the existence proof *and* more useful (it's
 the named object + a `@[simp]` computation rule), and `#print axioms` stays clean.
+
+### Maintainer follow-up (the second review pass on the `def`)
+
+After the `def` landed, @wwylele's next pass (PR #40567, 2026-06-14) trimmed it
+further. The durable lessons — most of which *correct or sharpen* the advice
+above:
+
+- **A `def` + apply lemma makes the `exists_…` wrapper dead weight — delete it.**
+  This reverses the "keep it as a corollary" instinct (step 1). Once the named
+  object exists, `∃ L, ∀ i, L (φ i) = ψ i` is recovered inline; a standing
+  wrapper is API bloat a reviewer will cut.
+- **Distinguish a genuine theorem from a *forgetful derivation* before keeping a
+  corollary.** Two corollaries that looked like "more API" were just
+  `(theEquiv).toLinearIsometry` (forgets surjectivity) and
+  `(span ψ).subtypeₗᵢ.comp (theEquiv).toLinearIsometry` (post-compose the
+  inclusion into the ambient space). Neither is new math — both are one-liners a
+  caller writes at the use site, and the downstream proof that *used* them now
+  just inlines the same expressions. Test: *"is this a new fact, or a trivial
+  cast/restatement of the strongest object?"* If the latter, drop it — and it is
+  **not** "pending-candidate" material either (a named wrapper for a one-liner
+  won't survive upstream review).
+- **Expose only the strongest object + its computation rule; let callers cast
+  down.** The keepers were the equiv `def`, its `@[simp]` apply lemma, the
+  finite-dim ambient equivalence, and the `gram`-iff. Everything between them and
+  the `def` was inlined.
+- **Don't name-drop a field's signature problem in prose unless the statement *is*
+  that problem.** "Procrustes" was questioned: this file is the *exact /
+  zero-residual* case (equal Grams ⇒ an exact isometry), not the orthogonal
+  Procrustes *optimization* (least-squares `min ‖ΩA−B‖`, SVD solution, generic
+  nonzero residual). Fix: drop the editorial term from the docstring; keep the
+  citation, qualified as "the exact, zero-residual case." Reference ≠ claim the
+  result solves the named problem.
+- **"Where should this live?" is an import-cost question, not a thematic one.**
+  Asked whether the `def` belongs in `InnerProductSpace/LinearMap.lean`: it needs
+  `Finsupp.linearCombination` + `LinearAlgebra.Isomorphisms` (`quotKerEquivRange`),
+  which that file doesn't import, so the move isn't free. Answer placement with
+  the dependency delta, then thematic fit.
+- **`variable (φ ψ)` to make def params explicit: place it *before* the docstring**
+  (between docstring and `def` is a parse error), and remember **section
+  variables only auto-fill *implicit* references** — once `φ ψ` are explicit you
+  must pass them at every `@`-site inside the section (`theDef φ ψ h`, not
+  `theDef h`).
 
 ## Expected outcome
 

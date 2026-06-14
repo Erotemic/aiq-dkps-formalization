@@ -10,6 +10,43 @@ Takeaway**.
 
 ---
 
+## 2026-06-14 — Maintainer follow-up on the `def`: drop the wrapper, keep only the strongest object
+
+The second review pass (@wwylele, PR #40567) trimmed the freshly-landed `def`
+further, and the lessons mostly **correct** what the first pass taught.
+
+- **A `def` + `@[simp]` apply lemma makes the `exists_…` wrapper dead weight.**
+  This *reverses* the "keep `exists_` as a one-line corollary so downstream is
+  untouched" advice I'd written in
+  [`../mathlib-proof-polishing.md`](../mathlib-proof-polishing.md). Once the named
+  object exists, `∃ L, ∀ i, L (φ i) = ψ i` is `⟨theDef …, theDef_apply …⟩` inline;
+  a standing wrapper is bloat. (I went back and corrected the doc — flagged the
+  reversal in place rather than silently rewriting.)
+- **Forgetful-derivation test before keeping/“pending”-ing a corollary.** Two
+  corollaries that read like "more API" were just `(equiv).toLinearIsometry` and
+  `(span ψ).subtypeₗᵢ.comp (equiv).toLinearIsometry` — a cast and a
+  post-composition, no new math. The proof that consumed them now inlines the same
+  expressions. Ask *"new fact, or trivial restatement of the strongest object?"*
+  If restatement: drop it, and it is **not** MathlibPending material either (a
+  named one-liner won't survive upstream review).
+- **Terminology precision.** Don't name-drop a field's signature problem
+  ("Procrustes") unless the statement *is* that problem; this is the exact /
+  zero-residual case, not the least-squares optimization. Keep the citation, drop
+  the editorial claim.
+- **Placement = import-cost, not theme.** "Move it to `LinearMap.lean`?" → it
+  needs `Finsupp.linearCombination` + `Isomorphisms`, which that file lacks;
+  answer with the dependency delta first.
+- **Sync discipline.** "Stay in sync with the fork" meant mirroring the fork
+  *exactly*, including dropping decls the fork had already dropped (staging had
+  drifted by two corollaries). And: amend dated decision logs with a **dated
+  supersession note**, don't rewrite the history.
+
+Details + the `variable (φ ψ)` placement gotcha in
+[`../mathlib-proof-polishing.md`](../mathlib-proof-polishing.md) §"Maintainer
+follow-up".
+
+---
+
 ## 2026-06-14 — Debugging the apply-lemma when `∃`-theorem → `def` (Mathlib structural polish)
 
 Turning `exists_linearIsometryEquiv_span_map_eq_of_inner_eq` into a `def`

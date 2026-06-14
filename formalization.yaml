@@ -40,7 +40,7 @@ sources:
 status:
   repository_build:
     last_user_reported_build: "lake build completes green. Challenge layer restructured 2026-06-14 into MathlibCandidate (3) + MathlibPending (10 comparator configs + 1 leaderboard-only); all leaf #print axioms verified clean."
-    last_user_reported_challenge_summary: "Re-run scripts/run_challenge_comparator.sh (real landrun) to cite comparator pass/fail; the conformance/leaderboard modules build green and all leaves are axiom-clean."
+    last_user_reported_challenge_summary: "candidate-01 (Gram) confirmed PASS under the real-landrun comparator (2026-06-14); conformances were corrected to mirror their ForMathlib source's universe/instance export signature. Remaining configs build green, are axiom-clean, and pass a local pp.all type-match check against the solution exports; run scripts/run_challenge_comparator.sh for the full comparator sweep."
     challenge_commands:
       - "lake env lean Challenge/MathlibCandidate/GramRigidity/Conformance.lean"
       - "lake env lean Challenge/MathlibCandidate/GramRigidity/Leaderboard.lean"
@@ -144,10 +144,12 @@ review:
   reviewers:
     - "Jon Crall"
   notes: >
-    Self-assessed metadata and challenge package. The dedicated Gram, PSD-Gram,
-    Spectral, and Inventory comparator configs have been reported locally as
-    passing. The candidates have not yet undergone independent Mathlib reviewer
-    approval or source-author verification.
+    Self-assessed metadata and challenge package. The MathlibCandidate and
+    MathlibPending comparator configs build green with axiom-clean leaves.
+    candidate-01 (Gram rigidity) is confirmed passing under the real-landrun
+    comparator (2026-06-14); a full local comparator sweep of the remaining
+    configs is pending. The candidates have not yet undergone independent Mathlib
+    reviewer approval or source-author verification.
 
 alignment:
   statements:
@@ -215,10 +217,10 @@ automation:
       soundness_gate: >
         Claimed theorem closes are trusted only insofar as they are accepted by
         Lean's kernel and use only allowed axioms. The challenge package exposes
-        a small headline sampler and a broader ForMathlib inventory for
-        comparator-style validation.
+        the MathlibCandidate (focused upstream push) and MathlibPending (held-back)
+        leaf theorems for comparator-style validation; see Challenge/README.md.
       cost:
-        wall_time: "multi-session effort from early 2026 through 2026-06-12"
+        wall_time: "multi-session effort from early 2026 through 2026-06-14"
         spend_usd: "not fully reconstructed"
         hardware: "local development machine plus hosted model access"
 

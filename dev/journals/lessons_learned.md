@@ -10,6 +10,46 @@ Takeaway**.
 
 ---
 
+## 2026-06-14 — Terminal `simp`: collapse the explicit list, don't pin it (corrects my own golf)
+
+@wwylele on PR #40567 replaced what I had golfed to
+`simpa only [LinearEquiv.trans_apply, …six @[simp] bookkeeping lemmas…]
+using (inner_linearCombination_eq_of_inner_eq h c c').symm`
+with simply
+`simp [inner_linearCombination_eq_of_inner_eq h c c']`.
+
+### What I got wrong
+My golf had turned `simp only [list]; exact fact.symm` into `simpa only [list]
+using fact.symm` — a *half* step. I kept (a) the explicit six-lemma list and (b)
+the `.symm`. Both were removable:
+- The six lemmas (`trans_apply`, `quotKerEquivRange_symm_apply_image`,
+  `mkQ_apply`, `quotEquivOfEq_mk`, `quotKerEquivRange_apply_mk`, `coe_inner`)
+  are **all `@[simp]`** — the default simp set already contains them; listing
+  them is noise that hides the one thing that matters (the math fact).
+- `simp` **orients equalities**, so `.symm` is unneeded.
+- This is a **terminal** simp (it closes the goal) → vendored golfing rule **1.15**
+  ("terminal `simp only` → `simp`") already said to unsqueeze it. I had the rule
+  in `mathlib-quality-adapter.md` and didn't apply it.
+
+### The rule (and the correction)
+**Terminal simp closing with one fact ⇒ `simp [fact]`** — drop the reconstructed
+`@[simp]` list *and* the `.symm`. This **corrects** the "pin a stable explicit
+`simp only` set; don't ship a bare `simp`" guidance I'd written: that applies only
+to **non-terminal** simps, where a later `rw`/`refine`/`simp` depends on the exact
+normal form. For a terminal goal there is no downstream fragility — the short
+`simp [fact]` is preferred and is the Mathlib house style.
+
+### Scope check (don't over-apply)
+The other `simp only […]` blocks in the polished files (NearIsometry,
+SpectralFunctionMeasurable) are **non-terminal** — a subsequent tactic consumes
+the normalized form — so they correctly stay explicit. `simpa only [gram_apply]
+using congrFun₂ hg i j` keeps its single *deliberately-named* unfold (it reads
+"unfold `gram`, then it's the hypothesis", not redundant bookkeeping). Only the
+one genuine instance changed. Recorded in
+[`../mathlib-proof-polishing.md`](../mathlib-proof-polishing.md).
+
+---
+
 ## 2026-06-14 — Maintainer follow-up on the `def`: drop the wrapper, keep only the strongest object
 
 The second review pass (@wwylele, PR #40567) trimmed the freshly-landed `def`

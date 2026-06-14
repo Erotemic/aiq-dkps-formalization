@@ -152,8 +152,17 @@ The reviewer's first pass "may not be optimal." After it compiles:
 1. repeated local rewrites → promote to a local lemma;
 2. `rw …; exact …` → `simpa … using …`;
 3. remove leftover `show` / `change` / coercion handling;
-4. `simp?` / `squeeze_simp` to pin a stable, explicit simp set (don't ship a
-   fragile bare `simp` into Mathlib);
+4. **simp set, by position:**
+   - **Non-terminal** simp (a later `rw`/`refine`/`simp` consumes its output) →
+     `simp?` / `squeeze_simp` to pin a stable, explicit `simp only [...]` (don't
+     ship a fragile bare `simp` whose normal form a downstream tactic depends on).
+   - **Terminal** simp (it closes the goal) → the opposite: **collapse** to
+     `simp [math_fact]`. Drop any reconstructed `@[simp]` bookkeeping lemmas (the
+     default set already has them) *and* a trailing `.symm` (simp orients
+     equalities). I.e. `simp only [@[simp] list]; exact fact.symm` ⇒
+     `simp [fact]` — **not** `simpa only [list] using fact.symm` (that keeps the
+     redundant list; @wwylele on PR #40567 cut it to `simp [fact]`). This is
+     vendored golfing rule **1.15** ("terminal `simp only` → `simp`"); apply it.
 5. remove now-unused lemmas/assumptions;
 6. re-check `classical` and other dead tactics.
 

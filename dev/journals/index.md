@@ -19,6 +19,12 @@ in doubt; this file is a routing aid, not a complete replacement for grep (see
 |---|---|
 | A `grep sorry` reports sorries in libraries that are actually clean (matched docstring prose like "no `sorry` remains") | [`comparator-statement-export-matching-2026-06-14.md`](comparator-statement-export-matching-2026-06-14.md) (and benchmark Q3) |
 
+## Lean: turning a theorem into a `def` + API / apply-lemma debugging
+
+| Symptom | Read |
+|---|---|
+| `unknown identifier 'h'` in a helper whose statement doesn't use `h`; `simp` "unsolved goals" you can't see; structural `simp` lemma won't fire (a compute lemma rewrote the pattern); `rw [someDef]` errors; mismatched `mkQ x` vs `Quotient.mk x` | [`lessons_learned.md`](lessons_learned.md) (2026-06-14, "Debugging the apply-lemma when ∃→def") + [`../mathlib-proof-polishing.md`](../mathlib-proof-polishing.md) §Structural polish |
+
 ## Consuming reviewer feedback / instructions
 
 | Symptom | Read |

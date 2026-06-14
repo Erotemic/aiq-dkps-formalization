@@ -148,6 +148,61 @@ The reviewer's first pass "may not be optimal." After it compiles:
 5. remove now-unused lemmas/assumptions;
 6. re-check `classical` and other dead tactics.
 
+## Structural polish: turning an `∃` theorem into a `def` + API
+
+A different *kind* of polish from folding. When a reviewer asks *"is the object
+this `∃` produces unique? if so, make it a `def` and provide API"* (verbatim
+@wwylele on PR #40567), they want the **construction exposed**, not just its
+existence. The Mathlib idiom:
+
+1. **Find the canonical analog and copy its API shape.** For "an isometry equiv
+   from a generator correspondence" that's **`Orthonormal.equiv`**
+   (`Mathlib/Analysis/InnerProductSpace/Orthonormal.lean`): a `def` built via an
+   `isometryOf…` constructor, an **`@[simp]` apply lemma** (the computation rule
+   on generators), a `coe`/`_toLinearEquiv` rfl-lemma, and **no separate
+   uniqueness theorem** — uniqueness is the *justification* for the def
+   (recovered via `ext` / `LinearMap.eqOn_span`), not a lemma you state. Keep the
+   old `exists_…` as a **one-line corollary** so downstream callers are
+   untouched. *Read the surrounding code to find this; don't invent names.*
+
+2. **`…OfInner` / `…OfBijective` separate "it's a (bi)linear map" from "it's an
+   isometry."** `LinearEquiv.isometryOfInner (e) (h : ∀ x y, ⟪e x, e y⟫ = ⟪x, y⟫)`
+   upgrades a `≃ₗ` to a `≃ₗᵢ` from inner-preservation alone — so you build a clean
+   underlying `≃ₗ`, prove *one* inner-preservation fact, and the
+   norm-preservation/surjectivity scaffolding the existence proof carried just
+   drops out. Here the clean `≃ₗ` was a composition of standard equivs
+   (`quotKerEquivRange⁻¹ ≪≫ quotEquivOfEq ker_eq ≪≫ quotKerEquivRange`);
+   transport between defeq-but-not-syntactic carriers (`range T` vs
+   `span (range ·)`) via `LinearEquiv.ofEq` / `LinearIsometryEquiv.ofEq`.
+
+### Gotchas proving the `@[simp]` apply lemma (these were the actual time-sinks)
+- **`include h`.** A `variable (h : P)` is auto-included only where the
+  *statement* mentions it. Helper lemmas/defs whose statement doesn't use `h`
+  (but whose proof does) need an explicit `include h`, else "unknown identifier
+  `h`".
+- **Debug a stuck `simp`/apply lemma with `extract_goal`.** `sorry` the
+  obligation so the file compiles, reproduce the goal in a scratch, and
+  `extract_goal` to see the *actual* residual — don't guess. (Twice the residual
+  was already trivial `⟪…⟫ = ⟪…⟫`; the bug was a *different* declaration.)
+- **simp ordering / premature rewriting.** A "compute" lemma can fire too early
+  and destroy the pattern a "structural" lemma needs: `Finsupp.linearCombination_single`
+  rewrote the carrier `Tφ (single i 1) → φ i`, so `quotKerEquivRange_symm_apply_image`
+  (which matches `⟨f x, _⟩`) stopped applying. Fix: do the structural `simp only`
+  **without** the compute lemma, then apply it in a *second* `simp`.
+- **Bridge mismatched canonical forms.** `quotKerEquivRange_symm_apply_image`
+  produces `(ker f).mkQ x` but `quotEquivOfEq_mk` matches `Submodule.Quotient.mk x`
+  → add `Submodule.mkQ_apply` to bridge.
+- **`rw [defName]` does not unfold a def** — use `simp only [defName]` (delta).
+- **Don't guess lemma names** — grep Mathlib (`coe_isometryOfInner`,
+  `coe_ofEq_apply`); a made-up `symm_trans_apply` aborted the whole `simp`.
+- **Carrier-rewrite for subtype-valued apply lemmas.** Rewrite the input
+  `⟨φ i, _⟩` to `⟨Tφ (single i 1), _⟩` (`Subtype.ext (by simp)`) so the quotient
+  lemmas fire; compute the chain; simplify `linearCombination (single i 1)` to
+  `ψ i` last.
+
+The payoff: the def is shorter than the existence proof *and* more useful (it's
+the named object + a `@[simp]` computation rule), and `#print axioms` stays clean.
+
 ## Expected outcome
 
 The final proof reads like a **high-level construction of the isometry between

@@ -10,6 +10,36 @@ Takeaway**.
 
 ---
 
+## 2026-06-14 — Debugging the apply-lemma when `∃`-theorem → `def` (Mathlib structural polish)
+
+Turning `exists_linearIsometryEquiv_span_map_eq_of_inner_eq` into a `def`
+(`linearIsometryEquivSpanOfInnerEq`, via `LinearEquiv.isometryOfInner`) per
+reviewer request. The construction was easy; proving the `@[simp]` apply lemma
+was the time-sink. Symptom → cause → fix, so you grep these from inside the bug:
+
+- **`unknown identifier 'h'`** in a helper whose *statement* doesn't mention `h`
+  → `variable (h)` isn't auto-included there → add `include h`.
+- **`simp` leaves a goal that looks already-true / `unsolved goals` at a `simp`**
+  → `sorry` it, reproduce in a scratch, `extract_goal` to read the *real*
+  residual (twice it turned out a *different* decl was failing, not the one I was
+  staring at).
+- **A `simp only [structural_lemma, compute_lemma]` won't fire the structural
+  lemma** → the compute lemma rewrote the pattern first (`linearCombination_single`
+  turned `Tφ (single i 1)` back into `φ i`, killing `quotKerEquivRange_symm_apply_image`'s
+  `⟨f x, _⟩` match). Split: structural `simp only` first, compute `simp` second.
+- **Two canonical forms won't unify** (`(ker f).mkQ x` vs `Submodule.Quotient.mk x`)
+  → add the bridge lemma (`Submodule.mkQ_apply`).
+- **`rw [someDef]` errors** → can't `rw` a def; use `simp only [someDef]`.
+- **`unknown constant …_apply`** mid-`simp` → invented lemma name; grep Mathlib
+  for the real one (`coe_isometryOfInner`, `coe_ofEq_apply`).
+
+Full write-up + the convention (copy `Orthonormal.equiv`'s API; no uniqueness
+lemma; keep `exists_` as a corollary) in
+[`../mathlib-proof-polishing.md`](../mathlib-proof-polishing.md) §"Structural
+polish".
+
+---
+
 ## 2026-06-14 — Over-relying on a ChatGPT *rephrasing* of reviewer feedback (invented meta-structure → wrong scope + over-build)
 
 **Not a Lean bug — a process failure when consuming reviewer feedback.**

@@ -4,8 +4,11 @@ Staged for Mathlib: addition to `Mathlib/Analysis/Matrix/Spectrum.lean`
 family).
 
 Formalized by Claude Fable 5 (claude-fable-5[1m]); relocated/staged and
-self-contained-ized by Claude Opus 4.8 (claude-opus-4-8[1m]);
-to be re-authored per Mathlib's AI-contribution policy at PR time.
+self-contained-ized by Claude Opus 4.8 (claude-opus-4-8[1m]); linter pass by
+Claude Opus 4.8 (name the two `MeasurableSpace`/`BorelSpace` instances so the
+auto-name carries no underscore; `opSym` `def` → `theorem` since it is
+Prop-valued; `rwa` consolidation).
+To be re-authored per Mathlib's AI-contribution policy at PR time.
 -/
 
 import Mathlib.Analysis.Matrix.Spectrum
@@ -47,14 +50,14 @@ variable {n : ℕ}
 fire on it automatically; register the entrywise σ-algebra (matching the pi
 topology used by `continuous_aeval`).  (To be reconciled with Mathlib's matrix
 measurable structure at PR time.) -/
-instance : MeasurableSpace (Matrix (Fin n) (Fin n) ℝ) :=
+instance instMeasurableSpaceMatrix : MeasurableSpace (Matrix (Fin n) (Fin n) ℝ) :=
   inferInstanceAs (MeasurableSpace (Fin n → Fin n → ℝ))
 
-instance : BorelSpace (Matrix (Fin n) (Fin n) ℝ) :=
+instance instBorelSpaceMatrix : BorelSpace (Matrix (Fin n) (Fin n) ℝ) :=
   inferInstanceAs (BorelSpace (Fin n → Fin n → ℝ))
 
 /-- The symmetric-operator structure of `toEuclideanLin B` for a Hermitian `B`. -/
-noncomputable def opSym {B : Matrix (Fin n) (Fin n) ℝ} (hB : B.IsHermitian) :
+theorem opSym {B : Matrix (Fin n) (Fin n) ℝ} (hB : B.IsHermitian) :
     (Matrix.toEuclideanLin B).IsSymmetric :=
   Matrix.isSymmetric_toEuclideanLin_iff.mpr hB
 
@@ -113,9 +116,7 @@ theorem abs_sortedEig_le_of_entry_le {B : Matrix (Fin n) (Fin n) ℝ}
     exact (opSym hB).apply_eigenvectorBasis finrank_euclideanSpace_fin k
   have hle : ‖Matrix.toEuclideanLin B (u k)‖ ≤ (n : ℝ) * β * ‖u k‖ :=
     ForMathlib.norm_toEuclideanLin_le_of_entry_le hβ (u k)
-  rw [happly, norm_smul, Real.norm_eq_abs, hnorm1, mul_one] at hle
-  rw [mul_one] at hle
-  exact hle
+  rwa [happly, norm_smul, Real.norm_eq_abs, hnorm1, mul_one, mul_one] at hle
 
 /-! ### Polynomial spectral action -/
 

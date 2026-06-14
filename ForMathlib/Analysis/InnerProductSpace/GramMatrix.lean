@@ -73,7 +73,6 @@ of a vector family `v`, expanded over the family's Gram data
 theorem inner_linearCombination_linearCombination (v : ι → E) (a b : ι →₀ 𝕜) :
     ⟪Finsupp.linearCombination 𝕜 v a, Finsupp.linearCombination 𝕜 v b⟫_𝕜
       = a.sum fun i s => b.sum fun j t => starRingEnd 𝕜 s * t * ⟪v i, v j⟫_𝕜 := by
-  classical
   rw [Finsupp.linearCombination_apply, Finsupp.linearCombination_apply, Finsupp.sum_inner]
   refine Finsupp.sum_congr fun i _ => ?_
   rw [Finsupp.inner_sum]

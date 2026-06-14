@@ -3,6 +3,9 @@ Staged for Mathlib: additions to `Mathlib/Analysis/InnerProductSpace/GramMatrix.
 
 Formalized by Claude Fable 5 (claude-fable-5[1m]); refactored into a
 span-to-span core plus corollaries by Claude Opus 4.8 (claude-opus-4-8[1m]).
+The span-to-span proof was then "folded" (rewrite-friendly local lemmas +
+`simp`/`simpa` for bookkeeping) following review suggestions by @wwylele on the
+Mathlib PR; applied here by Claude Opus 4.8 to stay in sync with the fork.
 To be re-authored per Mathlib's AI-contribution policy at PR time.
 -/
 
@@ -98,60 +101,41 @@ theorem exists_linearIsometryEquiv_span_map_eq_of_inner_eq {φ : ι → E} {ψ :
     ∃ L :
       (Submodule.span 𝕜 (Set.range φ)) ≃ₗᵢ[𝕜] (Submodule.span 𝕜 (Set.range ψ)),
       ∀ i, (L ⟨φ i, Submodule.subset_span ⟨i, rfl⟩⟩ : F) = ψ i := by
-  classical
   -- Linear-combination maps of the two families.
   set Tφ : (ι →₀ 𝕜) →ₗ[𝕜] E := Finsupp.linearCombination 𝕜 φ with hTφ
   set Tψ : (ι →₀ 𝕜) →ₗ[𝕜] F := Finsupp.linearCombination 𝕜 ψ with hTψ
   -- The two maps preserve the same inner products on all linear combinations.
-  have key : ∀ c c' : ι →₀ 𝕜, ⟪Tφ c, Tφ c'⟫_𝕜 = ⟪Tψ c, Tψ c'⟫_𝕜 := by
-    intro c c'
-    rw [hTφ, hTψ, inner_linearCombination_linearCombination,
-      inner_linearCombination_linearCombination]
-    refine Finsupp.sum_congr fun i _ => Finsupp.sum_congr fun j _ => ?_
-    rw [h i j]
+  have key (c c' : ι →₀ 𝕜) : ⟪Tφ c, Tφ c'⟫_𝕜 = ⟪Tψ c, Tψ c'⟫_𝕜 := by
+    simp [hTφ, hTψ, inner_linearCombination_linearCombination, h]
   -- Equal norms, hence `ker Tφ ≤ ker Tψ`.
-  have norm_eq : ∀ c : ι →₀ 𝕜, ‖Tψ c‖ = ‖Tφ c‖ := by
-    intro c
-    have hsq : ‖Tψ c‖ ^ 2 = ‖Tφ c‖ ^ 2 := by
-      rw [← inner_self_eq_norm_sq (𝕜 := 𝕜) (Tψ c),
-        ← inner_self_eq_norm_sq (𝕜 := 𝕜) (Tφ c), key c c]
-    exact (sq_eq_sq₀ (norm_nonneg _) (norm_nonneg _)).mp hsq
+  have norm_eq (c : ι →₀ 𝕜) : ‖Tψ c‖ = ‖Tφ c‖ := by
+    rw [← sq_eq_sq₀ (norm_nonneg _) (norm_nonneg _), norm_sq_eq_re_inner (𝕜 := 𝕜),
+      norm_sq_eq_re_inner (𝕜 := 𝕜), key]
   have hker : LinearMap.ker Tφ ≤ LinearMap.ker Tψ := by
     intro c hc
-    have hφ0 : Tφ c = 0 := by simpa [LinearMap.mem_ker] using hc
-    have : ‖Tψ c‖ = 0 := by rw [norm_eq c, hφ0, norm_zero]
-    simpa [LinearMap.mem_ker] using norm_eq_zero.mp this
+    rw [LinearMap.mem_ker, ← norm_eq_zero] at ⊢ hc
+    rw [norm_eq, hc]
   -- Factor `Tψ` through `(ι →₀ 𝕜) ⧸ ker Tφ ≃ range Tφ` to get `f : range Tφ → F`.
   set f₀ : ((ι →₀ 𝕜) ⧸ LinearMap.ker Tφ) →ₗ[𝕜] F :=
     (LinearMap.ker Tφ).liftQ Tψ hker with hf₀
   set f : (LinearMap.range Tφ) →ₗ[𝕜] F :=
     f₀.comp (Tφ.quotKerEquivRange.symm.toLinearMap) with hf
-  have hf_apply : ∀ c : ι →₀ 𝕜,
-      f ⟨Tφ c, LinearMap.mem_range_self Tφ c⟩ = Tψ c := by
-    intro c
-    rw [hf]
-    simp only [LinearMap.comp_apply, LinearEquiv.coe_coe]
-    rw [Tφ.quotKerEquivRange_symm_apply_image c (LinearMap.mem_range_self Tφ c)]
-    rw [hf₀, Submodule.mkQ_apply, Submodule.liftQ_apply]
+  have hf_apply (c : ι →₀ 𝕜) : f ⟨Tφ c, LinearMap.mem_range_self Tφ c⟩ = Tψ c := by
+    simp [hf, hf₀]
   -- `f` is norm preserving and lands in `range Tψ`.
-  have hf_isom : ∀ s : (LinearMap.range Tφ), ‖f s‖ = ‖s‖ := by
-    intro s
+  have hf_isom (s : LinearMap.range Tφ) : ‖f s‖ = ‖s‖ := by
     obtain ⟨c, hc⟩ := LinearMap.mem_range.mp s.2
     have hs : s = ⟨Tφ c, LinearMap.mem_range_self Tφ c⟩ := Subtype.ext hc.symm
-    rw [hs, hf_apply c, Submodule.coe_norm ⟨Tφ c, LinearMap.mem_range_self Tφ c⟩, norm_eq c]
-  have hf_mem : ∀ s : (LinearMap.range Tφ), f s ∈ LinearMap.range Tψ := by
-    intro s
+    simp [hs, hf_apply, norm_eq]
+  have hf_mem (s : LinearMap.range Tφ) : f s ∈ LinearMap.range Tψ := by
     obtain ⟨c, hc⟩ := LinearMap.mem_range.mp s.2
-    rw [show s = ⟨Tφ c, LinearMap.mem_range_self Tφ c⟩ from Subtype.ext hc.symm, hf_apply c]
-    exact LinearMap.mem_range_self Tψ c
+    have hs : s = ⟨Tφ c, LinearMap.mem_range_self Tφ c⟩ := Subtype.ext hc.symm
+    simp [hs, hf_apply]
   -- Corestrict `f` to `range Tψ` as a linear isometry.
   set f' : (LinearMap.range Tφ) →ₗ[𝕜] (LinearMap.range Tψ) :=
     LinearMap.codRestrict (LinearMap.range Tψ) f hf_mem with hf'
-  have hf'_isom : ∀ s : (LinearMap.range Tφ), ‖f' s‖ = ‖s‖ := by
-    intro s
-    rw [Submodule.coe_norm (f' s)]
-    simp only [hf', LinearMap.codRestrict_apply]
-    exact hf_isom s
+  have hf'_isom (s : LinearMap.range Tφ) : ‖f' s‖ = ‖s‖ := by
+    simpa [Submodule.coe_norm (f' s), hf', LinearMap.codRestrict_apply] using hf_isom s
   set Lr : (LinearMap.range Tφ) →ₗᵢ[𝕜] (LinearMap.range Tψ) :=
     ⟨f', hf'_isom⟩ with hLr
   -- `Lr` is surjective: `t = Tψ c` is the image of `Tφ c`.
@@ -159,33 +143,28 @@ theorem exists_linearIsometryEquiv_span_map_eq_of_inner_eq {φ : ι → E} {ψ :
     intro t
     obtain ⟨c, hc⟩ := LinearMap.mem_range.mp t.2
     refine ⟨⟨Tφ c, LinearMap.mem_range_self Tφ c⟩, Subtype.ext ?_⟩
-    show ((f' ⟨Tφ c, LinearMap.mem_range_self Tφ c⟩ : LinearMap.range Tψ) : F) = (t : F)
-    rw [hf', LinearMap.codRestrict_apply, hf_apply c]
-    exact hc
+    simpa [hLr, hf', hf_apply] using hc
   -- Transport both sides along `range T = span (range ·)`.
   have hrangeφ : LinearMap.range Tφ = Submodule.span 𝕜 (Set.range φ) := by
-    rw [hTφ]; exact Finsupp.range_linearCombination 𝕜
+    simpa [hTφ] using Finsupp.range_linearCombination 𝕜
   have hrangeψ : LinearMap.range Tψ = Submodule.span 𝕜 (Set.range ψ) := by
-    rw [hTψ]; exact Finsupp.range_linearCombination 𝕜
+    simpa [hTψ] using Finsupp.range_linearCombination 𝕜
   refine ⟨((LinearIsometryEquiv.ofEq _ _ hrangeφ).symm.trans
       (LinearIsometryEquiv.ofSurjective Lr hsurj)).trans
       (LinearIsometryEquiv.ofEq _ _ hrangeψ), fun i => ?_⟩
   -- Carrier bookkeeping: `(L ⟨φ i, _⟩ : F) = f ⟨φ i, _⟩ = ψ i`.
   have hmemRφ : φ i ∈ LinearMap.range Tφ := by
-    rw [hrangeφ]; exact Submodule.subset_span ⟨i, rfl⟩
+    simpa [hrangeφ] using Submodule.mem_span_of_mem (Set.mem_range_self i)
   have htransφ : (LinearIsometryEquiv.ofEq _ _ hrangeφ).symm
       ⟨φ i, Submodule.subset_span ⟨i, rfl⟩⟩ = ⟨φ i, hmemRφ⟩ := Subtype.ext rfl
   have hfφ : f ⟨φ i, hmemRφ⟩ = ψ i := by
-    have hφi : φ i = Tφ (Finsupp.single i 1) := by
-      rw [hTφ, Finsupp.linearCombination_single, one_smul]
     have hsubtype : (⟨φ i, hmemRφ⟩ : LinearMap.range Tφ)
-        = ⟨Tφ (Finsupp.single i 1), LinearMap.mem_range_self Tφ _⟩ := Subtype.ext hφi
-    rw [hsubtype, hf_apply, hTψ, Finsupp.linearCombination_single, one_smul]
+        = ⟨Tφ (Finsupp.single i 1), LinearMap.mem_range_self Tφ _⟩ :=
+      Subtype.ext (by simp [hTφ])
+    simp [hsubtype, hf_apply, hTψ]
   simp only [LinearIsometryEquiv.trans_apply]
   rw [LinearIsometryEquiv.coe_ofEq_apply, htransφ, LinearIsometryEquiv.coe_ofSurjective]
-  show ((f' ⟨φ i, hmemRφ⟩ : LinearMap.range Tψ) : F) = ψ i
-  rw [hf', LinearMap.codRestrict_apply]
-  exact hfφ
+  simp [hLr, hf', hfφ]
 
 /--
 **Gram rigidity, span-to-span isometry.** The `LinearIsometry` underlying the

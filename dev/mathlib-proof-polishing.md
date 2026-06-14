@@ -1,9 +1,27 @@
 # Mathlib proof-polishing: "folding" proofs
 
 Distilled from reviewer feedback (`@wwylele`, PR #40567, `GramMatrix.lean`,
-2026-06-14) on the Gram-rigidity proof. These are the durable lessons to apply
+2026-06-14) on the Gram-rigidity proof. These are durable techniques to apply
 when polishing any proof for upstream (ForMathlib candidates first; the DKPS
 paper proofs later). Read this before a polishing pass.
+
+> ⚠️ **Provenance — read this first.** The reviewer's *actual* message was the
+> worked before→after **examples** plus one line: *"This is to show you how you
+> can 'fold' proofs. This might not be the final optimal proof yet. You should
+> try doing another pass after this one."* That's it — concrete diffs and "do
+> another pass; there are more like these in the PR."
+>
+> The version first handed to the agent was a **ChatGPT rephrasing** that wrapped
+> those diffs in invented meta-structure ("what the reviewer is *really* asking
+> for", a 9-step argument breakdown, a long appendix). Treating that scaffolding
+> as the reviewer's intent caused two real mistakes (see
+> [`journals/lessons_learned.md`](journals/lessons_learned.md), 2026-06-14):
+> over-generalizing into a repo-wide mechanical sweep, and mis-scoping away from
+> the actual ask (fold *this PR's* remaining proofs).
+>
+> **So: the before→after examples below are the signal. The prose around them is
+> derived/secondary.** When reviewer feedback has been rephrased by another LLM,
+> anchor on the demonstrated diffs, not on any narrated "intent."
 
 > The goal is **not** to golf the proof short. It is to make the proof *express
 > the mathematical argument* clearly while delegating routine Lean bookkeeping

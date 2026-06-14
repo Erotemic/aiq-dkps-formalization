@@ -10,6 +10,54 @@ Takeaway**.
 
 ---
 
+## 2026-06-14 — Over-relying on a ChatGPT *rephrasing* of reviewer feedback (invented meta-structure → wrong scope + over-build)
+
+**Not a Lean bug — a process failure when consuming reviewer feedback.**
+
+### Symptom
+Asked to apply a Mathlib reviewer's proof-"folding" feedback, the agent: (1) built
+an elaborate `dev/` framework of "principles" and a benchmark question, (2) ran a
+*repo-wide* mechanical sweep (folding/classical-removal across ForMathlib **and**
+the DKPS papers), and (3) repeatedly mis-scoped — until the user said *"I don't
+like how you are interpreting it… focus on the content of what the demonstrated
+changes were."*
+
+### Root cause
+The feedback the agent received was **not the reviewer's message** — it was a
+**ChatGPT rephrasing** that added structure the reviewer never wrote: a "what the
+reviewer is *really* asking for" section, a numbered argument breakdown, a long
+"how `simp` works" appendix. The agent treated that invented scaffolding as the
+reviewer's intent and generalized from it. The reviewer's *actual* message was
+just the worked before→after diffs + *"this shows you how to fold; this might not
+be optimal yet; do another pass."* — i.e. a **scoped** ask: fold the remaining
+non-optimal proofs **in this PR**.
+
+### Fix
+Re-anchor on the **demonstrated diffs**, drop the invented meta. The real second
+pass was small and concrete: fold the PR's still-verbose rigidity proofs
+(`gram_eq_gram_iff` both directions; `obtain ⟨_, c, rfl⟩` to drop reconstruction
+`have`s in `hf_isom`/`hf_mem`/`hsurj`). Added a provenance caveat to
+[`../mathlib-proof-polishing.md`](../mathlib-proof-polishing.md).
+
+### Takeaway
+- **Distinguish the reviewer's actual words from any LLM rephrasing of them.** A
+  rephrasing optimizes for fluent structure and will *invent* intent, scope, and
+  rationale the reviewer never expressed. When the input is "here's the feedback
+  (paraphrased)", treat the **concrete examples/diffs as the only hard signal**
+  and the surrounding narrative as a hypothesis, not instructions.
+- **Don't generalize a few worked examples into a framework or a sweep.** "Here
+  are 8 folds on one proof + 'do another pass'" means *fold the other proofs like
+  these*, scoped to the same artifact — not "derive a meta-theory" or "apply
+  mechanically everywhere." Match the scope the examples were drawn from.
+- **When unsure of scope, the examples define it.** They were all from one PR's
+  rigidity proofs → the work is that PR's rigidity proofs.
+
+(The repo-wide `classical` removal that came out of this *was* separately
+user-directed and is fine; the failure was the interpretation/scope, not that
+specific edit.)
+
+---
+
 ## 2026-06-14 — Comparator `statement do not match` on conformances that build green + are axiom-clean
 
 Full postmortem:

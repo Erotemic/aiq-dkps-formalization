@@ -19,6 +19,12 @@ in doubt; this file is a routing aid, not a complete replacement for grep (see
 |---|---|
 | A `grep sorry` reports sorries in libraries that are actually clean (matched docstring prose like "no `sorry` remains") | [`comparator-statement-export-matching-2026-06-14.md`](comparator-statement-export-matching-2026-06-14.md) (and benchmark Q3) |
 
+## Consuming reviewer feedback / instructions
+
+| Symptom | Read |
+|---|---|
+| Over-built a framework / ran a too-broad sweep / mis-scoped after reading reviewer feedback that was an **LLM rephrasing** with invented meta-structure | [`lessons_learned.md`](lessons_learned.md) (2026-06-14, "Over-relying on a ChatGPT rephrasing") |
+
 ## How to extend
 
 Add a row when you write a postmortem. Phrase the **Symptom** column the way

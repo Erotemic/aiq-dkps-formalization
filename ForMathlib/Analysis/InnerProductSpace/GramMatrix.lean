@@ -123,13 +123,11 @@ theorem exists_linearIsometryEquiv_span_map_eq_of_inner_eq {φ : ι → E} {ψ :
     simp [hf, hf₀]
   -- `f` is norm preserving and lands in `range Tψ`.
   have hf_isom (s : LinearMap.range Tφ) : ‖f s‖ = ‖s‖ := by
-    obtain ⟨c, hc⟩ := LinearMap.mem_range.mp s.2
-    have hs : s = ⟨Tφ c, LinearMap.mem_range_self Tφ c⟩ := Subtype.ext hc.symm
-    simp [hs, hf_apply, norm_eq]
+    obtain ⟨_, c, rfl⟩ := s
+    simp [hf_apply, norm_eq]
   have hf_mem (s : LinearMap.range Tφ) : f s ∈ LinearMap.range Tψ := by
-    obtain ⟨c, hc⟩ := LinearMap.mem_range.mp s.2
-    have hs : s = ⟨Tφ c, LinearMap.mem_range_self Tφ c⟩ := Subtype.ext hc.symm
-    simp [hs, hf_apply]
+    obtain ⟨_, c, rfl⟩ := s
+    simp [hf_apply]
   -- Corestrict `f` to `range Tψ` as a linear isometry.
   set f' : (LinearMap.range Tφ) →ₗ[𝕜] (LinearMap.range Tψ) :=
     LinearMap.codRestrict (LinearMap.range Tψ) f hf_mem with hf'
@@ -139,10 +137,9 @@ theorem exists_linearIsometryEquiv_span_map_eq_of_inner_eq {φ : ι → E} {ψ :
     ⟨f', hf'_isom⟩ with hLr
   -- `Lr` is surjective: `t = Tψ c` is the image of `Tφ c`.
   have hsurj : Function.Surjective Lr := by
-    intro t
-    obtain ⟨c, hc⟩ := LinearMap.mem_range.mp t.2
+    rintro ⟨_, c, rfl⟩
     refine ⟨⟨Tφ c, LinearMap.mem_range_self Tφ c⟩, Subtype.ext ?_⟩
-    simpa [hLr, hf', hf_apply] using hc
+    simp [hLr, hf', hf_apply]
   -- Transport both sides along `range T = span (range ·)`.
   have hrangeφ : LinearMap.range Tφ = Submodule.span 𝕜 (Set.range φ) := by
     simpa [hTφ] using Finsupp.range_linearCombination 𝕜
@@ -228,11 +225,10 @@ theorem gram_eq_gram_iff_exists_linearIsometryEquiv_map_eq {φ ψ : ι → E} :
   constructor
   · intro hg
     refine exists_linearIsometryEquiv_map_eq_of_inner_eq fun i j => ?_
-    rw [← gram_apply (𝕜 := 𝕜) φ i j, ← gram_apply (𝕜 := 𝕜) ψ i j, hg]
+    simpa only [gram_apply] using congrFun₂ hg i j
   · rintro ⟨W, hW⟩
     ext i j
-    simp only [gram_apply]
-    rw [← hW i, ← hW j, LinearIsometryEquiv.inner_map_map]
+    simp [gram_apply, ← hW i, ← hW j, LinearIsometryEquiv.inner_map_map]
 
 end Matrix
 

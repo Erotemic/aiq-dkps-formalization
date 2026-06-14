@@ -2,8 +2,10 @@
 Staged for Mathlib: additions to `Mathlib/Analysis/InnerProductSpace/CourantFischer.lean`
 (new file).
 
-Formalized by Claude Fable 5 (claude-fable-5[1m]);
-to be re-authored per Mathlib's AI-contribution policy at PR time.
+Formalized by Claude Fable 5 (claude-fable-5[1m]); golfed/polished to Mathlib
+style by Claude Opus 4.8 (claude-opus-4-8[1m]) following the `mathlib-quality`
+rules (dedup, drop unused `set … with` bindings, `simpa`/`rwa` consolidation).
+To be re-authored per Mathlib's AI-contribution policy at PR time.
 -/
 
 import Mathlib.Analysis.InnerProductSpace.PiL2
@@ -157,7 +159,7 @@ theorem exists_unit_vector_re_inner_le_eigenvalue
     (hT : T.IsSymmetric) (hn : finrank 𝕜 E = n) (k : Fin n)
     (V : Submodule 𝕜 E) (hV : finrank 𝕜 V = (k : ℕ) + 1) :
     ∃ x ∈ V, ‖x‖ = 1 ∧ RCLike.re ⟪T x, x⟫_𝕜 ≤ hT.eigenvalues hn k := by
-  set b := hT.eigenvectorBasis hn with hb
+  set b := hT.eigenvectorBasis hn
   set W := specSubspace b (fun i : Fin n => k ≤ i) with hW
   have hWdim : finrank 𝕜 W = n - (k : ℕ) := by
     rw [hW, finrank_specSubspace, card_filter_le]
@@ -176,31 +178,30 @@ theorem exists_unit_vector_re_inner_le_eigenvalue
   obtain ⟨z, hz, hz0⟩ := Submodule.exists_mem_ne_zero_of_ne_bot hinf
   obtain ⟨hzV, hzW⟩ := Submodule.mem_inf.mp hz
   have hz0' : ‖z‖ ≠ 0 := norm_ne_zero_iff.mpr hz0
-  refine ⟨((‖z‖⁻¹ : ℝ) : 𝕜) • z, V.smul_mem _ hzV, ?_, ?_⟩
-  · rw [norm_smul, RCLike.norm_ofReal, abs_inv, abs_norm, inv_mul_cancel₀ hz0']
+  set x := ((‖z‖⁻¹ : ℝ) : 𝕜) • z with hx
+  have hnx : ‖x‖ = 1 := by
+    rw [hx, norm_smul, RCLike.norm_ofReal, abs_inv, abs_norm, inv_mul_cancel₀ hz0']
+  refine ⟨x, V.smul_mem _ hzV, hnx, ?_⟩
   -- The unit vector still lies in `W`, so its coordinates vanish for `i < k`.
-  · set x := ((‖z‖⁻¹ : ℝ) : 𝕜) • z with hx
-    have hxW : x ∈ W := W.smul_mem _ hzW
-    have hnx : ‖x‖ = 1 := by
-      rw [hx, norm_smul, RCLike.norm_ofReal, abs_inv, abs_norm, inv_mul_cancel₀ hz0']
-    rw [re_inner_map_self_eq_sum_eigenvalues_mul_sq hT hn x]
-    -- Bound each surviving term by `λₖ * ‖(b.repr x) i‖ ^ 2`.
-    have hbound : ∀ i ∈ Finset.univ,
-        hT.eigenvalues hn i * ‖b.repr x i‖ ^ 2 ≤ hT.eigenvalues hn k * ‖b.repr x i‖ ^ 2 := by
-      intro i _
-      by_cases hik : k ≤ i
-      · exact mul_le_mul_of_nonneg_right
-          (hT.eigenvalues_antitone hn hik) (sq_nonneg _)
-      · have : b.repr x i = 0 :=
-          repr_eq_zero_of_mem_specSubspace b _ hxW hik
-        simp [this]
-    calc ∑ i : Fin n, hT.eigenvalues hn i * ‖b.repr x i‖ ^ 2
-        ≤ ∑ i : Fin n, hT.eigenvalues hn k * ‖b.repr x i‖ ^ 2 :=
-          Finset.sum_le_sum hbound
-      _ = hT.eigenvalues hn k * ∑ i : Fin n, ‖b.repr x i‖ ^ 2 := by
-          rw [Finset.mul_sum]
-      _ = hT.eigenvalues hn k * ‖x‖ ^ 2 := by rw [sum_sq_norm_repr_eq_sq_norm]
-      _ = hT.eigenvalues hn k := by rw [hnx]; ring
+  have hxW : x ∈ W := W.smul_mem _ hzW
+  rw [re_inner_map_self_eq_sum_eigenvalues_mul_sq hT hn x]
+  -- Bound each surviving term by `λₖ * ‖(b.repr x) i‖ ^ 2`.
+  have hbound : ∀ i ∈ Finset.univ,
+      hT.eigenvalues hn i * ‖b.repr x i‖ ^ 2 ≤ hT.eigenvalues hn k * ‖b.repr x i‖ ^ 2 := by
+    intro i _
+    by_cases hik : k ≤ i
+    · exact mul_le_mul_of_nonneg_right
+        (hT.eigenvalues_antitone hn hik) (sq_nonneg _)
+    · have : b.repr x i = 0 :=
+        repr_eq_zero_of_mem_specSubspace b _ hxW hik
+      simp [this]
+  calc ∑ i : Fin n, hT.eigenvalues hn i * ‖b.repr x i‖ ^ 2
+      ≤ ∑ i : Fin n, hT.eigenvalues hn k * ‖b.repr x i‖ ^ 2 :=
+        Finset.sum_le_sum hbound
+    _ = hT.eigenvalues hn k * ∑ i : Fin n, ‖b.repr x i‖ ^ 2 := by
+        rw [Finset.mul_sum]
+    _ = hT.eigenvalues hn k * ‖x‖ ^ 2 := by rw [sum_sq_norm_repr_eq_sq_norm]
+    _ = hT.eigenvalues hn k := by rw [hnx]; ring
 
 /-- **Courant–Fischer, lower direction.** There is a subspace `V` of dimension
 `k + 1` on which every unit vector `x` satisfies `λₖ(T) ≤ re ⟪T x, x⟫`, where
@@ -213,7 +214,7 @@ theorem forall_unit_vector_eigenvalue_le_re_inner
     (hT : T.IsSymmetric) (hn : finrank 𝕜 E = n) (k : Fin n) :
     ∃ V : Submodule 𝕜 E, finrank 𝕜 V = (k : ℕ) + 1 ∧
       ∀ x ∈ V, ‖x‖ = 1 → hT.eigenvalues hn k ≤ RCLike.re ⟪T x, x⟫_𝕜 := by
-  set b := hT.eigenvectorBasis hn with hb
+  set b := hT.eigenvectorBasis hn
   refine ⟨specSubspace b (fun i : Fin n => i ≤ k), ?_, ?_⟩
   · rw [finrank_specSubspace, card_filter_ge]
   · intro x hxV hnx
@@ -224,9 +225,8 @@ theorem forall_unit_vector_eigenvalue_le_re_inner
       by_cases hik : i ≤ k
       · exact mul_le_mul_of_nonneg_right
           (hT.eigenvalues_antitone hn hik) (sq_nonneg _)
-      · have : b.repr x i = 0 := by
-          rw [hb]
-          exact repr_eq_zero_of_mem_specSubspace b _ hxV hik
+      · have : b.repr x i = 0 :=
+          repr_eq_zero_of_mem_specSubspace b _ hxV hik
         simp [this]
     calc hT.eigenvalues hn k
         = hT.eigenvalues hn k * ‖x‖ ^ 2 := by rw [hnx]; ring
@@ -258,9 +258,8 @@ private theorem eigenvalues_sub_le
   have hcs : RCLike.re ⟪(S - T) x, x⟫_𝕜 ≤ ‖(S - T) x‖ * ‖x‖ :=
     (RCLike.re_le_norm _).trans (norm_inner_le_norm _ _)
   have hbnd : ‖(S - T) x‖ * ‖x‖ ≤ ε := by
-    rw [hnx, mul_one]
     have := hε x
-    rwa [hnx, mul_one] at this
+    rwa [hnx, mul_one] at this ⊢
   calc hS.eigenvalues hn k - hT.eigenvalues hn k
       ≤ RCLike.re ⟪S x, x⟫_𝕜 - RCLike.re ⟪T x, x⟫_𝕜 := by linarith
     _ = RCLike.re ⟪(S - T) x, x⟫_𝕜 := hdiff

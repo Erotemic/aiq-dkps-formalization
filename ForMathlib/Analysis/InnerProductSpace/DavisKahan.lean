@@ -114,7 +114,6 @@ theorem sum_cross_norm_inner_eigenvectorBasis_sq_le
       ∑ j ∈ Finset.univ.filter (fun j : Fin n => d ≤ (j : ℕ)),
         ‖⟪hT.eigenvectorBasis hn i, hS.eigenvectorBasis hn j⟫_𝕜‖ ^ 2
       ≤ (n : ℝ) * ε ^ 2 / gap ^ 2 := by
-  classical
   set u := hT.eigenvectorBasis hn with hu
   set v := hS.eigenvectorBasis hn with hv
   -- Per-pair: `gap² ‖⟪uᵢ, v̂ⱼ⟫‖² ≤ ‖⟪uᵢ, (S − T) v̂ⱼ⟫‖²` for cross pairs.
@@ -300,7 +299,6 @@ theorem Orthonormal.starProjection_span_image_apply_self {ι : Type*} [Decidable
     {w : ι → F} (hw : Orthonormal 𝕜 w) (s : Finset ι)
     [(Submodule.span 𝕜 (w '' ↑s)).HasOrthogonalProjection] (k : ι) :
     (Submodule.span 𝕜 (w '' ↑s)).starProjection (w k) = if k ∈ s then w k else 0 := by
-  classical
   rw [Orthonormal.starProjection_span_image_apply hw s (w k),
     Finset.sum_congr rfl (fun i _ => by
       rw [orthonormal_iff_ite.mp hw i k, ite_smul, one_smul, zero_smul]),
@@ -338,7 +336,6 @@ theorem sum_norm_sub_starProjection_span_sq_eq (u v : OrthonormalBasis (Fin m) �
     ∑ k, ‖((Submodule.span 𝕜 (v '' ↑s)).starProjection
         - (Submodule.span 𝕜 (u '' ↑s)).starProjection) (u k)‖ ^ 2
       = 2 * ∑ i ∈ s, ∑ j ∈ sᶜ, ‖⟪u i, v j⟫_𝕜‖ ^ 2 := by
-  classical
   -- Per-`k` reduction: the `k`-th term is a single cross-overlap row.
   have hQnorm : ∀ k, ‖(Submodule.span 𝕜 (v '' ↑s)).starProjection (u k)‖ ^ 2
       = ∑ j ∈ s, ‖⟪v j, u k⟫_𝕜‖ ^ 2 :=
@@ -430,7 +427,6 @@ theorem sum_norm_sub_starProjection_span_sq_le {T S : F →ₗ[𝕜] F}
           ↑(Finset.univ.filter fun i : Fin m => (i : ℕ) < d))).starProjection)
         (hT.eigenvectorBasis hn k)‖ ^ 2
       ≤ 2 * ((m : ℝ) * ε ^ 2 / gap ^ 2) := by
-  classical
   rw [sum_norm_sub_starProjection_span_sq_eq]
   -- The complement of the leading filter is the trailing filter.
   have hcompl : (Finset.univ.filter fun i : Fin m => (i : ℕ) < d)ᶜ

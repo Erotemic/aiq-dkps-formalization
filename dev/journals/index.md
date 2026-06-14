@@ -27,6 +27,7 @@ in doubt; this file is a routing aid, not a complete replacement for grep (see
 | Should I keep the `exists_…` wrapper next to the new `def`? Is this corollary worth keeping / "pending"? `variable (φ ψ)` parse error or `theDef h` fails after making params explicit; is "Procrustes"/field-term prose OK; which file should a `def` live in | [`lessons_learned.md`](lessons_learned.md) (2026-06-14, "Maintainer follow-up on the `def`") + [`../mathlib-proof-polishing.md`](../mathlib-proof-polishing.md) §"Maintainer follow-up" |
 | How do I run the `mathlib-quality` skill (`/cleanup`, golfing rules) without stripping our AI-authorship provenance? What's the carve-out for staging vs the fork? `lemma` vs `theorem` — is there a rule? | [`../mathlib-quality-adapter.md`](../mathlib-quality-adapter.md) |
 | Reviewer collapsed my `simpa only [long @[simp] list] using fact.symm` to `simp [fact]`; when do I pin an explicit `simp only` vs use bare `simp`; should a terminal simp keep the explicit list / the `.symm`? | [`lessons_learned.md`](lessons_learned.md) (2026-06-14, "Terminal `simp`: collapse, don't pin") + [`../mathlib-proof-polishing.md`](../mathlib-proof-polishing.md) §"The second pass" |
+| Should I make this a `def` or keep the `∃` theorem? How do I tell if the object is unique/canonical? Is `#print axioms` the right test? | [`../mathlib-proof-polishing.md`](../mathlib-proof-polishing.md) §"Structural polish" point 0 (canonicity test: choice-free *term*, not the axiom closure) |
 
 ## Consuming reviewer feedback / instructions
 

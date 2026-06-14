@@ -173,6 +173,26 @@ this `∃` produces unique? if so, make it a `def` and provide API"* (verbatim
 @wwylele on PR #40567), they want the **construction exposed**, not just its
 existence. The Mathlib idiom:
 
+0. **First ask: is the object morally *canonical*, not just existent?** A `def` is
+   warranted when the object is unique/canonical. @wwylele's operational test
+   (PR #40567): **look for `Classical.choice` / `Classical.choose` / `choose` /
+   `Classical.arbitrary` in the definition's *term*.** If the construction makes no
+   arbitrary choice — it's an explicit formula/composition — the object is
+   canonical and a `def` is right. If you'd build it by `Classical.choose`-ing the
+   witness out of the `∃` proof, it is *not* canonical (the choice is arbitrary):
+   prefer to keep the `∃` theorem. **Caveat:** the axiom *closure* (`#print axioms`)
+   is the *wrong* test — almost everything in Mathlib transitively depends on
+   `Classical.choice`; what matters is whether the *term you wrote* chooses. Mathlib
+   does occasionally `def` a non-canonical object for convenience
+   (`stdOrthonormalBasis`, which depends on a basis choice), but that's the
+   less-common exception and such defs do carry a choice.
+
+   *Our case:* `linearIsometryEquivSpanOfInnerEq` is choice-free (a composition of
+   `ofEq` / `quotKerEquivRange` / `quotEquivOfEq` / `isometryOfInner`) — canonical,
+   which is exactly why the `def` was the right call. The `LinearMap.eqOn_span`
+   uniqueness argument below is the *proof* of canonicity; the choice-free term is
+   the *quick check* for it.
+
 1. **Find the canonical analog and copy its API shape.** For "an isometry equiv
    from a generator correspondence" that's **`Orthonormal.equiv`**
    (`Mathlib/Analysis/InnerProductSpace/Orthonormal.lean`): a `def` built via an

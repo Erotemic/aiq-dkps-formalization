@@ -35,7 +35,10 @@ consistency transfer.
 ├── DkpsQuench/            # theorem statements plus bridge from Acharyya2025 concentration
 ├── Helm2025.lean          # root module for the statistical-inference transfer layer
 ├── Helm2025/              # population/estimated DKPS transfer theorem statements and bridge
-├── planning/              # current polishing notes and Mathlib-extraction candidates
+├── Challenge/             # comparator challenges (MathlibCandidate / MathlibPending) + manifest
+├── comparator/            # per-PR comparator configs
+├── docs/                  # planning trackers (docs/planning) and challenge how-to (docs/challenge)
+├── dev/                   # engineering memory: benchmark questions + debug postmortems (agent-readable)
 ├── lakefile.toml          # Lake workspace for the four active libraries
 ├── lake-manifest.json     # pinned dependency manifest
 └── lean-toolchain         # Lean toolchain pin
@@ -44,6 +47,13 @@ consistency transfer.
 The sidecar files such as `Acharyya2025.lean` are normal Lean root modules.  The
 subdirectory files are imported as submodules, for example
 `Acharyya2025.RateChain`.
+
+**Agents / contributors:** [`dev/`](dev/README.md) is long-running engineering
+memory — distilled benchmark questions and effortful-debug postmortems from real
+work in this repo. Read [`dev/SEARCH.md`](dev/SEARCH.md) before a task that
+resembles a past mistake (restating a theorem, slimming a conformance, matching a
+comparator export); add to it after a fix whose root cause is a transferable
+invariant.
 
 ## Fresh environment
 

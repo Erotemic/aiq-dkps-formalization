@@ -2,8 +2,9 @@
 Staged for Mathlib: addition to `Mathlib/Analysis/Matrix/Spectrum.lean`
 (eigenvalue perturbation from entrywise closeness).
 
-Formalized by Claude Opus 4.8 (claude-opus-4-8[1m]);
-to be re-authored per Mathlib's AI-contribution policy at PR time.
+Formalized by Claude Opus 4.8 (claude-opus-4-8[1m]); golfed (collapse a
+`have … := by rw [map_sub]; rw [hsub]` to a single `rw [← map_sub]`).
+To be re-authored per Mathlib's AI-contribution policy at PR time.
 -/
 
 import ForMathlib.Analysis.InnerProductSpace.CourantFischer
@@ -42,10 +43,7 @@ theorem abs_sortedEig_sub_le_of_entry_le {A Ahat : Matrix (Fin n) (Fin n) ℝ}
   have hop : ∀ x : EuclideanSpace ℝ (Fin n),
       ‖(Matrix.toEuclideanLin Ahat - Matrix.toEuclideanLin A) x‖ ≤ ((n : ℝ) * ε) * ‖x‖ := by
     intro x
-    have hsub : (Matrix.toEuclideanLin Ahat - Matrix.toEuclideanLin A) x
-        = Matrix.toEuclideanLin (Ahat - A) x := by
-      rw [map_sub]
-    rw [hsub]
+    rw [← map_sub]
     have hentry' : ∀ i j, |(Ahat - A) i j| ≤ ε := by
       intro i j; simpa [Matrix.sub_apply] using hentry i j
     exact ForMathlib.norm_toEuclideanLin_le_of_entry_le hentry' x

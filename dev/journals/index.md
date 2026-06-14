@@ -28,6 +28,7 @@ in doubt; this file is a routing aid, not a complete replacement for grep (see
 | How do I run the `mathlib-quality` skill (`/cleanup`, golfing rules) without stripping our AI-authorship provenance? What's the carve-out for staging vs the fork? `lemma` vs `theorem` — is there a rule? | [`../mathlib-quality-adapter.md`](../mathlib-quality-adapter.md) |
 | Reviewer collapsed my `simpa only [long @[simp] list] using fact.symm` to `simp [fact]`; when do I pin an explicit `simp only` vs use bare `simp`; should a terminal simp keep the explicit list / the `.symm`? | [`lessons_learned.md`](lessons_learned.md) (2026-06-14, "Terminal `simp`: collapse, don't pin") + [`../mathlib-proof-polishing.md`](../mathlib-proof-polishing.md) §"The second pass" |
 | Should I make this a `def` or keep the `∃` theorem? How do I tell if the object is unique/canonical? Is `#print axioms` the right test? | [`../mathlib-proof-polishing.md`](../mathlib-proof-polishing.md) §"Structural polish" point 0 (canonicity test: choice-free *term*, not the axiom closure) |
+| Which Mathlib file does this theorem/def go in? Reviewer says "this doesn't involve X, move it earlier"; a lemma keeps getting moved; is a public helper in the wrong concept-file? | [`lessons_learned.md`](lessons_learned.md) (2026-06-14, "Theorem placement: by dependencies, not theme or first use") + [`../mathlib-proof-polishing.md`](../mathlib-proof-polishing.md) §"Where does a declaration go?" |
 
 ## Consuming reviewer feedback / instructions
 

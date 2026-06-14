@@ -288,6 +288,44 @@ above:
   must pass them at every `@`-site inside the section (`theDef φ ψ h`, not
   `theDef h`).
 
+## Where does a declaration go? (place by dependencies, not theme or first use)
+
+We got placement **wrong repeatedly** — `inner_linearCombination_linearCombination`
+went `GramMatrix.lean` → `Orthonormal.lean` → `Basic.lean` (three homes) before
+@wwylele's "this doesn't involve `Orthonormal`, move it earlier" landed it
+correctly. Distilled rule, applied in order:
+
+1. **Dependency floor.** List the declarations the *statement and proof* actually
+   use; the home is at/after the latest of them. (`inner_linearComb…` uses
+   `Finsupp.sum_inner` + `inner_smul_left` → both in `InnerProductSpace/Basic.lean`,
+   so Basic is the floor.)
+2. **Concept test (wwylele's).** *"Does this declaration involve the file's central
+   concept?"* A `Foo.lean` file is a promise that its public contents are about
+   `Foo`. If the statement/proof never mentions `Orthonormal`, it does **not**
+   belong in `Orthonormal.lean`.
+3. **Earliest viable file.** Among files satisfying (1), pick the earliest/most
+   foundational where the needed `open`s/notation are already present and **no new
+   heavy import** is required. (Basic already `open`ed `Finsupp`/`ComplexConjugate`
+   and transitively had `linearCombination` → the move was import-free.)
+4. **Import-cost veto.** If the dependency-correct home would force a heavy new
+   import into a foundational file, that's the signal it belongs in a *later /
+   specialized* file. (The `linearIsometryEquivSpanOfInnerEq` "→ `LinearMap.lean`?"
+   question: `LinearMap.lean` lacks `Finsupp.linearCombination` + `Isomorphisms`, so
+   no — answer placement with the dependency delta, not the theme.)
+
+**Anti-patterns that misled us** (each is a *non-*locator):
+- *"It's first used here."* Usage ≠ home (`GramMatrix`).
+- *"It resembles these lemmas."* Superficial similarity ≠ shared dependencies
+  (`Orthonormal.inner_finsupp_eq_sum_left` looked similar but is specialized).
+- *"It's thematically about X."* Theme is not the locator; dependencies are.
+
+**For a NEW file you're authoring** (e.g. `CourantFischer.lean`), the dual question:
+*does every **public** declaration belong to this file's concept?* A general helper
+that doesn't (`specSubspace` — a general orthonormal-subfamily span) should be
+`private` (internal scaffolding, no public-API placement claim) **or** moved to its
+dependency-correct general home — never left public in a concept-named file it
+doesn't match.
+
 ## Expected outcome
 
 The final proof reads like a **high-level construction of the isometry between

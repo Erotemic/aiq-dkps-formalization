@@ -10,6 +10,42 @@ Takeaway**.
 
 ---
 
+## 2026-06-14 — Theorem placement: by dependencies, not theme or first use (we got this wrong ≥3×)
+
+@wwylele on PR #40567: *"This theorem doesn't involve `Orthonormal`, which is what
+this file is about. Can this be moved to an earlier file?"* —
+`inner_linearCombination_linearCombination` had moved `GramMatrix.lean` →
+`Orthonormal.lean` → (finally) `Basic.lean`. **Three homes for one lemma.** Jon
+flagged that we've gotten placement wrong in many cases and asked to preempt it.
+
+### Root cause of every wrong placement
+We located the lemma by the wrong signal each time:
+- in `GramMatrix.lean` because that's where it was **first used** (usage ≠ home);
+- in `Orthonormal.lean` because it **resembled** `Orthonormal.inner_finsupp_eq_sum_left`
+  (superficial similarity ≠ shared dependencies; that lemma is specialized, ours
+  is general);
+- the right home, `Basic.lean`, is where its **dependencies** live
+  (`Finsupp.sum_inner`, `inner_smul_left`) and which already `open`s
+  `Finsupp`/`ComplexConjugate` — so the move was even import-free.
+
+### The rule (full operational version in `../mathlib-proof-polishing.md`)
+Place by **dependencies**, in order: (1) dependency floor — at/after the latest
+decl the statement+proof use; (2) **concept test** — does it *involve* the file's
+central concept? a `Foo.lean` is a promise its public contents are about `Foo`;
+(3) earliest viable file with the needed opens and **no new heavy import**;
+(4) import-cost veto — a heavy new import into a foundational file means it belongs
+later/more-specialized (the `…→ LinearMap.lean?` question, answered "no" by the
+`Finsupp`/`Isomorphisms` import delta). For a NEW file you author: every *public*
+decl must belong to the file's concept — else `private` it or move it (we just
+`private`d `CourantFischer`'s `specSubspace`, a general orthonormal-span helper).
+
+### Takeaway
+"What is this about / where did I first use it / what does it look like" are all
+**non-locators**. The locator is "what is it built from, and what's the earliest
+file that already has those without a new heavy import."
+
+---
+
 ## 2026-06-14 — Terminal `simp`: collapse the explicit list, don't pin it (corrects my own golf)
 
 @wwylele on PR #40567 replaced what I had golfed to

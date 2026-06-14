@@ -3,8 +3,9 @@ Staged for Mathlib: eigenvalue concentration for a random Hermitian matrix from
 per-entry second-moment control (the elementary, no-matrix-Bernstein route:
 entrywise Chebyshev + union bound, then entrywise → operator-norm → Weyl).
 
-Formalized by Claude Opus 4.8 (claude-opus-4-8[1m]);
-to be re-authored per Mathlib's AI-contribution policy at PR time.
+Formalized by Claude Opus 4.8 (claude-opus-4-8[1m]); prose symbol `Ŝ` → `Shat`
+(matching the Lean variable, clearing the Mathlib unicode-allowlist linter).
+To be re-authored per Mathlib's AI-contribution policy at PR time.
 -/
 
 import ForMathlib.Analysis.Matrix.EntrywiseEigenvalue
@@ -12,11 +13,11 @@ import ForMathlib.Probability.Moments.Variance
 
 /-! # Eigenvalue concentration of a random Hermitian matrix
 
-For a random real-symmetric `n × n` matrix `Ŝ(ω)` that is entrywise close in
-mean-square to a fixed symmetric `A` (`∫ (Ŝ_{kl} − A_{kl})² ≤ v` for every
+For a random real-symmetric `n × n` matrix `Shat(ω)` that is entrywise close in
+mean-square to a fixed symmetric `A` (`∫ (Shat_{kl} − A_{kl})² ≤ v` for every
 entry), Chebyshev + a union bound over the `n²` entries give that, with
 probability `≥ 1 − n² v / η²`, every entry is within `η`; whence (entrywise
-eigenvalue perturbation) every sorted eigenvalue of `Ŝ(ω)` is within `n · η` of
+eigenvalue perturbation) every sorted eigenvalue of `Shat(ω)` is within `n · η` of
 the corresponding eigenvalue of `A`.
 
 This is the elementary route to sample-covariance / empirical-Gram eigenvalue
@@ -36,7 +37,7 @@ namespace ForMathlib
 
 variable {Ω : Type*} [MeasurableSpace Ω] {n : ℕ}
 
-/-- **Entrywise concentration (union bound).**  If each entry of `Ŝ(ω) − A` has
+/-- **Entrywise concentration (union bound).**  If each entry of `Shat(ω) − A` has
 mean-square `≤ v`, then the probability that *some* entry exceeds `η` in absolute
 value is at most `n² v / η²`. -/
 theorem measure_exists_entry_gt_le
@@ -46,7 +47,7 @@ theorem measure_exists_entry_gt_le
     {v η : ℝ} (hη : 0 < η) (hmoment : ∀ k l, ∫ ω, (Shat ω k l - A k l) ^ 2 ∂P ≤ v) :
     P {ω | ∃ k l, η < |Shat ω k l - A k l|}
       ≤ ENNReal.ofReal ((n : ℝ) ^ 2 * v / η ^ 2) := by
-  -- per-entry Chebyshev: P{η < |Ŝ_{kl} − A_{kl}|} ≤ v / η²
+  -- per-entry Chebyshev: P{η < |Shat_{kl} − A_{kl}|} ≤ v / η²
   have hcheb : ∀ k l : Fin n,
       P {ω | η < |Shat ω k l - A k l|} ≤ ENNReal.ofReal (v / η ^ 2) := by
     intro k l
@@ -74,7 +75,7 @@ theorem measure_exists_entry_gt_le
         congr 1; ring
 
 /-- **Eigenvalue concentration of a random Hermitian matrix.**  With probability
-`≥ 1 − n² v / η²`, every sorted eigenvalue of `Ŝ(ω)` is within `n · η` of the
+`≥ 1 − n² v / η²`, every sorted eigenvalue of `Shat(ω)` is within `n · η` of the
 corresponding eigenvalue of `A`. -/
 theorem measure_forall_abs_sortedEig_sub_le_ge
     (P : Measure Ω) [IsProbabilityMeasure P]
@@ -117,7 +118,7 @@ theorem measure_forall_abs_sortedEig_sub_le_ge
   exact le_trans hgood (measure_mono hcontain)
 
 /-- **Eigenvalue lower bound for a random Hermitian matrix.**  With probability
-`≥ 1 − n² v / η²`, every sorted eigenvalue of `Ŝ(ω)` is at least the corresponding
+`≥ 1 − n² v / η²`, every sorted eigenvalue of `Shat(ω)` is at least the corresponding
 eigenvalue of `A` minus `n · η`.  (Take `η := c / (2n)` to keep a top-block
 eigenvalue floored at `c` above `c / 2`.) -/
 theorem measure_forall_sortedEig_ge_ge

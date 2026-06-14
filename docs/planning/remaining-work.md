@@ -39,6 +39,17 @@ completed-phase docs).
   thin derivations — all names/signatures preserved so downstream is untouched.
   Axiom audit clean. (Challenge home is now `Challenge/MathlibCandidate/GramRigidity/`
   after the 2026-06-14 restructure.)
+- **Gram def refactor + slim** ✅ (2026-06-14, @wwylele review on PR #40567):
+  supersedes the corollary structure above. The span-level core is now the `def`
+  `linearIsometryEquivSpanOfInnerEq` (built via `LinearEquiv.isometryOfInner` on
+  the quotient/range equivalence) plus a `@[simp]` apply lemma
+  `linearIsometryEquivSpanOfInnerEq_apply`. The three `exists_…` span-level
+  wrappers (`exists_linearIsometryEquiv_span_map_eq_of_inner_eq`,
+  `exists_linearIsometry_span_map_eq_of_inner_eq`,
+  `exists_linearIsometry_map_eq_of_inner_eq`) were **dropped** — the `def` + apply
+  lemma subsume them — and the finite-dim ambient equivalence
+  `exists_linearIsometryEquiv_map_eq_of_inner_eq` now builds from the `def`
+  directly. Fork and staging synced; build green; axiom audit clean.
 - **R2** ✅ rank-PSD forward direction extracted; iff is now a combinator.
 - **R3** ✅ spectral-stack PR decomposition plan (`spectral-pr-decomposition.md`).
 - **R3b** ✅ Weyl operator-norm corollary `abs_eigenvalues_sub_le_opNorm`.

@@ -39,6 +39,16 @@ the inclusion `span ψ ↪ F`), the finite-dim ambient equivalence
   previous. Downstream callers unaffected (all kept names/signatures). Build
   green; axiom audit clean (propext/Classical.choice/Quot.sound only); added to
   the headline `Challenge/Gram` conformance + leaderboard + comparator config.
+- ✅ **SUPERSEDED 2026-06-14 (@wwylele review on PR #40567):** the public face is
+  now the `def` `linearIsometryEquivSpanOfInnerEq` (via `LinearEquiv.isometryOfInner`)
+  plus its `@[simp]` apply lemma `linearIsometryEquivSpanOfInnerEq_apply`, following
+  the `Orthonormal.equiv` idiom (def + apply lemma, no separate uniqueness theorem;
+  uniqueness is the justification, via `LinearMap.eqOn_span`). The three `exists_…`
+  span-level wrappers (`exists_linearIsometryEquiv_span_map_eq_of_inner_eq` and the
+  two `LinearIsometry` corollaries above) were **dropped** — the `def` + apply lemma
+  subsume them — and the finite-dim ambient equivalence
+  `exists_linearIsometryEquiv_map_eq_of_inner_eq` now builds from the `def`
+  directly. The leading public statement is the `def`. Fork and staging synced.
 
 ## D-2. Gram — naming
 

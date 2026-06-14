@@ -154,7 +154,7 @@ review:
 alignment:
   statements:
     - informal: "Two vector families with equal pairwise inner products have isometrically equivalent generated spans."
-      lean: "ForMathlib.exists_linearIsometryEquiv_span_map_eq_of_inner_eq"
+      lean: "ForMathlib.linearIsometryEquivSpanOfInnerEq"
       status: "proved by the downstream ForMathlib staging library"
     - informal: "Finite configurations with equal pairwise inner products are equivalent up to a linear isometry."
       lean: "ForMathlib.exists_linearIsometryEquiv_map_eq_of_inner_eq"

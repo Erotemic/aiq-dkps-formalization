@@ -41,7 +41,6 @@ theorem PosSemidef.eigenvalues₀_eq_zero_of_le {B : Matrix n n 𝕜}
     (hB : B.PosSemidef) {d : ℕ} (hrank : B.rank ≤ d)
     (i : Fin (Fintype.card n)) (hi : d ≤ (i : ℕ)) :
     hB.isHermitian.eigenvalues₀ i = 0 := by
-  classical
   set hH := hB.isHermitian with hHdef
   -- The index equivalence `eigenvalues₀ = eigenvalues ∘ e` from the definition.
   set e : Fin (Fintype.card n) ≃ n :=

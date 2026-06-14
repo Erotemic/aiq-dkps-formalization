@@ -115,7 +115,6 @@ up to `2 * δ`. -/
 theorem exists_linearIsometryEquiv_norm_sub_le (M : E →ₗ[ℝ] E) {δ : ℝ} (hδ : δ ≤ 1 / 2)
     (hM : ∀ x : E, |⟪M x, M x⟫_ℝ - ⟪x, x⟫_ℝ| ≤ δ * ⟪x, x⟫_ℝ) :
     ∃ W : E ≃ₗᵢ[ℝ] E, ∀ x : E, ‖M x - W x‖ ≤ 2 * δ * ‖x‖ := by
-  classical
   -- Degenerate case: if `E` is a subsingleton every vector is `0`, so `W := refl` works.
   rcases subsingleton_or_nontrivial E with hsub | hnt
   · exact ⟨LinearIsometryEquiv.refl ℝ E, fun x => by simp [Subsingleton.elim x 0]⟩

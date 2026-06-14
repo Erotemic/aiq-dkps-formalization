@@ -52,7 +52,6 @@ theorem measurableSet_exists_mem_le
     (hFc : ∀ ω, ContinuousOn (fun y => F y ω) S)
     (hFm : ∀ y ∈ S, Measurable (F y)) (c : ℝ) :
     MeasurableSet {ω | ∃ y ∈ S, F y ω ≤ c} := by
-  classical
   rcases S.eq_empty_or_nonempty with hSe | hSne
   · have hempty : {ω | ∃ y ∈ S, F y ω ≤ c} = ∅ := by
       ext ω; simp [hSe]

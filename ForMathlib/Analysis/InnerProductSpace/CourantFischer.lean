@@ -127,7 +127,6 @@ theorem re_inner_map_self_eq_sum_eigenvalues_mul_sq
 /-- Counting lemma: the number of indices `i : Fin n` with `k ≤ i` is `n - k`. -/
 private theorem card_filter_le (k : Fin n) :
     (Finset.univ.filter (fun i : Fin n => k ≤ i)).card = n - (k : ℕ) := by
-  classical
   have : (Finset.univ.filter (fun i : Fin n => k ≤ i)).card
       = (Finset.Ici k).card := by
     congr 1
@@ -138,7 +137,6 @@ private theorem card_filter_le (k : Fin n) :
 /-- Counting lemma: the number of indices `i : Fin n` with `i ≤ k` is `k + 1`. -/
 private theorem card_filter_ge (k : Fin n) :
     (Finset.univ.filter (fun i : Fin n => i ≤ k)).card = (k : ℕ) + 1 := by
-  classical
   have : (Finset.univ.filter (fun i : Fin n => i ≤ k)).card
       = (Finset.Iic k).card := by
     congr 1
@@ -159,7 +157,6 @@ theorem exists_unit_vector_re_inner_le_eigenvalue
     (hT : T.IsSymmetric) (hn : finrank 𝕜 E = n) (k : Fin n)
     (V : Submodule 𝕜 E) (hV : finrank 𝕜 V = (k : ℕ) + 1) :
     ∃ x ∈ V, ‖x‖ = 1 ∧ RCLike.re ⟪T x, x⟫_𝕜 ≤ hT.eigenvalues hn k := by
-  classical
   set b := hT.eigenvectorBasis hn with hb
   set W := specSubspace b (fun i : Fin n => k ≤ i) with hW
   have hWdim : finrank 𝕜 W = n - (k : ℕ) := by
@@ -216,7 +213,6 @@ theorem forall_unit_vector_eigenvalue_le_re_inner
     (hT : T.IsSymmetric) (hn : finrank 𝕜 E = n) (k : Fin n) :
     ∃ V : Submodule 𝕜 E, finrank 𝕜 V = (k : ℕ) + 1 ∧
       ∀ x ∈ V, ‖x‖ = 1 → hT.eigenvalues hn k ≤ RCLike.re ⟪T x, x⟫_𝕜 := by
-  classical
   set b := hT.eigenvectorBasis hn with hb
   refine ⟨specSubspace b (fun i : Fin n => i ≤ k), ?_, ?_⟩
   · rw [finrank_specSubspace, card_filter_ge]

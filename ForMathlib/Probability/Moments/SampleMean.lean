@@ -71,7 +71,6 @@ theorem integral_sq_scaledSum_sub_of_pairwise_indep
       fun i j => IndepFun (Z i) (Z j) P) :
     ∫ ω, ((r : ℝ)⁻¹ * (∑ k, Z k ω) - c) ^ 2 ∂P
       = (r : ℝ)⁻¹ ^ 2 * ∑ k, ∫ ω, (Z k ω - c) ^ 2 ∂P := by
-  classical
   have hr0 : (r : ℝ) ≠ 0 := by exact_mod_cast hr.ne'
   -- The scaled sum has mean `c`.
   have hmean_sum : P[fun ω => (r : ℝ)⁻¹ * (∑ k, Z k ω)] = c := by
@@ -136,7 +135,6 @@ theorem integral_norm_sq_average_sub_eq_sum
       fun i j => IndepFun (X i) (X j) P) :
     ∫ ω, ‖(r : ℝ)⁻¹ • (∑ k, X k ω) - μ‖ ^ 2 ∂P
       = (r : ℝ)⁻¹ ^ 2 * ∑ k, ∫ ω, ‖X k ω - μ‖ ^ 2 ∂P := by
-  classical
   set b := stdOrthonormalBasis ℝ E with hb
   -- The coordinate functional `x ↦ ⟪b c, x⟫` as a continuous linear map.
   let φ : Fin (Module.finrank ℝ E) → (E →L[ℝ] ℝ) := fun c => innerSL ℝ (b c)

@@ -49,7 +49,6 @@ coordinates of each column of `M` in that basis.
 -/
 theorem exists_eq_mul_rank (M : Matrix m n 𝕜) :
     ∃ (L : Matrix m (Fin M.rank) 𝕜) (R : Matrix (Fin M.rank) n 𝕜), M = L * R := by
-  classical
   -- A basis of the column space, indexed by `Fin M.rank`.
   have hdim : finrank 𝕜 (LinearMap.range M.mulVecLin) = M.rank := rfl
   let b : Module.Basis (Fin M.rank) 𝕜 (LinearMap.range M.mulVecLin) :=
@@ -78,7 +77,6 @@ theorem exists_eq_mul_rank (M : Matrix m n 𝕜) :
 -/
 theorem exists_eq_mul_of_rank_le (M : Matrix m n 𝕜) {r : ℕ} (h : M.rank ≤ r) :
     ∃ (L : Matrix m (Fin r) 𝕜) (R : Matrix (Fin r) n 𝕜), M = L * R := by
-  classical
   obtain ⟨L₀, R₀, hM⟩ := exists_eq_mul_rank M
   refine ⟨fun i k => if hk : (k : ℕ) < M.rank then L₀ i ⟨k, hk⟩ else 0,
     fun k j => if hk : (k : ℕ) < M.rank then R₀ ⟨k, hk⟩ j else 0, ?_⟩

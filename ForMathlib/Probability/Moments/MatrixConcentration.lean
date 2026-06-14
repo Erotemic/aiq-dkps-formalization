@@ -46,7 +46,6 @@ theorem measure_exists_entry_gt_le
     {v η : ℝ} (hη : 0 < η) (hmoment : ∀ k l, ∫ ω, (Shat ω k l - A k l) ^ 2 ∂P ≤ v) :
     P {ω | ∃ k l, η < |Shat ω k l - A k l|}
       ≤ ENNReal.ofReal ((n : ℝ) ^ 2 * v / η ^ 2) := by
-  classical
   -- per-entry Chebyshev: P{η < |Ŝ_{kl} − A_{kl}|} ≤ v / η²
   have hcheb : ∀ k l : Fin n,
       P {ω | η < |Shat ω k l - A k l|} ≤ ENNReal.ofReal (v / η ^ 2) := by

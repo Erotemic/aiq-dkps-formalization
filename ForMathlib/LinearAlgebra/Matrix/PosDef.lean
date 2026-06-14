@@ -65,7 +65,6 @@ theorem isHermitian_entry_eq_sum_eigenvalues
     B i j = ∑ k : Fin n,
       (hB.eigenvalues k : 𝕜) * (hB.eigenvectorUnitary i k) *
         conj (hB.eigenvectorUnitary j k) := by
-  classical
   have hspec := hB.spectral_theorem
   have hentry : B i j =
       (hB.eigenvectorUnitary *

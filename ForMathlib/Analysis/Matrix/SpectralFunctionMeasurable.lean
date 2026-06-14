@@ -68,7 +68,6 @@ uniformly close to `h` on `[-R, R]`. -/
 theorem exists_polynomial_uniform_close (h : ℝ → ℝ) (hh : Continuous h)
     (R : ℝ) {ε : ℝ} (hε : 0 < ε) :
     ∃ p : Polynomial ℝ, ∀ x ∈ Set.Icc (-R) R, |h x - p.eval x| ≤ ε := by
-  classical
   set s : Set ℝ := Set.Icc (-R) R with hs
   haveI : CompactSpace s := isCompact_iff_compactSpace.mp isCompact_Icc
   set f : C(s, ℝ) := ContinuousMap.restrict s ⟨h, hh⟩ with hf
@@ -164,7 +163,6 @@ theorem aeval_entry_eq_sum {B : Matrix (Fin n) (Fin n) ℝ} (hB : B.IsHermitian)
       = ∑ k : Fin n, p.eval (sortedEig hB k)
           * ((opSym hB).eigenvectorBasis finrank_euclideanSpace_fin k i)
           * ((opSym hB).eigenvectorBasis finrank_euclideanSpace_fin k j) := by
-  classical
   set u := (opSym hB).eigenvectorBasis finrank_euclideanSpace_fin with hu
   set v : Fin n → (Fin n → ℝ) := fun k => WithLp.ofLp (u k) with hv
   -- the single basis vector expands in the eigenbasis
@@ -271,7 +269,6 @@ theorem measurable_specTransform {Ω : Type*} [MeasurableSpace Ω]
     {Bm : Ω → Matrix (Fin n) (Fin n) ℝ} (hBmeas : Measurable Bm)
     (hsym : ∀ ω, (Bm ω).IsHermitian) :
     Measurable fun ω => specTransform h (hsym ω) := by
-  classical
   -- coordinate measurability of the matrix family
   have hentry : ∀ a b : Fin n, Measurable fun ω => Bm ω a b := fun a b =>
     (measurable_pi_apply b).comp ((measurable_pi_apply a).comp hBmeas)

@@ -24,9 +24,7 @@ import Mathlib.LinearAlgebra.Isomorphisms
 Two families of vectors in an inner product space over `𝕜 = ℝ, ℂ` with equal
 pairwise inner products are related by a linear isometry.  In finite dimension
 this upgrades to a single linear isometry *equivalence* of the ambient space, and
-the hypothesis can be packaged as equality of `Matrix.gram` matrices.  This is the
-exact (zero-residual) case of the orthogonal Procrustes problem; see the
-Schönemann reference.
+the hypothesis can be packaged as equality of `Matrix.gram` matrices.
 
 ## Main results
 
@@ -48,9 +46,6 @@ Schönemann reference.
 
 * R. A. Horn and C. R. Johnson, *Matrix Analysis*, 2nd ed., Cambridge University
   Press, 2013 — Gram matrices and factorization up to a unitary factor.
-* P. H. Schönemann, *A generalized solution of the orthogonal Procrustes
-  problem*, Psychometrika **31** (1966), 1–10 — the (least-squares) Procrustes
-  problem, of which this is the exact, zero-residual case.
 * T.-Y. Chien and S. Waldron, *A Characterization of Projective Unitary
   Equivalence of Finite Frames and Applications*, SIAM J. Discrete Math. **30**
   (2016), no. 2, 976–994, arXiv:1312.5393 — the frame-theoretic form: finite

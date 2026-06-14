@@ -5,6 +5,10 @@ Staged for Mathlib: additions to `Mathlib/Analysis/InnerProductSpace/CourantFisc
 Formalized by Claude Fable 5 (claude-fable-5[1m]); golfed/polished to Mathlib
 style by Claude Opus 4.8 (claude-opus-4-8[1m]) following the `mathlib-quality`
 rules (dedup, drop unused `set … with` bindings, `simpa`/`rwa` consolidation).
+PR-prep by Claude Opus 4.8: the `specSubspace` helper and its two lemmas are a
+general orthonormal-subfamily-span fact (not Courant–Fischer-specific) used only
+internally, so they are `private` — keeping a `CourantFischer.lean` file's public
+surface to Courant–Fischer/Weyl.
 To be re-authored per Mathlib's AI-contribution policy at PR time.
 -/
 
@@ -61,13 +65,14 @@ subspace spanned by the basis vectors selected by `p`.  We record its dimension
 this subspace has vanishing `b`-coordinates outside `p`. -/
 
 /-- The subspace spanned by the orthonormal basis vectors `b i` for indices `i`
-satisfying `p i`. -/
-noncomputable def specSubspace (b : OrthonormalBasis (Fin n) 𝕜 E) (p : Fin n → Prop) :
+satisfying `p i`.  Internal scaffolding for the Courant–Fischer proofs (a general
+orthonormal-subfamily span, not Courant–Fischer-specific), hence `private`. -/
+private noncomputable def specSubspace (b : OrthonormalBasis (Fin n) 𝕜 E) (p : Fin n → Prop) :
     Submodule 𝕜 E :=
   Submodule.span 𝕜 (Set.range (fun i : {i : Fin n // p i} => b i))
 
 /-- A spectral subspace has dimension equal to the number of selected indices. -/
-theorem finrank_specSubspace (b : OrthonormalBasis (Fin n) 𝕜 E) (p : Fin n → Prop)
+private theorem finrank_specSubspace (b : OrthonormalBasis (Fin n) 𝕜 E) (p : Fin n → Prop)
     [DecidablePred p] :
     finrank 𝕜 (specSubspace b p) = (Finset.univ.filter p).card := by
   rw [specSubspace,
@@ -77,8 +82,8 @@ theorem finrank_specSubspace (b : OrthonormalBasis (Fin n) 𝕜 E) (p : Fin n �
 
 /-- A vector in a spectral subspace has zero `b`-coordinate at any index outside
 the selecting predicate. -/
-theorem repr_eq_zero_of_mem_specSubspace (b : OrthonormalBasis (Fin n) 𝕜 E) (p : Fin n → Prop)
-    {x : E} (hx : x ∈ specSubspace b p) {i : Fin n} (hi : ¬ p i) :
+private theorem repr_eq_zero_of_mem_specSubspace (b : OrthonormalBasis (Fin n) 𝕜 E)
+    (p : Fin n → Prop) {x : E} (hx : x ∈ specSubspace b p) {i : Fin n} (hi : ¬ p i) :
     b.repr x i = 0 := by
   rw [b.repr_apply_apply]
   -- `⟪b i, ·⟫` vanishes on the spanning set, hence on the whole span.

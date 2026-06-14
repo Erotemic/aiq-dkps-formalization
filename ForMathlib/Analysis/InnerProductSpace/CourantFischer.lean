@@ -8,13 +8,13 @@ rules (dedup, drop unused `set … with` bindings, `simpa`/`rwa` consolidation).
 PR-prep by Claude Opus 4.8: the `specSubspace` helper and its two lemmas are a
 general orthonormal-subfamily-span fact (not Courant–Fischer-specific) used only
 internally, so they are `private` — keeping a `CourantFischer.lean` file's public
-surface to Courant–Fischer/Weyl.
+surface to Courant–Fischer/Weyl.  Minimal imports: `FiniteDimensional.Lemmas`
+dropped (its `finrank` lemmas arrive transitively via `PiL2`/`Spectrum`).
 To be re-authored per Mathlib's AI-contribution policy at PR time.
 -/
 
 import Mathlib.Analysis.InnerProductSpace.PiL2
 import Mathlib.Analysis.InnerProductSpace.Spectrum
-import Mathlib.LinearAlgebra.FiniteDimensional.Lemmas
 
 /-! # Courant–Fischer min-max and Weyl's eigenvalue perturbation inequality
 

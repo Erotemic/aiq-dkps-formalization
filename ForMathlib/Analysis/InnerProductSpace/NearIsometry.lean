@@ -1,8 +1,11 @@
 /-
 Staged for Mathlib: a proposed new file `Mathlib/Analysis/InnerProductSpace/NearIsometry.lean`.
 
-Formalized by Claude Fable 5 (claude-fable-5[1m]);
-to be re-authored per Mathlib's AI-contribution policy at PR time.
+Formalized by Claude Fable 5 (claude-fable-5[1m]); golf pass (drop unused
+`set … with`, `rwa` consolidation, dedupe the repeated `⟪b k, b k⟫ = 1` fact to
+a single `hunit`) by Claude Opus 4.8 (claude-opus-4-8[1m]) per the
+`mathlib-quality` rules.
+To be re-authored per Mathlib's AI-contribution policy at PR time.
 -/
 
 import Mathlib.Analysis.InnerProductSpace.Adjoint
@@ -64,7 +67,7 @@ theorem abs_one_sub_inv_sqrt_le {μ δ : ℝ} (hδ : δ ≤ 1 / 2) (hμ : |μ - 
     |1 - (Real.sqrt μ)⁻¹| ≤ δ := by
   have hμlb : 1 - δ ≤ μ := by rw [abs_le] at hμ; linarith
   have hμpos : (0 : ℝ) < μ := by linarith
-  set s := Real.sqrt μ with hs
+  set s := Real.sqrt μ
   have hs0 : 0 < s := Real.sqrt_pos.mpr hμpos
   have hssq : s ^ 2 = μ := Real.sq_sqrt (le_of_lt hμpos)
   -- `s ≥ 1/2` (since `s² = μ ≥ 1/2`)
@@ -136,6 +139,9 @@ theorem exists_linearIsometryEquiv_norm_sub_le (M : E →ₗ[ℝ] E) {δ : ℝ} 
   -- Sorted eigen-data of `G`.
   set b := hGsymm.eigenvectorBasis hd with hb
   set μ := hGsymm.eigenvalues hd with hμ
+  -- The eigenbasis vectors are unit vectors.
+  have hunit : ∀ k : Fin d, ⟪b k, b k⟫_ℝ = 1 := fun k => by
+    rw [real_inner_self_eq_norm_sq, b.orthonormal.norm_eq_one k]; ring
   -- Parseval: in the eigenbasis the squared coordinates sum to the squared norm.
   have hpars : ∀ y : E, ∑ k : Fin d, b.repr y k ^ 2 = ‖y‖ ^ 2 := by
     intro y
@@ -144,14 +150,11 @@ theorem exists_linearIsometryEquiv_norm_sub_le (M : E →ₗ[ℝ] E) {δ : ℝ} 
   -- Each eigenvalue lies in `[1 - δ, 1 + δ]`, in particular `≥ 1/2 > 0`.
   have hμbound : ∀ k : Fin d, |μ k - 1| ≤ δ := by
     intro k
-    have hnorm1 : ⟪b k, b k⟫_ℝ = 1 := by
-      rw [real_inner_self_eq_norm_sq, b.orthonormal.norm_eq_one k]; ring
     have hGbk : ⟪G (b k), b k⟫_ℝ = μ k := by
-      rw [hb, hGsymm.apply_eigenvectorBasis, real_inner_smul_left, ← hb, ← hμ, hnorm1]
+      rw [hb, hGsymm.apply_eigenvectorBasis, real_inner_smul_left, ← hb, ← hμ, hunit k]
       simp
     have := hM (b k)
-    rw [← hGquad, hGbk, hnorm1, mul_one] at this
-    exact this
+    rwa [← hGquad, hGbk, hunit k, mul_one] at this
   have hμpos : ∀ k : Fin d, (1 : ℝ) / 2 ≤ μ k := by
     intro k
     have := hμbound k
@@ -175,9 +178,7 @@ theorem exists_linearIsometryEquiv_norm_sub_le (M : E →ₗ[ℝ] E) {δ : ℝ} 
     simp only [RCLike.ofReal_real_eq_id, id_eq]
     by_cases hjk : j = k
     · subst hjk
-      have : ⟪b j, b j⟫_ℝ = 1 := by
-        rw [real_inner_self_eq_norm_sq, b.orthonormal.norm_eq_one j]; ring
-      rw [this, if_pos rfl, mul_one]
+      rw [hunit j, if_pos rfl, mul_one]
     · rw [b.inner_eq_zero hjk, if_neg hjk, mul_zero]
   -- The candidate isometry.
   set W : E →ₗ[ℝ] E := M ∘ₗ R with hW
@@ -195,9 +196,7 @@ theorem exists_linearIsometryEquiv_norm_sub_le (M : E →ₗ[ℝ] E) {δ : ℝ} 
       rw [if_pos rfl]
       have hsj : Real.sqrt (μ j) > 0 := Real.sqrt_pos.mpr hμj
       have hsqj : Real.sqrt (μ j) ^ 2 = μ j := Real.sq_sqrt (le_of_lt hμj)
-      have hbb : ⟪b j, b j⟫_ℝ = 1 := by
-        rw [real_inner_self_eq_norm_sq, b.orthonormal.norm_eq_one j]; ring
-      rw [hbb]
+      rw [hunit j]
       -- `(√μ)⁻¹ * ((√μ)⁻¹ * μ) = μ⁻¹ * μ = 1`.
       field_simp
       nlinarith [hsqj, hsj]

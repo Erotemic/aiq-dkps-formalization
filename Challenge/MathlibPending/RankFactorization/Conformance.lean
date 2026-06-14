@@ -10,10 +10,13 @@ import Mathlib
 
 namespace ForMathlib.Matrix
 
-variable {𝕜' m' n' : Type*} [Field 𝕜'] [Fintype n'] [DecidableEq n']
+-- Binder names match the ForMathlib source (`{𝕜 m n}`); the comparator exports
+-- de Bruijn terms so names do not affect matching, but keeping them identical
+-- avoids any ambiguity.
+variable {𝕜 m n : Type*} [Field 𝕜] [Fintype n] [DecidableEq n]
 
-theorem rank_le_iff_exists_eq_mul (M : Matrix m' n' 𝕜') (r : ℕ) :
-    M.rank ≤ r ↔ ∃ (L : Matrix m' (Fin r) 𝕜') (R : Matrix (Fin r) n' 𝕜'), M = L * R := by
+theorem rank_le_iff_exists_eq_mul (M : Matrix m n 𝕜) (r : ℕ) :
+    M.rank ≤ r ↔ ∃ (L : Matrix m (Fin r) 𝕜) (R : Matrix (Fin r) n 𝕜), M = L * R := by
   sorry
 
 end ForMathlib.Matrix

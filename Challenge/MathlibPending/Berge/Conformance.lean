@@ -22,7 +22,10 @@ theorem upperHemicontinuousAt_isMinOn {X : Type*} [TopologicalSpace X]
     UpperHemicontinuousAt (fun p => {x ∈ K | IsMinOn (g p) K x}) p₀ := by
   sorry
 
-theorem continuous_iInf_of_isCompact [FirstCountableTopology P]
+-- `[FirstCountableTopology X]` precedes `[FirstCountableTopology P]` to match the
+-- ForMathlib source, where the former is an accumulated section instance and the
+-- latter the theorem's own; the comparator needs the exact instance order.
+theorem continuous_iInf_of_isCompact [FirstCountableTopology X] [FirstCountableTopology P]
     {K : Set X} (hK : IsCompact K) (hKne : K.Nonempty)
     {g : P → X → ℝ} (hg : Continuous (Function.uncurry g)) :
     Continuous (fun p => ⨅ x : ↥K, g p ↑x) := by

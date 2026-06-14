@@ -17,8 +17,11 @@ namespace ForMathlib
 
 open scoped InnerProductSpace
 
-variable {𝕜 E ι : Type*} [RCLike 𝕜] [NormedAddCommGroup E] [InnerProductSpace 𝕜 E]
-  [FiniteDimensional 𝕜 E]
+-- The unused `F` (with its instances) mirrors the ForMathlib source's
+-- `variable {𝕜 E F ι}` so the exported universe parameters match the solution
+-- (the comparator compares universe signatures without alpha-normalizing).
+variable {𝕜 E F ι : Type*} [RCLike 𝕜] [NormedAddCommGroup E] [InnerProductSpace 𝕜 E]
+  [NormedAddCommGroup F] [InnerProductSpace 𝕜 F] [FiniteDimensional 𝕜 E]
 
 namespace Matrix
 

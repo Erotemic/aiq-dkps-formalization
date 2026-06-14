@@ -1,0 +1,14 @@
+{
+  "challenge_module": "Challenge.MathlibPending.RankPsdRealization.Conformance",
+  "solution_module": "Challenge.MathlibPending.RankPsdRealization.Leaderboard",
+  "theorem_names": [
+    "ForMathlib.Matrix.PosSemidef.eigenvalues\u2080_eq_zero_of_le",
+    "ForMathlib.Matrix.posSemidef_and_rank_le_iff_exists_conjTranspose_mul_self"
+  ],
+  "permitted_axioms": [
+    "propext",
+    "Quot.sound",
+    "Classical.choice"
+  ],
+  "enable_nanoda": false
+}

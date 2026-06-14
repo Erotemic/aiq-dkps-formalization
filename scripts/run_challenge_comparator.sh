@@ -7,14 +7,14 @@
 # Usage:
 #   bash scripts/run_challenge_comparator.sh
 #   bash scripts/run_challenge_comparator.sh --fake-landrun
-#   bash scripts/run_challenge_comparator.sh --config comparator/aiq-gram-rigidity.json
-#   bash scripts/run_challenge_comparator.sh --config comparator/aiq-inventory-rank-psd.json
-#   bash scripts/run_challenge_comparator.sh --config comparator/aiq-inventory.json  # legacy full inventory
+#   bash scripts/run_challenge_comparator.sh --config comparator/candidate-01-gram-rigidity.json
+#   bash scripts/run_challenge_comparator.sh --config comparator/pending-rank-factorization.json
 #   bash scripts/run_challenge_comparator.sh --only-comparator
 #
-# By default the script runs the three headline configs plus PR-oriented
-# inventory-group configs. The legacy monolithic inventory config remains
-# available via --config comparator/aiq-inventory.json.
+# By default the script runs the MathlibCandidate configs (the focused upstream
+# push) followed by the MathlibPending configs (proven, held back). See
+# Challenge/README.md for the manifest. The four DKPS papers are documented, not
+# comparator challenges.
 #
 # The script runs all requested configs, prints a final summary table, and exits
 # nonzero if any config fails.
@@ -25,16 +25,19 @@ USE_FAKE_LANDRUN=0
 ONLY_COMPARATOR=0
 
 DEFAULT_CONFIGS=(
-    "comparator/aiq-gram-rigidity.json"
-    "comparator/aiq-psd-gram-realization.json"
-    "comparator/aiq-spectral-perturbation.json"
-    "comparator/aiq-inventory-probability.json"
-    "comparator/aiq-inventory-operator-spectral.json"
-    "comparator/aiq-inventory-gram-geometry.json"
-    "comparator/aiq-inventory-rank-psd.json"
-    "comparator/aiq-inventory-matrix-spectral.json"
-    "comparator/aiq-inventory-measurability.json"
-    "comparator/aiq-inventory-berge.json"
+    "comparator/candidate-01-gram-rigidity.json"
+    "comparator/candidate-02-courant-fischer-weyl.json"
+    "comparator/candidate-03-davis-kahan.json"
+    "comparator/pending-berge.json"
+    "comparator/pending-rank-factorization.json"
+    "comparator/pending-rank-psd-realization.json"
+    "comparator/pending-restrict-cover-measurable.json"
+    "comparator/pending-sample-mean-mse.json"
+    "comparator/pending-near-isometry.json"
+    "comparator/pending-cfc-measurable.json"
+    "comparator/pending-matrix-concentration.json"
+    "comparator/pending-probability-qol.json"
+    "comparator/pending-tendsto-in-measure.json"
 )
 
 while [ "$#" -gt 0 ]; do

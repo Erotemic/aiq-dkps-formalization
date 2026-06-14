@@ -1,0 +1,14 @@
+{
+  "challenge_module": "Challenge.MathlibPending.CfcMeasurable.Conformance",
+  "solution_module": "Challenge.MathlibPending.CfcMeasurable.Leaderboard",
+  "theorem_names": [
+    "ForMathlib.measurable_cfc_comp",
+    "ForMathlib.measurableSet_exists_mem_le"
+  ],
+  "permitted_axioms": [
+    "propext",
+    "Quot.sound",
+    "Classical.choice"
+  ],
+  "enable_nanoda": false
+}

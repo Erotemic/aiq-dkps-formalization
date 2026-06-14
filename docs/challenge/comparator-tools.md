@@ -45,10 +45,10 @@ bash scripts/run_challenge_comparator.sh
 This performs:
 
 ```bash
-lake env lean Challenge/Gram/Conformance.lean
-lake env lean Challenge/Gram/Leaderboard.lean
-lake build Challenge.Gram.Leaderboard
-lake env comparator comparator/aiq-gram-rigidity.json
+lake env lean Challenge/MathlibCandidate/GramRigidity/Conformance.lean
+lake env lean Challenge/MathlibCandidate/GramRigidity/Leaderboard.lean
+lake build Challenge.MathlibCandidate.GramRigidity.Leaderboard
+lake env comparator comparator/candidate-01-gram-rigidity.json
 ```
 
 using explicit `COMPARATOR_LANDRUN` and `COMPARATOR_LEAN4EXPORT` paths.
@@ -79,24 +79,13 @@ corresponding paths automatically.
 
 Default configs run by `scripts/run_challenge_comparator.sh`:
 
-* `comparator/aiq-gram-rigidity.json`
-* `comparator/aiq-psd-gram-realization.json`
-* `comparator/aiq-spectral-perturbation.json`
-* `comparator/aiq-inventory-probability.json`
-* `comparator/aiq-inventory-operator-spectral.json`
-* `comparator/aiq-inventory-gram-geometry.json`
-* `comparator/aiq-inventory-rank-psd.json`
-* `comparator/aiq-inventory-matrix-spectral.json`
-* `comparator/aiq-inventory-measurability.json`
-* `comparator/aiq-inventory-berge.json`
+* `comparator/candidate-01-gram-rigidity.json`
+* `comparator/candidate-02-courant-fischer-weyl.json`
+* `comparator/candidate-03-davis-kahan.json`
+* `comparator/pending-*.json` (Berge, RankFactorization, RankPsdRealization,
+  RestrictCoverMeasurable, SampleMeanMSE, NearIsometry, CfcMeasurable,
+  MatrixConcentration, ProbabilityQoL, TendstoInMeasure)
 
-The legacy aggregate inventory config remains available as
-`comparator/aiq-inventory.json`, but it is no longer part of the default runner
-path. Prefer the split inventory configs for PR planning and failure diagnosis.
-
-## Summary output
-
-`scripts/run_challenge_comparator.sh` runs each requested comparator config and
-prints a final summary table with pass/fail status, exit code, elapsed seconds,
-and config path. The script exits nonzero if any requested config fails, but it
-continues running later configs so failures can be diagnosed independently.
+See `Challenge/README.md` for the manifest. SpectralFunctionMeasurable is an
+axiom-audit leaderboard only (no comparator config). The four DKPS papers are
+documented, not comparator challenges.

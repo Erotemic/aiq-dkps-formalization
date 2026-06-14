@@ -1,0 +1,13 @@
+{
+  "challenge_module": "Challenge.MathlibPending.RankFactorization.Conformance",
+  "solution_module": "Challenge.MathlibPending.RankFactorization.Leaderboard",
+  "theorem_names": [
+    "ForMathlib.Matrix.rank_le_iff_exists_eq_mul"
+  ],
+  "permitted_axioms": [
+    "propext",
+    "Quot.sound",
+    "Classical.choice"
+  ],
+  "enable_nanoda": false
+}

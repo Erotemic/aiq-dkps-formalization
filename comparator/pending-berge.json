@@ -1,0 +1,15 @@
+{
+  "challenge_module": "Challenge.MathlibPending.Berge.Conformance",
+  "solution_module": "Challenge.MathlibPending.Berge.Leaderboard",
+  "theorem_names": [
+    "ForMathlib.upperHemicontinuousAt_isMinOn",
+    "ForMathlib.continuous_iInf_of_isCompact",
+    "ForMathlib.exists_modulus_isMinOn"
+  ],
+  "permitted_axioms": [
+    "propext",
+    "Quot.sound",
+    "Classical.choice"
+  ],
+  "enable_nanoda": false
+}

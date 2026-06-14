@@ -39,151 +39,94 @@ sources:
 
 status:
   repository_build:
-    last_user_reported_build: "Earlier state: lake build completed successfully on 8626 jobs. Latest user-reported build after Gram span-to-span equivalence promotion: lake build completed successfully on 8634 jobs; re-run comparator after this bookkeeping sync before citing challenge status."
-    last_user_reported_challenge_summary: "Before the latest bookkeeping sync, the dedicated headline and inventory-group comparator configs were being iterated locally; re-run scripts/run_challenge_comparator.sh after applying this metadata update before citing the new state."
+    last_user_reported_build: "lake build completes green. Challenge layer restructured 2026-06-14 into MathlibCandidate (3) + MathlibPending (10 comparator configs + 1 leaderboard-only); all leaf #print axioms verified clean."
+    last_user_reported_challenge_summary: "Re-run scripts/run_challenge_comparator.sh (real landrun) to cite comparator pass/fail; the conformance/leaderboard modules build green and all leaves are axiom-clean."
     challenge_commands:
-      - "lake env lean Challenge/Gram/Conformance.lean"
-      - "lake env lean Challenge/Gram/Leaderboard.lean"
-      - "lake env lean Challenge/Inventory/Conformance.lean"
-      - "lake env lean Challenge/Inventory/Leaderboard.lean"
+      - "lake env lean Challenge/MathlibCandidate/GramRigidity/Conformance.lean"
+      - "lake env lean Challenge/MathlibCandidate/GramRigidity/Leaderboard.lean"
       - "bash scripts/run_challenge_comparator.sh"
     comparator_configs:
-      - "comparator/aiq-gram-rigidity.json"
-      - "comparator/aiq-psd-gram-realization.json"
-      - "comparator/aiq-spectral-perturbation.json"
-      - "comparator/aiq-inventory-probability.json"
-      - "comparator/aiq-inventory-operator-spectral.json"
-      - "comparator/aiq-inventory-gram-geometry.json"
-      - "comparator/aiq-inventory-rank-psd.json"
-      - "comparator/aiq-inventory-matrix-spectral.json"
-      - "comparator/aiq-inventory-measurability.json"
-      - "comparator/aiq-inventory-berge.json"
-      - "comparator/aiq-inventory.json"  # legacy aggregate audit target
+      - "comparator/candidate-01-gram-rigidity.json"
+      - "comparator/candidate-02-courant-fischer-weyl.json"
+      - "comparator/candidate-03-davis-kahan.json"
+      - "comparator/pending-berge.json"
+      - "comparator/pending-rank-factorization.json"
+      - "comparator/pending-rank-psd-realization.json"
+      - "comparator/pending-restrict-cover-measurable.json"
+      - "comparator/pending-sample-mean-mse.json"
+      - "comparator/pending-near-isometry.json"
+      - "comparator/pending-cfc-measurable.json"
+      - "comparator/pending-matrix-concentration.json"
+      - "comparator/pending-probability-qol.json"
+      - "comparator/pending-tendsto-in-measure.json"
   scope: >
-    The repository formalizes several DKPS-related paper layers and stages
-    paper-agnostic infrastructure in ForMathlib for potential upstreaming.
-    This metadata file and the challenge files expose both a small headline
-    sampler of the most visible Mathlib-facing claims and a broader inventory
-    of the current ForMathlib theorem surface. The inventory is for calibration
-    and comparator checking, not a proposal to upstream everything in one PR.
+    The repository fully formalizes four DKPS-family papers (the end states) and
+    stages the reusable, paper-agnostic results it required in ForMathlib for
+    upstreaming. Challenges are split into two families (see Challenge/README.md):
+    MathlibCandidate, a small focused set of drop-ready PRs, and MathlibPending,
+    proven results held back pending further work. Each challenge lists only the
+    leaf (top-level) theorems; #print axioms on a leaf transitively certifies its
+    whole proof tree. The four papers are documented but are not comparator
+    challenges (their statements are inherently in each paper's own vocabulary).
   main_results:
-    - declaration: "ForMathlib.exists_linearIsometryEquiv_span_map_eq_of_inner_eq"
-      file: "ForMathlib/Analysis/InnerProductSpace/GramMatrix.lean"
-      sorry_count: 0
-      axioms: ["propext", "Classical.choice", "Quot.sound"]
-      challenge_file: "Challenge/Gram/Conformance.lean"
-      solution_file: "Challenge/Gram/Leaderboard.lean"
-      challenge_declaration: "ForMathlib.exists_linearIsometryEquiv_span_map_eq_of_inner_eq"
-      source_declaration: "ForMathlib.exists_linearIsometryEquiv_span_map_eq_of_inner_eq"
-      source_file: "ForMathlib/Analysis/InnerProductSpace/GramMatrix.lean"
-      category: "Procrustes / Gram-matrix rigidity"
-      sorry_count_in_solution: 0
-      expected_axioms: ["propext", "Classical.choice", "Quot.sound"]
-      comparator_config: "comparator/aiq-gram-rigidity.json"
-    - declaration: "ForMathlib.exists_linearIsometryEquiv_map_eq_of_inner_eq"
-      file: "ForMathlib/Analysis/InnerProductSpace/GramMatrix.lean"
-      sorry_count: 0
-      axioms: ["propext", "Classical.choice", "Quot.sound"]
-      challenge_file: "Challenge/Gram/Conformance.lean"
-      solution_file: "Challenge/Gram/Leaderboard.lean"
-      challenge_declaration: "ForMathlib.exists_linearIsometryEquiv_map_eq_of_inner_eq"
-      source_declaration: "ForMathlib.exists_linearIsometryEquiv_map_eq_of_inner_eq"
-      source_file: "ForMathlib/Analysis/InnerProductSpace/GramMatrix.lean"
-      category: "Procrustes / Gram-matrix rigidity"
-      sorry_count_in_solution: 0
-      expected_axioms: ["propext", "Classical.choice", "Quot.sound"]
-      comparator_config: "comparator/aiq-gram-rigidity.json"
     - declaration: "ForMathlib.Matrix.gram_eq_gram_iff_exists_linearIsometryEquiv_map_eq"
       file: "ForMathlib/Analysis/InnerProductSpace/GramMatrix.lean"
       sorry_count: 0
       axioms: ["propext", "Classical.choice", "Quot.sound"]
-      challenge_file: "Challenge/Gram/Conformance.lean"
-      solution_file: "Challenge/Gram/Leaderboard.lean"
-      challenge_declaration: "ForMathlib.Matrix.gram_eq_gram_iff_exists_linearIsometryEquiv_map_eq"
-      source_declaration: "ForMathlib.Matrix.gram_eq_gram_iff_exists_linearIsometryEquiv_map_eq"
-      source_file: "ForMathlib/Analysis/InnerProductSpace/GramMatrix.lean"
+      challenge_file: "Challenge/MathlibCandidate/GramRigidity/Conformance.lean"
+      solution_file: "Challenge/MathlibCandidate/GramRigidity/Leaderboard.lean"
       category: "Procrustes / Gram-matrix rigidity"
-      sorry_count_in_solution: 0
-      expected_axioms: ["propext", "Classical.choice", "Quot.sound"]
-      comparator_config: "comparator/aiq-gram-rigidity.json"
-    - declaration: "ForMathlib.Matrix.posSemidef_and_rank_le_iff_exists_conjTranspose_mul_self"
-      file: "ForMathlib/LinearAlgebra/Matrix/PosDef.lean"
-      sorry_count: 0
-      axioms: ["propext", "Classical.choice", "Quot.sound"]
-      challenge_file: "Challenge/PsdGram/Conformance.lean"
-      solution_file: "Challenge/PsdGram/Leaderboard.lean"
-      challenge_declaration: "AIQChallenge.psd_rank_le_iff_exists_conjTranspose_mul_self"
-      source_declaration: "ForMathlib.Matrix.posSemidef_and_rank_le_iff_exists_conjTranspose_mul_self"
-      source_file: "ForMathlib/LinearAlgebra/Matrix/PosDef.lean"
-      category: "Rank-controlled PSD Gram realization"
-      sorry_count_in_solution: 0
-      expected_axioms: ["propext", "Classical.choice", "Quot.sound"]
-      comparator_config: "comparator/aiq-psd-gram-realization.json"
-    - declaration: "ForMathlib.abs_eigenvalues_sub_le"
+      comparator_config: "comparator/candidate-01-gram-rigidity.json"
+    - declaration: "ForMathlib.abs_eigenvalues_sub_le_opNorm"
       file: "ForMathlib/Analysis/InnerProductSpace/CourantFischer.lean"
       sorry_count: 0
       axioms: ["propext", "Classical.choice", "Quot.sound"]
-      challenge_file: "Challenge/Spectral/Conformance.lean"
-      solution_file: "Challenge/Spectral/Leaderboard.lean"
-      challenge_declaration: "AIQChallenge.weyl_abs_eigenvalues_sub_le"
-      source_declaration: "ForMathlib.abs_eigenvalues_sub_le"
-      source_file: "ForMathlib/Analysis/InnerProductSpace/CourantFischer.lean"
-      category: "Weyl / Courant-Fischer spectral perturbation"
-      sorry_count_in_solution: 0
-      expected_axioms: ["propext", "Classical.choice", "Quot.sound"]
-      comparator_config: "comparator/aiq-spectral-perturbation.json"
-  inventory_challenge:
-    challenge_file: "Challenge/Inventory/Conformance.lean"
-    solution_file: "Challenge/Inventory/Leaderboard.lean"
-    comparator_config: "comparator/aiq-inventory.json"
-    scope: "Current public theorem surface of ForMathlib selected for comparator inventory; excludes the staged spectral-transform measurability and sample-covariance Hermitian/sorted-eigenvalue theorems pending API review."
-    theorem_count: 69
-    expected_axioms: ["propext", "Classical.choice", "Quot.sound"]
-    excluded_for_now:
+      challenge_file: "Challenge/MathlibCandidate/CourantFischerWeyl/Conformance.lean"
+      solution_file: "Challenge/MathlibCandidate/CourantFischerWeyl/Leaderboard.lean"
+      category: "Courant-Fischer min-max + Weyl perturbation"
+      comparator_config: "comparator/candidate-02-courant-fischer-weyl.json"
+    - declaration: "ForMathlib.sum_norm_sub_starProjection_span_sq_le"
+      file: "ForMathlib/Analysis/InnerProductSpace/DavisKahan.lean"
+      sorry_count: 0
+      axioms: ["propext", "Classical.choice", "Quot.sound"]
+      challenge_file: "Challenge/MathlibCandidate/DavisKahan/Conformance.lean"
+      solution_file: "Challenge/MathlibCandidate/DavisKahan/Leaderboard.lean"
+      category: "Davis-Kahan cross-block / sin-Theta"
+      comparator_config: "comparator/candidate-03-davis-kahan.json"
+  pending_challenges:
+    note: "Proven (sorry-free, axiom-clean) but held back from the upstream push; see Challenge/README.md for why each is not yet PR-ready."
+    configs:
+      - "comparator/pending-berge.json"
+      - "comparator/pending-rank-factorization.json"
+      - "comparator/pending-rank-psd-realization.json"
+      - "comparator/pending-restrict-cover-measurable.json"
+      - "comparator/pending-sample-mean-mse.json"
+      - "comparator/pending-near-isometry.json"
+      - "comparator/pending-cfc-measurable.json"
+      - "comparator/pending-matrix-concentration.json"
+      - "comparator/pending-probability-qol.json"
+      - "comparator/pending-tendsto-in-measure.json"
+    leaderboard_only:
       - declaration: "ForMathlib.Matrix.measurable_specTransform"
-        reason: "Recent spectral-transform / CFC measurability staging theorem; not part of the current upstream claim set until its statement/API is reviewed."
-      - declaration: "ForMathlib.isHermitian_sampleCovariance"
-        reason: "Newest sample-covariance staging theorem; conformance wrapper is not yet comparator-exact for the Hermitian witness/API."
-      - declaration: "ForMathlib.measure_forall_sampleCovariance_sortedEig_ge_ge"
-        reason: "Depends on the excluded sample-covariance Hermitian witness; excluded until the sample-covariance API is reviewed."
-  inventory_groups:
-    - name: "probability"
-      comparator_config: "comparator/aiq-inventory-probability.json"
-      theorem_count: 13
-      scope: "Probability measure, second-moment, sample-mean, convergence-in-measure, and concentration helpers."
-    - name: "operator-spectral"
-      comparator_config: "comparator/aiq-inventory-operator-spectral.json"
-      theorem_count: 17
-      scope: "Finite-dimensional spectral identities, Courant--Fischer/Weyl, Davis--Kahan, and projection infrastructure."
-    - name: "gram-geometry"
-      comparator_config: "comparator/aiq-inventory-gram-geometry.json"
-      theorem_count: 9
-      scope: "Gram rigidity and quantitative near-isometry / polar-factor infrastructure."
-    - name: "rank-psd"
-      comparator_config: "comparator/aiq-inventory-rank-psd.json"
-      theorem_count: 8
-      scope: "Matrix rank factorization and rank-controlled PSD Gram realization."
-    - name: "matrix-spectral"
-      comparator_config: "comparator/aiq-inventory-matrix-spectral.json"
-      theorem_count: 11
-      scope: "Entrywise operator/eigenvalue bounds and spectral-function polynomial approximation infrastructure."
-    - name: "measurability"
-      comparator_config: "comparator/aiq-inventory-measurability.json"
-      theorem_count: 3
-      scope: "CFC measurability and compact-existential measurability helpers."
-    - name: "berge"
-      comparator_config: "comparator/aiq-inventory-berge.json"
-      theorem_count: 8
-      scope: "Approximate minimizer compactness and Berge-style continuity fragments."
-  additional_upstream_candidates:
-    - "Davis-Kahan / sin-theta perturbation bounds"
-    - "Entrywise-to-operator-norm and entrywise-to-eigenvalue perturbation"
-    - "Elementary eigenvalue concentration from entrywise second moments"
-    - "Continuous functional calculus / spectral-transform measurability"
-    - "Quantitative polar-factor / near-isometry theorem"
-    - "Compact-existential measurability"
-    - "Approximate-minimizer stability and Berge maximum-theorem fragments"
-    - "Convergence-in-measure constructors and probability helper lemmas"
+        solution_file: "Challenge/MathlibPending/SpectralFunctionMeasurable/Leaderboard.lean"
+        reason: "Matrix-valued measurability statement is not cleanly Mathlib-only expressible; axiom-audit leaderboard only, no comparator conformance."
+  dkps_papers:
+    note: "Fully formalized end-state papers; documented here and in each library's README, NOT comparator challenges. All capstones verified #print axioms = {propext, Classical.choice, Quot.sound} (2026-06-14)."
+    papers:
+      - id: "Acharyya2024"
+        capstones:
+          - "Acharyya2024.Consistency.fixed_models_fixed_queries_consistency"
+          - "Acharyya2024.Consistency.growing_models_growing_queries_consistency"
+      - id: "Acharyya2025"
+        capstones:
+          - "Acharyya2025.RateChain.tendsto_endToEndRate_zero"
+      - id: "DkpsQuench"
+        capstones:
+          - "DkpsQuench.AcharyyaBridge.quench_uniform_embedding_error_of_finite_configError"
+      - id: "Helm2025"
+        capstones:
+          - "Helm2025.DKPS.Theorem1"
+          - "Helm2025.DKPS.Theorem2_bayes"
 
 fidelity:
   summary: >
@@ -281,19 +224,24 @@ automation:
 
 
 challenge_packages:
-  dedicated_configs:
-    - comparator/aiq-gram-rigidity.json
-    - comparator/aiq-psd-gram-realization.json
-    - comparator/aiq-spectral-perturbation.json
-    - comparator/aiq-inventory-probability.json
-    - comparator/aiq-inventory-operator-spectral.json
-    - comparator/aiq-inventory-gram-geometry.json
-    - comparator/aiq-inventory-rank-psd.json
-    - comparator/aiq-inventory-matrix-spectral.json
-    - comparator/aiq-inventory-measurability.json
-    - comparator/aiq-inventory-berge.json
-    - comparator/aiq-inventory.json  # legacy aggregate audit target
+  candidate_configs:
+    - comparator/candidate-01-gram-rigidity.json
+    - comparator/candidate-02-courant-fischer-weyl.json
+    - comparator/candidate-03-davis-kahan.json
+  pending_configs:
+    - comparator/pending-berge.json
+    - comparator/pending-rank-factorization.json
+    - comparator/pending-rank-psd-realization.json
+    - comparator/pending-restrict-cover-measurable.json
+    - comparator/pending-sample-mean-mse.json
+    - comparator/pending-near-isometry.json
+    - comparator/pending-cfc-measurable.json
+    - comparator/pending-matrix-concentration.json
+    - comparator/pending-probability-qol.json
+    - comparator/pending-tendsto-in-measure.json
   note: >-
-    Dedicated challenge families are separated so Mathlib reviewers can inspect
-    and run the Gram/Procrustes, PSD Gram realization, spectral perturbation,
-    and broader PR-oriented inventory groups independently.
+    One comparator config per planned PR. MathlibCandidate is the focused upstream
+    push (Gram rigidity, Courant-Fischer/Weyl, Davis-Kahan); MathlibPending holds
+    proven results that need further work before upstreaming. Each lists only leaf
+    theorems. See Challenge/README.md for the full manifest and the four
+    documented (non-comparator) DKPS papers.

@@ -1,0 +1,13 @@
+{
+  "challenge_module": "Challenge.MathlibPending.MatrixConcentration.Conformance",
+  "solution_module": "Challenge.MathlibPending.MatrixConcentration.Leaderboard",
+  "theorem_names": [
+    "ForMathlib.measure_forall_sortedEig_ge_ge"
+  ],
+  "permitted_axioms": [
+    "propext",
+    "Quot.sound",
+    "Classical.choice"
+  ],
+  "enable_nanoda": false
+}

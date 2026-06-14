@@ -1,0 +1,13 @@
+{
+  "challenge_module": "Challenge.MathlibCandidate.CourantFischerWeyl.Conformance",
+  "solution_module": "Challenge.MathlibCandidate.CourantFischerWeyl.Leaderboard",
+  "theorem_names": [
+    "ForMathlib.abs_eigenvalues_sub_le_opNorm"
+  ],
+  "permitted_axioms": [
+    "propext",
+    "Quot.sound",
+    "Classical.choice"
+  ],
+  "enable_nanoda": false
+}

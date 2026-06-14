@@ -1,0 +1,13 @@
+{
+  "challenge_module": "Challenge.MathlibPending.RestrictCoverMeasurable.Conformance",
+  "solution_module": "Challenge.MathlibPending.RestrictCoverMeasurable.Leaderboard",
+  "theorem_names": [
+    "ForMathlib.measurable_of_iUnion_restrict"
+  ],
+  "permitted_axioms": [
+    "propext",
+    "Quot.sound",
+    "Classical.choice"
+  ],
+  "enable_nanoda": false
+}

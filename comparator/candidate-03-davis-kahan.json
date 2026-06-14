@@ -1,0 +1,14 @@
+{
+  "challenge_module": "Challenge.MathlibCandidate.DavisKahan.Conformance",
+  "solution_module": "Challenge.MathlibCandidate.DavisKahan.Leaderboard",
+  "theorem_names": [
+    "ForMathlib.sum_cross_norm_inner_eigenvectorBasis_sq_le_of_rank_floor",
+    "ForMathlib.sum_norm_sub_starProjection_span_sq_le"
+  ],
+  "permitted_axioms": [
+    "propext",
+    "Quot.sound",
+    "Classical.choice"
+  ],
+  "enable_nanoda": false
+}

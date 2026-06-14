@@ -1,0 +1,13 @@
+{
+  "challenge_module": "Challenge.MathlibCandidate.GramRigidity.Conformance",
+  "solution_module": "Challenge.MathlibCandidate.GramRigidity.Leaderboard",
+  "theorem_names": [
+    "ForMathlib.Matrix.gram_eq_gram_iff_exists_linearIsometryEquiv_map_eq"
+  ],
+  "permitted_axioms": [
+    "propext",
+    "Quot.sound",
+    "Classical.choice"
+  ],
+  "enable_nanoda": false
+}

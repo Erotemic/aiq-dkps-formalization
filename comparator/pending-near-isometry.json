@@ -1,0 +1,14 @@
+{
+  "challenge_module": "Challenge.MathlibPending.NearIsometry.Conformance",
+  "solution_module": "Challenge.MathlibPending.NearIsometry.Leaderboard",
+  "theorem_names": [
+    "ForMathlib.LinearMap.exists_linearIsometryEquiv_norm_sub_le",
+    "ForMathlib.ContinuousLinearMap.exists_linearIsometryEquiv_norm_sub_le"
+  ],
+  "permitted_axioms": [
+    "propext",
+    "Quot.sound",
+    "Classical.choice"
+  ],
+  "enable_nanoda": false
+}

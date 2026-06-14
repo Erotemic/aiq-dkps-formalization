@@ -1,0 +1,13 @@
+{
+  "challenge_module": "Challenge.MathlibPending.TendstoInMeasure.Conformance",
+  "solution_module": "Challenge.MathlibPending.TendstoInMeasure.Leaderboard",
+  "theorem_names": [
+    "ForMathlib.tendstoInMeasure_of_tendsto_measure_dist_le_rate"
+  ],
+  "permitted_axioms": [
+    "propext",
+    "Quot.sound",
+    "Classical.choice"
+  ],
+  "enable_nanoda": false
+}

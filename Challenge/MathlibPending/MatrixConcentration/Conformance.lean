@@ -14,7 +14,7 @@ namespace ForMathlib.Matrix
 
 variable {n : ℕ}
 
-noncomputable def opSym {B : Matrix (Fin n) (Fin n) ℝ} (hB : B.IsHermitian) :
+theorem opSym {B : Matrix (Fin n) (Fin n) ℝ} (hB : B.IsHermitian) :
     (Matrix.toEuclideanLin B).IsSymmetric :=
   Matrix.isSymmetric_toEuclideanLin_iff.mpr hB
 

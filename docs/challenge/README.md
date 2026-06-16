@@ -19,7 +19,7 @@ certifies its whole proof tree, so supporting lemmas need not be listed.
 ## Two families
 
 * `Challenge/MathlibCandidate/` — the focused upstream push: drop-ready PRs.
-  * `GramRigidity` — Procrustes / Gram-matrix rigidity (`comparator/candidate-01-gram-rigidity.json`)
+  * `GramRigidity` — Gram-matrix rigidity (`comparator/candidate-01-gram-rigidity.json`)
   * `CourantFischerWeyl` — k-th eigenvalue min–max + Weyl perturbation (`candidate-02`)
   * `DavisKahan` — cross-block / sin-Θ bound (`candidate-03`)
 * `Challenge/MathlibPending/` — proven (sorry-free, axiom-clean) but held back

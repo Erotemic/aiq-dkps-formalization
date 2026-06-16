@@ -1,5 +1,5 @@
 /-
-# Gram / Procrustes rigidity (Mathlib candidate 01)
+# Gram rigidity (Mathlib candidate 01)
 
 `Conformance.lean` imports only Mathlib and states the leaf theorem(s) as `sorry`;
 `Leaderboard.lean` imports the project and supplies the proofs. Only the leaf

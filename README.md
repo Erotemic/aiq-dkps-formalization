@@ -102,7 +102,7 @@ Formalizes a finite-sample concentration chain for response-based vector
 embeddings.  Beyond the probability step, this library proves an aligned
 classical-MDS perturbation pipeline: double-centering stability,
 entrywise-to-operator transport, Weyl-style spectral perturbation,
-Davis-Kahan-style subspace control, Procrustes/Gram realization facts,
+Davis-Kahan-style subspace control, Gram realization facts,
 quantitative polar alignment, and an explicit end-to-end rate chain.
 
 ### `DkpsQuench`

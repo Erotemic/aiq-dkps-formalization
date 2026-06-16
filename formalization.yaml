@@ -30,12 +30,12 @@ sources:
     type: "research paper"
     author_contacted: "yes; ongoing subject-matter discussion"
     prior_work: "Downstream theorem layer in Helm2025/."
-  - title: "DKPS Quench theorem layer"
-    authors: ["AIQ / Kitware formalization project"]
-    id: "DkpsQuench"
-    type: "downstream formal theorem layer"
-    author_contacted: "n/a"
-    prior_work: "DkpsQuench/ consumes Acharyya2025 concentration interfaces."
+  - title: "Query-efficient model evaluation using cached responses"
+    authors: ["Helm", "Johnson", "Priebe"]
+    id: "Helm et al. 2026"
+    type: "research paper"
+    author_contacted: "yes; ongoing subject-matter discussion"
+    prior_work: "Downstream theorem layer in DkpsQuench/ (consumes Acharyya2025 concentration interfaces)."
 
 status:
   repository_build:
@@ -75,7 +75,8 @@ status:
       axioms: ["propext", "Classical.choice", "Quot.sound"]
       challenge_file: "Challenge/MathlibCandidate/GramRigidity/Conformance.lean"
       solution_file: "Challenge/MathlibCandidate/GramRigidity/Leaderboard.lean"
-      category: "Procrustes / Gram-matrix rigidity"
+      category: "Gram-matrix rigidity"
+      reference: "Horn & Johnson, Matrix Analysis (2nd ed.); Chien & Waldron, arXiv:1312.5393 (2016) -- frame-theoretic form."
       comparator_config: "comparator/candidate-01-gram-rigidity.json"
     - declaration: "ForMathlib.abs_eigenvalues_sub_le_opNorm"
       file: "ForMathlib/Analysis/InnerProductSpace/CourantFischer.lean"
@@ -84,6 +85,7 @@ status:
       challenge_file: "Challenge/MathlibCandidate/CourantFischerWeyl/Conformance.lean"
       solution_file: "Challenge/MathlibCandidate/CourantFischerWeyl/Leaderboard.lean"
       category: "Courant-Fischer min-max + Weyl perturbation"
+      reference: "Horn & Johnson, Matrix Analysis (2nd ed.), Thm 4.2.6 (Courant-Fischer) & 4.3.1 (Weyl); Bhatia, Matrix Analysis, Cor III.2.6 (Weyl)."
       comparator_config: "comparator/candidate-02-courant-fischer-weyl.json"
     - declaration: "ForMathlib.sum_norm_sub_starProjection_span_sq_le"
       file: "ForMathlib/Analysis/InnerProductSpace/DavisKahan.lean"
@@ -92,6 +94,7 @@ status:
       challenge_file: "Challenge/MathlibCandidate/DavisKahan/Conformance.lean"
       solution_file: "Challenge/MathlibCandidate/DavisKahan/Leaderboard.lean"
       category: "Davis-Kahan cross-block / sin-Theta"
+      reference: "Davis & Kahan, SIAM J. Numer. Anal. 7 (1970), 1-46 (sin-Theta theorem III); Yu, Wang & Samworth, Biometrika 102 (2015), 315-323 (variant)."
       comparator_config: "comparator/candidate-03-davis-kahan.json"
   pending_challenges:
     note: "Proven (sorry-free, axiom-clean) but held back from the upstream push; see Challenge/README.md for why each is not yet PR-ready."

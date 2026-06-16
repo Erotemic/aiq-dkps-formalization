@@ -1,7 +1,8 @@
 # DkpsQuench — "Query-efficient model evaluation" (Lean formalization)
 
 **Paper:** Hayden Helm, Ben Johnson, Carey E. Priebe.
-*Query-efficient model evaluation using cached responses* (arXiv:2605.07096).
+*Query-efficient model evaluation using cached responses*
+([arXiv:2605.07096](https://arxiv.org/abs/2605.07096), 2026).
 A transcription is in [`prose/`](prose/) and the LaTeX source in
 [`prose/quench-tex-src/`](prose/quench-tex-src/).
 

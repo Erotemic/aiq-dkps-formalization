@@ -23,7 +23,7 @@ def build_mathlib_candidate_graph() -> nx.DiGraph:
         "Courant-Fischer theorem and helper lemmas": {"rank": 1, "value": "very high"},
         "Weyl eigenvalue perturbation": {"rank": 1, "value": "very high"},
         "Davis-Kahan / sin-theta perturbation": {"rank": 1, "value": "very high"},
-        "Procrustes / Gram-matrix rigidity": {"rank": 2, "value": "very high"},
+        "Gram-matrix rigidity": {"rank": 2, "value": "very high"},
         "Rank-controlled PSD Gram realization": {"rank": 3, "value": "very high"},
         "Quantitative polar factor / near-isometry theorem": {"rank": 5, "value": "high"},
         "Spectral-transform / CFC measurability": {"rank": 4, "value": "high"},
@@ -59,8 +59,8 @@ def build_mathlib_candidate_graph() -> nx.DiGraph:
         ("Davis-Kahan / sin-theta perturbation", "Weyl eigenvalue perturbation"),
         ("Davis-Kahan / sin-theta perturbation", "Courant-Fischer theorem and helper lemmas"),
 
-        ("Procrustes / Gram-matrix rigidity", "Rank-controlled PSD Gram realization"),
-        ("Quantitative polar factor / near-isometry theorem", "Procrustes / Gram-matrix rigidity"),
+        ("Gram-matrix rigidity", "Rank-controlled PSD Gram realization"),
+        ("Quantitative polar factor / near-isometry theorem", "Gram-matrix rigidity"),
 
         ("Approximate-minimizer stability", "Compact-existential measurability"),
         ("Spectral-transform / CFC measurability", "Compact-existential measurability"),

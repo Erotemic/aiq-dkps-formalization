@@ -276,7 +276,9 @@ above:
   Procrustes *optimization* (least-squares `min ‖ΩA−B‖`, SVD solution, generic
   nonzero residual). Fix: drop the editorial term from the docstring; keep the
   citation, qualified as "the exact, zero-residual case." Reference ≠ claim the
-  result solves the named problem.
+  result solves the named problem. (Resolved 2026-06-22: taken further — the file
+  and namespace were renamed `Procrustes` → `GramRigidity`, "Procrustes" kept only
+  as a one-line motivation, and the polar-factor "optimal `W*`" overclaims softened.)
 - **"Where should this live?" is an import-cost question, not a thematic one.**
   Asked whether the `def` belongs in `InnerProductSpace/LinearMap.lean`: it needs
   `Finsupp.linearCombination` + `LinearAlgebra.Isomorphisms` (`quotKerEquivRange`),

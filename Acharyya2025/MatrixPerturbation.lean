@@ -27,8 +27,8 @@ Given a population Gram matrix `B` that is positive semidefinite with
   single linear isometry `W`, is `configBound`-close to `ψ`.
 
 The capstone assembles the operator bound (via `OperatorBridge`), the rank/PSD
-eigenvalue transport, the Gram identity, and Procrustes rigidity
-(`Acharyya2025.Procrustes`).
+eigenvalue transport, the Gram identity, and Gram rigidity
+(`Acharyya2025.GramRigidity`).
 
 Formalized by Claude Fable 5 (claude-fable-5[1m]).
 -/
@@ -37,7 +37,7 @@ import Mathlib
 import Acharyya2024.Common
 import Acharyya2025.ConfigPerturbation
 import Acharyya2025.OperatorBridge
-import Acharyya2025.Procrustes
+import Acharyya2025.GramRigidity
 import Acharyya2025.GramRealization
 
 open scoped BigOperators RealInnerProductSpace InnerProductSpace Matrix
@@ -360,7 +360,7 @@ theorem gram_spectralConfig_eq {d : ℕ} (hd : d ≤ n)
 Assemble: operator closeness (`OperatorBridge`), the rank/PSD eigenvalue
 transport, the operator-world configuration bound
 (`ConfigPerturbation.exists_isometry_configError_spectralConfig_le`), the Gram
-identity, and Procrustes rigidity (`Procrustes.exists_linearIsometryEquiv_of_gram_eq`). -/
+identity, and Gram rigidity (`GramRigidity.exists_linearIsometryEquiv_of_gram_eq`). -/
 
 /-- **Matrix-world capstone.**
 
@@ -374,8 +374,8 @@ isometry `W`, is `configBound n d α Λ (n·η)`-close to `ψ`.
 
 This is the matrix-world deterministic core behind the paper's **Theorem 2**
 (`‖ψ̂W* − ψ‖ ≤ κ` with high probability): once the sample matrix B̂ is entrywise
-close to the population B, the spectral embedding of B̂ — after an optimal
-orthogonal alignment `W` (the Procrustes / `W*` rotation) — is uniformly close to
+close to the population B, the spectral embedding of B̂ — after a suitable
+orthogonal alignment `W` (the paper's `W*` rotation) — is uniformly close to
 the true embedding `ψ`.  The probabilistic step (concentration of `‖B̂ − B‖`) is
 *not* part of this lemma; this provides the deterministic perturbation bound that
 Weyl and Davis–Kahan feed.
@@ -395,7 +395,7 @@ theorem exists_isometry_configError_le_of_entrywise_close
     (hpolar : (d : ℝ) * (4 * (n : ℝ) * ((n : ℝ) * η)^2 / α^2) ≤ 1/2) -- polar-factor smallness (Davis–Kahan term ≤ 1/2)
     (ψ : Acharyya2024.Config n d)               -- any external configuration realizing B
     (hψ : ∀ i j, (∑ k : Fin d, ψ i k * ψ j k) = B i j) :  -- ψ has Gram matrix B
-    -- Conclusion: ∃ a linear isometry W (the alignment/Procrustes rotation) such that the
+    -- Conclusion: ∃ a linear isometry W (the alignment rotation, paper's `W*`) such that the
     -- W-transported sample spectral embedding is configBound-close to ψ (Theorem 2's deterministic core).
     ∃ W : EuclideanSpace ℝ (Fin d) →ₗ[ℝ] EuclideanSpace ℝ (Fin d),
       (∀ x y, ⟪W x, W y⟫_ℝ = ⟪x, y⟫_ℝ) ∧
@@ -427,11 +427,11 @@ theorem exists_isometry_configError_le_of_entrywise_close
   obtain ⟨W₀, hW₀_isom, hW₀_bound⟩ :=
     exists_isometry_configError_spectralConfig_le hd T S hT hSsym hα_pos hε_nonneg
       hα htail hΛ' hclose hsmall hpolar
-  -- Procrustes: Gram(spectralConfig T) = B = Gram(ψ), so an isometry `V` aligns them.
+  -- Gram rigidity: Gram(spectralConfig T) = B = Gram(ψ), so an isometry `V` aligns them.
   have hgramT : ∀ i j : Fin n,
       (∑ k : Fin d, spectralConfig T hT hd i k * spectralConfig T hT hd j k) = B i j :=
     gram_spectralConfig_eq hd hB hrank
-  obtain ⟨V, hV⟩ := Acharyya2025.Procrustes.exists_linearIsometryEquiv_of_gram_eq
+  obtain ⟨V, hV⟩ := Acharyya2025.GramRigidity.exists_linearIsometryEquiv_of_gram_eq
     (spectralConfig T hT hd) ψ (fun i j => by rw [hgramT i j, hψ i j])
   -- the combined isometry `W := V ∘ W₀`.
   refine ⟨V.toLinearMap ∘ₗ W₀, ?_, ?_⟩

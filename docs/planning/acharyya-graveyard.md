@@ -37,7 +37,7 @@ idea; say *why* it died.
   `(toEuclideanLin M x) i` is still rfl-equal to `(M.mulVec (WithLp.ofLp x)) i`
   (use `show` to switch).
 
-- 2026-06-11 — WP7(c) trap: after Procrustes-aligning the eigenvector blocks,
+- 2026-06-11 — WP7(c) trap: after orthogonally aligning the eigenvector blocks,
   the residual `‖Λ̂^{1/2}W − WΛ^{1/2}‖` CANNOT be bounded by naive triangle
   splitting — entries `(√λ̂_k − √λ_l)W_{kl}` are large for k ≠ l without
   per-eigenvalue gaps inside the top block. Resolution: the Sylvester-style

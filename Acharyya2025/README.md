@@ -86,7 +86,7 @@ The result is assembled in layers; read them in this order:
 | **Corollary 2** — vanishing rate as budgets grow | `endToEndRate`, `tendsto_endToEndRate_zero`, `tendsto_configBound_zero` | `RateChain.lean` |
 | Weyl's eigenvalue inequality | `abs_eigenvalues_sub_le` | `Weyl.lean` |
 | Davis–Kahan sin-Θ bound; rank-`d` eigengap | `sum_cross_inner_sq_le`; rank-gap lemmas | `DavisKahan.lean`, `RankGap.lean` |
-| The aligning orthogonal map `W*` | `alignedSpectralConfig`, `AlignExists`; Procrustes / polar factor | `AlignedPipeline.lean`, `Procrustes.lean`, `PolarFactor.lean`, `Overlap.lean` |
+| The aligning orthogonal map `W*` | `alignedSpectralConfig`, `AlignExists`; Gram rigidity / polar factor | `AlignedPipeline.lean`, `GramRigidity.lean`, `PolarFactor.lean`, `Overlap.lean` |
 | PSD rank-`≤d` ⇒ Gram of a `d`-config (produces the population `ψ`) | `exists_config_gram_eq_of_posSemidef_rank_le` | `GramRealization.lean` |
 | Matrix-world capstone (entrywise `η` ⇒ aligned `ConfigError`) | `exists_isometry_configError_le_of_entrywise_close` | `MatrixPerturbation.lean` |
 
@@ -152,7 +152,7 @@ user-observed model labels.
 | [`RankGap.lean`](RankGap.lean) | Eigengap derivation from rank-`d` / floor structure via Weyl. |
 | [`Overlap.lean`](Overlap.lean) | Eigenvector overlap matrix, `QᵀQ − I` deviation, Sylvester commutator identity. |
 | [`PolarFactor.lean`](PolarFactor.lean) | Quantitative polar factor: near-isometry ⇒ exact isometry within `2δ`. |
-| [`Procrustes.lean`](Procrustes.lean) | Exact Gram rigidity: equal Grams ⇒ isometry-related (the `κ = 0` limit of `W*`). |
+| [`GramRigidity.lean`](GramRigidity.lean) | Exact Gram rigidity: equal Grams ⇒ isometry-related (the `κ = 0` limit of `W*`). |
 | [`GramRealization.lean`](GramRealization.lean) | PSD rank-`≤d` matrices are Gram matrices of `d`-dimensional configurations. |
 | [`SpectralPipeline.lean`](SpectralPipeline.lean) | World-map between DKPS/CMDS, matrix, spectral, and configuration layers; `CMDSpectralAssumptions`; population CMDS Gram realization. |
 | [`OperatorBridge.lean`](OperatorBridge.lean) | Honest `ℓ²→ℓ²` operator-norm transport between the matrix and operator worlds. |

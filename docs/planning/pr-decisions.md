@@ -68,7 +68,7 @@ conclusion is a `map_eq`.
   `gram_eq_gram_iff_exists_linearIsometryEquiv_map_eq` (iff);
   `inner_linearCombination_linearCombination` unchanged. Updated `GramMatrix.lean`
   and the `Challenge/Gram/` + `Challenge/Inventory/` conformance & leaderboard
-  files; repointed the `ForMathlib.`-qualified call in `Procrustes.lean`.
+  files; repointed the `ForMathlib.`-qualified call in `GramRigidity.lean`.
 - **Wrapper policy (user-directed):** Mathlib-candidate names must be pristine
   with no inconsistency; any non-standard convenience name lives **downstream** as
   a wrapper in the DKPS libs. The only such wrapper is

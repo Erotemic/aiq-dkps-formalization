@@ -17,9 +17,9 @@ This repository focuses on five active Lean libraries:
 
 The active libraries formalize more than paper-facing wrappers.  They include
 supporting mathematics for raw-stress multidimensional scaling, classical MDS
-double-centering, finite-dimensional spectral perturbation, Procrustes/alignment
-bookkeeping, sample-mean concentration, high-probability event propagation, and
-consistency transfer.
+double-centering, finite-dimensional spectral perturbation, orthogonal-alignment
+(Gram rigidity / polar factor) bookkeeping, sample-mean concentration,
+high-probability event propagation, and consistency transfer.
 
 ## Repository layout
 
@@ -30,7 +30,7 @@ consistency transfer.
 ├── Acharyya2024.lean      # root module for the 2024 consistency library
 ├── Acharyya2024/          # raw-stress MDS, probability, second moments, paper-facing consistency
 ├── Acharyya2025.lean      # root module for the 2025 concentration library
-├── Acharyya2025/          # CMDS, Weyl/Davis-Kahan/Procrustes, aligned finite-sample rates
+├── Acharyya2025/          # CMDS, Weyl/Davis-Kahan, Gram rigidity/polar factor, aligned finite-sample rates
 ├── DkpsQuench.lean        # root module for the cached-response query-efficiency layer
 ├── DkpsQuench/            # theorem statements plus bridge from Acharyya2025 concentration
 ├── Helm2025.lean          # root module for the statistical-inference transfer layer

@@ -14,7 +14,7 @@ reviewer is likely to object to before these results are proposed as PRs.
 
 The headline candidates considered here are:
 
-1. Gram/Procrustes rigidity.
+1. Gram rigidity.
 2. Rank-controlled PSD Gram realization.
 3. Spectral perturbation infrastructure: Courant--Fischer, Weyl, and
    Davis--Kahan-style projector/cross-block estimates.
@@ -30,12 +30,12 @@ placement, and whether the statements fit existing Mathlib abstractions.
 
 | Candidate | Current proof status | Mathlib readiness | Recommended action |
 | --- | --- | --- | --- |
-| Gram/Procrustes rigidity | Complete, clean, comparator-covered | **Closest to PR-ready** | Make this the first serious upstream target, after statement/API polishing. |
+| Gram rigidity | Complete, clean, comparator-covered | **Closest to PR-ready** | Make this the first serious upstream target, after statement/API polishing. |
 | Rank-controlled PSD Gram realization | Complete, valuable, comparator-covered | **Promising but needs API review** | Second big target; likely needs proof/API reshaping around existing PSD/rank APIs. |
 | Courant--Fischer + Weyl | Complete and important | **High value, medium readiness** | Split into smaller PRs; do not bundle with Davis--Kahan initially. |
 | Davis--Kahan projector/cross-block bounds | Complete and useful downstream | **Not PR-ready as-is** | Treat as staged infrastructure; needs API redesign and likely human spectral-analysis review. |
 
-The first **big** result to target should be Gram/Procrustes rigidity.  It has
+The first **big** result to target should be Gram rigidity.  It has
 the best combination of mathematical value, statement clarity, proof locality,
 and likely reviewer tractability.
 
@@ -58,7 +58,7 @@ file into a Mathlib-style contribution:
   for the downstream DKPS application.
 - Verify with a dedicated comparator challenge for the exact theorem family.
 
-## 1. Gram/Procrustes rigidity
+## 1. Gram rigidity
 
 Current file:
 
@@ -423,7 +423,7 @@ the public challenge statement using only permitted axioms.
 
 Current trusted headline coverage:
 
-- Gram/Procrustes rigidity: covered by the headline challenge.
+- Gram rigidity: covered by the headline challenge.
 - Rank-controlled PSD Gram realization: covered by the headline challenge.
 - Weyl perturbation: covered by the headline challenge.
 
@@ -434,13 +434,13 @@ as headline claims until their statement shape has been reviewed.
 
 ## Recommended upstreaming sequence
 
-### First serious PR track: Gram/Procrustes rigidity
+### First serious PR track: Gram rigidity
 
 1. Ask on Zulip whether the community prefers a same-ambient-space theorem or a
    span-level theorem between two spaces.
 2. Refactor the proof around the preferred core theorem.
 3. Add a dedicated comparator challenge for this family.
-4. Prepare a small PR with only the Gram/Procrustes theorem family.
+4. Prepare a small PR with only the Gram-rigidity theorem family.
 
 ### Second serious PR track: PSD Gram realization
 
@@ -488,7 +488,7 @@ Use Fable for targeted cleanup rather than broad theorem proving:
 ## Bottom line
 
 The current headline proofs are real and substantial, but they are not all
-Mathlib-quality as-is.  Gram/Procrustes rigidity is the best first big target.
+Mathlib-quality as-is.  Gram rigidity is the best first big target.
 PSD Gram realization is the best second target after API review.  The spectral
 stack is probably the highest-value long-term contribution, but it must be
 split carefully.  Davis--Kahan is the most impressive downstream result, but it

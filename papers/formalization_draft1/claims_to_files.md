@@ -59,7 +59,7 @@ for line-accurate citations in a final submission.
 - `Acharyya2025/RankGap.lean`: rank/floor eigengap derivation.
 - `Acharyya2025/Overlap.lean`: eigenvector overlap and commutator control.
 - `Acharyya2025/PolarFactor.lean`: quantitative polar-factor argument.
-- `Acharyya2025/Procrustes.lean`: Gram rigidity and isometric alignment.
+- `Acharyya2025/GramRigidity.lean`: Gram rigidity and isometric alignment.
 - `Acharyya2025/GramRealization.lean`: PSD rank-constrained Gram realization.
 - `Acharyya2025/OperatorBridge.lean`: entrywise-to-operator transport.
 

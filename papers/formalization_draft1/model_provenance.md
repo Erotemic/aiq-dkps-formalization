@@ -67,7 +67,7 @@ most of the technically difficult Acharyya and bridge files, including:
 - `Acharyya2025/MatrixPerturbation.lean`
 - `Acharyya2025/Overlap.lean`
 - `Acharyya2025/PolarFactor.lean`
-- `Acharyya2025/Procrustes.lean`
+- `Acharyya2025/GramRigidity.lean`
 - `Acharyya2025/GramRealization.lean`
 - `Acharyya2025/ConfigPerturbation.lean`
 - `Acharyya2025/AlignedPipeline.lean`
@@ -90,7 +90,7 @@ Relevant git-history milestones include:
 - `c9df219` marks five false-as-written statements.
 - `08cfb0b` proves the entrywise-to-operator-norm seam.
 - `3b95d23` proves Courant-Fischer and Weyl.
-- `c068eb5` proves Procrustes rigidity.
+- `c068eb5` proves Gram rigidity.
 - `d8d6a2d` proves Davis-Kahan cross-block bounds.
 - `a748e9f` proves the CMDS configuration perturbation theorem.
 - `45f4bc2` proves the deterministic raw-stress MDS stability core.

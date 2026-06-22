@@ -85,7 +85,7 @@ scope now.
 
 | Candidate | Reviewer value | State | Left to drop-ready | Fable? |
 |---|---|---|---|---|
-| **Gram/Procrustes rigidity** | **High** — clean, novel, fundamental (audit A−/B+) | refactored (R1/R1b); modular, general | R6 naming decision; choose destination; minimal-import pass | no |
+| **Gram rigidity** | **High** — clean, novel, fundamental (audit A−/B+) | refactored (R1/R1b); modular, general | R6 naming decision; choose destination; minimal-import pass | no |
 | **Weyl perturbation** | **High** — entirely absent upstream, canonical | done + opNorm form (R3b); decomposition planned (R3) | physically split per plan (PR-1 cross-term, PR-4 Weyl); naming; destination | no |
 | **Rank-controlled PSD factorization** | **Good** — novel rank-controlled refinement | modularized (R2) | **R2b recon** (below); naming; destination | recon only |
 

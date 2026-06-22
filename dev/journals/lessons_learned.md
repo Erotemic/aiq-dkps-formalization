@@ -108,7 +108,9 @@ further, and the lessons mostly **correct** what the first pass taught.
 - **Terminology precision.** Don't name-drop a field's signature problem
   ("Procrustes") unless the statement *is* that problem; this is the exact /
   zero-residual case, not the least-squares optimization. Keep the citation, drop
-  the editorial claim.
+  the editorial claim. (Resolved 2026-06-22: the file/namespace were renamed
+  `Procrustes` → `GramRigidity`, and "Procrustes" was demoted to a one-line
+  *motivation* note; the polar-factor "optimal `W*`" overclaims were softened too.)
 - **Placement = import-cost, not theme.** "Move it to `LinearMap.lean`?" → it
   needs `Finsupp.linearCombination` + `Isomorphisms`, which that file lacks;
   answer with the dependency delta first.

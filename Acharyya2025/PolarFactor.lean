@@ -63,10 +63,14 @@ genuine linear isometry `W` by an operator of norm at most `2 δ`:
 from the sorted eigenbasis of `G`.  The constant `2 δ` is not sharp (the
 construction gives `√(1+δ) · δ ≤ √(3/2) · δ`), but suffices.
 
-Paper correspondence: this is the **polar-factor / orthogonal Procrustes** step
-that produces the aligning orthogonal map `W*` of Theorem 2 in the approximate
-(noisy) regime.  Given a map `M` that is only near-isometric, it extracts a true
-orthogonal `W` (the isometry `⟪W x, W y⟫ = ⟪x, y⟫`) close to `M`.  In the
+Paper correspondence: this is the **polar-factor** step that produces the
+aligning orthogonal map `W*` of Theorem 2 in the approximate (noisy) regime.
+Given a map `M` that is only near-isometric, it extracts a true orthogonal `W`
+(the isometry `⟪W x, W y⟫ = ⟪x, y⟫`) close to `M`.  The construction
+`W := M (MᵀM)^{-1/2}` is exactly the orthogonal polar factor of `M`, which is
+the closed-form solution of the *orthogonal Procrustes problem* `min_{Ω ∈ O(d)}
+‖M − Ω‖` — but that optimization is only motivation here: this lemma proves the
+closeness bound `‖(M − W) x‖ ≤ 2 δ ‖x‖`, not that `W` is the minimizer.  In the
 Agterberg-style decomposition of `ψ̂W* − ψ`, this controls the leading
 ("Term-1") polar-factor error.
 
@@ -82,7 +86,7 @@ theorem exists_isometry_close_of_self_adjoint_comp_close
     -- hypothesis: `M`'s quadratic form is uniformly `δ`-close to the identity's (near-isometry)
     (hclose : ∀ x : F, |⟪M x, M x⟫_ℝ - ⟪x, x⟫_ℝ| ≤ δ * ⟪x, x⟫_ℝ) :
     -- Conclusion: there is a genuine orthogonal map `W` (an isometry, first conjunct)
-    -- with `‖(M − W) x‖ ≤ 2δ ‖x‖` (second conjunct) — the optimal orthogonal W* close to `M`.
+    -- with `‖(M − W) x‖ ≤ 2δ ‖x‖` (second conjunct) — an orthogonal `W` close to `M` (the polar factor).
     ∃ W : F →ₗ[ℝ] F,
       (∀ x y : F, ⟪W x, W y⟫_ℝ = ⟪x, y⟫_ℝ) ∧
       (∀ x : F, ‖(M - W) x‖ ≤ 2 * δ * ‖x‖) := by

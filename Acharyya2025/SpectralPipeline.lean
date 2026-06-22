@@ -10,7 +10,7 @@ This file is intentionally a map between "worlds":
 3. Spectral world:
    eigengaps, invariant subspaces, Davis-Kahan perturbation.
 4. Configuration world:
-   Euclidean configurations, Gram matrices, Procrustes/alignment error.
+   Euclidean configurations, Gram matrices, orthogonal-alignment error.
 
 The elementary representation bridges are proved in `MathlibBridge`.  The hard
 spectral facts are now FULLY PROVED, one stage per file: Weyl eigenvalue

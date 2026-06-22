@@ -1,16 +1,20 @@
 /-
-# Procrustes rigidity (exact Gram case)
+# Gram rigidity (orthogonal congruence of equal-Gram configurations)
 
 Two configurations of vectors with identical Gram matrices (all pairwise inner
 products equal) are related by a single linear isometry of the ambient space.
+This is an *existence/rigidity* statement — there is no optimization here: the
+aligning map is exhibited directly and achieves zero error exactly.
 
-This is the deterministic, exact-data core underlying *Procrustes alignment* in
-classical multidimensional scaling (CMDS): a configuration recovered from a
-Gram matrix is determined only up to an orthogonal transformation, so any two
-configurations realizing the same Gram matrix are orthogonally congruent.  In
-the finite-sample CMDS perturbation theorems this rigidity is what makes the
-"up to `W ∈ O(d)`" alignment in the conclusion *statable*: it is the exact
-limit of the approximate alignment.
+The result is the deterministic, exact-data core that *motivates* Procrustes
+alignment in classical multidimensional scaling (CMDS): a configuration
+recovered from a Gram matrix is determined only up to an orthogonal
+transformation, so any two configurations realizing the same Gram matrix are
+orthogonally congruent.  In the finite-sample CMDS perturbation theorems this
+rigidity is what makes the "up to `W ∈ O(d)`" alignment in the conclusion
+*statable*: it is the exact limit of the approximate alignment.  (The Procrustes
+*problem* proper — minimizing `‖A Ω − B‖` over `Ω ∈ O(d)` — is not formalized;
+only this exact-congruence existence statement is.)
 
 References:
 * T. F. Cox and M. A. A. Cox, *Multidimensional Scaling*, 2nd ed.,
@@ -30,10 +34,10 @@ import ForMathlib.Analysis.InnerProductSpace.GramMatrix
 
 open scoped RealInnerProductSpace BigOperators
 
-namespace Acharyya2025.Procrustes
+namespace Acharyya2025.GramRigidity
 
 /--
-**Procrustes rigidity (abstract form).**
+**Gram rigidity (abstract form).**
 
 If two families `φ ψ : ι → E` of vectors in a finite-dimensional real inner
 product space have equal Gram matrices, i.e. `⟪φ i, φ j⟫ = ⟪ψ i, ψ j⟫` for all
@@ -45,9 +49,11 @@ Thin `ℝ`-instantiation of the Mathlib-staged
 `RCLike 𝕜`); kept under its original name for downstream call-sites.
 
 Paper correspondence: this is the **exact (noise-free) limit** of the alignment
-in Theorem 2.  When the two configurations have *equal* Gram matrices, the
-aligning orthogonal map `W*` exists exactly and achieves zero error; the
-finite-sample Theorem 2 is the approximate version of this rigidity.
+in Theorem 2.  When the two configurations have *equal* Gram matrices, an
+aligning orthogonal map `W` exists exactly and achieves zero error (the exact
+analogue of the paper's `W*`); the finite-sample Theorem 2 is the approximate
+version of this rigidity.  Note this asserts *existence* of such a `W`, not that
+it is the minimizer of any alignment cost.
 
 Note (extra implicit assumptions beyond the paper): `E` is assumed to be a
 finite-dimensional real inner-product space — a Lean modelling choice matching
@@ -61,12 +67,12 @@ theorem exists_linearIsometryEquiv_of_inner_eq
     {ι : Type*} (φ ψ : ι → E)
     (h : ∀ i j, ⟪φ i, φ j⟫ = ⟪ψ i, ψ j⟫) :  -- hypothesis: the two families have equal Gram matrices
     -- Conclusion: there is an orthogonal map `W` (linear isometry equivalence of `E`)
-    -- aligning the families exactly, `W (φ i) = ψ i` for all `i` — the exact case of W*.
+    -- aligning the families exactly, `W (φ i) = ψ i` for all `i` — the exact analogue of `W*`.
     ∃ W : E ≃ₗᵢ[ℝ] E, ∀ i, W (φ i) = ψ i :=
   ForMathlib.exists_linearIsometryEquiv_map_eq_of_inner_eq h
 
 /--
-**Procrustes rigidity for DKPS configurations.**
+**Gram rigidity for DKPS configurations.**
 
 Specialization of `exists_linearIsometryEquiv_of_inner_eq` to the DKPS
 configuration type `Acharyya2024.Config n d = Fin n → EuclideanSpace ℝ (Fin d)`,
@@ -96,4 +102,4 @@ theorem exists_linearIsometryEquiv_of_gram_eq
         simp [PiLp.inner_apply, mul_comm]]
   exact h i j
 
-end Acharyya2025.Procrustes
+end Acharyya2025.GramRigidity

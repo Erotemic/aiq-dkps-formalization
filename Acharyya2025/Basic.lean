@@ -12,7 +12,7 @@ import Acharyya2025.MathlibBridge
 import Acharyya2025.Bridge
 import Acharyya2025.SpectralPipeline
 import Acharyya2025.GramRealization
-import Acharyya2025.Procrustes
+import Acharyya2025.GramRigidity
 import Acharyya2025.Weyl
 import Acharyya2025.OperatorBridge
 import Acharyya2025.DavisKahan

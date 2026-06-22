@@ -48,7 +48,7 @@ matrix-norm-scope wrangling (the "(b) instance risk" below never materializes):
   `Gram (spectralConfig) = specTransform h` (the `√λ·√λ = λ` computation plus
   tail-kill/reindex over `Fin.castLE`).
 * **(B)** `alignExists_iff_qProp` — `AlignExists ↔ QProp ψ c (Gram spec)`
-  pointwise and unconditionally (Procrustes rigidity,
+  pointwise and unconditionally (Gram rigidity,
   `exists_linearIsometryEquiv_of_inner_eq`).
 * **(C)** `measurableSet_qProp` — `{M | QProp ψ c M}` is Borel: on each
   diagonal-bounded piece the realizing configuration lies in a compact ball, so
@@ -152,8 +152,8 @@ Both `spectralConfig` and the eigendata use the SAME `eigenvectorBasis`, so the
 `AlignExists ω = ∃ W ∈ S, ∑ᵢ ‖W(spec ω i) − ψ i‖ ≤ c` with `S` = the
 inner-product-preserving maps (a group). Replacing `spec ω` by `R ∘ spec ω`
 (`R ∈ S`) leaves the event unchanged (`W ↦ W R⁻¹`), and two configs share an
-`S`-orbit iff they have equal Gram (Procrustes —
-[`Acharyya2025/Procrustes.lean`](../../Acharyya2025/Procrustes.lean) `exists_linearIsometryEquiv_*` gives this).
+`S`-orbit iff they have equal Gram (Gram rigidity —
+[`Acharyya2025/GramRigidity.lean`](../../Acharyya2025/GramRigidity.lean) `exists_linearIsometryEquiv_*` gives this).
 Conclude `AlignExists ω = P(GramMatrix (spec ω))` for a predicate `P` on `n×n`
 matrices, where `P M := ∃ z, GramMatrix z = M ∧ ∃ W ∈ S, ∑ ‖W (z i) − ψ i‖ ≤ c`.
 

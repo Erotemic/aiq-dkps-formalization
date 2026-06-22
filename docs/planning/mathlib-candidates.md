@@ -24,7 +24,7 @@ finite-dim real IPS), #5 (rank-constrained PSD factorization, ℝ), #6
 (TendstoInMeasure constructors, general filter/EDist) are ALL staged in the
 `ForMathlib/` library (see `ForMathlib/README.md`), generalized to `RCLike 𝕜`
 where applicable, with the paper libraries rewired to consume them
-(`Acharyya2025/Procrustes.lean`, `Acharyya2025/RateChain.lean`,
+(`Acharyya2025/GramRigidity.lean`, `Acharyya2025/RateChain.lean`,
 `Acharyya2024/Probability.lean`, `Acharyya2025/DavisKahan.lean`,
 `Acharyya2024/SecondMoment.lean`, `Acharyya2025/GramRealization.lean`,
 `Acharyya2025/Weyl.lean`, `Acharyya2025/PolarFactor.lean`,
@@ -73,7 +73,7 @@ generalization (typically ℝ → `RCLike 𝕜`, restating in Mathlib idiom);
 
 | # | Candidate | Source | Effort | Proposed home |
 |---|-----------|--------|--------|---------------|
-| 1 | Procrustes rigidity (equal Grams ⇒ linear isometry equiv) | `Acharyya2025/Procrustes.lean:49` | S/M | `Analysis/InnerProductSpace/GramMatrix.lean` |
+| 1 | Gram rigidity (equal Grams ⇒ linear isometry equiv) | `Acharyya2025/GramRigidity.lean:49` | S/M | `Analysis/InnerProductSpace/GramMatrix.lean` |
 | 2 | QoL small-lemma bundle: measurability-free `1 − μ sᶜ ≤ μ s`; uncentered second-moment Chebyshev | `Acharyya2025/RateChain.lean:75`, `Acharyya2024/Probability.lean:49` | S | next to the existing siblings (see §2) |
 | 3 | Courant–Fischer (k-th eigenvalue, both directions) + Weyl's eigenvalue perturbation inequality | `Acharyya2025/Weyl.lean:142,196,260` | M | new `Analysis/InnerProductSpace/CourantFischer.lean` |
 | 4 | Vector-valued sample-mean MSE: `E‖X̄−μ‖² = r⁻²Σₖ E‖Xₖ−μ‖²` + iid trace(Σ)/r + `≤ γ/r` | `Acharyya2024/SecondMoment.lean:143,232,265` | M | `Probability/Moments/Variance.lean` or new `SampleMean.lean` |
@@ -247,9 +247,9 @@ proof).
 
 ## Detailed dossiers
 
-### 1. Procrustes rigidity — best spectral value/effort
+### 1. Gram rigidity — best spectral value/effort
 
-`exists_linearIsometryEquiv_map_eq_of_inner_eq` (`Acharyya2025/Procrustes.lean:49`):
+`exists_linearIsometryEquiv_map_eq_of_inner_eq` (`Acharyya2025/GramRigidity.lean:49`):
 families `φ ψ : ι → E` (arbitrary index, `E` finite-dim real IPS) with
 `⟪φ i, φ j⟫ = ⟪ψ i, ψ j⟫` are related by `W : E ≃ₗᵢ[ℝ] E` with `W (φ i) = ψ i`.
 Proof: `Finsupp.linearCombination` kernel comparison + `LinearIsometry.extend`.

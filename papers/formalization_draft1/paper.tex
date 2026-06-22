@@ -39,7 +39,7 @@ for Statistical Embeddings in Lean}
 We describe a \Lean formalization of a connected body of finite-dimensional
 mathematics underlying statistical embedding methods: raw-stress
 multidimensional-scaling consistency, classical multidimensional-scaling
-perturbation, Procrustes alignment, measurable alignment events, and
+perturbation, orthogonal alignment, measurable alignment events, and
 probability-to-rate composition.  Data kernel perspective space (DKPS)
 embeddings of black-box generative models provide the motivating application
 and integration test, but the main contribution is the formalization of the
@@ -103,7 +103,7 @@ The development makes the following contributions.
   \item It formalizes a deterministic CMDS perturbation theorem converting
   matrix perturbation into aligned configuration error.  This requires formal
   spectral perturbation, rank-gap bookkeeping, overlap estimates, polar-factor
-  control, Procrustes alignment, and Gram-realization lemmas.
+  control, orthogonal alignment, and Gram-realization lemmas.
   \item It formalizes raw-stress MDS stability through minimizer-set arguments,
   compactness, approximate-minimizer stability, and explicit uniqueness
   hypotheses for fixed-profile conclusions.
@@ -190,13 +190,13 @@ converted to operator control.  Weyl-type inequalities control eigenvalues.
 Rank and eigenvalue-floor assumptions produce the spectral separation needed for
 Davis--Kahan estimates.  Cross-block overlap estimates control the deviation of
 empirical and population eigenspaces.  A quantitative polar-factor theorem turns
-an approximate isometry into a genuine isometry.  Gram and Procrustes lemmas
+an approximate isometry into a genuine isometry.  Gram-rigidity lemmas
 then transfer this information back to configurations.
 
 These pieces are distributed across
 \file{Acharyya2025/Weyl.lean}, \file{DavisKahan.lean},
 \file{RankGap.lean}, \file{Overlap.lean}, \file{PolarFactor.lean},
-\file{Procrustes.lean}, \file{GramRealization.lean},
+\file{GramRigidity.lean}, \file{GramRealization.lean},
 \file{OperatorBridge.lean}, and \file{ConfigPerturbation.lean}.  Several of the
 same ideas are also staged in \file{ForMathlib}.  The important point is that
 well-known spectral reasoning had to be decomposed into formally usable lemmas
@@ -309,7 +309,7 @@ interfaces have the shape needed by later statistical theorems.
 
 The \file{ForMathlib} layer stages general lemmas separated from the DKPS
 application.  These include Courant--Fischer and Weyl lemmas, Davis--Kahan-style
-bounds, Gram-matrix and Procrustes rigidity, quantitative near-isometry and
+bounds, Gram-matrix rigidity, quantitative near-isometry and
 polar-factor results, entrywise-to-operator comparisons, compact-existential
 measurability, convergence-in-measure constructors, sample-mean moment identities,
 and approximate-minimizer stability.  Some are thin generalizations of local
@@ -416,7 +416,7 @@ connected artifact.
 This development formalizes a collection of difficult mathematical bridges
 underlying statistical embedding theory.  DKPS provides the motivating theorem
 stack, but the central contribution is broader: a verified treatment of CMDS
-perturbation, raw-stress MDS stability, Procrustes alignment, measurable
+perturbation, raw-stress MDS stability, orthogonal alignment, measurable
 alignment events, and response-level probability-to-rate composition in \Lean.
 
 The artifact shows that familiar mathematical arguments may require substantial

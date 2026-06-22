@@ -14,7 +14,7 @@ noted, paper libs rewired as thin consumers):
 
 | Candidate | Staged file | Rewired consumer |
 |---|---|---|
-| #1 Procrustes rigidity (RCLike + `Matrix.gram` iff) | `Analysis/InnerProductSpace/GramMatrix.lean` | `Acharyya2025/Procrustes.lean` |
+| #1 Gram rigidity (RCLike + `Matrix.gram` iff) | `Analysis/InnerProductSpace/GramMatrix.lean` | `Acharyya2025/GramRigidity.lean` |
 | #2a measurability-free `1 − μ sᶜ ≤ μ s` | `MeasureTheory/Measure/Typeclasses/Probability.lean` | `Acharyya2025/RateChain.lean` |
 | #2b uncentered second-moment Chebyshev | `Probability/Moments/Variance.lean` | `Acharyya2024/Probability.lean` |
 | #3a Courant–Fischer (both directions) + Weyl (RCLike) | `Analysis/InnerProductSpace/CourantFischer.lean` | `Acharyya2025/Weyl.lean` |
@@ -111,7 +111,7 @@ permutation bridge is painless, else leave and note it.
 ## Task E — PR pipeline (when the user says go; do NOT push/PR without them)
 
 Sequencing (small trust-builders first): (1) #2a+#2b QoL bundle, (2) #3b
-cross-term, (3) #7 constructors, (4) #1 Procrustes into GramMatrix.lean,
+cross-term, (3) #7 constructors, (4) #1 Gram rigidity into GramMatrix.lean,
 (5) #6 polar factor, (6) #3a Courant–Fischer+Weyl (split: helpers/quadratic
 form, then CF+Weyl), (7) #4, #5.
 Per PR: copy staged decls into a mathlib fork dropping the `ForMathlib`

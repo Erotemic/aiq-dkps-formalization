@@ -270,9 +270,10 @@ of which is `≤ τ := 4 n ε² / α²`. -/
 
 /-- The near-isometry `M := toEuclideanLin Qᵀ`, where `Q := overlap hT hS` is the
 overlap (cosine) matrix between the population and sample leading eigenbases.
-`M` is the linear map whose polar factor will furnish the alignment matrix `W`
-(the paper's orthogonal `W*`). It is `≈` an isometry because `Q` is `≈`
-orthogonal under the rank-`d` floor; a plain definition, not a claim. -/
+`M` is the linear map whose polar factor will furnish an aligning isometry `W`
+(playing the role of the paper's orthogonal `W*`; optimality/uniqueness is not
+established here). It is `≈` an isometry because `Q` is `≈` orthogonal under the
+rank-`d` floor; a plain definition, not a claim. -/
 noncomputable def nearIsometry (hT : T.IsSymmetric) (hS : S.IsSymmetric) (hd : d ≤ n) :
     EuclideanSpace ℝ (Fin d) →ₗ[ℝ] EuclideanSpace ℝ (Fin d) :=
   Matrix.toEuclideanLin (Acharyya2025.Overlap.overlap hT hS hn_eq hd)ᵀ
@@ -904,8 +905,8 @@ The three `Real.sqrt` summands are the Frobenius bounds of Term 1 (polar factor)
 Term 2 (commutator), and Term 3 (Davis–Kahan defect) respectively; the leading
 `√n` converts the Frobenius norm to the per-point `ConfigError`. Here
 `δ := d · (4 n ε² / α²)` is the polar-factor parameter. This is the explicit
-`κ`-style bound on `‖ψ̂W* − ψ‖` in the deterministic core of Theorem 2; a plain
-definition (the bound is asserted in the theorem below). -/
+`κ`-style bound on `‖ψ̂W* − ψ‖` in the deterministic core feeding Theorem 2; a
+plain definition (the bound is asserted in the theorem below). -/
 noncomputable def configBound (n d : ℕ) (α Λ ε : ℝ) : ℝ :=
   Real.sqrt n *
     ( Real.sqrt ((2 * ((d : ℝ) * (4 * (n : ℝ) * ε^2 / α^2)))^2 * ((d : ℝ) * (Λ + ε)))
@@ -929,13 +930,15 @@ three-term decomposition `ψ̂W − ψ = Term1 + Term2 + Term3` (polar / commuta
 Davis–Kahan), combined by the Minkowski inequality on
 `EuclideanSpace ℝ (Fin n × Fin d)` and `ConfigError ≤ √n · ‖·‖_F`.
 
-PAPER CORRESPONDENCE: this is the **deterministic core of Theorem 2** (the
-Weyl + Davis–Kahan part). The existential `W` is the paper's orthogonal matrix
-`W* ∈ O(d)`; the conclusion is the deterministic version of `‖ψ̂W* − ψ‖ ≤ κ`,
-here with the explicit `κ = configBound n d α Λ ε`. The probabilistic
-"with high probability" content of Theorem 2 (turning `ε` and the asymptotic
-regime `r = ω(n³)` into a tail bound) lives elsewhere; this theorem supplies the
-deterministic bound that holds once `S` is `ε`-close to `T`.
+PAPER CORRESPONDENCE: this is the **deterministic core feeding Theorem 2** (the
+Weyl + Davis–Kahan part); Theorem 2 itself is probabilistic. The existential `W`
+is an aligning isometry playing the role of the paper's orthogonal matrix
+`W* ∈ O(d)` (optimality/uniqueness is not established here); the conclusion is the
+deterministic counterpart of `‖ψ̂W* − ψ‖ ≤ κ`, here with the explicit
+`κ = configBound n d α Λ ε`. The probabilistic "with high probability" content of
+Theorem 2 (turning `ε` and the asymptotic regime `r = ω(n³)` into a tail bound)
+lives elsewhere; this theorem supplies the deterministic bound that holds once
+`S` is `ε`-close to `T`.
 
 Formalized by Claude Fable 5 (claude-fable-5[1m]).
 -/

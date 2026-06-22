@@ -138,7 +138,7 @@ the paper's Theorem 1 (Section 4.1). It is a thin renaming wrapper around
 
 Formalized by Claude Fable 5 (claude-fable-5[1m]).
 -/
-theorem fixed_models_fixed_queries_consistency
+theorem fixed_models_fixed_queries_consistency_of_uniqueProfile
   (P : Measure Ω)
   {n d : Nat}
   (Dseq : Nat → Ω → DisMat n)
@@ -301,7 +301,7 @@ abstractly via `hsample`/`hlimit`).
 
 Formalized by Claude Fable 5 (claude-fable-5[1m]).
 -/
-theorem fixed_models_growing_queries_consistency
+theorem fixed_models_growing_queries_consistency_of_uniqueProfile
   (P : Measure Ω)
   {n d : Nat}
   (Dseq : Nat → Ω → DisMat n)
@@ -326,7 +326,7 @@ theorem fixed_models_growing_queries_consistency
       ψ ∈ MDS n d DeltaInf ∧
       ∀ i j : Fin n,
         ConvergesInProbability P (fun t ω => pairDistErr (ψhat (u t) ω) ψ i j) 0 := by
-  exact fixed_models_fixed_queries_consistency P Dseq DeltaInf ψhat hψhat huniq
+  exact fixed_models_fixed_queries_consistency_of_uniqueProfile P Dseq DeltaInf ψhat hψhat huniq
     (growing_queries_dissimilarity_converges P Dseq Delta DeltaInf hsample hlimit)
 
 /-! ## Paper layer 3: growing model set and growing query set -/
@@ -368,7 +368,7 @@ Formalized by Claude Fable 5 (claude-fable-5[1m]).
 -- Paper correspondence: the **growing-models / growing-queries** regime (Section 4.3),
 -- corresponding to the FINITE per-stage content of paper Theorem 4. See the SCOPE CAVEAT
 -- above: this is NOT the paper's full Lᵖ-over-the-model-distribution conclusion.
-theorem growing_models_growing_queries_consistency
+theorem growing_models_growing_queries_perStage_consistency_of_uniqueProfile
   (P : Measure Ω)
   (d : Nat)
   -- `nOf k` = number of models at stage `k` (a triangular array; the model count grows in `k`).
@@ -405,10 +405,10 @@ theorem growing_models_growing_queries_consistency
 Triangular-array consistency in the paper's Theorem-5 *shape*: the per-stage
 dissimilarity convergence is split into a per-stage sampling error against a
 stage-and-budget population `Delta r k` plus a deterministic per-stage
-Assumption-1 error, mirroring `fixed_models_growing_queries_consistency`.
+Assumption-1 error, mirroring `fixed_models_growing_queries_consistency_of_uniqueProfile`.
 
-Same SCOPE CAVEAT as `growing_models_growing_queries_consistency`: this is the
-finite per-stage form, not the paper's `Lᵖ`-over-the-model-distribution
+Same SCOPE CAVEAT as `growing_models_growing_queries_perStage_consistency_of_uniqueProfile`:
+this is the finite per-stage form, not the paper's `Lᵖ`-over-the-model-distribution
 conclusion (the model distribution and the continuous-MDS map are not
 formalized).
 
@@ -417,7 +417,7 @@ Formalized by Claude Fable 5 (claude-fable-5[1m]).
 -- Paper correspondence: the **growing-models / growing-queries** regime in the paper's
 -- Theorem 5 *shape* (the finite per-stage content). Same SCOPE CAVEAT as above: not the
 -- paper's full Lᵖ-over-the-model-distribution conclusion.
-theorem growing_models_growing_queries_consistency_of_sample_limit
+theorem growing_models_growing_queries_perStage_consistency_of_sample_limit_uniqueProfile
   (P : Measure Ω)
   (d : Nat)
   (nOf : Nat → Nat)                                   -- stage-`k` model count
@@ -445,7 +445,7 @@ theorem growing_models_growing_queries_consistency_of_sample_limit
         ∀ i j : Fin (nOf k),
           ConvergesInProbability P
             (fun t ω => pairDistErr (ψhat (u t) ω k) ψ i j) 0 := by
-  refine growing_models_growing_queries_consistency P d nOf Dseq DeltaInf ψhat
+  refine growing_models_growing_queries_perStage_consistency_of_uniqueProfile P d nOf Dseq DeltaInf ψhat
     hψhat huniq (fun k => ?_)
   exact growing_queries_dissimilarity_converges P
     (fun r ω => Dseq r ω k) (fun r => Delta r k) (DeltaInf k)

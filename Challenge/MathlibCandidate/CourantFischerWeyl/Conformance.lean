@@ -1,5 +1,9 @@
 /-
-# Courant-Fischer min-max + Weyl perturbation (Mathlib candidate 02)
+# Weyl eigenvalue perturbation, via Courant-Fischer min-max (Mathlib candidate 02)
+
+The surfaced leaf is Weyl's perturbation inequality; the discrete Courant-Fischer
+min-max characterization is the proof vehicle (developed in
+`ForMathlib.Analysis.InnerProductSpace.CourantFischer`), not a separately listed leaf.
 
 `Conformance.lean` imports only Mathlib and states the leaf theorem(s) as `sorry`;
 `Leaderboard.lean` imports the project and supplies the proofs. Only the leaf

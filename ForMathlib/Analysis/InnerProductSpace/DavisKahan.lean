@@ -41,7 +41,7 @@ is self-contained and correct.
   projection onto the span of an orthonormal subfamily is the sum of the
   corresponding rank-one projections (`Submodule.starProjection` form; holds in
   any inner product space, the finite span carrying its own projection).
-* `ForMathlib.sum_norm_sub_starProjection_span_sq_eq`: the canonical projector
+* `ForMathlib.sum_norm_sub_starProjection_span_sq_eq`: the projector
   identity — the squared Frobenius distance between the projections onto two
   orthonormal-subfamily spans is `2 ·` the cross overlap sum (over `RCLike 𝕜`,
   arbitrary index subsets, phrased with `Submodule.starProjection`).
@@ -222,7 +222,7 @@ theorem sum_cross_norm_inner_eigenvectorBasis_sq_le_of_rank_floor
             (by positivity : (0 : ℝ) < α / 2) hgap hε
     _ = 4 * (n : ℝ) * ε ^ 2 / α ^ 2 := by field_simp; ring
 
-/-! ### Projector (canonical sin-Θ) form via `Submodule.starProjection`
+/-! ### Projector (sin-Θ) form via `Submodule.starProjection`
 
 The cross-block sum is exactly half the squared Frobenius distance between the
 orthogonal projections onto the two spectral subspaces.  The projections are

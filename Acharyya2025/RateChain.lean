@@ -27,7 +27,7 @@ and a closeness level `t u ~ √(n · σ2 u) / δ' = √(n γ / r(u)) / δ'`, th
 Chebyshev hypothesis `n · σ2 u / (t u)² = δ'² → 0` holds along any `δ' → 0`
 slow enough, and the resulting bound is
 `configBound n d α Λ (n · cmdsEntrywiseRate n m R (t u))` with
-`cmdsEntrywiseRate n m R η = 8 R n² m⁻¹ · η` linear in `η = t u`.  Since
+`cmdsEntrywiseRate n m R η = 16 R n² m⁻¹ · η` linear in `η = t u`.  Since
 `configBound n d α Λ ε` is, for small `ε`, dominated by its linear-in-`ε`
 Davis–Kahan term `√n · d · ε / √(α/2)` (the polar term is `O(ε²)` and the
 commutator term `O(ε)`), the formal rate is
@@ -35,7 +35,7 @@ commutator term `O(ε)`), the formal rate is
 dependence (the `δ`-loss is exactly the Chebyshev slack `1/δ'` above) and a
 polynomial constant in the structural parameters.  What differs is bookkeeping:
 the formal constant is the deliberately loose product of the proved chain
-constants (`n²` from the ℓ²→ℓ¹ Frobenius step, `8R/m` from the
+constants (`2n²/m` from the ℓ²→ℓ¹ Frobenius step, `8R` from the
 squaring/centering step, `√n` from `ConfigError ≤ √n‖·‖_F`), not the paper's
 optimized `Poly₃(n³)` aggregation, and the formal statement quantifies the
 spectral hypotheses (floor `α`, cap `Λ`, rank ≤ `d`, smallness, polar) as
@@ -236,8 +236,9 @@ theorem tendsto_configBound_comp_zero (n d : Nat) (α Λ : Real)
 /-! ### (3) The end-to-end rate -/
 
 /--
-**The explicit end-to-end rate** of the aligned DKPS spectral estimator: the
-capstone spectral bound evaluated at the operator-norm proxy
+**An explicit (loose-constant) end-to-end rate** of the aligned DKPS spectral
+estimator: the deterministic spectral bound `configBound` evaluated at the
+operator-norm proxy
 `n · cmdsEntrywiseRate n m R (t u)`, where `t u` is the uniform response-mean
 closeness level, `R` the uniform dissimilarity bound, and
 `cmdsEntrywiseRate n m R η = 4 · (2R) · n² · m⁻¹ · 2η` the proved entrywise
@@ -258,7 +259,7 @@ noncomputable def endToEndRate (n m d : Nat) (α Λ R : Real) (t : Nat → Real)
 /--
 **End-to-end rate theorem.**  Under per-model second-moment bounds `σ2 u`
 (uniform over models) with vanishing Chebyshev ratio `n · σ2 u / (t u)² → 0`,
-and under the capstone spectral hypotheses on the population CMDS matrix
+and under the spectral hypotheses on the population CMDS matrix
 (PSD, rank ≤ `d`, eigenvalue floor `α` on the top-`d` block, cap `Λ`, Gram
 realization `ψ`, per-`u` smallness and polar conditions, uniform dissimilarity
 bound `R`), the aligned spectral estimator's `ConfigError` against the
@@ -271,9 +272,13 @@ pipeline (`highProb_aligned_configError_of_response_mean`); the spectral
 hypotheses are threaded through verbatim with the dissimilarity bound
 specialized to the constant `R`.
 
-This is the explicit-rate high-probability form of **Theorem 2** with the rate
-named (`endToEndRate`); paired with `tendsto_endToEndRate_zero` below it gives
-the **Corollary 2** "for any κ > 0, with high probability eventually" statement.
+This is a loose-constant, explicit-rate high-probability bound *corresponding to*
+Theorem 2, with the rate named (`endToEndRate`); paired with
+`tendsto_endToEndRate_zero` below it yields a vanishing-rate (Corollary-2-style)
+"for any κ > 0, with high probability eventually" statement.  Note the constants
+are deliberately non-sharp and the spectral hypotheses appear as explicit
+side-conditions, so this is an analogue of Theorem 2 / Corollary 2, not a
+verbatim formalization of them.
 
 Formalized by Claude Fable 5 (claude-fable-5[1m]).
 -/

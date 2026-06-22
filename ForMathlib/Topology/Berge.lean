@@ -13,15 +13,20 @@ import Mathlib.Topology.Constructions.SumProd
 import Mathlib.Analysis.SpecificLimits.Basic
 import Mathlib.Topology.Semicontinuity.Hemicontinuity
 
-/-! # Berge's maximum theorem (fixed compact constraint)
+/-! # Upper hemicontinuity of the argmin correspondence over a fixed compact set
+
+This is the *fixed-constraint case* of Berge's maximum theorem: the feasible set
+`K` does not vary with the parameter `p`.  (The classical Berge theorem allows a
+parameter-varying constraint correspondence; that more general case is not
+formalized here.)
 
 Let `g : P → X → ℝ` be jointly continuous and let `K ⊆ X` be a fixed nonempty
 compact set.  Consider the parametric minimization of `g p` over `K`, with
 argmin correspondence
 `M p = {x ∈ K | IsMinOn (g p) K x}`.
-Berge's maximum theorem says the value function `p ↦ ⨅ x ∈ K, g p x` is continuous
-and the correspondence `M` is upper hemicontinuous (and compact-valued and
-nonempty).
+In this fixed-constraint setting, the value function `p ↦ ⨅ x ∈ K, g p x` is
+continuous and the correspondence `M` is upper hemicontinuous (and compact-valued
+and nonempty).
 
 Mathlib has the hemicontinuity *definitions* (`Mathlib/Topology/Semicontinuity/
 Hemicontinuity.lean`) and the extreme-value theorem (`IsCompact.exists_isMinOn`),
@@ -45,11 +50,9 @@ usable forms, building on the approximate-minimizer stability engine
   `ε`–`δ` modulus** form (metric `P`): for every `ε > 0` there is a `δ > 0` such
   that whenever `dist p p₀ ≤ δ`, *every* minimizer of `g p` over `K` is `ε`-close
   (in the ambient metric, or in any finite family of continuous invariants) to
-  *some* minimizer of `g p₀` over `K`.  The family form captures the
-  affine-invariant `pairDistErr` closeness of MDS; it is the general core of the
-  raw-stress modulus `Acharyya2024.exists_modulus_pairDist`, which additionally
-  needs the MDS-specific coercive compactness (centering into a parameter-
-  dependent box) that the fixed-`K` theorem here does not subsume.
+  *some* minimizer of `g p₀` over `K`.  The family form lets closeness be measured
+  by a finite family of continuous invariants rather than the ambient metric,
+  which is useful when minimizers are only determined up to a symmetry group.
 
 ## Main results
 
@@ -95,14 +98,15 @@ theorem tendsto_eval_sub_of_isCompact
     (hgp0.tendsto a).comp hφ_tendsto
   simpa using h1.sub h2
 
-/-- **Sequential upper hemicontinuity of the argmin correspondence (Berge).**
+/-- **Sequential upper hemicontinuity of the argmin correspondence over a fixed
+compact set (the fixed-constraint case of Berge's maximum theorem).**
 Let `g : P → X → ℝ` be jointly continuous and `K` a fixed compact set.  If
 `p k → p₀` and each `x k` minimizes `g (p k)` over `K`, then a subsequence of
 `x k` converges to a point `x₀ ∈ K` that minimizes `g p₀` over `K`.
 
-This is the closed-graph form of Berge's maximum theorem: the argmin
-correspondence `p ↦ {x ∈ K | IsMinOn (g p) K x}` has closed graph (equivalently,
-is upper hemicontinuous, since `K` is compact). -/
+This is the closed-graph form: the argmin correspondence
+`p ↦ {x ∈ K | IsMinOn (g p) K x}` has closed graph (equivalently, is upper
+hemicontinuous, since `K` is compact). -/
 theorem tendsto_subseq_isMinOn_of_isMinOn
     {K : Set X} (hK : IsCompact K)
     {g : P → X → ℝ} (hg : Continuous (Function.uncurry g))
@@ -134,7 +138,9 @@ theorem tendsto_subseq_isMinOn_of_isMinOn
     have hmin : g (p k) (x k) ≤ g (p k) y := (isMinOn_iff.mp (hxmin k)) y hy
     linarith
 
-/-- **Berge's maximum theorem via Mathlib's `UpperHemicontinuousAt`.**
+/-- **Upper hemicontinuity of the argmin correspondence over a fixed compact set
+(the fixed-constraint case of Berge's maximum theorem), via Mathlib's
+`UpperHemicontinuousAt`.**
 For `X` Hausdorff (so the compact feasible set `K` is closed), jointly continuous
 `g`, and `P` first-countable at `p₀`, the argmin correspondence
 `p ↦ {x ∈ K | IsMinOn (g p) K x}` is upper hemicontinuous at `p₀` in the sense of
@@ -167,12 +173,14 @@ theorem upperHemicontinuousAt_isMinOn {X : Type*} [TopologicalSpace X]
   exact le_of_tendsto_of_tendsto hL hR
     (Eventually.of_forall fun n => (isMinOn_iff.mp (hc n).2) y hy)
 
-/-- **Berge's maximum theorem, value-function continuity.**
+/-- **Value-function continuity over a fixed compact set (the value-function half
+of the fixed-constraint case of Berge's maximum theorem).**
 For jointly continuous `g`, a fixed nonempty compact `K`, and `P` first-countable,
 the value function `p ↦ ⨅ x ∈ K, g p x` is continuous.
 
-This is the second half of Berge's theorem (alongside the upper hemicontinuity of
-the argmin correspondence above).  The proof is the standard squeeze: with `xₖ` a
+This is the second half of the fixed-constraint statement (alongside the upper
+hemicontinuity of the argmin correspondence above).  The proof is the standard
+squeeze: with `xₖ` a
 minimizer of `g (p k)` and `x₀` a minimizer of `g p₀`,
 `V p₀ + (g (p k) xₖ − g p₀ xₖ) ≤ V (p k) ≤ g (p k) x₀`,
 where the lower bound tends to `V p₀` via `tendsto_eval_sub_of_isCompact` and the
@@ -222,7 +230,8 @@ theorem continuous_iInf_of_isCompact [FirstCountableTopology P]
   · -- `V (p k) ≤ g (p k) x₀`
     simpa using hVle (p k) x₀ hx₀K
 
-/-- **Berge's maximum theorem, uniform `ε`–`δ` modulus form.**
+/-- **Uniform `ε`–`δ` modulus form over a fixed compact set (the fixed-constraint
+case of Berge's maximum theorem).**
 With `P` a (pseudo)metric space, `g` jointly continuous, `K` a fixed compact set,
 and closeness measured by a *finite family* of jointly-continuous functionals
 `ρ i : X → X → ℝ` with `ρ i x x = 0` (a family of continuous invariants, not
@@ -232,14 +241,10 @@ with `IsMinOn (g p) K x`) is `ρ`-within `ε` of *some* feasible minimizer `x₀
 `g p₀` over `K` (`∀ i, ρ i x x₀ < ε`).
 
 The `δ` depends only on `p₀` and `ε` (a genuine modulus of upper hemicontinuity),
-exactly the shape needed downstream to avoid measurable selection of minimizers.
-The closeness family captures *invariant* closeness measures such as the
-affine-invariant per-pair distance error `pairDistErr` of MDS (indexed by
-`(i,j) : Fin n × Fin n`), for which the ambient metric is *not* the right notion
-(MDS minimizers differ by rigid motions).  This is the metric-side generalization
-of the raw-stress modulus `Acharyya2024.exists_modulus_pairDist`; see the note
-there on the remaining MDS-specific ingredient (coercive, parameter-dependent
-compactness via centering), which the abstract fixed-`K` theorem does not subsume. -/
+which lets one avoid measurable selection of minimizers.  The closeness family
+captures *invariant* closeness measures for which the ambient metric is not the
+right notion — for instance when minimizers are only determined up to a symmetry
+group, so that closeness should be measured by group-invariant functionals. -/
 theorem exists_modulus_isMinOn_family {P X : Type*} [PseudoMetricSpace P]
     [TopologicalSpace X] [FirstCountableTopology X]
     {ι : Type*} [Finite ι]
@@ -276,7 +281,8 @@ theorem exists_modulus_isMinOn_family {P X : Type*} [PseudoMetricSpace P]
   obtain ⟨i, hi⟩ := hbad (φ t) x₀ hx₀K hx₀min
   exact absurd (ht i) (not_lt.mpr hi)
 
-/-- **Berge's maximum theorem, uniform `ε`–`δ` modulus form (metric closeness).**
+/-- **Uniform `ε`–`δ` modulus form over a fixed compact set, metric closeness
+(the fixed-constraint case of Berge's maximum theorem).**
 The single-functional special case of `exists_modulus_isMinOn_family` where
 closeness is the ambient metric `dist`: for every `ε > 0` there is `δ > 0` with,
 for every feasible minimizer `x` of `g p` over `K` with `dist p p₀ ≤ δ`, some

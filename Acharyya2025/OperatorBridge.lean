@@ -65,7 +65,7 @@ Entrywise closeness gives honest `ℓ² → ℓ²` operator-norm closeness with
 constant `n · ε`.
 
 This is the `ℓ²` analogue of
-`Acharyya2025.SpectralPipeline.cited_entrywise_to_operatorNormClose` (which
+`Acharyya2025.SpectralPipeline.operatorNormClose_of_entrywiseClose` (which
 bounds the sup norm of the output) and is the form consumed by the
 operator-world spectral perturbation theorems (Weyl, Davis–Kahan).
 

@@ -85,7 +85,7 @@ verified clean — `#print axioms = {propext, Classical.choice, Quot.sound}`, no
 
 | Paper | Main theorem(s) | Axiom status |
 |---|---|---|
-| Acharyya2024 | `Consistency.fixed_models_fixed_queries_consistency`, `…fixed_models_growing_queries_consistency`, `…growing_models_growing_queries_consistency`(`_of_sample_limit`) | clean ✓ |
+| Acharyya2024 | `Consistency.fixed_models_fixed_queries_consistency_of_uniqueProfile`, `…fixed_models_growing_queries_consistency_of_uniqueProfile`, `…growing_models_growing_queries_perStage_consistency_of_uniqueProfile` (and `…_of_sample_limit_uniqueProfile`) | clean ✓ |
 | Acharyya2025 | `RateChain.tendsto_endToEndRate_zero` (+ `tendsto_configBound_comp_zero`) | clean ✓ |
 | DkpsQuench | `AcharyyaBridge.quench_uniform_embedding_error_of_finite_configError`, `queryEfficient_nn_of_second_moment` | clean ✓ |
 | Helm2025 | `DKPS.Theorem1`, `DKPS.Theorem2_bayes` (+ `alignmentConsistency_of_highProb_configError`) | clean ✓ |

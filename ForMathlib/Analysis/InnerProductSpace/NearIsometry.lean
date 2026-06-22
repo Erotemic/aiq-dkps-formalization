@@ -11,7 +11,7 @@ To be re-authored per Mathlib's AI-contribution policy at PR time.
 import Mathlib.Analysis.InnerProductSpace.Adjoint
 import Mathlib.Analysis.InnerProductSpace.Spectrum
 
-/-! # Quantitative polar factor for a near-isometry
+/-! # A near-isometry is close to a genuine isometry (via the quantitative polar factor)
 
 A linear map `M` on a finite-dimensional real inner product space whose quadratic form
 `x ↦ ⟪M x, M x⟫` is uniformly `δ`-close to `x ↦ ⟪x, x⟫` (with `δ ≤ 1 / 2`) lies within

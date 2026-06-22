@@ -1,5 +1,5 @@
 /-
-WP6-core — matrix-world capstone (transport layer) of `planning/acharyya-plan.md`.
+WP6-core — matrix-world assembly (transport layer) of `planning/acharyya-plan.md`.
 
 The operator-world configuration-perturbation theorem
 `Acharyya2025.ConfigPerturbation.exists_isometry_configError_spectralConfig_le`
@@ -22,11 +22,11 @@ Given a population Gram matrix `B` that is positive semidefinite with
   `spectralConfig T` equals `B` (operator spectral expansion evaluated at the
   standard basis vectors);
 * `exists_isometry_configError_le_of_entrywise_close` — the **matrix-world
-  capstone**: for any external configuration `ψ` realizing `B` as its Gram
+  assembly**: for any external configuration `ψ` realizing `B` as its Gram
   matrix, the sample spectral embedding `spectralConfig S`, transported by a
   single linear isometry `W`, is `configBound`-close to `ψ`.
 
-The capstone assembles the operator bound (via `OperatorBridge`), the rank/PSD
+The assembly combines the operator bound (via `OperatorBridge`), the rank/PSD
 eigenvalue transport, the Gram identity, and Gram rigidity
 (`Acharyya2025.GramRigidity`).
 
@@ -355,14 +355,14 @@ theorem gram_spectralConfig_eq {d : ℕ} (hd : d ≤ n)
   -- the full spectral sum is `B i j`.
   rw [entry_eq_sum_sorted_eigenvalues hB.isHermitian i j]
 
-/-! ### Deliverable (4): the matrix-world capstone
+/-! ### Deliverable (4): the matrix-world assembly
 
 Assemble: operator closeness (`OperatorBridge`), the rank/PSD eigenvalue
 transport, the operator-world configuration bound
 (`ConfigPerturbation.exists_isometry_configError_spectralConfig_le`), the Gram
 identity, and Gram rigidity (`GramRigidity.exists_linearIsometryEquiv_of_gram_eq`). -/
 
-/-- **Matrix-world capstone.**
+/-- **Matrix-world assembly.**
 
 Let `B` be a positive semidefinite Gram matrix with `B.rank ≤ d` (population),
 and `Bhat` a Hermitian sample matrix entrywise `η`-close to `B`.  Set
@@ -372,13 +372,15 @@ external configuration `ψ` realizing `B` as its Gram matrix, the sample spectra
 embedding `spectralConfig (toEuclideanLin Bhat)`, transported by a single linear
 isometry `W`, is `configBound n d α Λ (n·η)`-close to `ψ`.
 
-This is the matrix-world deterministic core behind the paper's **Theorem 2**
+This is the matrix-world deterministic core *behind* the paper's **Theorem 2**
 (`‖ψ̂W* − ψ‖ ≤ κ` with high probability): once the sample matrix B̂ is entrywise
-close to the population B, the spectral embedding of B̂ — after a suitable
-orthogonal alignment `W` (the paper's `W*` rotation) — is uniformly close to
-the true embedding `ψ`.  The probabilistic step (concentration of `‖B̂ − B‖`) is
-*not* part of this lemma; this provides the deterministic perturbation bound that
-Weyl and Davis–Kahan feed.
+close to the population B, the spectral embedding of B̂ — after an aligning
+isometry `W` (playing the role of the paper's `W*`; optimality/uniqueness is not
+established here) — is uniformly close to the true embedding `ψ`.  Theorem 2 is
+itself probabilistic; this lemma is the deterministic perturbation bound that
+*corresponds to / feeds* it.  The probabilistic step (concentration of
+`‖B̂ − B‖`) is *not* part of this lemma; this provides the deterministic
+perturbation bound that Weyl and Davis–Kahan feed.
 
 Formalized by Claude Fable 5 (claude-fable-5[1m]). -/
 theorem exists_isometry_configError_le_of_entrywise_close
@@ -395,8 +397,9 @@ theorem exists_isometry_configError_le_of_entrywise_close
     (hpolar : (d : ℝ) * (4 * (n : ℝ) * ((n : ℝ) * η)^2 / α^2) ≤ 1/2) -- polar-factor smallness (Davis–Kahan term ≤ 1/2)
     (ψ : Acharyya2024.Config n d)               -- any external configuration realizing B
     (hψ : ∀ i j, (∑ k : Fin d, ψ i k * ψ j k) = B i j) :  -- ψ has Gram matrix B
-    -- Conclusion: ∃ a linear isometry W (the alignment rotation, paper's `W*`) such that the
-    -- W-transported sample spectral embedding is configBound-close to ψ (Theorem 2's deterministic core).
+    -- Conclusion: ∃ a linear isometry W (an aligning isometry playing the role of the paper's `W*`;
+    -- optimality/uniqueness is not established here) such that the W-transported sample spectral
+    -- embedding is configBound-close to ψ (the deterministic core feeding Theorem 2).
     ∃ W : EuclideanSpace ℝ (Fin d) →ₗ[ℝ] EuclideanSpace ℝ (Fin d),
       (∀ x y, ⟪W x, W y⟫_ℝ = ⟪x, y⟫_ℝ) ∧
       Acharyya2024.ConfigError

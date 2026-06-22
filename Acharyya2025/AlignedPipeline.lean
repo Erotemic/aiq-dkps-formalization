@@ -1,5 +1,5 @@
 /-
-Downstream wiring of the matrix-world spectral capstone into aligned CMDS
+Downstream wiring of the matrix-world spectral assembly into aligned CMDS
 embeddings and the high-probability concentration chain.
 
 This file connects the proved spectral bridge
@@ -9,7 +9,7 @@ producing an *aligned* CMDS spectral estimator whose `ConfigError` against the
 population configuration is high-probability `configBound`-close.
 
 The estimator `alignedSpectralConfig` is built by `Classical.choose` from the
-capstone's existential alignment isometry `W`: whenever the alignment exists with
+matrix-world assembly's existential alignment isometry `W`: whenever the alignment exists with
 a given bound `c u`, the estimator achieves `ConfigError ≤ c u`; otherwise it
 falls back to the raw sample spectral embedding.  This packaging makes the two
 downstream consumer files (`DkpsQuench`, `Helm2025`) a one-application-deep honest
@@ -24,7 +24,7 @@ Contents:
   of the legacy unaligned CMDS-perturbation seam;
 * `highProb_aligned_configError_of_response_mean` — the end-to-end
   response-mean → aligned `ConfigError` theorem, composing `Bridge.lean`'s HP
-  chain with the capstone.
+  chain with the matrix-world assembly.
 
 Formalized by Claude Fable 5 (claude-fable-5[1m]).
 -/
@@ -57,7 +57,7 @@ The response-distance dissimilarity matrix is symmetric: its entries are
 normalized norms `‖Xbar i - Xbar j‖`, symmetric in `i, j` via `norm_sub_rev`.
 
 Internal helper (symmetry plumbing for the CMDS Gram matrix). Used so that the
-sample CMDS matrices are Hermitian, which the spectral capstone requires.
+sample CMDS matrices are Hermitian, which the spectral assembly requires.
 
 Formalized by Claude Fable 5 (claude-fable-5[1m]).
 -/
@@ -111,7 +111,7 @@ theorem symmetricDisMat_classicalMDSMatrix {n : Nat} {D : DisMat n}
 The alignment existential at sample `(u, ω)` for the CMDS spectral embedding of
 `Dhat u ω`, compared against an external configuration `ψ` with bound `c u`.
 
-This is exactly the existential produced by the matrix-world capstone
+This is exactly the existential produced by the matrix-world assembly
 `exists_isometry_configError_le_of_entrywise_close`.
 
 In the paper, `W` corresponds to the orthogonal alignment matrix `W*` of
@@ -325,7 +325,7 @@ theorem measurableSet_setOf_alignExists {n d : Nat} (hd : d ≤ n)
 **Deterministic: entrywise CMDS-closeness implies the alignment existential.**
 
 On any sample where the CMDS matrices are entrywise `rate u`-close, the
-matrix-world capstone produces the aligning isometry achieving
+matrix-world assembly produces the aligning isometry achieving
 `ConfigError ≤ configBound`.  This is the deterministic core of
 `highProb_aligned_configError_of_entrywise_close`, extracted so the Quench
 bridge can use the (directly measurable) entrywise event itself as its
@@ -374,12 +374,16 @@ aligned spectral estimator `alignedSpectralConfig` is high-probability
 This is the honest, TRUE replacement for the legacy unaligned
 `cited_cmds_embedding_perturbation_from_centered_entrywise`: the conclusion now
 carries the alignment isometry (baked into `alignedSpectralConfig`), and every
-hypothesis matches the matrix-world capstone exactly.
+hypothesis matches the matrix-world assembly exactly.
 
-This is the high-probability form of **Theorem 2** (the bound `‖ψ̂ W* − ψ‖ ≤ κ`
-with high probability), assembled by feeding the entrywise CMDS-closeness event
-(the high-probability input from **Theorem 1**) through the deterministic
-configuration bound (Theorem 2's deterministic core, `configBound`).
+This is a high-probability bound *corresponding to* **Theorem 2** (the paper's
+probabilistic bound `‖ψ̂ W* − ψ‖ ≤ κ` with high probability), assembled by feeding
+the entrywise CMDS-closeness event (the high-probability input corresponding to
+**Theorem 1**) through the deterministic configuration bound (the deterministic
+core feeding Theorem 2, `configBound`).  The alignment carried by
+`alignedSpectralConfig` is an aligning isometry `W` (playing the role of the
+paper's `W*`; optimality/uniqueness is not established here).  The error measured
+is the *direct* `ConfigError` (stronger than the paper's affine-quotient error).
 
 Formalized by Claude Fable 5 (claude-fable-5[1m]).
 -/
@@ -500,7 +504,7 @@ theorem isHermitian_disMatToMatrix_classicalMDSMatrix_responseDist
 
 Composing `Bridge.lean`'s proved high-probability chain
 (response-mean → Frobenius → entrywise → CMDS-entrywise) with the matrix-world
-spectral capstone (via `highProb_aligned_configError_of_entrywise_close`), a
+spectral assembly (via `highProb_aligned_configError_of_entrywise_close`), a
 high-probability uniform response-mean event yields a high-probability bound on
 the aligned CMDS spectral `ConfigError` against the population configuration `ψ`.
 
@@ -508,13 +512,15 @@ The population CMDS Gram matrix is `classicalMDSMatrix (responseDist μ)`; the
 sample estimator is built from `Dhat u ω := responseDist (Xbar u ω)`.  Hermitian-
 ness of every sample CMDS matrix is supplied automatically (symmetry plumbing);
 the remaining spectral hypotheses (PSD, rank, floor, cap, smallness, polar) are
-exactly those of the capstone.
+exactly those of the matrix-world assembly.
 
-This is the response-mean-driven high-probability form of **Theorem 2**: it takes
-a high-probability uniform response-mean event and emits the high-probability
-aligned `ConfigError` bound, composing `Bridge.lean`'s concentration chain
-(response-mean → Frobenius → entrywise → CMDS-entrywise, i.e. the Theorem 1
-input) with the deterministic configuration bound.
+This is the response-mean-driven high-probability bound *corresponding to*
+**Theorem 2** (which is itself probabilistic): it takes a high-probability uniform
+response-mean event and emits the high-probability aligned `ConfigError` bound,
+composing `Bridge.lean`'s concentration chain (response-mean → Frobenius →
+entrywise → CMDS-entrywise, i.e. the input corresponding to Theorem 1) with the
+deterministic configuration bound.  The error measured is the *direct*
+`ConfigError` (stronger than the paper's affine-quotient error).
 
 Formalized by Claude Fable 5 (claude-fable-5[1m]).
 -/

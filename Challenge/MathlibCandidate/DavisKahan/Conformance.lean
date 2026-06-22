@@ -16,7 +16,9 @@ open Module (finrank)
 variable {𝕜 E : Type*} [RCLike 𝕜] [NormedAddCommGroup E] [InnerProductSpace 𝕜 E]
   [FiniteDimensional 𝕜 E] {n : ℕ} {T S : E →ₗ[𝕜] E}
 
-/-- **Davis-Kahan cross-block bound (eigenvector form), rank-floor corollary.** -/
+/-- A cross-block eigenvector-overlap bound in the spirit of the Davis-Kahan sin-Θ
+theorem, with a *non-sharp* constant: the bound carries an extra factor `n`
+(`4 n ε²/α²`), whereas the sharp sin-Θ constant is `ε²/gap²`. Rank-floor corollary. -/
 theorem sum_cross_norm_inner_eigenvectorBasis_sq_le_of_rank_floor
     (hT : T.IsSymmetric) (hS : S.IsSymmetric) (hn : finrank 𝕜 E = n)
     (d : ℕ) {α ε : ℝ} (hα_pos : 0 < α)
@@ -35,8 +37,9 @@ section Projector
 variable {F : Type*} [NormedAddCommGroup F] [InnerProductSpace 𝕜 F]
   [FiniteDimensional 𝕜 F] {m : ℕ}
 
-/-- **Davis-Kahan, projector form.** `‖P̂ − P‖_F² ≤ 2 m ε² / gap²` for the
-projections onto the leading-`d` spectral subspaces. -/
+/-- Projector-form bound in the spirit of Davis-Kahan sin-Θ, with a *non-sharp*
+constant: `‖P̂ − P‖_F² ≤ 2 m ε² / gap²` for the projections onto the leading-`d`
+spectral subspaces — loose by the factor `m` relative to the sharp `ε²/gap²`. -/
 theorem sum_norm_sub_starProjection_span_sq_le {T S : F →ₗ[𝕜] F}
     (hT : T.IsSymmetric) (hS : S.IsSymmetric) (hn : finrank 𝕜 F = m)
     (d : ℕ) {gap : ℝ} (hgap_pos : 0 < gap)

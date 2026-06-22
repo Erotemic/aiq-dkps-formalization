@@ -61,6 +61,6 @@ idea; say *why* it died.
   `matrixL2OperatorClose_of_entrywise` (constant n·ε); the old predicate is
   left untouched for the legacy seam.
 - 2024 paper convergence is *subsequence-based* (`∃ u, Subseq u`) — when wiring
-  WP2 into `fixed_models_growing_queries_consistency`, the subsequence comes
+  WP2 into `fixed_models_growing_queries_consistency_of_uniqueProfile`, the subsequence comes
   only from the Trosset–Priebe seam, not from the probability step. Keep the
   layering that way.

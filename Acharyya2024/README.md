@@ -55,12 +55,12 @@ theorem some_name
 Open **[`Consistency.lean`](Consistency.lean)** — the paper-facing consistency
 results. Read:
 
-1. `fixed_models_fixed_queries_consistency` — the **Theorem 1 / Lemma 1**
+1. `fixed_models_fixed_queries_consistency_of_uniqueProfile` — the **Theorem 1 / Lemma 1**
    shape (fixed `n`, fixed `m`): a raw-stress minimizer `ψ̂` converges to `ψ`
    up to an affine transformation.
-2. `fixed_models_growing_queries_consistency` — **Theorems 2 + 3** (fixed
+2. `fixed_models_growing_queries_consistency_of_uniqueProfile` — **Theorems 2 + 3** (fixed
    models, growing queries), built on the dissimilarity-concentration step.
-3. `growing_models_growing_queries_consistency` — the **Theorems 4 / 5**
+3. `growing_models_growing_queries_perStage_consistency_of_uniqueProfile` — the **Theorems 4 / 5**
    (triangular-array) shape.
 
 ---
@@ -69,13 +69,13 @@ results. Read:
 
 | Paper result | Lean declaration | File |
 |---|---|---|
-| **Theorem 1 / Lemma 1** — minimizer `ψ̂ → ψ` up to affine (fixed `n`,`m`) | `fixed_models_fixed_queries_consistency`, `rawStress_mds_stability` | `Consistency.lean` |
+| **Theorem 1 / Lemma 1** — minimizer `ψ̂ → ψ` up to affine (fixed `n`,`m`) | `fixed_models_fixed_queries_consistency_of_uniqueProfile`, `rawStress_mds_stability` | `Consistency.lean` |
 | … unconditional set form of the stability | `rawStress_mds_stability_set` | `Consistency.lean` |
 | … in-probability raw-stress stability | `mds_stability_inProbability_set`, `mds_stability_inProbability_of_uniqueProfile` | `RawStress.lean` |
 | **Theorem 2** — covariance `Σ`; `Dᵢᵢ'` concentrates (rate `γᵢⱼ/r`) | `dissimilarity_convergesInProbability_of_secondMoment` | `Probability.lean` |
 | … second-moment algebra `E‖X̄−μ‖² = trace(Σ)/r` | `integral_norm_sq_sampleMean_sub_mean`, `…_le_of_bound` | `SecondMoment.lean` |
-| **Theorems 2 + 3** — fixed models, growing queries | `fixed_models_growing_queries_consistency`, `growing_queries_dissimilarity_converges` | `Consistency.lean` |
-| **Theorems 4 / 5** — growing models & queries | `growing_models_growing_queries_consistency`, `…_of_sample_limit` | `Consistency.lean` |
+| **Theorems 2 + 3** — fixed models, growing queries | `fixed_models_growing_queries_consistency_of_uniqueProfile`, `growing_queries_dissimilarity_converges` | `Consistency.lean` |
+| **Theorems 4 / 5** — growing models & queries (finite per-stage form) | `growing_models_growing_queries_perStage_consistency_of_uniqueProfile`, `…_of_sample_limit_uniqueProfile` | `Consistency.lean` |
 | Raw stress; MDS minimizer set; existence | `rawStress`, `MDS`, `mds_nonempty` | `RawStress.lean` |
 | Translation/affine invariance (Remark 1) | `rawStress_translate`, `center_mem_mds` | `RawStress.lean` |
 

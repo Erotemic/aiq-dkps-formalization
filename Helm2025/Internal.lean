@@ -98,7 +98,7 @@ space, the law of a measurable random variable `Y` is tight — for any `ε > 0`
 compact `K` with `P(Y ∉ K) < ε`. Standard measure theory, not stated in the paper; used to
 turn "continuity" into "uniform continuity on a high-probability compact set".
 -/
-lemma tightness_helper {Ω : Type*} [MeasurableSpace Ω]
+lemma exists_isCompact_measure_notMem_lt_of_measurable {Ω : Type*} [MeasurableSpace Ω]
     (P : Measure Ω) [IsProbabilityMeasure P]
     -- Topological side-conditions on the target space `S` (extra structural assumptions
     -- beyond the paper; all satisfied by the Euclidean label/embedding spaces here).
@@ -232,7 +232,7 @@ lemma continuous_prob_convergence {Ω : Type*} [MeasurableSpace Ω]
     ConvergesInProbabilityToZero P (fun u ω => dist (f (X u ω)) (f (Y ω))) := by
       intro ε hε_pos
       have h_tight : ∀ η > 0, ∃ K : Set S, IsCompact K ∧ P {ω | Y ω∉K} < η := by
-        exact fun η a ↦ tightness_helper P Y h_meas_Y η a;
+        exact fun η a ↦ exists_isCompact_measure_notMem_lt_of_measurable P Y h_meas_Y η a;
       -- Since `f` is continuous and `K` is compact, `f` is uniformly continuous on `K`.
       have h_unif : ∀ K : Set S, IsCompact K → ∀ ε > 0, ∃ δ > 0, ∀ x y, y ∈ K → dist x y < δ → dist (f x) (f y) ≤ ε := by
         intro K hK ε hε_pos;
@@ -254,7 +254,7 @@ lemma continuous_prob_convergence {Ω : Type*} [MeasurableSpace Ω]
           · exact le_trans ( dist_triangle_right _ _ _ ) ( by linarith );
           · exact lt_of_lt_of_le hz₂ ( by linarith [ hδ_pos z ( ht₁ z hz₁ ) ] );
         · exact lt_of_le_of_lt ( dist_triangle _ _ _ ) ( by linarith [ hδ_min z hz₁, Metric.mem_ball.mp hz₂ ] );
-      -- Fix `ε > 0`. By `tightness_helper`, for any `η > 0`, there exists a compact set `K` such that `P(Y ∉ K) < η`.
+      -- Fix `ε > 0`. By `exists_isCompact_measure_notMem_lt_of_measurable`, for any `η > 0`, there exists a compact set `K` such that `P(Y ∉ K) < η`.
       have h_bound : ∀ η > 0, ∃ δ > 0, ∀ u, P {ω | dist (f (X u ω)) (f (Y ω)) > ε} ≤ P {ω | dist (X u ω) (Y ω) ≥ δ} + η := by
         intro η hη_pos
         obtain ⟨K, hK_compact, hK_bound⟩ := h_tight η hη_pos

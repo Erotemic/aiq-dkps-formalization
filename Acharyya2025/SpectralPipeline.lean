@@ -22,8 +22,8 @@ perturbation (`Acharyya2025.Weyl`), Davis-Kahan eigenspace perturbation
 (`Acharyya2025.AlignedPipeline`).  This file retains the world-map definitions
 (`configGram`, `GramRealizesCMDS`, the hardened `CMDSpectralAssumptions`, the
 stage records), the proved norm-comparison bridge
-(`cited_entrywise_to_operatorNormClose`), and the proved population CMDS
-realization (`cited_population_cmds_realization`).
+(`operatorNormClose_of_entrywiseClose`), and the proved population CMDS
+realization (`exists_config_gramRealizesCMDS_of_spectralAssumptions`).
 -/
 
 import Acharyya2025.MathlibBridge
@@ -115,7 +115,7 @@ Mathematical source/citation:
 Role: internal helper / standard norm-comparison fact (entrywise control to an
 operator bound).
 -/
-theorem cited_entrywise_to_operatorNormClose
+theorem operatorNormClose_of_entrywiseClose
     {n : Nat} {A B : SqMat n} {ε : Real}
     (hentry : MatrixEntrywiseClose A B ε) :   -- hypothesis: every entry of `A − B` is bounded by `ε`
     -- Conclusion: `A` and `B` are operator-norm close with constant `n · ε`.
@@ -158,11 +158,11 @@ theorem cited_entrywise_to_operatorNormClose
 /--
 Population CMDS spectral realization seam.
 
-This is the place where the classical theorem "positive semidefinite Gram matrix
-of rank `d` gives a `d`-dimensional Euclidean realization" should connect to the
-paper's CMDS matrix.  In the final proof this should be built from Mathlib's
-spectral theorem for real symmetric/self-adjoint matrices plus the standard Gram
-factorization.
+This is where the classical theorem "positive semidefinite Gram matrix of rank
+`d` gives a `d`-dimensional Euclidean realization" connects to the paper's CMDS
+matrix.  It is proved (below) from
+`Acharyya2025.GramRealization.exists_config_gram_eq_of_posSemidef_rank_le`, the
+Mathlib-spectral-theorem-based Gram factorization for real symmetric PSD matrices.
 
 Mathematical source/citation:
 - Cox and Cox, *Multidimensional Scaling*, 2nd ed., Sections 2.2-2.3.
@@ -176,7 +176,7 @@ realizing the population classical-MDS matrix of `D` — i.e. the population
 perspective `ψ` that Theorem 2 aligns the sample embedding `ψ̂` to.  It does not
 itself produce W*; it produces one of the two configurations W* relates.
 -/
-theorem cited_population_cmds_realization
+theorem exists_config_gramRealizesCMDS_of_spectralAssumptions
     {n d : Nat}
     (D : DisMat n)
     -- hypothesis: the population CMDS matrix is PSD and rank ≤ d (classical-MDS preconditions)

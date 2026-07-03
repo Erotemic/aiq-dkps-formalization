@@ -290,6 +290,48 @@ above:
   must pass them at every `@`-site inside the section (`theDef φ ψ h`, not
   `theDef h`).
 
+## Third pass (2026-07-03, post-rejection elegance restructure)
+
+After PR #40567 was closed, a structural pass replaced the remaining tactic
+pain instead of managing it. The durable lessons — several *supersede* the
+gotchas above:
+
+- **An ugly proof of a specific instance often means the general fact is
+  missing.** The 12-line apply-lemma proof (carrier-rewrite + 6-lemma
+  `simp only` chain) was a symptom: the `def` inlined an instance of a general
+  fact — two linear maps `S`, `T` with `⟪S x, S y⟫ = ⟪T x, T y⟫` have equal
+  kernels and isometric ranges via `S x ↦ T x` (the *isometric first
+  isomorphism theorem*, `LinearMap.rangeEquivOfInnerEq`). Stated generally, its
+  apply lemma is `simp [defName]` because elements of `range S` destructure to
+  `⟨S x, _⟩` **already in the shape the quotient lemmas match**. The span
+  version becomes a 3-line `ofEq` transport. Extract the general fact; don't
+  golf the instance.
+- **Subtype-valued `@[simp]` lemmas: take the membership proof as an
+  argument.** `(e ⟨S x, hx⟩ : F) = T x` with `hx` a hypothesis fires against
+  *any* proof term (Mathlib's `quotKerEquivRange_symm_apply_image` does
+  exactly this); baking in a canonical proof (`Submodule.subset_span ⟨i, rfl⟩`)
+  makes call sites with a different proof term miss.
+- **State the computation rule at the generic point first; generators are an
+  instance.** On generic `c : ι →₀ 𝕜`, `simp` cannot prematurely collapse
+  `Tφ c` (nothing to rewrite), so the structural lemmas fire in any order —
+  this *dissolves* the "simp ordering / premature rewriting" and
+  "carrier-rewrite" gotchas above rather than working around them. The
+  generator lemma is then `simpa using generic (single i 1) _`, where `simp`
+  normalizes `Tφ (single i 1) → φ i` in the *statement*, the direction it
+  wants to rewrite anyway.
+- **When `simp` can't push an identity-like equiv through `Subtype.mk`, the
+  `rfl`-lemma is probably missing upstream.** `coe_ofEq_apply` only rewrites
+  under an ambient coercion; feeding `ofEq … ⟨x, hx⟩` to another bundled map
+  leaves no coercion to rewrite under. The fix is a one-line `@[simp] … := rfl`
+  (`LinearIsometryEquiv.ofEq_apply_mk`, staged in
+  `ForMathlib/Analysis/Normed/Operator/LinearIsometry.lean`) — a Mathlib gap
+  worth a micro-addition, not a per-use-site fight.
+
+Outcome: every proof in the staging file is 1–4 lines, each mapping to one
+sentence of the mathematical argument (polarize → equal kernels → first
+isomorphism theorem → transport to spans → extend). See
+`docs/planning/pr-decisions.md` D-1 (2026-07-03 entry) for the shape decision.
+
 ## Where does a declaration go? (place by dependencies, not theme or first use)
 
 We got placement **wrong repeatedly** — `inner_linearCombination_linearCombination`

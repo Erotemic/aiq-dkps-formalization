@@ -15,6 +15,7 @@ import ForMathlib.Analysis.Matrix.EntrywiseOpNorm
 import ForMathlib.Analysis.Matrix.SpectralFunctionMeasurable
 import ForMathlib.Analysis.Matrix.EntrywiseEigenvalue
 import ForMathlib.Analysis.Matrix.Spectrum
+import ForMathlib.Analysis.Normed.Operator.LinearIsometry
 import ForMathlib.LinearAlgebra.Matrix.PosDef
 import ForMathlib.LinearAlgebra.Matrix.RankFactorization
 import ForMathlib.MeasureTheory.CfcMeasurable

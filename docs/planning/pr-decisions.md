@@ -49,6 +49,26 @@ the inclusion `span ψ ↪ F`), the finite-dim ambient equivalence
   subsume them — and the finite-dim ambient equivalence
   `exists_linearIsometryEquiv_map_eq_of_inner_eq` now builds from the `def`
   directly. The leading public statement is the `def`. Fork and staging synced.
+- ✅ **REFINED 2026-07-03 (post-rejection elegance pass, Claude Fable 5):** the
+  quotient plumbing inside the `def` is now a standalone *isometric first
+  isomorphism theorem* in staging: `LinearMap.rangeEquivOfInnerEq` (with
+  `LinearMap.ker_eq_ker_of_inner_eq`) — two linear maps `S`, `T` out of a
+  common module with `⟪S x, S y⟫ = ⟪T x, T y⟫` have equal kernels and
+  canonically isometric ranges via `S x ↦ T x`.
+  `linearIsometryEquivSpanOfInnerEq` is a 3-line transport of that def along
+  `Finsupp.range_linearCombination`.  Its computation rule is stated first on
+  linear combinations (`…_apply_linearCombination`, generic `c : ι →₀ 𝕜`,
+  proof = one `simp`) and the generator `@[simp]` lemma is its
+  `c = single i 1` instance (one `simpa`).  All subtype-valued `@[simp]`
+  lemmas take the membership proof as an argument (the
+  `quotKerEquivRange_symm_apply_image` idiom) so they fire against any proof
+  term; the 12-line `show … from Subtype.ext` block in the old apply proof is
+  gone and every proof in the file is 1–4 lines.  New staged prerequisite:
+  `LinearIsometryEquiv.ofEq_apply_mk` (`rfl`; destination
+  `Analysis/Normed/Operator/LinearIsometry.lean`), which lets `simp` push
+  `ofEq` through `Subtype.mk`s.  Public names/signatures kept
+  (`exists_linearIsometryEquiv_map_eq_of_inner_eq`, the `gram` iff); full
+  build green; leaf axiom audit clean.
 
 ## D-2. Gram — naming
 

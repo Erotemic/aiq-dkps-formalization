@@ -1,0 +1,291 @@
+% Davis-Kahan sin-Theta: what the Lean formalization proves, and how it relates
+% to the literature.  Written as an expert-readable companion to
+% ForMathlib/Analysis/InnerProductSpace/DavisKahan.lean, so that the statement
+% can be checked against the source papers without reading Lean.
+%
+% Independently written; the two source-paper digests it draws on are
+%   ForMathlib/prose/Davis-1963-core-arguments.tex
+%   ForMathlib/prose/Yu-Wang-Samworth-2014-core-arguments.tex
+
+\documentclass[11pt]{article}
+
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage{microtype}
+\usepackage[margin=1.1in]{geometry}
+\usepackage{amsmath,amssymb,amsthm,mathtools}
+\usepackage{booktabs}
+\usepackage[hidelinks]{hyperref}
+
+\newcommand{\norm}[1]{\left\lVert #1\right\rVert}
+\newcommand{\eps}{\varepsilon}
+\newcommand{\F}{\mathrm{F}}
+\newcommand{\op}{\mathrm{op}}
+\newcommand{\inner}[2]{\langle #1,\,#2\rangle}
+\newcommand{\gap}{g}
+\newcommand{\HH}{\mathcal H}
+\newcommand{\sinT}{\sin\Theta}
+\DeclareMathOperator{\tr}{tr}
+\DeclareMathOperator{\ran}{ran}
+\DeclareMathOperator{\spann}{span}
+
+\newtheorem{theorem}{Theorem}
+\newtheorem{corollary}[theorem]{Corollary}
+\newtheorem{lemma}[theorem]{Lemma}
+\theoremstyle{remark}
+\newtheorem*{remark}{Remark}
+
+\title{Davis--Kahan $\sin\Theta$: what the Lean formalization proves,\\
+and how it relates to Davis (1963/1970) and Yu--Wang--Samworth (2015)}
+\author{Companion note to \texttt{ForMathlib/Analysis/InnerProductSpace/DavisKahan.lean}}
+\date{}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+This note states, in ordinary mathematical language, the Davis--Kahan
+$\sin\Theta$ theorem that has been formalized in Lean, and pins down exactly how
+it sits relative to the two cited source papers.  Briefly: what is formalized is
+the \emph{Frobenius} $\sin\Theta$ bound
+$\norm{\sinT}_{\F}\le\norm{S-T}_{\F}/\gap$, proved by the elementary cross-term /
+Rayleigh-quotient mechanism of Davis, using a \emph{hybrid} eigengap between the
+leading eigenvalues of one operator and the trailing eigenvalues of the other.
+This is the deterministic core of the Yu--Wang--Samworth variant; the passage to
+a population-only gap (their theorem) is a separate Weyl step, also formalized.
+No resolvents or contour integrals are used.
+\end{abstract}
+
+\section{Setup and notation}
+
+Let $\HH$ be a finite-dimensional inner product space over
+$\mathbb K\in\{\mathbb R,\mathbb C\}$, $\dim\HH=n$, and let $T,S:\HH\to\HH$ be
+self-adjoint.  Write the eigenvalues and an orthonormal eigenbasis of $T$ as
+$\lambda_1(T),\dots,\lambda_n(T)$ and $u_1,\dots,u_n$, and likewise
+$\lambda_1(S),\dots,\lambda_n(S)$ and $v_1,\dots,v_n$ for $S$.  Fix a block size
+$d$; in the intended application the indices $1,\dots,d$ label the top-$d$
+eigenvalues, but the statements below only ever use the index split
+$\{1,\dots,d\}$ versus $\{d+1,\dots,n\}$, so no sorting is assumed a priori.
+
+Let
+\[
+  P=\text{orthogonal projection onto }\spann(u_1,\dots,u_d),
+  \qquad
+  \widehat P=\text{orthogonal projection onto }\spann(v_1,\dots,v_d)
+\]
+be the projections onto the two leading spectral subspaces, and let
+$\Theta=\Theta\bigl(\ran P,\ran\widehat P\bigr)$ be the vector of principal
+angles between them.  The two norms used are the operator norm
+$\norm{\cdot}_{\op}$ and the Frobenius (Hilbert--Schmidt) norm
+$\norm{B}_{\F}^2=\tr(B^*B)=\sum_k\norm{Be_k}^2$ (any orthonormal basis $e_k$).
+
+The separation hypothesis is a \emph{hybrid gap}: a number $\gap>0$ with
+\begin{equation}\label{eq:gap}
+  \gap\le\bigl|\lambda_i(T)-\lambda_j(S)\bigr|
+  \qquad\text{for all }i\le d<j.
+\end{equation}
+It compares the leading eigenvalues of $T$ with the trailing eigenvalues of $S$
+(one operator's block against the other's complement), which is the separation
+that Davis's argument actually consumes.
+
+\section{The formalized theorem}
+
+Two equivalent presentations are formalized: an \emph{overlap} form written with
+eigenvector inner products, and a \emph{projector} form written with the
+basis-independent spectral projections.  They are the same statement, since the
+overlap sum equals $\norm{\sinT}_{\F}^2$.
+
+\begin{theorem}[Sharp Frobenius $\sin\Theta$; overlap form]\label{thm:sharp-overlap}
+Let $T,S$ be self-adjoint and let $\gap>0$ satisfy \eqref{eq:gap}.  Then
+\[
+  \sum_{i\le d}\ \sum_{j>d}\ \bigl|\inner{u_i}{v_j}\bigr|^2
+  \ \le\ \frac{\norm{S-T}_{\F}^2}{\gap^2}.
+\]
+Equivalently $\norm{\sinT}_{\F}\le\norm{S-T}_{\F}/\gap$.  There is no
+operator-norm hypothesis and no dimension factor.
+\end{theorem}
+
+\begin{theorem}[Sharp Frobenius $\sin\Theta$; projector form]\label{thm:sharp-proj}
+Under the same hypotheses,
+\[
+  \norm{\widehat P-P}_{\F}^2\ \le\ \frac{2\,\norm{S-T}_{\F}^2}{\gap^2},
+\]
+i.e.\ $\norm{\widehat P-P}_{\F}\le\sqrt2\,\norm{S-T}_{\F}/\gap$.
+\end{theorem}
+
+The factor $2$ between the two forms is exact:
+$\norm{\widehat P-P}_{\F}^2=2\norm{\sinT}_{\F}^2$, because
+$\widehat P-P=\widehat P(I-P)-(I-\widehat P)P$ splits into two pieces with
+orthogonal ranges of equal Frobenius norm (``how much each leading subspace leaks
+out of the other''); each piece equals the overlap sum.
+
+\paragraph{Crude operator-norm corollary.}
+If one only controls the perturbation in operator norm, $\norm{S-T}_{\op}\le\eps$,
+then $\norm{S-T}_{\F}^2\le n\,\eps^2$, and Theorems~\ref{thm:sharp-overlap}
+and~\ref{thm:sharp-proj} degrade to
+\[
+  \sum_{i\le d}\sum_{j>d}\bigl|\inner{u_i}{v_j}\bigr|^2\le\frac{n\,\eps^2}{\gap^2},
+  \qquad
+  \norm{\widehat P-P}_{\F}^2\le\frac{2n\,\eps^2}{\gap^2}.
+\]
+The dimension factor $n$ enters at exactly this one step and nowhere else; it is
+the price of converting an operator-norm bound into a Frobenius conclusion, and
+it is tight for that conversion (take $S-T=\eps I$).
+
+\paragraph{Rank / eigenvalue-floor corollary (the statistical setup).}
+If $T$ is positive semidefinite of rank $d$ with its nonzero eigenvalues bounded
+below by $\alpha$, and $S$ is $\eps$-close in operator norm with
+$\eps\le\alpha/2$, then Weyl's inequality forces every trailing eigenvalue of $S$
+below $\alpha/2$, so \eqref{eq:gap} holds with $\gap=\alpha/2$, and
+\[
+  \sum_{i\le d}\sum_{j>d}\bigl|\inner{u_i}{v_j}\bigr|^2\le\frac{4n\,\eps^2}{\alpha^2}.
+\]
+
+\section{The proof mechanism (one paragraph)}
+
+For an eigenvector $v_j$ of $S$ with eigenvalue $\lambda_j(S)$ and an eigenvector
+$u_i$ of $T$ with eigenvalue $\lambda_i(T)$, self-adjointness gives the
+\emph{cross-term identity}
+\begin{equation}\label{eq:cross}
+  \inner{u_i}{(S-T)v_j}=\bigl(\lambda_j(S)-\lambda_i(T)\bigr)\inner{u_i}{v_j}.
+\end{equation}
+On a cross pair ($i\le d<j$), \eqref{eq:gap} and \eqref{eq:cross} give
+$\gap^2\,|\inner{u_i}{v_j}|^2\le|\inner{u_i}{(S-T)v_j}|^2$.  Summing over the
+cross block, and then enlarging to the full double sum (all terms nonnegative),
+\[
+  \gap^2\sum_{i\le d}\sum_{j>d}|\inner{u_i}{v_j}|^2
+  \le\sum_{i,j}|\inner{u_i}{(S-T)v_j}|^2
+  =\sum_j\norm{(S-T)v_j}^2
+  =\norm{S-T}_{\F}^2,
+\]
+the middle equality being Parseval in the orthonormal basis $\{u_i\}$.  That is
+the whole proof: no resolvents, no contour integrals.  The dimension factor
+appears only if one replaces the last quantity by $n\eps^2$.
+
+\section{Relation to Davis (1963/1970)}
+
+The mechanism above is Davis's.  In ``The Rotation of Eigenvectors by a
+Perturbation'' (\emph{J.\ Math.\ Anal.\ Appl.}\ \textbf{6}, 1963) the
+total-rotation estimate for simple spectra reads, in Davis's notation
+($A\rightsquigarrow T$, $A+H\rightsquigarrow S$, $\mathcal C^{\perp}U$ the
+off-diagonal part of the matching unitary),
+\[
+  (\gamma')^2\,\norm{\mathcal C^{\perp}U}_{\F}^2
+  \le\norm{H}_{\F}^2-\sum_i\bigl(\lambda_i-\lambda_i'\bigr)^2,
+  \qquad
+  \gamma_i=\min_{j\ne i}|\lambda_i-\lambda_j'|,
+\]
+proved by comparing $\inner{(A+H-\lambda_i')^2x_i}{x_i}$ from above and below --
+exactly the identity \eqref{eq:cross}.  Our Theorem~\ref{thm:sharp-overlap} is
+the same argument, specialized to the two-block (leading/trailing) split rather
+than a full eigenvector matching, and with two of Davis's refinements dropped:
+we bound the cross block by the \emph{full} $\norm{S-T}_{\F}^2$ (so we do not
+subtract the eigenvalue-displacement term $\sum_i(\lambda_i-\lambda_i')^2$, and
+we do not push the right-hand side down to the off-diagonal part
+$\norm{\mathcal C^{\perp}H}_{\F}^2$ of Davis's sharper §5 statement).  Our hybrid
+gap \eqref{eq:gap} is Davis's $\gamma_i$ without the $(\gamma')^2$ correction.
+The frequently cited companion is Davis \& Kahan, ``\dots\ III'', \emph{SIAM
+J.\ Numer.\ Anal.}\ \textbf{7} (1970), which gives the $\sin\Theta$ theorem for
+every unitarily invariant norm; the Frobenius norm is the instance formalized
+here.
+
+\section{Relation to Yu--Wang--Samworth (2015)}
+
+Yu, Wang and Samworth (\emph{Biometrika} \textbf{102}, 2015) state, for symmetric
+$\Sigma,\widehat\Sigma$ with population eigengap
+$\Delta=\min(\lambda_{r-1}-\lambda_r,\ \lambda_s-\lambda_{s+1})$ built from
+$\Sigma$ alone,
+\[
+  \norm{\sinT(\widehat V,V)}_{\F}
+  \le\frac{2\min\{d^{1/2}\norm{\widehat\Sigma-\Sigma}_{\op},
+                   \norm{\widehat\Sigma-\Sigma}_{\F}\}}{\Delta}.
+\]
+Their proof is the residual sandwich
+$\Delta\norm{\sinT}_{\F}\le\norm{R}_{\F}\le
+2\min\{d^{1/2}\norm{\cdot}_{\op},\norm{\cdot}_{\F}\}$ with
+$R=\widehat V\Lambda-\Sigma\widehat V$; the left inequality is a deterministic
+separation estimate, the right one a perturbation estimate (Weyl and
+Hoffman--Wielandt), and the factor $2$ is the cost of moving from a mixed
+population/sample separation to the population-only gap $\Delta$.
+
+Our development is the two pieces YWS fuse, kept apart:
+\begin{itemize}
+\item Theorem~\ref{thm:sharp-overlap} (with the \emph{hybrid} gap \eqref{eq:gap})
+  is the deterministic separation estimate --- YWS's left inequality --- but with
+  constant $1$ rather than $2$, because the hybrid gap already accounts for where
+  the trailing eigenvalues sit, so no Hoffman--Wielandt eigenvalue-displacement
+  term is incurred.  This is precisely the ``classical Davis--Kahan with a mixed
+  population/sample separation'' that YWS's remark describes as the usual
+  workaround.
+\item The rank/floor corollary is the Weyl step that turns the hybrid gap into a
+  population-only gap $\alpha/2$ --- the move YWS package into their theorem's
+  denominator.
+\end{itemize}
+So the Frobenius conclusion is the same; the difference is bookkeeping about the
+gap.  Two honesty notes on constants: (i) our operator-norm corollary carries
+$n^{1/2}$ where YWS carry $d^{1/2}$, because we degrade the \emph{full} Frobenius
+sum to $n\eps^2$; bounding only the leading$\times$trailing block would give
+$\min(d,n-d)^{1/2}$, but that refinement is not formalized.  (ii) We formalize
+only the symmetric $\sin\Theta$ statement, not YWS's aligned-basis
+(orthogonal Procrustes) corollary or their singular-vector extension.
+
+\section{Dictionary to the Lean source}
+
+All declarations live in
+\texttt{ForMathlib/Analysis/InnerProductSpace/DavisKahan.lean}
+(namespace \texttt{ForMathlib}).
+
+\begin{center}
+\begin{tabular}{@{}ll@{}}
+\toprule
+Statement here & Lean name \\
+\midrule
+Cross-term identity \eqref{eq:cross}
+  & \texttt{inner\_eigenvectorBasis\_map\_sub\_eigenvectorBasis} \\
+Parseval identity $\sum_{i,j}=\sum_j\norm{(S-T)v_j}^2=\norm{S-T}_{\F}^2$
+  & \texttt{sum\_sq\_norm\_inner\_eigenvectorBasis\_map\_sub\_eq} \\
+The single dimension-factor step $\norm{S-T}_{\F}^2\le n\eps^2$
+  & \texttt{sum\_norm\_eigenvectorBasis\_map\_sub\_sq\_le} \\
+Thm~\ref{thm:sharp-overlap} (sharp overlap)
+  & \texttt{sum\_cross\_norm\_inner\_eigenvectorBasis\_sq\_le\_hilbertSchmidt} \\
+Crude overlap corollary $n\eps^2/\gap^2$
+  & \texttt{sum\_cross\_norm\_inner\_eigenvectorBasis\_sq\_le} \\
+Projector identity $\norm{\widehat P-P}_{\F}^2=2\cdot\text{overlap}$
+  & \texttt{sum\_norm\_sub\_starProjection\_span\_sq\_eq} \\
+Thm~\ref{thm:sharp-proj} (sharp projector)
+  & \texttt{sum\_norm\_sub\_starProjection\_span\_sq\_le\_hilbertSchmidt} \\
+Crude projector corollary $2n\eps^2/\gap^2$
+  & \texttt{sum\_norm\_sub\_starProjection\_span\_sq\_le} \\
+Weyl step: floor $\Rightarrow$ gap $\alpha/2$
+  & \texttt{gap\_of\_rank\_floor} \\
+Rank/floor corollary $4n\eps^2/\alpha^2$
+  & \texttt{sum\_cross\_norm\_inner\_eigenvectorBasis\_sq\_le\_of\_rank\_floor} \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+The projections $P,\widehat P$ are Mathlib's \texttt{Submodule.starProjection}
+of the spans of the selected eigenvectors; in Lean the Frobenius norm on the
+left of Theorem~\ref{thm:sharp-proj} is written as the basis sum
+$\sum_k\norm{(\widehat P-P)u_k}^2$, which equals $\norm{\widehat P-P}_{\F}^2$.
+
+\begin{thebibliography}{9}
+\bibitem{Davis1963}
+Chandler Davis.
+\newblock The rotation of eigenvectors by a perturbation.
+\newblock \emph{J.\ Math.\ Anal.\ Appl.}\ \textbf{6} (1963), 159--173.
+\newblock DOI: 10.1016/0022-247X(63)90001-5.
+
+\bibitem{DavisKahan1970}
+Chandler Davis and W.\ M.\ Kahan.
+\newblock The rotation of eigenvectors by a perturbation. III.
+\newblock \emph{SIAM J.\ Numer.\ Anal.}\ \textbf{7} (1970), 1--46.
+
+\bibitem{YWS2015}
+Yi Yu, Tengyao Wang, and Richard J.\ Samworth.
+\newblock A useful variant of the Davis--Kahan theorem for statisticians.
+\newblock \emph{Biometrika} \textbf{102} (2015), 315--323.
+\newblock arXiv:1405.0680.
+\end{thebibliography}
+
+\end{document}

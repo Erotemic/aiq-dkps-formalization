@@ -10,6 +10,12 @@ general orthonormal-subfamily-span fact (not Courant–Fischer-specific) used on
 internally, so they are `private` — keeping a `CourantFischer.lean` file's public
 surface to Courant–Fischer/Weyl.  Minimal imports: `FiniteDimensional.Lemmas`
 dropped (its `finrank` lemmas arrive transitively via `PiL2`/`Spectrum`).
+Elegance pass by Claude Opus 4.8 (claude-opus-4-8[1m]): the two min-max directions
+previously duplicated a `diagonalize → bound each surviving term → Parseval` calc.
+That mechanism is now the pair of dual private lemmas
+`re_inner_map_self_le_of_mem_specSubspace` / `le_re_inner_map_self_of_mem_specSubspace`
+(the quadratic form on a spectral subspace is bounded by any bound on the selected
+eigenvalues), and each Courant–Fischer direction is a two-line application.
 To be re-authored per Mathlib's AI-contribution policy at PR time.
 -/
 
@@ -129,6 +135,40 @@ theorem re_inner_map_self_eq_sum_eigenvalues_mul_sq
       mul_left_comm, RCLike.mul_conj]
   rw [key, RCLike.ofReal_re]
 
+/-- On a spectral subspace, the quadratic form is bounded by any bound on the selected
+eigenvalues.  If `x ∈ specSubspace b p` (so its coordinates vanish off `p`) and every
+selected eigenvalue satisfies `λᵢ ≤ c`, then `re ⟪T x, x⟫ ≤ c ‖x‖²`: the diagonalized form
+`∑ λᵢ ‖repr x i‖²` only sees eigenvalues `≤ c`, and the weights sum to `‖x‖²`. -/
+private theorem re_inner_map_self_le_of_mem_specSubspace
+    (hT : T.IsSymmetric) (hn : finrank 𝕜 E = n) {p : Fin n → Prop} {c : ℝ}
+    (hc : ∀ i, p i → hT.eigenvalues hn i ≤ c)
+    {x : E} (hx : x ∈ specSubspace (hT.eigenvectorBasis hn) p) :
+    RCLike.re ⟪T x, x⟫_𝕜 ≤ c * ‖x‖ ^ 2 := by
+  set b := hT.eigenvectorBasis hn
+  rw [re_inner_map_self_eq_sum_eigenvalues_mul_sq hT hn x,
+    show c * ‖x‖ ^ 2 = ∑ i : Fin n, c * ‖b.repr x i‖ ^ 2 by
+      rw [← Finset.mul_sum, sum_sq_norm_repr_eq_sq_norm]]
+  refine Finset.sum_le_sum fun i _ => ?_
+  by_cases hp : p i
+  · exact mul_le_mul_of_nonneg_right (hc i hp) (sq_nonneg _)
+  · rw [repr_eq_zero_of_mem_specSubspace b p hx hp]; simp
+
+/-- Dual of `re_inner_map_self_le_of_mem_specSubspace`: if `x ∈ specSubspace b p` and every
+selected eigenvalue satisfies `c ≤ λᵢ`, then `c ‖x‖² ≤ re ⟪T x, x⟫`. -/
+private theorem le_re_inner_map_self_of_mem_specSubspace
+    (hT : T.IsSymmetric) (hn : finrank 𝕜 E = n) {p : Fin n → Prop} {c : ℝ}
+    (hc : ∀ i, p i → c ≤ hT.eigenvalues hn i)
+    {x : E} (hx : x ∈ specSubspace (hT.eigenvectorBasis hn) p) :
+    c * ‖x‖ ^ 2 ≤ RCLike.re ⟪T x, x⟫_𝕜 := by
+  set b := hT.eigenvectorBasis hn
+  rw [re_inner_map_self_eq_sum_eigenvalues_mul_sq hT hn x,
+    show c * ‖x‖ ^ 2 = ∑ i : Fin n, c * ‖b.repr x i‖ ^ 2 by
+      rw [← Finset.mul_sum, sum_sq_norm_repr_eq_sq_norm]]
+  refine Finset.sum_le_sum fun i _ => ?_
+  by_cases hp : p i
+  · exact mul_le_mul_of_nonneg_right (hc i hp) (sq_nonneg _)
+  · rw [repr_eq_zero_of_mem_specSubspace b p hx hp]; simp
+
 /-! ### Discrete Courant–Fischer directional bounds -/
 
 /-- Counting lemma: the number of indices `i : Fin n` with `k ≤ i` is `n - k`. -/
@@ -187,25 +227,13 @@ theorem exists_unit_vector_re_inner_le_eigenvalue
   have hnx : ‖x‖ = 1 := by
     rw [hx, norm_smul, RCLike.norm_ofReal, abs_inv, abs_norm, inv_mul_cancel₀ hz0']
   refine ⟨x, V.smul_mem _ hzV, hnx, ?_⟩
-  -- The unit vector still lies in `W`, so its coordinates vanish for `i < k`.
+  -- The unit vector still lies in `W`; on `W` the selected eigenvalues are all `≤ λₖ`
+  -- (antitone), so the spectral-subspace bound gives `re ⟪T x, x⟫ ≤ λₖ · ‖x‖² = λₖ`.
   have hxW : x ∈ W := W.smul_mem _ hzW
-  rw [re_inner_map_self_eq_sum_eigenvalues_mul_sq hT hn x]
-  -- Bound each surviving term by `λₖ * ‖(b.repr x) i‖ ^ 2`.
-  have hbound : ∀ i ∈ Finset.univ,
-      hT.eigenvalues hn i * ‖b.repr x i‖ ^ 2 ≤ hT.eigenvalues hn k * ‖b.repr x i‖ ^ 2 := by
-    intro i _
-    by_cases hik : k ≤ i
-    · exact mul_le_mul_of_nonneg_right
-        (hT.eigenvalues_antitone hn hik) (sq_nonneg _)
-    · have : b.repr x i = 0 :=
-        repr_eq_zero_of_mem_specSubspace b _ hxW hik
-      simp [this]
-  calc ∑ i : Fin n, hT.eigenvalues hn i * ‖b.repr x i‖ ^ 2
-      ≤ ∑ i : Fin n, hT.eigenvalues hn k * ‖b.repr x i‖ ^ 2 :=
-        Finset.sum_le_sum hbound
-    _ = hT.eigenvalues hn k * ∑ i : Fin n, ‖b.repr x i‖ ^ 2 := by
-        rw [Finset.mul_sum]
-    _ = hT.eigenvalues hn k * ‖x‖ ^ 2 := by rw [sum_sq_norm_repr_eq_sq_norm]
+  calc RCLike.re ⟪T x, x⟫_𝕜
+      ≤ hT.eigenvalues hn k * ‖x‖ ^ 2 :=
+        re_inner_map_self_le_of_mem_specSubspace hT hn
+          (fun _ hik => hT.eigenvalues_antitone hn hik) hxW
     _ = hT.eigenvalues hn k := by rw [hnx]; ring
 
 /-- **Courant–Fischer, lower direction.** There is a subspace `V` of dimension
@@ -223,22 +251,13 @@ theorem forall_unit_vector_eigenvalue_le_re_inner
   refine ⟨specSubspace b (fun i : Fin n => i ≤ k), ?_, ?_⟩
   · rw [finrank_specSubspace, card_filter_ge]
   · intro x hxV hnx
-    rw [re_inner_map_self_eq_sum_eigenvalues_mul_sq hT hn x]
-    have hbound : ∀ i ∈ Finset.univ,
-        hT.eigenvalues hn k * ‖b.repr x i‖ ^ 2 ≤ hT.eigenvalues hn i * ‖b.repr x i‖ ^ 2 := by
-      intro i _
-      by_cases hik : i ≤ k
-      · exact mul_le_mul_of_nonneg_right
-          (hT.eigenvalues_antitone hn hik) (sq_nonneg _)
-      · have : b.repr x i = 0 :=
-          repr_eq_zero_of_mem_specSubspace b _ hxV hik
-        simp [this]
+    -- On this subspace the selected eigenvalues are all `≥ λₖ` (antitone), so the dual
+    -- spectral-subspace bound gives `λₖ = λₖ · ‖x‖² ≤ re ⟪T x, x⟫`.
     calc hT.eigenvalues hn k
         = hT.eigenvalues hn k * ‖x‖ ^ 2 := by rw [hnx]; ring
-      _ = hT.eigenvalues hn k * ∑ i : Fin n, ‖b.repr x i‖ ^ 2 := by
-          rw [sum_sq_norm_repr_eq_sq_norm]
-      _ = ∑ i : Fin n, hT.eigenvalues hn k * ‖b.repr x i‖ ^ 2 := by rw [Finset.mul_sum]
-      _ ≤ ∑ i : Fin n, hT.eigenvalues hn i * ‖b.repr x i‖ ^ 2 := Finset.sum_le_sum hbound
+      _ ≤ RCLike.re ⟪T x, x⟫_𝕜 :=
+          le_re_inner_map_self_of_mem_specSubspace hT hn
+            (fun _ hik => hT.eigenvalues_antitone hn hik) hxV
 
 /-! ### Weyl's inequality -/
 

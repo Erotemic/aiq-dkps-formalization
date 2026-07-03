@@ -332,6 +332,36 @@ sentence of the mathematical argument (polarize → equal kernels → first
 isomorphism theorem → transport to spans → extend). See
 `docs/planning/pr-decisions.md` D-1 (2026-07-03 entry) for the shape decision.
 
+### The "ugly instance ⇒ missing general fact" lesson generalizes (2026-07-03, Opus 4.8)
+
+The first bullet of the third pass — *an ugly proof of a specific instance often
+means the general fact is missing; extract it* — is not Gram-specific. Re-reading
+the neighbouring spectral files with it in hand found the same smell twice, each
+fixed the same way (a duplicated/inline calc → a named general lemma + thin call
+sites), no `mathlib-quality` mechanical rule involved:
+
+- **`CourantFischer.lean`.** The two Courant–Fischer min-max directions each
+  inlined ~18 lines of `diagonalize → bound each surviving term → Parseval`. The
+  general fact is one min-max statement in two dual forms: *the quadratic form of
+  a symmetric operator on a spectral subspace is bounded by any bound on the
+  selected eigenvalues* (`re_inner_map_self_le_of_mem_specSubspace` and its dual).
+  Each direction became a 2-line application; Weyl (which uses both directions)
+  reads more clearly for it.
+- **`DavisKahan.lean`.** The `k ∈ s` case of the projector identity inlined a
+  14-line `norm_sq_eq_add_norm_sq_starProjection` + Parseval `linarith`. The
+  general fact is the *complementary Parseval residual*
+  `‖x − P x‖² = ∑_{i ∉ s} ‖⟪wᵢ, x⟫‖²`
+  (`OrthonormalBasis.norm_sq_sub_starProjection_span_image`), the exact companion
+  to the pre-existing `‖P x‖² = ∑_{i ∈ s}` — a lemma that belongs in the
+  projection API on its own merits. The case collapsed to `rw [norm_sub_rev];
+  exact …`.
+
+Tell for this smell: **two parallel proofs that differ only in a direction/sign,
+or a `by_cases`/`split` whose branches each re-derive a Parseval-type identity.**
+The extraction is worth it even when net LOC is flat — the work moves into a
+named, reusable, individually-quotable lemma, and the call sites start reading
+like the mathematics.
+
 ## Where does a declaration go? (place by dependencies, not theme or first use)
 
 We got placement **wrong repeatedly** — `inner_linearCombination_linearCombination`

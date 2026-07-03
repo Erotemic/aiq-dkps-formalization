@@ -1,0 +1,415 @@
+% Distilled mathematical notes for:
+%
+%   Yi Yu, Tengyao Wang, and Richard J. Samworth,
+%   "A useful variant of the Davis--Kahan theorem for statisticians",
+%   arXiv:1405.0680 [math.ST], submitted 4 May 2014.
+%   DOI: 10.48550/arXiv.1405.0680
+%
+% This file is not a transcription of the article.  It is an independent
+% distillation of the core mathematical argument, with attribution.
+%
+% Notation switch:
+%   \\PaperNotationtrue  : Yu--Wang--Samworth notation, e.g. Sigma, hat Sigma.
+%   \\PaperNotationfalse : generic perturbation notation, e.g. A, tilde A.
+
+\documentclass[11pt]{article}
+
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage{microtype}
+\usepackage[margin=1.1in]{geometry}
+\usepackage{amsmath,amssymb,amsthm,mathtools}
+\usepackage[hidelinks]{hyperref}
+\usepackage{enumitem}
+
+% -----------------------------------------------------------------------------
+% Notation layer
+% -----------------------------------------------------------------------------
+\newif\ifPaperNotation
+\PaperNotationtrue
+
+\ifPaperNotation
+  \newcommand{\BaseMat}{\Sigma}
+  \newcommand{\PertMat}{\widehat{\Sigma}}
+  \newcommand{\ErrMat}{\widehat{\Sigma}-\Sigma}
+  \newcommand{\Sub}{V}
+  \newcommand{\Subhat}{\widehat V}
+  \newcommand{\EigDiag}{\Lambda}
+  \newcommand{\EigDiagHat}{\widehat\Lambda}
+  \newcommand{\AlignMat}{\widehat O}
+\else
+  \newcommand{\BaseMat}{A}
+  \newcommand{\PertMat}{\widetilde A}
+  \newcommand{\ErrMat}{\widetilde A-A}
+  \newcommand{\Sub}{Q}
+  \newcommand{\Subhat}{\widetilde Q}
+  \newcommand{\EigDiag}{D}
+  \newcommand{\EigDiagHat}{\widetilde D}
+  \newcommand{\AlignMat}{O}
+\fi
+
+\newcommand{\R}{\mathbb R}
+\newcommand{\gap}{\Delta}
+\newcommand{\sgap}{\Gamma}
+\newcommand{\norm}[1]{\left\lVert #1 \right\rVert}
+\newcommand{\op}{\mathrm{op}}
+\newcommand{\F}{\mathrm F}
+\newcommand{\diag}{\operatorname{diag}}
+\newcommand{\tr}{\operatorname{tr}}
+\newcommand{\vecop}{\operatorname{vec}}
+\newcommand{\rank}{\operatorname{rank}}
+
+\newtheorem{theorem}{Theorem}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{corollary}[theorem]{Corollary}
+\theoremstyle{remark}
+\newtheorem*{remark}{Remark}
+
+\title{Core arguments in Yu--Wang--Samworth's Davis--Kahan variant}
+\author{Distilled notes}
+\date{}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+These notes isolate the main mathematical mechanism in Yu, Wang, and
+Samworth's useful Davis--Kahan variant.  The key observation is that the
+residual $\Subhat\EigDiag-\BaseMat\Subhat$ can be bounded above using only
+matrix perturbation estimates, while it can be bounded below by a
+population eigengap times the sine of the principal angles.  The result is
+an eigenvector/subspace perturbation bound whose denominator contains only
+population eigenvalue gaps.
+\end{abstract}
+
+\section{Reference and scope}
+
+The source paper is:
+\begin{quote}
+Yi Yu, Tengyao Wang, and Richard J. Samworth,
+``A useful variant of the Davis--Kahan theorem for statisticians,''
+arXiv:1405.0680, 2014.
+\end{quote}
+
+This document is a short mathematical distillation, not a line-by-line
+transcription.  It keeps the paper's notation by default.  To view the same
+argument in more generic perturbation notation, set
+\verb|\PaperNotationfalse| near the top of the file.
+
+\section{Setup}
+
+Let $\BaseMat,\PertMat\in\R^{p\times p}$ be symmetric, with eigenvalues
+$\lambda_1\geq\cdots\geq\lambda_p$ and
+$\widehat\lambda_1\geq\cdots\geq\widehat\lambda_p$, respectively.  Fix
+indices $1\leq r\leq s\leq p$ and write $d=s-r+1$.  The target population
+subspace is spanned by
+\[
+  \Sub=(v_r,v_{r+1},\ldots,v_s)\in\R^{p\times d},
+\]
+and the perturbed subspace is spanned by
+\[
+  \Subhat=(\widehat v_r,\widehat v_{r+1},\ldots,\widehat v_s)
+  \in\R^{p\times d}.
+\]
+Thus
+\[
+  \BaseMat\Sub=\Sub\EigDiag,
+  \qquad
+  \PertMat\Subhat=\Subhat\EigDiagHat,
+\]
+where
+\[
+  \EigDiag=\diag(\lambda_r,\ldots,\lambda_s),
+  \qquad
+  \EigDiagHat=\diag(\widehat\lambda_r,\ldots,\widehat\lambda_s).
+\]
+The relevant population eigengap is
+\[
+  \gap := \min(\lambda_{r-1}-\lambda_r,\lambda_s-\lambda_{s+1}),
+  \qquad
+  \lambda_0:=\infty,\quad \lambda_{p+1}:=-\infty.
+\]
+The goal is to control the principal angles between the column spaces of
+$\Sub$ and $\Subhat$, measured by $\norm{\sin\Theta(\Subhat,\Sub)}_{\F}$.
+
+\section{The symmetric-matrix variant}
+
+\begin{theorem}[Population-gap Davis--Kahan variant]
+Assume $\gap>0$.  Then
+\[
+  \norm{\sin\Theta(\Subhat,\Sub)}_{\F}
+  \leq
+  \frac{2\min\{d^{1/2}\norm{\ErrMat}_{\op},\norm{\ErrMat}_{\F}\}}{\gap}.
+\]
+Moreover, there is a $d\times d$ orthogonal matrix $\AlignMat$ such that
+\[
+  \norm{\Subhat\AlignMat-\Sub}_{\F}
+  \leq
+  \frac{2^{3/2}\min\{d^{1/2}\norm{\ErrMat}_{\op},\norm{\ErrMat}_{\F}\}}{\gap}.
+\]
+\end{theorem}
+
+\begin{remark}
+The important structural point is that $\gap$ is formed only from the
+population eigenvalues.  The usual statistical workaround is to apply a
+classical Davis--Kahan theorem with a mixed population/sample separation,
+and then use Weyl's inequality to show that the sample eigenvalues are close
+to the population eigenvalues.  The theorem above builds the population gap
+directly into the argument.
+\end{remark}
+
+\section{The proof as an upper/lower sandwich}
+
+Define the residual
+\[
+  R := \Subhat\EigDiag-\BaseMat\Subhat.
+\]
+The whole proof is the comparison
+\[
+  \gap\,\norm{\sin\Theta(\Subhat,\Sub)}_{\F}
+  \leq \norm{R}_{\F}
+  \leq 2\min\{d^{1/2}\norm{\ErrMat}_{\op},\norm{\ErrMat}_{\F}\}.
+\]
+The left inequality is a deterministic separation estimate.  The right
+inequality is a perturbation estimate.
+
+\subsection{Upper bound on the residual}
+
+From $\PertMat\Subhat=\Subhat\EigDiagHat$ we have
+\[
+  0=\PertMat\Subhat-\Subhat\EigDiagHat
+   =\BaseMat\Subhat-\Subhat\EigDiag+(\ErrMat)\Subhat
+     -\Subhat(\EigDiagHat-\EigDiag),
+\]
+and hence
+\[
+  R=(\ErrMat)\Subhat-\Subhat(\EigDiagHat-\EigDiag).
+\]
+Therefore
+\[
+  \norm{R}_{\F}
+  \leq \norm{(\ErrMat)\Subhat}_{\F}
+      +\norm{\Subhat(\EigDiagHat-\EigDiag)}_{\F}.
+\]
+There are two useful versions of this upper bound.
+
+First, using $\norm{B\Subhat}_{\F}\leq d^{1/2}\norm{B}_{\op}$ and Weyl's
+inequality,
+\[
+  \norm{R}_{\F}
+  \leq d^{1/2}\norm{\ErrMat}_{\op}+\norm{\EigDiagHat-\EigDiag}_{\F}
+  \leq 2d^{1/2}\norm{\ErrMat}_{\op}.
+\]
+Second, using Frobenius-norm contraction under multiplication by matrices
+with orthonormal columns, together with the Hoffman--Wielandt eigenvalue
+perturbation bound,
+\[
+  \norm{R}_{\F}
+  \leq \norm{\ErrMat}_{\F}+\norm{\EigDiagHat-\EigDiag}_{\F}
+  \leq 2\norm{\ErrMat}_{\F}.
+\]
+Combining the two gives
+\[
+  \norm{R}_{\F}
+  \leq 2\min\{d^{1/2}\norm{\ErrMat}_{\op},\norm{\ErrMat}_{\F}\}.
+\]
+
+\subsection{Lower bound on the residual}
+
+Let $V_1\in\R^{p\times(p-d)}$ be an orthonormal complement to $\Sub$ chosen
+so that, with $P=(\Sub\; V_1)$,
+\[
+  P^T\BaseMat P=\begin{pmatrix}\EigDiag&0\\0&\Lambda_1\end{pmatrix},
+  \qquad
+  \Lambda_1=\diag(\lambda_1,\ldots,\lambda_{r-1},
+                   \lambda_{s+1},\ldots,\lambda_p).
+\]
+Projecting $R$ onto the orthogonal complement of $\operatorname{col}(\Sub)$
+can only decrease its Frobenius norm, so
+\[
+  \norm{R}_{\F}
+  \geq
+  \norm{V_1^T\Subhat\EigDiag-\Lambda_1V_1^T\Subhat}_{\F}.
+\]
+The linear map
+\[
+  X\mapsto X\EigDiag-\Lambda_1X
+\]
+acts entrywise by multiplying the $(a,b)$ entry of $X$ by a difference
+between one eigenvalue outside the target block and one eigenvalue inside
+it.  By the definition of $\gap$, all these multipliers have absolute value
+at least $\gap$.  Hence
+\[
+  \norm{V_1^T\Subhat\EigDiag-\Lambda_1V_1^T\Subhat}_{\F}
+  \geq \gap\,\norm{V_1^T\Subhat}_{\F}.
+\]
+Finally,
+\[
+  \norm{V_1^T\Subhat}_{\F}^2
+  =\tr\{\Subhat^T(I_p-\Sub\Sub^T)\Subhat\}
+  =d-\norm{\Subhat^T\Sub}_{\F}^2
+  =\norm{\sin\Theta(\Subhat,\Sub)}_{\F}^2.
+\]
+Thus
+\[
+  \norm{R}_{\F}
+  \geq \gap\,\norm{\sin\Theta(\Subhat,\Sub)}_{\F}.
+\]
+
+\section{From angles to aligned bases}
+
+The sine-angle bound controls the subspaces.  To control a particular choice
+of orthonormal bases, align them by an orthogonal Procrustes rotation.  Let
+\[
+  \widehat O_1^T\Subhat^T\Sub\widehat O_2
+  =\diag(\cos\theta_1,\ldots,\cos\theta_d)
+\]
+be a singular value decomposition, and set
+$\AlignMat=\widehat O_1\widehat O_2^T$.  Then
+\[
+\begin{aligned}
+  \norm{\Subhat\AlignMat-\Sub}_{\F}^2
+  &=2d-2\sum_{j=1}^d\cos\theta_j  \\
+  &\leq 2d-2\sum_{j=1}^d\cos^2\theta_j
+   =2\norm{\sin\Theta(\Subhat,\Sub)}_{\F}^2.
+\end{aligned}
+\]
+Taking square roots and inserting the previous theorem gives the displayed
+basis-alignment bound.
+
+\section{The single-vector corollary}
+
+When $d=1$, say the target index is $j$, the theorem reduces to
+\[
+  \sin\Theta(\widehat v_j,v_j)
+  \leq
+  \frac{2\norm{\ErrMat}_{\op}}
+       {\min(\lambda_{j-1}-\lambda_j,\lambda_j-\lambda_{j+1})}.
+\]
+If the sign of $\widehat v_j$ is chosen so that $\widehat v_j^Tv_j\geq 0$,
+then
+\[
+  \norm{\widehat v_j-v_j}
+  \leq \sqrt2\,\sin\Theta(\widehat v_j,v_j)
+  \leq
+  \frac{2^{3/2}\norm{\ErrMat}_{\op}}
+       {\min(\lambda_{j-1}-\lambda_j,\lambda_j-\lambda_{j+1})}.
+\]
+
+\section{The singular-vector extension}
+
+Let $A,\widehat A\in\R^{p\times q}$ have singular values
+$\sigma_1\geq\cdots\geq\sigma_{\min(p,q)}$ and
+$\widehat\sigma_1\geq\cdots\geq\widehat\sigma_{\min(p,q)}$.  Fix
+$1\leq r\leq s\leq\rank(A)$, set $d=s-r+1$, and define the squared-singular
+value gap
+\[
+  \sgap := \min(\sigma_{r-1}^2-\sigma_r^2,
+                 \sigma_s^2-\sigma_{s+1}^2),
+  \qquad
+  \sigma_0^2:=\infty,
+  \quad
+  \sigma_{\rank(A)+1}^2:=-\infty.
+\]
+Let $V=(v_r,\ldots,v_s)$ and $\widehat V=(\widehat v_r,\ldots,\widehat v_s)$
+be the corresponding right singular-vector matrices.  Applying the symmetric
+result to $A^TA$ and $\widehat A^T\widehat A$ gives
+\[
+  \norm{\sin\Theta(\widehat V,V)}_{\F}
+  \leq
+  \frac{2\min\{d^{1/2}\norm{\widehat A^T\widehat A-A^TA}_{\op},
+               \norm{\widehat A^T\widehat A-A^TA}_{\F}\}}{\sgap}.
+\]
+The Gram-matrix perturbation is bounded by
+\[
+\begin{aligned}
+  \norm{\widehat A^T\widehat A-A^TA}_{\op}
+  &\leq (2\sigma_1+\norm{\widehat A-A}_{\op})\norm{\widehat A-A}_{\op},\\
+  \norm{\widehat A^T\widehat A-A^TA}_{\F}
+  &\leq (2\sigma_1+\norm{\widehat A-A}_{\op})\norm{\widehat A-A}_{\F}.
+\end{aligned}
+\]
+Consequently,
+\[
+  \norm{\sin\Theta(\widehat V,V)}_{\F}
+  \leq
+  \frac{2(2\sigma_1+\norm{\widehat A-A}_{\op})
+        \min\{d^{1/2}\norm{\widehat A-A}_{\op},
+              \norm{\widehat A-A}_{\F}\}}{\sgap}.
+\]
+The same Procrustes step yields an orthogonal $\widehat O\in\R^{d\times d}$
+for which
+\[
+  \norm{\widehat V\widehat O-V}_{\F}
+  \leq
+  \frac{2^{3/2}(2\sigma_1+\norm{\widehat A-A}_{\op})
+        \min\{d^{1/2}\norm{\widehat A-A}_{\op},
+              \norm{\widehat A-A}_{\F}\}}{\sgap}.
+\]
+Identical bounds for left singular subspaces follow by applying the same
+argument to $AA^T$ and $\widehat A\widehat A^T$.
+
+\section{Minimal supporting lemmas}
+
+\begin{lemma}[Frobenius compression]
+Let $B\in\R^{m\times n}$.  If $U\in\R^{m\times a}$ and
+$W\in\R^{n\times b}$ have orthonormal columns, then
+\[
+  \norm{U^TBW}_{\F}\leq \norm{B}_{\F}.
+\]
+If instead $U$ and $W$ have orthonormal rows of the compatible sizes, then
+\[
+  \norm{U^TBW}_{\F}=\norm{B}_{\F}.
+\]
+\end{lemma}
+
+\begin{proof}
+Complete the column-orthonormal matrices to orthogonal matrices and observe
+that Frobenius norm is preserved by orthogonal multiplication; the block
+$U^TBW$ is one sub-block of the transformed matrix, hence has no larger
+Frobenius norm.  For orthonormal rows, $UU^T=I$ and $WW^T=I$, so
+\[
+  \norm{U^TBW}_{\F}^2
+  =\tr(U^TBWW^TB^TU)=\tr(BB^TUU^T)=\tr(BB^T)=\norm{B}_{\F}^2.
+\]
+\end{proof}
+
+\begin{lemma}[Eigenvalue perturbation inputs]
+For symmetric matrices $M$ and $N$ with ordered eigenvalues $\mu_i$ and
+$\nu_i$,
+\[
+  \max_i |\mu_i-\nu_i|\leq \norm{M-N}_{\op},
+  \qquad
+  \sum_i(\mu_i-\nu_i)^2\leq \norm{M-N}_{\F}^2.
+\]
+The first inequality is Weyl's inequality; the second is the
+Hoffman--Wielandt inequality in the symmetric case.
+\end{lemma}
+
+\section{Takeaway}
+
+The proof is not a contour-integral or resolvent argument.  It is a residual
+argument:
+\[
+  \text{population separation} \times \text{subspace error}
+  \leq \text{residual}
+  \leq \text{matrix perturbation size}.
+\]
+That is why the denominator can be a population gap only.  The price is a
+small constant factor, while the benefit in statistical applications is that
+one can state assumptions directly on the population spectrum.
+
+\begin{thebibliography}{9}
+\bibitem{YWS2014}
+Yi Yu, Tengyao Wang, and Richard J. Samworth.
+\newblock A useful variant of the Davis--Kahan theorem for statisticians.
+\newblock \emph{arXiv:1405.0680} [math.ST], 2014.
+\newblock \url{https://arxiv.org/abs/1405.0680}.
+
+\bibitem{DavisKahan1970}
+Chandler Davis and W. M. Kahan.
+\newblock The rotation of eigenvectors by a perturbation. III.
+\newblock \emph{SIAM Journal on Numerical Analysis}, 7(1):1--46, 1970.
+\end{thebibliography}
+
+\end{document}

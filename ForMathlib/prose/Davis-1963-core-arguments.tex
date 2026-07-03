@@ -1,0 +1,369 @@
+% Davis (1963), "The Rotation of Eigenvectors by a Perturbation" --
+% mathematical digest / proof skeleton.
+%
+% This file is not a transcription of the article.  It is a compact,
+% independently written summary of the main mathematical mechanisms and
+% proof ideas, with attribution to the original source:
+%
+%   Chandler Davis, "The Rotation of Eigenvectors by a Perturbation",
+%   Journal of Mathematical Analysis and Applications 6, 159--173 (1963).
+%   DOI: 10.1016/0022-247X(63)90001-5
+%
+% The default notation follows Davis's notation as closely as practical in
+% LaTeX.  Switch \DavisOriginalNotationfalse to use a more modern notation.
+
+\documentclass[11pt]{article}
+
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage{microtype}
+\usepackage{amsmath,amssymb,amsthm,mathtools}
+\usepackage{mathrsfs}
+\usepackage{xparse}
+\usepackage[hidelinks]{hyperref}
+\usepackage[margin=1.1in]{geometry}
+
+\newif\ifDavisOriginalNotation
+\DavisOriginalNotationtrue
+% \DavisOriginalNotationfalse
+
+\ifDavisOriginalNotation
+  \newcommand{\Hsp}{\mathscr{H}}
+  \newcommand{\Fsp}{\mathscr{F}}
+  \newcommand{\Pinch}{\mathscr{C}}
+  \newcommand{\Off}{\widetilde{\mathscr{C}}}
+  \newcommand{\Comp}[1]{\widehat{#1}}
+  \NewDocumentCommand{\blanknorm}{o}{\left\lVert\,\right\rVert\IfValueT{#1}{_{#1}}}
+\else
+  \newcommand{\Hsp}{\mathcal{H}}
+  \newcommand{\Fsp}{\mathcal{F}}
+  \newcommand{\Pinch}{\mathcal{D}}
+  \newcommand{\Off}{\mathcal{D}^{\perp}}
+  \newcommand{\Comp}[1]{#1^{\perp}}
+  \NewDocumentCommand{\blanknorm}{o}{\left\lVert\cdot\right\rVert\IfValueT{#1}{_{#1}}}
+\fi
+
+\NewDocumentCommand{\norm}{om}{\left\lVert #2\right\rVert\IfValueT{#1}{_{#1}}}
+\NewDocumentCommand{\inner}{mm}{\left(#1,#2\right)}
+\newcommand{\tr}{\operatorname{tr}}
+\newcommand{\spec}{\operatorname{spec}}
+\newcommand{\Ran}{\operatorname{Ran}}
+\newcommand{\Id}{I}
+\newcommand{\eps}{\varepsilon}
+\newcommand{\lam}{\lambda}
+\newcommand{\hlam}{\lambda'}
+\newcommand{\Pp}{P'}
+\newcommand{\Phat}{\Comp{P}}
+\newcommand{\Pphat}{\widehat{P'}}
+
+\theoremstyle{definition}
+\newtheorem{definition}{Definition}[section]
+\newtheorem{observation}[definition]{Observation}
+\newtheorem{result}[definition]{Result}
+\newtheorem{argument}[definition]{Argument}
+
+\title{Core Mathematical Arguments in Davis's Rotation-of-Eigenvectors Paper}
+\author{Mathematical digest after Chandler Davis (1963)}
+\date{}
+
+\begin{document}
+\maketitle
+
+\begin{center}
+\small
+Original source: Chandler Davis, ``The Rotation of Eigenvectors by a Perturbation'',
+\emph{Journal of Mathematical Analysis and Applications} 6, 159--173 (1963),
+DOI: \href{https://doi.org/10.1016/0022-247X(63)90001-5}{10.1016/0022-247X(63)90001-5}.
+This note is an independently written mathematical digest, not a transcription.
+\end{center}
+
+\section{Notation and the main problem}
+
+Let \(A\) and \(H\) be hermitian operators on a finite-dimensional Hilbert
+space \(\Hsp\).  The perturbation is \(A+H\).  Write the eigenvalues and
+orthonormal eigenvectors of \(A\) as \(\lam_1,\ldots,\lam_n\) and
+\(x_1,\ldots,x_n\), and write the corresponding data for \(A+H\) as
+\(\hlam_1,\ldots,\hlam_n\) and \(x'_1,\ldots,x'_n\), when such a matching is
+specified.
+
+The two norms used most often are the operator norm \(\blanknorm\) and the
+Frobenius norm \(\blanknorm[2]\).  Thus
+\[
+  \norm{B}=\sup_{\norm{x}=1}\norm{Bx},
+  \qquad
+  \norm[2]{B}^2=\tr B^2
+\]
+for hermitian \(B\).
+
+Let \(P_1,\ldots,P_m\) be a complete orthogonal family of projectors, usually
+spectral projectors of \(A\).  Davis's pinching operator is
+\[
+  \Pinch B = \sum_{j=1}^m P_j B P_j,
+  \qquad
+  \Off B = B-\Pinch B.
+\]
+The space \(\Fsp\) of hermitian operators, equipped with the Frobenius inner
+product, makes \(\Pinch\) an orthogonal projector and \(\Off\) its complementary
+projector.  The term \(\Off H\) is the part of the perturbation that mixes the
+chosen spectral subspaces.
+
+The problem is to bound how much the spectral subspaces of \(A\) rotate under
+\(H\), preferably in terms of spectral gaps and norms of \(H\), especially
+\(\norm{H}\), \(\norm[2]{H}\), and \(\norm[2]{\Off H}\).
+
+\section{Canonical matching of subspaces}
+
+Suppose \(P_1,\ldots,P_m\) and \(P'_1,\ldots,P'_m\) are two complete orthogonal
+families of projectors with the same ranks, and assume no nonzero vector in
+\(P_j\Hsp\) is annihilated by \(P'_j\).  There is a canonical unitary \(U\)
+intertwining the two decompositions, obtained from the polar decomposition of
+\(P'_jP_j\) on each summand:
+\[
+  U P_j
+  = (P'_jP_jP'_j)^{-1/2} P'_jP_j
+  = P'_j(P_jP'_jP_j)^{-1/2}P_j .
+\]
+It satisfies \(UP_j=P'_jU\).
+
+\begin{observation}[Why this unitary is the right rotation]
+Among unitaries \(W\) satisfying \(WP_j=P'_jW\) for every \(j\), the polar
+unitary \(U\) minimizes the Frobenius displacement \(\norm[2]{\Id-W}\).  More
+generally, it minimizes the unitarily invariant size of
+\((\Id-W^*)(\Id-W))\) after pinching.  This justifies measuring the rotation of
+spectral decompositions through quantities computed from \(U\).
+\end{observation}
+
+Choose an orthonormal basis in each \(P_j\Hsp\) consisting of eigenvectors of
+\(P_jP'_jP_j\).  If \(x_i\) is one of these vectors, define its rotation angle by
+\(\theta_i=\arccos\inner{Ux_i}{x_i}\).  Then
+\[
+  \norm[2]{\Off U}^2 = \sum_i \sin^2\theta_i,
+  \qquad
+  \norm[2]{\Id-U}^2 = \sum_i 2(1-\\cos\theta_i).
+\]
+Thus \(\norm[2]{\Off U}^2\) is the clean Frobenius ``sum of squared sines''
+measure of total rotation.
+
+\section{The single-cluster Rayleigh-quotient estimate}
+
+Let \(P=E([-\beta,\beta])\) be a spectral projector of \(A\).  Assume that the
+intervals \((-\beta-\gamma,-\beta)\) and \((\beta,\beta+\gamma)\) contain no
+spectrum of \(A\).  Put \(\norm{H}=\delta<\gamma/2\), and let
+\(P'=E'([-\beta-\delta,\beta+\delta])\) be the corresponding spectral projector
+of \(A+H\).
+
+\begin{result}[Single-cluster rotation bound]
+For the complementary projector \(\Pphat=\Id-P'\),
+\[
+  \norm{\Pphat P} \le
+  \frac{\beta+\delta}{\beta+\gamma-\delta}.
+\]
+\end{result}
+
+\begin{argument}[Core proof]
+Take \(x=Px\), \(\norm{x}=1\).  Since \(A\) is bounded by \(\beta\) on
+\(P\Hsp\),
+\[
+  \inner{(A+H)^2x}{x}\le (\beta+\delta)^2.
+\]
+Decompose \(x=P'x+\Pphat x\).  On \(\Pphat\Hsp\), the operator \(A+H\) lies
+outside the enlarged interval, so
+\[
+  \inner{(A+H)^2x}{x}\ge (\beta+\gamma-\delta)^2\norm{\Pphat x}^2.
+\]
+Combining the two inequalities gives the stated estimate.  The whole proof is
+a Rayleigh-quotient comparison: the same quadratic form is bounded above by
+what happens in the old spectral cluster and below by what happens outside the
+new cluster.
+\end{argument}
+
+When \(\beta=0\), the cluster is a single eigenvalue, possibly with
+multiplicity.  Retaining the discarded contribution on \(P'\Hsp\) gives the
+sharper Frobenius estimate
+\[
+  \tr \Pphat P
+  \le
+  \frac{\tr H^2P-\tr(A+H)^2P'}{\gamma(\gamma-2\delta)}.
+\]
+Equivalently,
+\[
+  \norm[2]{\Pphat P}^2
+  \le
+  \frac{\norm[2]{HP}^2-\norm[2]{(A+H)P'}^2}{\gamma(\gamma-2\delta)}.
+\]
+The proof is the same comparison, summed over a basis of the old spectral
+subspace chosen compatibly with the canonical unitary.
+
+\section{Total rotation for simple spectrum}
+
+Assume now that \(A\) has simple eigenvalues separated by at least \(\gamma\),
+and \(\norm{H}=\delta<\gamma/2\).  Let \(U\) be the canonical unitary matching
+one-dimensional spectral subspaces.  Summing the previous single-cluster
+estimate gives a first global bound of the form
+\[
+  \norm[2]{\Id-U}^2
+  \le
+  \frac{2\norm[2]{H}^2}{(1+\cos\theta)\gamma(\gamma-2\delta)},
+  \qquad
+  \theta=\arcsin\frac{\delta}{\gamma-\delta}.
+\]
+This is useful, but the natural quantity is
+\(\norm[2]{\Off U}^2=\sum_i\sin^2\theta_i\).
+
+For each \(i\), define
+\[
+  \gamma_i = \min_{j\ne i}|\lam_i-\hlam_j|,
+  \qquad
+  (\gamma')^2=\min_i\{\gamma_i^2-(\lam_i-\hlam_i)^2\}.
+\]
+Then Davis's sharper global estimate is
+\[
+  (\gamma')^2\norm[2]{\Off U}^2
+  \le
+  \norm[2]{H}^2-
+  \sum_i(\lam_i-\hlam_i)^2.
+\]
+
+\begin{argument}[Core proof]
+For each old eigenvector \(x_i\), compare the same quantity in two ways:
+\[
+  \inner{(A+H-\hlam_i)^2x_i}{x_i}.
+\]
+On one side, split \(H=\Pinch H+\Off H\).  The cross term with \(\Off H\)
+vanishes because \(\Pinch H\) is diagonal in the old eigenbasis, giving
+\[
+  \inner{(A+H-\hlam_i)^2x_i}{x_i}
+  = (\lam_i-\hlam_i)^2 + \inner{(\Off H)^2x_i}{x_i}.
+\]
+On the other side, decompose \(x_i\) into its component in the new eigenspace
+for \(\hlam_i\) and its component in the orthogonal complement.  The complement
+is separated by at least \(\gamma_i\), so
+\[
+  \inner{(A+H-\hlam_i)^2x_i}{x_i}
+  \ge
+  (\lam_i-\hlam_i)^2 + (\gamma')^2\sin^2\theta_i.
+\]
+Summing over \(i\) yields the estimate.
+\end{argument}
+
+The important interpretation is that a fixed perturbation budget can be spent
+on eigenvalue motion or on eigenspace rotation, but not independently on both.
+
+\section{Lower bound on eigenvalue motion}
+
+The sharper total-rotation theorem still contains the eigenvalue displacement
+\(\sum_i(\lam_i-\hlam_i)^2\).  Davis removes it using a lower bound on how much
+the diagonal part \(\Pinch H\) must move eigenvalues.
+
+\begin{result}[Eigenvalue-change lower bound]
+Suppose the eigenvalues of \(A+H\) are separated by at least \(\gamma>0\), and
+\(\norm[2]{\Off H}\le \gamma/\sqrt2\).  Then
+\[
+  \sum_i(\hlam_i-\lam_i)^2
+  \ge
+  \norm[2]{\Pinch H}^2-\norm[2]{\Off H}^2.
+\]
+\end{result}
+
+\begin{argument}[Geometric proof idea]
+Work in the real Hilbert space \(\Fsp\) of hermitian matrices with Frobenius
+norm.  Let \(B\) have the eigenvectors of \(A\) and the eigenvalues of
+\(A+H\).  Let \(C=A+\Pinch H\).  The matrix \(C\) is the pinching of a matrix
+unitarily equivalent to \(B\), so by the Schur-Horn convexity principle it lies
+in the convex hull of the matrices obtained from \(B\) by permuting the new
+eigenvalues.
+
+The vertices of this convex polytope lie on a sphere.  The nearest nontrivial
+permutation is obtained by swapping the pair of new eigenvalues with smallest
+gap.  This gives a lower bound on the angle between \(-B\) and \(C-B\).  After
+rewriting
+\[
+  (B-A)+(C-B)=\Pinch H,
+  \qquad
+  \Off(A+H)=\Off H,
+\]
+the angle inequality becomes the displayed lower bound.  Conceptually, the
+diagonal part of the perturbation cannot be hidden: unless it is cancelled by
+off-diagonal mixing, it must appear as eigenvalue displacement.
+\end{argument}
+
+Combining this result with the sharper total-rotation inequality gives the
+clean off-diagonal control statement
+\[
+  (\gamma')^2\norm[2]{\Off U}^2 \le 2\norm[2]{\Off H}^2,
+\]
+under the corresponding smallness and gap hypotheses.  This is the central
+structural message: eigenvector rotation is controlled primarily by the
+part of \(H\) that is off-diagonal relative to the old spectral resolution.
+
+\section{The sharp two-subspace estimate}
+
+Finally specialize to two spectral subspaces separated by a gap.  After scaling,
+assume \(A\) has no spectrum in \((-1,1)\), and let
+\[
+  P=E([1,\infty)), \qquad \Phat=E((-
+\infty,-1]).
+\]
+Let \(x\) be an eigenvector of \(A+H\) with eigenvalue \(\hlam\ge 0\), and let
+\(\theta\) be the acute angle between \(x\) and \(Px\).
+
+\begin{result}[Sharp half-space rotation bounds]
+If \(\norm{H}=\delta<1\), then
+\[
+  \sin 2\theta \le \delta.
+\]
+If in addition \(\Pinch H=0\), i.e. the diagonal blocks \(PHP\) and
+\(\Phat H\Phat\) vanish, then the smallness assumption can be dropped and
+\[
+  \tan 2\theta \le \delta.
+\]
+Both constants are sharp in two-dimensional examples.
+\end{result}
+
+\begin{argument}[Two-dimensional compression]
+Ignore the trivial cases \(Px=0\) and \(\Phat x=0\).  Compress to the span of
+\(Px\) and \(\Phat x\), and use the orthonormal basis
+\(Px/\norm{Px}\), \(\Phat x/\norm{\Phat x}\).  In this basis
+\[
+  x=\begin{pmatrix}\cos\theta\\ \sin\theta\end{pmatrix},
+  \qquad
+  A=\begin{pmatrix}a_1&0\\0&a_2\end{pmatrix},
+  \qquad
+  H=\begin{pmatrix}h_{11}&h_{12}\\\overline{h_{12}}&h_{22}\end{pmatrix},
+\]
+with \(a_1\ge 1\), \(a_2\le -1\).  The eigenvalue equation gives
+\[
+  \hlam=a_1+h_{11}+h_{12}\tan\theta
+  =a_2+h_{22}+h_{12}\cot\theta.
+\]
+This forces the relevant off-diagonal entry to be real after the phase choice.
+Rearranging yields
+\[
+  h_{12}(\cot\theta-\tan\theta)=a_1-a_2+h_{11}-h_{22}.
+\]
+Using \(a_1-a_2\ge2\) and the norm bound on the \(2\times2\) compression of
+\(H\) gives the inequality \(\sin2\theta\le\delta\).  If
+\(h_{11}=h_{22}=0\), the same displayed equation immediately gives
+\(\tan2\theta\le\delta\).
+\end{argument}
+
+\section{Distilled logical dependencies}
+
+\begin{enumerate}
+  \item Match old and new spectral projectors with the polar-decomposition
+  unitary \(U\).
+  \item Measure rotation by \(\norm[2]{\Off U}^2=\sum_i\sin^2\theta_i\).
+  \item For one cluster, compare the same Rayleigh quotient above and below to
+  bound escape from the corresponding new cluster.
+  \item Sum one-cluster bounds to control total rotation.
+  \item Refine the total estimate by separating eigenvalue motion from
+  eigenspace rotation.
+  \item Prove that the diagonal part \(\Pinch H\) must contribute to eigenvalue
+  motion, up to an error controlled by \(\Off H\).
+  \item Conclude that the actual eigenspace rotation is controlled by the
+  off-diagonal part \(\Off H\), not merely by the full perturbation norm.
+  \item In the two-subspace case, compress to dimension two to get sharp
+  trigonometric bounds.
+\end{enumerate}
+
+\end{document}

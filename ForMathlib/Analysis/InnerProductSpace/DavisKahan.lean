@@ -39,21 +39,35 @@ identity `⟪uᵢ, (S − T) v̂ⱼ⟫ = (λ̂ⱼ − λᵢ) ⟪uᵢ, v̂ⱼ⟫`
 resolvents or contour integrals.
 
 Mathlib has no Davis–Kahan / sin-Θ result; `Analysis/InnerProductSpace/Rayleigh`
-covers only the extreme eigenvalues.  Two constants are provided: the **sharp**
-Frobenius sin-Θ bound `‖sin Θ‖_F ≤ ‖S − T‖_F / gap` (no operator-norm hypothesis,
-no dimension factor), and the **crude** operator-norm corollary `n ε² / gap²`
-obtained from it by `‖S − T‖²_F ≤ n ε²`.
+covers only the extreme eigenvalues.  A **ladder** of bounds on the same overlap
+`∑_{i<d, j≥d} ‖⟪uᵢ, v̂ⱼ⟫‖² = ‖sin Θ‖²_F` is provided, all from one engine and
+differing only in which perturbation quantity sits on the right (tightest first):
+the cross-block `‖P(S − T)Q‖²_F` (Davis's off-diagonal control), the one-sided
+residual `‖(S − T)P‖²_F` (the original Davis–Kahan sin-Θ form), the full Frobenius
+`‖S − T‖²_F` (the sharp constant-`1` `‖sin Θ‖_F ≤ ‖S − T‖_F / gap`), and the two
+operator-norm corollaries `d ε²` (Yu–Wang–Samworth `√d` branch) and `n ε²` (crude).
+Two gap bridges (`gap_of_rank_floor`, `gap_of_eigengap`) supply the hybrid gap from
+a population-only spectral gap via Weyl.
 
 ## Main results
 
-* `ForMathlib.sum_sq_norm_inner_eigenvectorBasis_map_sub_eq`: the Parseval identity
-  `∑_{i,j} ‖⟪uᵢ, (S − T) v̂ⱼ⟫‖² = ∑ⱼ ‖(S − T) v̂ⱼ‖²`, i.e. the full off-diagonal
-  energy equals `‖S − T‖²_F` (the squared Hilbert–Schmidt/Frobenius norm).
+* `ForMathlib.sum_sq_norm_inner_eigenvectorBasis_map_sub_eq` /
+  `…_map_sub_eq_row`: Parseval identities collapsing the full / a single-row
+  off-diagonal energy to `∑ⱼ ‖(S − T) v̂ⱼ‖² = ‖S − T‖²_F` and to `‖(S − T) uᵢ‖²`.
+* `ForMathlib.sum_cross_norm_inner_eigenvectorBasis_sq_le_offDiag`: the **engine** —
+  the cross-block (off-diagonal) bound `overlap ≤ ‖P(S − T)Q‖²_F / gap²`, tightest,
+  no operator-norm hypothesis, no dimension factor; the two-block form of Davis's
+  off-diagonal control.
+* `ForMathlib.sum_cross_norm_inner_eigenvectorBasis_sq_le_residual`: the Davis–Kahan
+  one-sided residual form `overlap ≤ ‖(S − T)P‖²_F / gap²`.
 * `ForMathlib.sum_cross_norm_inner_eigenvectorBasis_sq_le_hilbertSchmidt`: the
-  **sharp** cross-block bound `∑_{i < d, j ≥ d} ‖⟪uᵢ, v̂ⱼ⟫‖² ≤ ‖S − T‖²_F / gap²`,
-  with no operator-norm hypothesis and no dimension factor.
-* `ForMathlib.sum_cross_norm_inner_eigenvectorBasis_sq_le`: its crude
-  operator-norm corollary `∑_{i < d, j ≥ d} ‖⟪uᵢ, v̂ⱼ⟫‖² ≤ n ε² / gap²`.
+  **sharp** full-Frobenius bound `overlap ≤ ‖S − T‖²_F / gap²`
+  (`‖sin Θ‖_F ≤ ‖S − T‖_F / gap`), no dimension factor.
+* `ForMathlib.sum_cross_norm_inner_eigenvectorBasis_sq_le_opNorm` /
+  `…_sq_le`: the operator-norm corollaries `d ε² / gap²` (Yu–Wang–Samworth `√d`)
+  and the crude `n ε² / gap²`.
+* `ForMathlib.gap_of_eigengap` / `gap_of_rank_floor`: Weyl bridges giving the hybrid
+  gap `(a − b) − ε` (resp. `α/2`) from a population-only spectral gap in `T`.
 * `ForMathlib.Orthonormal.starProjection_span_image_apply`: the orthogonal
   projection onto the span of an orthonormal subfamily is the sum of the
   corresponding rank-one projections (`Submodule.starProjection` form; holds in
@@ -102,6 +116,23 @@ theorem sum_sq_norm_inner_eigenvectorBasis_map_sub_eq
   exact Finset.sum_congr rfl fun j _ =>
     (hT.eigenvectorBasis hn).sum_sq_norm_inner_right _
 
+/-- **Row Parseval identity.**  Summing a single leading row over all columns recovers the
+squared column norm of the perturbation applied to that eigenvector:
+`∑ⱼ ‖⟪uᵢ, (S − T) v̂ⱼ⟫‖² = ‖(S − T) uᵢ‖²`.  Uses self-adjointness of `S − T` to move it onto
+`uᵢ` and Parseval in the orthonormal basis `v̂`.  This is what turns the leading rows of the
+cross-block into `‖(S − T) P‖²_F` for the residual form. -/
+theorem sum_sq_norm_inner_eigenvectorBasis_map_sub_eq_row
+    (hT : T.IsSymmetric) (hS : S.IsSymmetric) (hn : finrank 𝕜 E = n) (i : Fin n) :
+    ∑ j : Fin n, ‖⟪hT.eigenvectorBasis hn i, (S - T) (hS.eigenvectorBasis hn j)⟫_𝕜‖ ^ 2
+      = ‖(S - T) (hT.eigenvectorBasis hn i)‖ ^ 2 := by
+  have hsym : (S - T).IsSymmetric := hS.sub hT
+  have hrw : ∀ j : Fin n,
+      ‖⟪hT.eigenvectorBasis hn i, (S - T) (hS.eigenvectorBasis hn j)⟫_𝕜‖ ^ 2
+        = ‖⟪(S - T) (hT.eigenvectorBasis hn i), hS.eigenvectorBasis hn j⟫_𝕜‖ ^ 2 :=
+    fun j => by rw [hsym (hT.eigenvectorBasis hn i) (hS.eigenvectorBasis hn j)]
+  simp_rw [hrw]
+  exact (hS.eigenvectorBasis hn).sum_sq_norm_inner_left _
+
 /-- The squared Hilbert–Schmidt norm of an `ε`-operator-bounded `S − T` is at most `n ε²`:
 each of the `n` columns `‖(S − T) v̂ⱼ‖²` is `≤ ε²` since `v̂ⱼ` is a unit vector.  This is the
 one place the crude constant's dimension factor `n` is introduced. -/
@@ -135,24 +166,23 @@ theorem sum_norm_inner_eigenvectorBasis_map_sub_sq_le
   exact sum_norm_eigenvectorBasis_map_sub_sq_le hS hn hε
 
 /--
-**Sharp Davis–Kahan cross-block bound (Frobenius sin-Θ).** Suppose `T`, `S` are
-self-adjoint and there is a positive `gap` separating the first `d` eigenvalues of
-`T` from the trailing eigenvalues of `S`
-(`(i : ℕ) < d → d ≤ (j : ℕ) → gap ≤ |λᵢ(T) − λⱼ(S)|`).  Then the total squared
-overlap between the leading eigenvectors of `T` and the trailing eigenvectors of
-`S` is bounded by the squared Hilbert–Schmidt (Frobenius) norm of the perturbation
-over `gap²`:
-`∑_{i < d} ∑_{d ≤ j} ‖⟪uᵢ, v̂ⱼ⟫‖² ≤ (∑ⱼ ‖(S − T) v̂ⱼ‖²) / gap²`.
+**Cross-block (off-diagonal) form — the engine.** Suppose `T`, `S` are self-adjoint
+and there is a positive `gap` separating the first `d` eigenvalues of `T` from the
+trailing eigenvalues of `S`
+(`(i : ℕ) < d → d ≤ (j : ℕ) → gap ≤ |λᵢ(T) − λⱼ(S)|`).  Then the total squared overlap
+between the leading eigenvectors of `T` and the trailing eigenvectors of `S` is bounded
+by the squared Frobenius norm of the *leading×trailing block* of the perturbation,
+`‖P (S − T) Q‖²_F = ∑_{i<d} ∑_{d≤j} ‖⟪uᵢ, (S − T) v̂ⱼ⟫‖²`, over `gap²`.
 
-There is **no operator-norm hypothesis and no dimension factor**: this is the sharp
-`‖sin Θ‖_F ≤ ‖S − T‖_F / gap` form.  The cross-term identity
-`⟪uᵢ, (S − T) v̂ⱼ⟫ = (λ̂ⱼ − λᵢ) ⟪uᵢ, v̂ⱼ⟫` gives `gap² ‖⟪uᵢ, v̂ⱼ⟫‖² ≤ ‖⟪uᵢ, (S − T) v̂ⱼ⟫‖²`
-on cross pairs, and the cross block is a sub-block of the full Frobenius sum
-(`sum_sq_norm_inner_eigenvectorBasis_map_sub_eq`).  The crude `n ε² / gap²` bound
-(`sum_cross_norm_inner_eigenvectorBasis_sq_le`) is the corollary via
-`‖S − T‖²_F ≤ n ε²`.
+This is the tightest of the sin-Θ bounds and the two-block analogue of Davis's
+off-diagonal control: the rotation is driven only by the block-mixing part of the
+perturbation.  There is **no operator-norm hypothesis and no dimension factor**.  The
+cross-term identity `⟪uᵢ, (S − T) v̂ⱼ⟫ = (λ̂ⱼ − λᵢ) ⟪uᵢ, v̂ⱼ⟫` gives
+`gap² ‖⟪uᵢ, v̂ⱼ⟫‖² ≤ ‖⟪uᵢ, (S − T) v̂ⱼ⟫‖²` on cross pairs, summed over the block.  Every
+weaker form below (`…_residual`, `…_hilbertSchmidt`, `…_opNorm`, the crude bound) is a
+corollary got by enlarging this block to a larger perturbation quantity.
 -/
-theorem sum_cross_norm_inner_eigenvectorBasis_sq_le_hilbertSchmidt
+theorem sum_cross_norm_inner_eigenvectorBasis_sq_le_offDiag
     (hT : T.IsSymmetric) (hS : S.IsSymmetric) (hn : finrank 𝕜 E = n)
     (d : ℕ) {gap : ℝ} (hgap_pos : 0 < gap)
     (hgap : ∀ i j : Fin n, (i : ℕ) < d → d ≤ (j : ℕ) →
@@ -160,7 +190,10 @@ theorem sum_cross_norm_inner_eigenvectorBasis_sq_le_hilbertSchmidt
     ∑ i ∈ Finset.univ.filter (fun i : Fin n => (i : ℕ) < d),
       ∑ j ∈ Finset.univ.filter (fun j : Fin n => d ≤ (j : ℕ)),
         ‖⟪hT.eigenvectorBasis hn i, hS.eigenvectorBasis hn j⟫_𝕜‖ ^ 2
-      ≤ (∑ j : Fin n, ‖(S - T) (hS.eigenvectorBasis hn j)‖ ^ 2) / gap ^ 2 := by
+      ≤ (∑ i ∈ Finset.univ.filter (fun i : Fin n => (i : ℕ) < d),
+          ∑ j ∈ Finset.univ.filter (fun j : Fin n => d ≤ (j : ℕ)),
+            ‖⟪hT.eigenvectorBasis hn i, (S - T) (hS.eigenvectorBasis hn j)⟫_𝕜‖ ^ 2)
+        / gap ^ 2 := by
   set u := hT.eigenvectorBasis hn with hu
   set v := hS.eigenvectorBasis hn with hv
   -- Per-pair: `gap² ‖⟪uᵢ, v̂ⱼ⟫‖² ≤ ‖⟪uᵢ, (S − T) v̂ⱼ⟫‖²` for cross pairs.
@@ -191,22 +224,71 @@ theorem sum_cross_norm_inner_eigenvectorBasis_sq_le_hilbertSchmidt
     rw [Finset.mul_sum]
     refine Finset.sum_le_sum fun j hj => ?_
     exact hpair i j (Finset.mem_filter.mp hi).2 (Finset.mem_filter.mp hj).2
-  -- The cross block is a sub-block of the full Frobenius sum (all terms nonneg),
-  -- which by Parseval equals the sum of squared column norms `∑ⱼ ‖(S − T) v̂ⱼ‖²`.
-  have hsub : ∑ i ∈ Finset.univ.filter (fun i : Fin n => (i : ℕ) < d),
-        ∑ j ∈ Finset.univ.filter (fun j : Fin n => d ≤ (j : ℕ)),
-          ‖⟪u i, (S - T) (v j)⟫_𝕜‖ ^ 2
-      ≤ ∑ i : Fin n, ∑ j : Fin n, ‖⟪u i, (S - T) (v j)⟫_𝕜‖ ^ 2 :=
-    (Finset.sum_le_sum fun i _ => Finset.sum_le_sum_of_subset_of_nonneg
-        (Finset.filter_subset _ _) fun j _ _ => sq_nonneg _).trans
-      (Finset.sum_le_sum_of_subset_of_nonneg (Finset.filter_subset _ _)
-        fun i _ _ => Finset.sum_nonneg fun j _ => sq_nonneg _)
-  have hfull : ∑ i : Fin n, ∑ j : Fin n, ‖⟪u i, (S - T) (v j)⟫_𝕜‖ ^ 2
-      = ∑ j : Fin n, ‖(S - T) (v j)‖ ^ 2 := by
-    rw [hu, hv]; exact sum_sq_norm_inner_eigenvectorBasis_map_sub_eq hT hS hn
-  -- Chain: gap² · CROSS ≤ full Frobenius energy = ‖S − T‖²_F.
   rw [le_div_iff₀ (by positivity : (0 : ℝ) < gap ^ 2), mul_comm]
-  exact (hcross.trans hsub).trans hfull.le
+  exact hcross
+
+/--
+**Davis–Kahan one-sided residual form (Frobenius).** The overlap is bounded by the
+squared Frobenius norm of the perturbation restricted to the leading subspace,
+`‖(S − T) P‖²_F = ∑_{i<d} ‖(S − T) uᵢ‖²`, over `gap²`.  This is the residual form of the
+original Davis–Kahan sin-Θ theorem (in Frobenius norm); it is tighter than the full
+`‖S − T‖²_F` bound below and looser than the cross-block `…_offDiag` engine.  Obtained
+from the engine by summing each leading row over all columns (`…_eq_row`). -/
+theorem sum_cross_norm_inner_eigenvectorBasis_sq_le_residual
+    (hT : T.IsSymmetric) (hS : S.IsSymmetric) (hn : finrank 𝕜 E = n)
+    (d : ℕ) {gap : ℝ} (hgap_pos : 0 < gap)
+    (hgap : ∀ i j : Fin n, (i : ℕ) < d → d ≤ (j : ℕ) →
+      gap ≤ |hT.eigenvalues hn i - hS.eigenvalues hn j|) :
+    ∑ i ∈ Finset.univ.filter (fun i : Fin n => (i : ℕ) < d),
+      ∑ j ∈ Finset.univ.filter (fun j : Fin n => d ≤ (j : ℕ)),
+        ‖⟪hT.eigenvectorBasis hn i, hS.eigenvectorBasis hn j⟫_𝕜‖ ^ 2
+      ≤ (∑ i ∈ Finset.univ.filter (fun i : Fin n => (i : ℕ) < d),
+          ‖(S - T) (hT.eigenvectorBasis hn i)‖ ^ 2) / gap ^ 2 := by
+  refine (sum_cross_norm_inner_eigenvectorBasis_sq_le_offDiag
+    hT hS hn d hgap_pos hgap).trans ?_
+  gcongr with i hi
+  calc ∑ j ∈ Finset.univ.filter (fun j : Fin n => d ≤ (j : ℕ)),
+        ‖⟪hT.eigenvectorBasis hn i, (S - T) (hS.eigenvectorBasis hn j)⟫_𝕜‖ ^ 2
+      ≤ ∑ j : Fin n, ‖⟪hT.eigenvectorBasis hn i, (S - T) (hS.eigenvectorBasis hn j)⟫_𝕜‖ ^ 2 :=
+        Finset.sum_le_sum_of_subset_of_nonneg (Finset.filter_subset _ _)
+          fun j _ _ => sq_nonneg _
+    _ = ‖(S - T) (hT.eigenvectorBasis hn i)‖ ^ 2 :=
+        sum_sq_norm_inner_eigenvectorBasis_map_sub_eq_row hT hS hn i
+
+/--
+**Sharp Davis–Kahan cross-block bound (Frobenius sin-Θ).** The overlap is bounded by the
+full squared Hilbert–Schmidt (Frobenius) norm of the perturbation over `gap²`:
+`∑_{i < d} ∑_{d ≤ j} ‖⟪uᵢ, v̂ⱼ⟫‖² ≤ (∑ⱼ ‖(S − T) v̂ⱼ‖²) / gap²`.
+
+There is **no operator-norm hypothesis and no dimension factor**: this is the sharp
+`‖sin Θ‖_F ≤ ‖S − T‖_F / gap` form.  It is the `…_offDiag` engine with the cross block
+enlarged to the full Frobenius sum (`sum_sq_norm_inner_eigenvectorBasis_map_sub_eq`).  The
+crude `n ε² / gap²` bound (`sum_cross_norm_inner_eigenvectorBasis_sq_le`) is in turn its
+corollary via `‖S − T‖²_F ≤ n ε²`.
+-/
+theorem sum_cross_norm_inner_eigenvectorBasis_sq_le_hilbertSchmidt
+    (hT : T.IsSymmetric) (hS : S.IsSymmetric) (hn : finrank 𝕜 E = n)
+    (d : ℕ) {gap : ℝ} (hgap_pos : 0 < gap)
+    (hgap : ∀ i j : Fin n, (i : ℕ) < d → d ≤ (j : ℕ) →
+      gap ≤ |hT.eigenvalues hn i - hS.eigenvalues hn j|) :
+    ∑ i ∈ Finset.univ.filter (fun i : Fin n => (i : ℕ) < d),
+      ∑ j ∈ Finset.univ.filter (fun j : Fin n => d ≤ (j : ℕ)),
+        ‖⟪hT.eigenvectorBasis hn i, hS.eigenvectorBasis hn j⟫_𝕜‖ ^ 2
+      ≤ (∑ j : Fin n, ‖(S - T) (hS.eigenvectorBasis hn j)‖ ^ 2) / gap ^ 2 := by
+  refine (sum_cross_norm_inner_eigenvectorBasis_sq_le_offDiag
+    hT hS hn d hgap_pos hgap).trans ?_
+  gcongr
+  calc ∑ i ∈ Finset.univ.filter (fun i : Fin n => (i : ℕ) < d),
+        ∑ j ∈ Finset.univ.filter (fun j : Fin n => d ≤ (j : ℕ)),
+          ‖⟪hT.eigenvectorBasis hn i, (S - T) (hS.eigenvectorBasis hn j)⟫_𝕜‖ ^ 2
+      ≤ ∑ i : Fin n, ∑ j : Fin n,
+          ‖⟪hT.eigenvectorBasis hn i, (S - T) (hS.eigenvectorBasis hn j)⟫_𝕜‖ ^ 2 :=
+        (Finset.sum_le_sum fun i _ => Finset.sum_le_sum_of_subset_of_nonneg
+            (Finset.filter_subset _ _) fun j _ _ => sq_nonneg _).trans
+          (Finset.sum_le_sum_of_subset_of_nonneg (Finset.filter_subset _ _)
+            fun i _ _ => Finset.sum_nonneg fun j _ => sq_nonneg _)
+    _ = ∑ j : Fin n, ‖(S - T) (hS.eigenvectorBasis hn j)‖ ^ 2 :=
+        sum_sq_norm_inner_eigenvectorBasis_map_sub_eq hT hS hn
 
 /--
 **Davis–Kahan cross-block bound (crude operator-norm form).**
@@ -234,6 +316,48 @@ theorem sum_cross_norm_inner_eigenvectorBasis_sq_le
     hT hS hn d hgap_pos hgap).trans ?_
   gcongr
   exact sum_norm_eigenvectorBasis_map_sub_sq_le hS hn hε
+
+/--
+**Operator-norm form with the `√d` factor (Yu–Wang–Samworth branch).** With `S − T`
+`ε`-operator-close, the overlap is bounded by `d ε² / gap²`, i.e.
+`‖sin Θ‖_F ≤ √d · ε / gap`.  This is sharper than the crude `n ε² / gap²` bound (the
+factor is the block size `d`, not the ambient dimension `n`), matching the `d^{1/2}`
+operator-norm branch of Yu–Wang–Samworth.  It is the residual form
+(`…_residual`) with each of the `≤ d` leading columns bounded by `ε²`. -/
+theorem sum_cross_norm_inner_eigenvectorBasis_sq_le_opNorm
+    (hT : T.IsSymmetric) (hS : S.IsSymmetric) (hn : finrank 𝕜 E = n)
+    (d : ℕ) {gap : ℝ} (hgap_pos : 0 < gap)
+    (hgap : ∀ i j : Fin n, (i : ℕ) < d → d ≤ (j : ℕ) →
+      gap ≤ |hT.eigenvalues hn i - hS.eigenvalues hn j|)
+    {ε : ℝ} (hε : ∀ x : E, ‖(S - T) x‖ ≤ ε * ‖x‖) :
+    ∑ i ∈ Finset.univ.filter (fun i : Fin n => (i : ℕ) < d),
+      ∑ j ∈ Finset.univ.filter (fun j : Fin n => d ≤ (j : ℕ)),
+        ‖⟪hT.eigenvectorBasis hn i, hS.eigenvectorBasis hn j⟫_𝕜‖ ^ 2
+      ≤ (d : ℝ) * ε ^ 2 / gap ^ 2 := by
+  refine (sum_cross_norm_inner_eigenvectorBasis_sq_le_residual
+    hT hS hn d hgap_pos hgap).trans ?_
+  gcongr
+  have hcard : (Finset.univ.filter (fun i : Fin n => (i : ℕ) < d)).card ≤ d := by
+    calc (Finset.univ.filter (fun i : Fin n => (i : ℕ) < d)).card
+        = ((Finset.univ.filter (fun i : Fin n => (i : ℕ) < d)).image Fin.val).card :=
+          (Finset.card_image_of_injOn Fin.val_injective.injOn).symm
+      _ ≤ (Finset.range d).card := Finset.card_le_card (by
+          intro x hx
+          simp only [Finset.mem_image, Finset.mem_filter] at hx
+          obtain ⟨i, ⟨_, hi⟩, rfl⟩ := hx
+          exact Finset.mem_range.mpr hi)
+      _ = d := Finset.card_range d
+  calc ∑ i ∈ Finset.univ.filter (fun i : Fin n => (i : ℕ) < d),
+        ‖(S - T) (hT.eigenvectorBasis hn i)‖ ^ 2
+      ≤ ∑ _i ∈ Finset.univ.filter (fun i : Fin n => (i : ℕ) < d), ε ^ 2 :=
+        Finset.sum_le_sum fun i _ => by
+          have := hε (hT.eigenvectorBasis hn i)
+          rw [(hT.eigenvectorBasis hn).orthonormal.1 i, mul_one] at this
+          exact pow_le_pow_left₀ (norm_nonneg _) this 2
+    _ = ((Finset.univ.filter (fun i : Fin n => (i : ℕ) < d)).card : ℝ) * ε ^ 2 := by
+        rw [Finset.sum_const, nsmul_eq_mul]
+    _ ≤ (d : ℝ) * ε ^ 2 :=
+        mul_le_mul_of_nonneg_right (by exact_mod_cast hcard) (sq_nonneg ε)
 
 /-! ### Rank-`d` population structure: gap from an eigenvalue floor
 
@@ -265,6 +389,35 @@ theorem gap_of_rank_floor
   have hSj : hS.eigenvalues hn j ≤ α / 2 := (le_abs_self _).trans (hweyl.trans hsmall)
   have := hα i hi
   exact (by linarith : α / 2 ≤ hT.eigenvalues hn i - hS.eigenvalues hn j).trans (le_abs_self _)
+
+/--
+**Gap from a spectral gap in `T` (population gap, via Weyl).**  If `T`'s leading
+eigenvalues are at least `a` and its trailing eigenvalues at most `b` — a spectral gap
+`a − b` in `T` alone — and `S` is `ε`-operator-close to `T`, then the hybrid separation
+holds with `gap = (a − b) − ε`.  Weyl's inequality (`abs_eigenvalues_sub_le`) pushes each
+trailing sample eigenvalue up to at most `b + ε`, leaving `a − (b + ε)` below every
+leading eigenvalue of `T`.
+
+This is the Weyl bridge that turns a *population-only* gap (as used by Yu–Wang–Samworth,
+`Δ = λ_d(T) − λ_{d+1}(T)`, taking `a = λ_d(T)`, `b = λ_{d+1}(T)`) into the mixed
+leading-`T`/trailing-`S` separation the sin-Θ bounds consume.  `gap_of_rank_floor` is the
+special case `a = α`, `b = 0` (with `ε ≤ α/2` giving the weaker `α/2` in place of `α − ε`).
+-/
+theorem gap_of_eigengap
+    (hT : T.IsSymmetric) (hS : S.IsSymmetric) (hn : finrank 𝕜 E = n)
+    (d : ℕ) {a b ε : ℝ}
+    (hlead : ∀ i : Fin n, (i : ℕ) < d → a ≤ hT.eigenvalues hn i)
+    (htrail : ∀ j : Fin n, d ≤ (j : ℕ) → hT.eigenvalues hn j ≤ b)
+    (hε : ∀ x : E, ‖(T - S) x‖ ≤ ε * ‖x‖) :
+    ∀ i j : Fin n, (i : ℕ) < d → d ≤ (j : ℕ) →
+      a - b - ε ≤ |hT.eigenvalues hn i - hS.eigenvalues hn j| := by
+  intro i j hi hj
+  have hweyl := abs_le.mp (abs_eigenvalues_sub_le hT hS hn hε j)
+  -- `hweyl.1 : -ε ≤ λⱼ(T) - λⱼ(S)`, so `λⱼ(S) ≤ λⱼ(T) + ε ≤ b + ε`.
+  have hSj : hS.eigenvalues hn j ≤ b + ε := by linarith [htrail j hj, hweyl.1]
+  have hTi : a ≤ hT.eigenvalues hn i := hlead i hi
+  exact (by linarith : a - b - ε ≤ hT.eigenvalues hn i - hS.eigenvalues hn j).trans
+    (le_abs_self _)
 
 /--
 **Davis–Kahan cross-block bound under rank-`d` population structure.**

@@ -176,14 +176,21 @@ off-diagonal part of the matching unitary),
   \gamma_i=\min_{j\ne i}|\lambda_i-\lambda_j'|,
 \]
 proved by comparing $\inner{(A+H-\lambda_i')^2x_i}{x_i}$ from above and below --
-exactly the identity \eqref{eq:cross}.  Our Theorem~\ref{thm:sharp-overlap} is
-the same argument, specialized to the two-block (leading/trailing) split rather
-than a full eigenvector matching, and with two of Davis's refinements dropped:
-we bound the cross block by the \emph{full} $\norm{S-T}_{\F}^2$ (so we do not
-subtract the eigenvalue-displacement term $\sum_i(\lambda_i-\lambda_i')^2$, and
-we do not push the right-hand side down to the off-diagonal part
-$\norm{\mathcal C^{\perp}H}_{\F}^2$ of Davis's sharper §5 statement).  Our hybrid
-gap \eqref{eq:gap} is Davis's $\gamma_i$ without the $(\gamma')^2$ correction.
+exactly the identity \eqref{eq:cross}.  Our results are the same argument,
+specialized to the two-block (leading/trailing) split rather than a full
+eigenvector matching.  Of Davis's two refinements, one transfers and one does
+not.  The \emph{off-diagonal} refinement does transfer, and is formalized: the
+engine \texttt{\dots\_offDiag} bounds the overlap by the cross-block
+$\norm{P(S-T)Q}_{\F}^2$ (and the one-sided residual \texttt{\dots\_residual} by
+$\norm{(S-T)P}_{\F}^2$), the two-block analogues of controlling the rotation by
+the off-diagonal part $\norm{\mathcal C^{\perp}H}_{\F}^2$ rather than the full
+norm; Theorem~\ref{thm:sharp-overlap} then further enlarges this to
+$\norm{S-T}_{\F}^2$.  The \emph{eigenvalue-displacement} refinement (subtracting
+$\sum_i(\lambda_i-\lambda_i')^2$, equivalently the $(\gamma')^2$ correction to the
+gap) does \emph{not} transfer: it is a feature of Davis's per-eigenvector matching,
+whereas our block quantity $\norm{\sinT(\mathcal U,\mathcal V)}_{\F}^2$ discards the
+within-block/diagonal part entirely, so there is nothing left to subtract.  Our
+hybrid gap \eqref{eq:gap} is Davis's $\gamma_i$ restricted to the cross block.
 The frequently cited companion is Davis \& Kahan, ``\dots\ III'', \emph{SIAM
 J.\ Numer.\ Anal.}\ \textbf{7} (1970), which gives the $\sin\Theta$ theorem for
 every unitarily invariant norm; the Frobenius norm is the instance formalized
@@ -217,17 +224,19 @@ Our development is the two pieces YWS fuse, kept apart:
   term is incurred.  This is precisely the ``classical Davis--Kahan with a mixed
   population/sample separation'' that YWS's remark describes as the usual
   workaround.
-\item The rank/floor corollary is the Weyl step that turns the hybrid gap into a
-  population-only gap $\alpha/2$ --- the move YWS package into their theorem's
-  denominator.
+\item \texttt{gap\_of\_eigengap} is the Weyl step that turns a population-only
+  spectral gap of $T$ (leading eigenvalues $\ge a$, trailing $\le b$) into the
+  hybrid gap $(a-b)-\eps$ --- the move YWS package into their theorem's denominator
+  (their $\Delta=\lambda_d-\lambda_{d+1}$ is $a-b$).  \texttt{gap\_of\_rank\_floor}
+  is the special case $a=\alpha$, $b=0$.
 \end{itemize}
 So the Frobenius conclusion is the same; the difference is bookkeeping about the
-gap.  Two honesty notes on constants: (i) our operator-norm corollary carries
-$n^{1/2}$ where YWS carry $d^{1/2}$, because we degrade the \emph{full} Frobenius
-sum to $n\eps^2$; bounding only the leading$\times$trailing block would give
-$\min(d,n-d)^{1/2}$, but that refinement is not formalized.  (ii) We formalize
-only the symmetric $\sin\Theta$ statement, not YWS's aligned-basis
-(orthogonal Procrustes) corollary or their singular-vector extension.
+gap, and YWS's $d^{1/2}$ operator-norm branch is also available
+(\texttt{\dots\_opNorm}, $\mathrm{overlap}\le d\,\eps^2/\gap^2$, obtained from the
+one-sided residual by bounding its $\le d$ leading columns).  One remaining gap
+in coverage: we formalize only the symmetric $\sin\Theta$ statement, not YWS's
+aligned-basis (orthogonal Procrustes) corollary or their singular-vector
+extension.
 
 \section{Dictionary to the Lean source}
 
@@ -242,14 +251,22 @@ Statement here & Lean name \\
 \midrule
 Cross-term identity \eqref{eq:cross}
   & \texttt{inner\_eigenvectorBasis\_map\_sub\_eigenvectorBasis} \\
-Parseval identity $\sum_{i,j}=\sum_j\norm{(S-T)v_j}^2=\norm{S-T}_{\F}^2$
-  & \texttt{sum\_sq\_norm\_inner\_eigenvectorBasis\_map\_sub\_eq} \\
+Parseval identities (full / single row)
+  & \texttt{sum\_sq\_norm\_inner\_eigenvectorBasis\_map\_sub\_eq}$(\text{\_row})$ \\
 The single dimension-factor step $\norm{S-T}_{\F}^2\le n\eps^2$
   & \texttt{sum\_norm\_eigenvectorBasis\_map\_sub\_sq\_le} \\
-Thm~\ref{thm:sharp-overlap} (sharp overlap)
-  & \texttt{sum\_cross\_norm\_inner\_eigenvectorBasis\_sq\_le\_hilbertSchmidt} \\
+Engine: cross-block $\mathrm{overlap}\le\norm{P(S-T)Q}_{\F}^2/\gap^2$
+  & \texttt{sum\_cross\_\dots\_sq\_le\_offDiag} \\
+DK one-sided residual $\le\norm{(S-T)P}_{\F}^2/\gap^2$
+  & \texttt{sum\_cross\_\dots\_sq\_le\_residual} \\
+Thm~\ref{thm:sharp-overlap} (sharp overlap) $\le\norm{S-T}_{\F}^2/\gap^2$
+  & \texttt{sum\_cross\_\dots\_sq\_le\_hilbertSchmidt} \\
+YWS $d^{1/2}$ branch $\le d\,\eps^2/\gap^2$
+  & \texttt{sum\_cross\_\dots\_sq\_le\_opNorm} \\
 Crude overlap corollary $n\eps^2/\gap^2$
   & \texttt{sum\_cross\_norm\_inner\_eigenvectorBasis\_sq\_le} \\
+Population-gap Weyl bridge $\Rightarrow\gap=(a-b)-\eps$
+  & \texttt{gap\_of\_eigengap} \\
 Projector identity $\norm{\widehat P-P}_{\F}^2=2\cdot\text{overlap}$
   & \texttt{sum\_norm\_sub\_starProjection\_span\_sq\_eq} \\
 Thm~\ref{thm:sharp-proj} (sharp projector)

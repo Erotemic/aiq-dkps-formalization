@@ -1,0 +1,241 @@
+% Horn & Johnson, "Matrix Analysis" (2nd ed., 2013) -- distilled core arguments
+% for Gram matrices and their rigidity (the unitary/isometric freedom of a
+% factorization A = B^* B).
+%
+% This file is not a transcription of the book.  It is an independently written
+% digest of the exact mathematical arguments, with attribution and precise
+% pointers to the source:
+%
+%   R. A. Horn and C. R. Johnson, "Matrix Analysis", 2nd ed.,
+%   Cambridge University Press, 2013.
+%
+% Relevant locations: Sections 7.2 (Gram matrices, positive semidefiniteness)
+% and 7.3 (polar and singular value decompositions), plus Problem 2.6.P10.
+% Notation follows the book (M_{m,n}, A^*, singular value decomposition).
+
+\documentclass[11pt]{article}
+
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage{microtype}
+\usepackage[margin=1.1in]{geometry}
+\usepackage{amsmath,amssymb,amsthm,mathtools}
+\usepackage[colorlinks=true, urlcolor=blue, citecolor=blue, linkcolor=black]{hyperref}
+
+\newcommand{\M}{M}
+\newcommand{\norm}[1]{\left\lVert #1\right\rVert}
+\newcommand{\inner}[2]{\langle #1,\,#2\rangle}
+\newcommand{\C}{\mathbb C}
+\newcommand{\adj}{^{*}}
+\DeclareMathOperator{\rank}{rank}
+\DeclareMathOperator{\spann}{span}
+\DeclareMathOperator{\tr}{tr}
+\DeclareMathOperator{\diag}{diag}
+\DeclareMathOperator{\nullsp}{null}
+
+\theoremstyle{definition}
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{corollary}[theorem]{Corollary}
+\newtheorem{exercise}[theorem]{Exercise / Problem}
+\newtheorem{argument}[theorem]{Argument}
+
+\title{Core Mathematical Arguments for Gram Matrices and Rigidity\\
+in Horn and Johnson's \emph{Matrix Analysis}}
+\author{Mathematical digest after R.\ A.\ Horn and C.\ R.\ Johnson (2013)}
+\date{}
+
+\begin{document}
+\maketitle
+
+\begin{center}
+\small
+Source: R.\ A.\ Horn and C.\ R.\ Johnson, \emph{Matrix Analysis}, 2nd ed.,
+Cambridge University Press, 2013.  This is an independently written digest of the
+arguments, not a transcription.  Section and result numbers refer to the 2nd
+edition.
+\end{center}
+
+\section{Notation and the two views of a Gram matrix}
+
+Let $\M_{m,n}$ denote the $m\times n$ complex matrices and $A\adj$ the conjugate
+transpose.  A Hermitian $A\in\M_n$ is \emph{positive semidefinite} when
+$x\adj Ax\ge 0$ for all $x\in\C^n$, and \emph{positive definite} when the
+inequality is strict for $x\ne 0$.
+
+Given vectors $v_1,\dots,v_m$ in an inner product space $V$ with inner product
+$\inner{\cdot}{\cdot}$, their \emph{Gram matrix} is
+\[
+  G=\bigl[\inner{v_j}{v_i}\bigr]_{i,j=1}^{m}\in\M_m .
+\]
+When $V=\C^{p}$ with the Euclidean inner product and $X=[v_1\ \dots\ v_m]\in\M_{p,m}$
+is the matrix of columns, $G=X\adj X$.  The subject has two faces, and this note
+follows both:
+\begin{itemize}
+\item \emph{Characterization} (\S7.2): a matrix is a Gram matrix if and only if it
+  is positive semidefinite, with positive definiteness detecting linear
+  independence and $\rank G$ the dimension of the span.
+\item \emph{Rigidity} (\S7.3): two matrices with the same Gram matrix
+  ($A\adj A=B\adj B$) differ by a left factor with orthonormal columns, i.e.\ an
+  isometry.
+\end{itemize}
+
+\section{Positive semidefiniteness and the factorization \texorpdfstring{$A=B\adj B$}{A=B*B}}
+
+The bridge between the two views is the unique positive semidefinite square root.
+
+\begin{theorem}[square root; 7.2.6]
+A positive semidefinite $A\in\M_n$ has a unique positive semidefinite $k$th root
+$A^{1/k}$ for each $k\ge 1$; it is a polynomial in $A$, has the same range and
+rank as $A$, and is real when $A$ is.
+\end{theorem}
+
+\begin{theorem}[factorization; 7.2.7]
+A Hermitian $A\in\M_n$ is positive semidefinite if and only if $A=B\adj B$ for
+some $B\in\M_{m,n}$.  For any such $B$: $\nullsp A=\nullsp B$ and
+$\rank A=\rank B$, and $A$ is positive definite if and only if $B$ has full column
+rank.
+\end{theorem}
+
+\begin{argument}[7.2.7]
+If $A=B\adj B$ then $x\adj Ax=\norm{Bx}_2^2\ge 0$; the factorization is realized by
+$B=A^{1/2}$.  From $x\adj Ax=\norm{Bx}_2^2$, $Ax=0$ and $Bx=0$ are equivalent, so
+$A$ and $B$ share null space and rank, and $A$ is positive definite exactly when
+$\nullsp B=\{0\}$.
+\end{argument}
+
+Taking $B=A^{1/2}$ and reading its columns as vectors shows the easy direction of
+the characterization: with $A^{1/2}=[v_1\ \dots\ v_n]$,
+\[
+  A=A^{1/2}A^{1/2}=(A^{1/2})\adj A^{1/2}=\bigl[v_i\adj v_j\bigr]
+   =\bigl[\inner{v_j}{v_i}\bigr],
+\]
+so \emph{every positive semidefinite matrix is a Gram matrix} (of the columns of
+its square root, under the Euclidean inner product).  The QR and Cholesky
+factorizations (7.2.9) give other realizations $A=R\adj R=LL\adj$.
+
+\section{The Gram characterization (7.2.10)}
+
+The converse holds in any inner product space, and the proof is a single
+computation.
+
+\begin{theorem}[Gram characterization; 7.2.10]
+Let $v_1,\dots,v_m\in V$ and $G=[\inner{v_j}{v_i}]_{i,j=1}^m$.  Then
+\begin{enumerate}
+\item[(a)] $G$ is Hermitian and positive semidefinite;
+\item[(b)] $G$ is positive definite if and only if $v_1,\dots,v_m$ are linearly
+  independent;
+\item[(c)] $\rank G=\dim\spann\{v_1,\dots,v_m\}$.
+\end{enumerate}
+\end{theorem}
+
+\begin{argument}[7.2.10]
+(a) With $\norm{\cdot}$ the norm of the inner product and $x=[x_i]\in\C^m$,
+\begin{equation}\label{eq:key}
+  x\adj Gx
+  =\sum_{i,j=1}^{m}\inner{v_j}{v_i}\,\overline{x_i}\,x_j
+  =\Bigl\langle\textstyle\sum_j x_j v_j,\ \sum_i x_i v_i\Bigr\rangle
+  =\Bigl\|\textstyle\sum_{i} x_i v_i\Bigr\|^2\ge 0 .
+\end{equation}
+(b) Equality in \eqref{eq:key} holds iff $\sum_i x_i v_i=0$.  If the $v_i$ are
+linearly independent this forces $x=0$, so $G$ is positive definite; conversely
+positive definiteness makes $\sum_i x_i v_i=0$ possible only for $x=0$, which is
+linear independence.
+(c) Write $r=\rank G$ and $d=\dim\spann\{v_i\}$.  A Gram matrix is rank principal,
+so $G$ has a nonsingular (hence positive definite) $r\times r$ principal submatrix;
+by (b) the corresponding $r$ vectors are independent, giving $r\le d$.  Conversely
+$d$ independent vectors have a positive definite Gram matrix that is a principal
+submatrix of $G$, giving $d\le r$.  Hence $r=d$.
+\end{argument}
+
+Identity \eqref{eq:key} is the whole of parts (a) and (b): positive
+semidefiniteness and the linear-independence test are the statement that
+$x\adj Gx$ is the squared norm of the linear combination $\sum_i x_i v_i$.
+
+\section{Rigidity: the isometric freedom of a factorization}
+
+Fix a positive semidefinite $G$.  Its factorizations $G=A\adj A$ are unique up to
+a left isometry.  The book states this at three levels of generality.
+
+\paragraph{Positive definite case (\S7.2, exercise).}
+If $A\in\M_n$ is positive definite and $A=C\adj C$ with $C\in\M_n$, then
+$C=V A^{1/2}$ for a unitary $V$.  Indeed
+\[
+  \bigl(CA^{-1/2}\bigr)\adj\bigl(CA^{-1/2}\bigr)
+  =A^{-1/2}C\adj C A^{-1/2}
+  =A^{-1/2}AA^{-1/2}=I,
+\]
+so $V:=CA^{-1/2}$ is unitary and $C=VA^{1/2}$.  Two factorizations $C\adj C=C'^{*}C'$
+therefore satisfy $C'=(V'V\adj)\,C$, a unitary change.  This is the rigidity in the
+full-rank case, obtained by dividing out the invertible square root.
+
+\paragraph{Square case (Problem 2.6.P10).}
+For $A,B\in\M_n$ with $\Sigma=\diag(\sigma_1,\dots,\sigma_n)$ the singular values
+of $A$, the following are equivalent: (a) $A\adj A=B\adj B$; (b) $A=X\Sigma W\adj$
+and $B=Y\Sigma W\adj$ for unitary $W,X,Y$; (c) $B=UA$ for a unitary $U$.  This is
+the square, possibly singular, case; the book flags 7.3.11 as its generalization.
+
+\paragraph{General case (Theorem 7.3.11).}
+This is the statement the formalization targets.
+
+\begin{theorem}[isometric factorization; 7.3.11]
+Let $p\le q$, $A\in\M_{p,n}$, and $B\in\M_{q,n}$.  Then $A\adj A=B\adj B$ if and
+only if there is a $V\in\M_{q,p}$ with orthonormal columns such that $B=VA$.  If
+$A,B$ are real, $V$ may be taken real.
+\end{theorem}
+
+\begin{argument}[7.3.11]
+If $B=VA$ then $B\adj B=A\adj V\adj VA=A\adj A$, since $V\adj V=I$.  Conversely,
+suppose $A\adj A=B\adj B$.  A (reduced) singular value decomposition (7.3.2) writes
+\[
+  A=V_1\Sigma_r W_1\adj,\qquad B=V_2\Sigma_r W_1\adj,
+\]
+with the \emph{same} $W_1$ and positive $\Sigma_r=\diag(\sigma_1,\dots,\sigma_r)$
+because $A\adj A=W_1\Sigma_r^2W_1\adj=B\adj B$ share this eigendecomposition; here
+$V_1\in\M_{p,r}$ and $V_2\in\M_{q,r}$ have orthonormal columns.  Embed
+$\widehat V_1=\bigl[\begin{smallmatrix}V_1\\ 0\end{smallmatrix}\bigr]\in\M_{q,r}$,
+which still has orthonormal columns.  A matrix with orthonormal columns extends to
+a unitary matrix (2.1.18), so there is a unitary $U\in\M_q$ with
+$V_2=U\widehat V_1$.  Writing $U=[V\ Z]$ with $V\in\M_{q,r}$ gives
+$V_2=V V_1$, whence
+\[
+  B=V_2\Sigma_r W_1\adj=V(V_1\Sigma_r W_1\adj)=VA,
+\]
+and $V$ has orthonormal columns.  Reality of $A,B$ lets $W_1,V_1,U$ be real.
+\end{argument}
+
+The mechanism is the same at all three levels: the common data $A\adj A=B\adj B$
+is exactly the right-singular structure $W_1,\Sigma_r$, so $A$ and $B$ differ only
+in their left-singular frames $V_1,V_2$, and any two orthonormal frames spanning
+the correct dimensions are joined by an isometry.  The positive definite exercise
+is this with $\Sigma_r$ invertible and no embedding needed; 7.3.11 supplies the
+embedding (2.1.18) that also covers rank deficiency and unequal ambient
+dimensions $p\le q$.
+
+\section{Distilled logical dependencies}
+
+\begin{enumerate}
+\item Unique positive semidefinite square root $A^{1/2}$ (7.2.6).
+\item Positive semidefinite $\iff$ $A=B\adj B$, with matched null space and rank
+  (7.2.7); reading columns of $A^{1/2}$ makes every such $A$ a Gram matrix.
+\item Gram $\iff$ positive semidefinite, positive definite $\iff$ linear
+  independence, $\rank G=\dim\spann$ (7.2.10), all from the identity
+  $x\adj Gx=\bigl\|\sum_i x_i v_i\bigr\|^2$.
+\item Isometric freedom: $A\adj A=B\adj B\iff B=VA$ with $V\adj V=I$ (7.3.11),
+  via the singular value decomposition and the extension of an orthonormal-column
+  matrix to a unitary one (2.1.18); the positive definite special case (\S7.2
+  exercise) and the square case (2.6.P10) are corollaries.
+\end{enumerate}
+
+The characterization (item~3) lives entirely in \S7.2 and is a theorem there.  The
+rigidity (item~4) is Theorem 7.3.11 in \S7.3; within \S7.2 it appears only in the
+positive definite special case, and only as an exercise.
+
+\begin{thebibliography}{9}
+\bibitem{HornJohnson2013}
+Roger A.\ Horn and Charles R.\ Johnson.
+\newblock \href{https://doi.org/10.1017/CBO9781139020411}{\emph{Matrix Analysis}}, 2nd ed.
+\newblock Cambridge University Press, 2013.
+\newblock Sections 7.2--7.3; Problem 2.6.P10.
+\end{thebibliography}
+
+\end{document}

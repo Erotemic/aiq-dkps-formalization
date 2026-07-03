@@ -18,6 +18,14 @@
 #
 # The script runs all requested configs, prints a final summary table, and exits
 # nonzero if any config fails.
+#
+# Pre-flight (no external tools, seconds not minutes): before running the full
+# comparator, check that each config's leaf theorems export a matching universe
+# signature and full type in the Conformance vs Leaderboard modules with
+#   python3 scripts/check_comparator_signatures.py
+# This catches the `statement do not match` class (universe-slot shifts,
+# instance-telescope drift) that builds green and looks right under `#check`.
+# See dev/journals/comparator-statement-export-matching-2026-06-14.md.
 set -uo pipefail
 
 CONFIGS=()

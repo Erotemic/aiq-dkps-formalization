@@ -97,5 +97,25 @@ vs solution. All 21 leaves matched after the fixes.
   matches docstring prose like `` no `sorry` remains `` and produced a bogus
   "the papers have sorries" alarm earlier in the same session.
 
+## Tooling
+
+`scripts/check_comparator_signatures.py` automates the proxy above for every
+theorem in every `comparator/*.json`: it `#print`s each leaf in both the
+challenge and solution modules and compares the raw `.{…}` universe signature
+(the slot check — `#print`, not `#check`), then `pp.all #check`s both and
+compares the full type (the telescope check), asserting non-empty output. Run
+it before paying for the full comparator + landrun:
+
+```
+python3 scripts/check_comparator_signatures.py                 # all configs
+python3 scripts/check_comparator_signatures.py comparator/candidate-01-gram-rigidity.json
+python3 scripts/check_comparator_signatures.py --no-build      # modules already built
+```
+
+It reproduced this exact bug (a stray `M` added to the Gram source's shared
+`variable {𝕜 E F ι}` line shifted `ι` from `u_4` to `u_5`): solution
+`.{u_1,u_2,u_5}` vs conformance `.{u_1,u_2,u_4}`, flagged `FAIL` in seconds
+without landrun.
+
 See also: benchmark questions Q1/Q2/Q3 in
 [`../benchmark-candidates/lean-questions.md`](../benchmark-candidates/lean-questions.md).

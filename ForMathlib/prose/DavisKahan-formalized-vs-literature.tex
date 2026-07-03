@@ -38,8 +38,8 @@
 \title{Davis--Kahan $\sin\Theta$: what the Lean formalization proves,\\
 and how it relates to Davis (1963/1970) and Yu--Wang--Samworth (2015)}
 
-% NOTE: if you are a different LLM and are making a substaintial addition and
-% not credited, then add yourself.
+% NOTE: if you are a different model making a substantial addition and are not
+% yet credited, add yourself to the author list above.
 \author{Jonathan Crall \and Claude Opus 4.8}
 
 \date{}
@@ -50,19 +50,19 @@ and how it relates to Davis (1963/1970) and Yu--Wang--Samworth (2015)}
 \begin{abstract}
 This note states, in ordinary mathematical language, the Davis--Kahan
 $\sin\Theta$ theorem that has been formalized in Lean, and pins down exactly how
-it sits relative to the two cited source papers.  Briefly: what is formalized is
-the \emph{Frobenius} $\sin\Theta$ bound
-$\norm{\sinT}_{\F}\le\norm{S-T}_{\F}/\gap$, proved by the elementary cross-term /
-Rayleigh-quotient mechanism of Davis, using a \emph{hybrid} eigengap between the
-leading eigenvalues of one operator and the trailing eigenvalues of the other.
-This is the deterministic core of the Yu--Wang--Samworth variant; the passage to
-a population-only gap (their theorem) is a separate Weyl step, also formalized.
-No resolvents or contour integrals are used.
+it sits relative to the source papers.  Briefly: what is formalized is a
+\emph{ladder} of Frobenius $\sin\Theta$ bounds whose sharp rung is
+$\norm{\sinT}_{\F}\le\norm{S-T}_{\F}/\gap$, all proved by the elementary
+cross-term / Rayleigh-quotient mechanism of Davis, using a \emph{hybrid} eigengap
+between the leading eigenvalues of one operator and the trailing eigenvalues of
+the other.  This is the deterministic core of the Yu--Wang--Samworth variant; the
+passage to a population-only gap (their theorem) is a separate Weyl step, also
+formalized.  No resolvents or contour integrals are used.
 \end{abstract}
 
 \vspace{1.5em}
 % NOTE: Update permalink if underlying proof changes, so this always is up to date wrt to the referenced lean file.
-\noindent Companion note to \href{https://github.com/AIQ-Kitware/aiq-dkps-formalization/blob/c3af8278fb72cb447e44a7c816ab1d1e30c2b097/ForMathlib/Analysis/InnerProductSpace/DavisKahan.lean}{ForMathlib/Analysis/InnerProductSpace/DavisKahan.lean} in part of a larger formalization effort: \href{https://github.com/AIQ-Kitware/aiq-dkps-formalization}{github/AIQ-Kitware/aiq-dkps-formalization}
+\noindent Companion note to \href{https://github.com/AIQ-Kitware/aiq-dkps-formalization/blob/c3af8278fb72cb447e44a7c816ab1d1e30c2b097/ForMathlib/Analysis/InnerProductSpace/DavisKahan.lean}{ForMathlib/Analysis/InnerProductSpace/DavisKahan.lean}, part of a larger formalization effort at \href{https://github.com/AIQ-Kitware/aiq-dkps-formalization}{github.com/AIQ-Kitware/aiq-dkps-formalization}.
 
 
 \section{Setup and notation}
@@ -78,9 +78,10 @@ $\{1,\dots,d\}$ versus $\{d+1,\dots,n\}$, so no sorting is assumed a priori.
 
 Let
 \[
-  P=\text{orthogonal projection onto }\spann(u_1,\dots,u_d),
-  \qquad
-  \widehat P=\text{orthogonal projection onto }\spann(v_1,\dots,v_d)
+\begin{aligned}
+  P&=\text{orthogonal projection onto }\spann(u_1,\dots,u_d),\\
+  \widehat P&=\text{orthogonal projection onto }\spann(v_1,\dots,v_d)
+\end{aligned}
 \]
 be the projections onto the two leading spectral subspaces, and let
 $\Theta=\Theta\bigl(\ran P,\ran\widehat P\bigr)$ be the vector of principal
@@ -150,7 +151,7 @@ below $\alpha/2$, so \eqref{eq:gap} holds with $\gap=\alpha/2$, and
   \sum_{i\le d}\sum_{j>d}\bigl|\inner{u_i}{v_j}\bigr|^2\le\frac{4n\,\eps^2}{\alpha^2}.
 \]
 
-\section{The proof mechanism (one paragraph)}
+\section{The proof mechanism}
 
 For an eigenvector $v_j$ of $S$ with eigenvalue $\lambda_j(S)$ and an eigenvector
 $u_i$ of $T$ with eigenvalue $\lambda_i(T)$, self-adjointness gives the
@@ -185,7 +186,7 @@ off-diagonal part of the matching unitary),
   \gamma_i=\min_{j\ne i}|\lambda_i-\lambda_j'|,
 \]
 proved by comparing $\inner{(A+H-\lambda_i')^2x_i}{x_i}$ from above and below --
-exactly the identity \eqref{eq:cross}.  Our results are the same argument,
+exactly the identity \eqref{eq:cross}.  Our results run the same argument,
 specialized to the two-block (leading/trailing) split rather than a full
 eigenvector matching.  Of Davis's two refinements, one transfers and one does
 not.  The \emph{off-diagonal} refinement does transfer, and is formalized: the
@@ -254,14 +255,16 @@ All declarations live in
 (namespace \texttt{ForMathlib}).
 
 \begin{center}
-\begin{tabular}{@{}ll@{}}
+\footnotesize
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{@{}p{0.42\linewidth}l@{}}
 \toprule
 Statement here & Lean name \\
 \midrule
 Cross-term identity \eqref{eq:cross}
   & \texttt{inner\_eigenvectorBasis\_map\_sub\_eigenvectorBasis} \\
-Parseval identities (full / single row)
-  & \texttt{sum\_sq\_norm\_inner\_eigenvectorBasis\_map\_sub\_eq}$(\text{\_row})$ \\
+Parseval identities (full sum / single row)
+  & \texttt{sum\_sq\_norm\_inner\_\dots\_map\_sub\_eq}\,/\,\texttt{\dots\_eq\_row} \\
 The single dimension-factor step $\norm{S-T}_{\F}^2\le n\eps^2$
   & \texttt{sum\_norm\_eigenvectorBasis\_map\_sub\_sq\_le} \\
 Engine: cross-block $\mathrm{overlap}\le\norm{P(S-T)Q}_{\F}^2/\gap^2$
@@ -273,7 +276,7 @@ Thm~\ref{thm:sharp-overlap} (sharp overlap) $\le\norm{S-T}_{\F}^2/\gap^2$
 YWS $d^{1/2}$ branch $\le d\,\eps^2/\gap^2$
   & \texttt{sum\_cross\_\dots\_sq\_le\_opNorm} \\
 Crude overlap corollary $n\eps^2/\gap^2$
-  & \texttt{sum\_cross\_norm\_inner\_eigenvectorBasis\_sq\_le} \\
+  & \texttt{sum\_cross\_\dots\_sq\_le} \\
 Population-gap Weyl bridge $\Rightarrow\gap=(a-b)-\eps$
   & \texttt{gap\_of\_eigengap} \\
 Projector identity $\norm{\widehat P-P}_{\F}^2=2\cdot\text{overlap}$
@@ -282,10 +285,10 @@ Thm~\ref{thm:sharp-proj} (sharp projector)
   & \texttt{sum\_norm\_sub\_starProjection\_span\_sq\_le\_hilbertSchmidt} \\
 Crude projector corollary $2n\eps^2/\gap^2$
   & \texttt{sum\_norm\_sub\_starProjection\_span\_sq\_le} \\
-Weyl step: floor $\Rightarrow$ gap $\alpha/2$
+Weyl step: rank/floor $\Rightarrow$ gap $\alpha/2$
   & \texttt{gap\_of\_rank\_floor} \\
 Rank/floor corollary $4n\eps^2/\alpha^2$
-  & \texttt{sum\_cross\_norm\_inner\_eigenvectorBasis\_sq\_le\_of\_rank\_floor} \\
+  & \texttt{sum\_cross\_\dots\_sq\_le\_of\_rank\_floor} \\
 \bottomrule
 \end{tabular}
 \end{center}
@@ -298,20 +301,19 @@ $\sum_k\norm{(\widehat P-P)u_k}^2$, which equals $\norm{\widehat P-P}_{\F}^2$.
 \begin{thebibliography}{9}
 \bibitem{Davis1963}
 Chandler Davis.
-\newblock \href{https://www.sciencedirect.com/science/article/pii/0022247X63900015}{The rotation of eigenvectors by a perturbation.}
+\newblock \href{https://doi.org/10.1016/0022-247X(63)90001-5}{The rotation of eigenvectors by a perturbation}.
 \newblock \emph{J.\ Math.\ Anal.\ Appl.}\ \textbf{6} (1963), 159--173.
-\newblock DOI: 10.1016/0022-247X(63)90001-5.
 
 \bibitem{DavisKahan1970}
 Chandler Davis and W.\ M.\ Kahan.
-\newblock \href{https://dl.acm.org/doi/10.1137/0707001}{The rotation of eigenvectors by a perturbation. III.}
-\newblock \emph{SIAM J.\ Numer.\ Anal.}\ \textbf{7} (1970), 1--46.
+\newblock \href{https://doi.org/10.1137/0707001}{The rotation of eigenvectors by a perturbation.\ III}.
+\newblock \emph{SIAM J.\ Numer.\ Anal.}\ \textbf{7} (1970), no.\ 1, 1--46.
 
 \bibitem{YWS2015}
 Yi Yu, Tengyao Wang, and Richard J.\ Samworth.
-\newblock \href{https://arxiv.org/abs/1405.0680}{A useful variant of the Davis--Kahan theorem for statisticians.}
-\newblock \emph{Biometrika} \textbf{102} (2015), 315--323.
-\newblock arXiv:1405.0680.
+\newblock \href{https://doi.org/10.1093/biomet/asv008}{A useful variant of the Davis--Kahan theorem for statisticians}.
+\newblock \emph{Biometrika} \textbf{102} (2015), no.\ 2, 315--323.
+\newblock arXiv:\href{https://arxiv.org/abs/1405.0680}{1405.0680}.
 \end{thebibliography}
 
 \end{document}

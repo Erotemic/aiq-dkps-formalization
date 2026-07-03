@@ -221,9 +221,20 @@ of RawStress is wrappers (`abs_sqrt_rawStress_sub_le` = reverse triangle;
 argmin modulus `exists_modulus_pairDist` — see `planning/historical/for-fable.md` F3.
 
 Remaining non-trivial items are catalogued in `planning/historical/for-fable.md` (RCLike
-Gram factorization, eigenvalues₀ tail, Berge/argmin modulus, sharp Davis–Kahan,
+Gram factorization, eigenvalues₀ tail, Berge/argmin modulus,
 the `h_conc_meas` measurable-selection seam) — all either blocked on upstream
 API or requiring substantial new proofs.
+
+**Update 2026-07-03 (Opus session): sharp Davis–Kahan (Frobenius) done.** The sharp
+Frobenius sin-Θ bound `‖sin Θ‖_F ≤ ‖S − T‖_F / gap` (no operator-norm hypothesis, no
+dimension factor) is now the primary DK result in
+`ForMathlib/Analysis/InnerProductSpace/DavisKahan.lean`
+(`sum_cross_norm_inner_eigenvectorBasis_sq_le_hilbertSchmidt` and the projector
+`sum_norm_sub_starProjection_span_sq_le_hilbertSchmidt`); the dimension factor `n`
+was isolated to the single degradation step `‖S − T‖²_F ≤ n ε²`
+(`sum_norm_eigenvectorBasis_map_sub_sq_le`), and the crude `n ε²/gap²` bounds are now
+thin corollaries. Still open: the *operator-norm* sin-Θ `‖sin Θ‖_op ≤ ε/gap` (largest
+singular value rather than sum-of-squares — a genuinely different argument).
 
 **Deliberately deferred** (real gaps, but redesign expected):
 argmin-set stability behind `exists_modulus_pairDist` (Mathlib just gained

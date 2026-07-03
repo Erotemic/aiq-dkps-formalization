@@ -1,0 +1,251 @@
+% Gram matrix rigidity: what the Lean formalization proves, and how it relates to
+% the literature.  Expert-readable companion to
+% ForMathlib/Analysis/InnerProductSpace/GramMatrix.lean, so the statement can be
+% checked against the source references without reading Lean.
+%
+% Independently written; draws on the distilled digest
+%   ForMathlib/prose/Horn-Johnson-2013-Gram-core-arguments.tex
+
+\documentclass[11pt]{article}
+
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage{microtype}
+\usepackage[margin=1.1in]{geometry}
+\usepackage{amsmath,amssymb,amsthm,mathtools}
+\usepackage{booktabs}
+\usepackage[colorlinks=true, urlcolor=blue, citecolor=blue, linkcolor=black]{hyperref}
+
+\newcommand{\M}{M}
+\newcommand{\norm}[1]{\left\lVert #1\right\rVert}
+\newcommand{\inner}[2]{\langle #1,\,#2\rangle}
+\newcommand{\adj}{^{*}}
+\newcommand{\KK}{\mathbb K}
+\newcommand{\gram}{G}
+\DeclareMathOperator{\rank}{rank}
+\DeclareMathOperator{\spann}{span}
+\DeclareMathOperator{\ran}{ran}
+
+\newtheorem{theorem}{Theorem}
+\newtheorem{corollary}[theorem]{Corollary}
+\newtheorem{lemma}[theorem]{Lemma}
+\theoremstyle{remark}
+\newtheorem*{remark}{Remark}
+
+\title{Gram matrix rigidity: what the Lean formalization proves,\\
+and how it relates to Horn--Johnson (2013) and finite frames}
+
+% NOTE: if you are a different model making a substantial addition and are not
+% yet credited, add yourself to the author list above.
+\author{Claude Opus 4.8 \and Jonathan Crall}
+
+\date{}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+This note states, in ordinary mathematical language, the Gram-matrix rigidity
+theorem formalized in Lean, and locates it against the source references.  Two
+families of vectors with the same Gram matrix, that is with equal pairwise inner
+products, are related by a linear isometry: on their spans in full generality,
+and on a finite-dimensional ambient space by a linear isometry equivalence.  This
+is the coordinate-free form of the classical fact that a factorization
+$A\adj A=B\adj B$ determines $A$ up to a left isometry (Horn and Johnson,
+Theorem 7.3.11), and of the frame-theoretic statement that finite frames are
+unitarily equivalent if and only if their Gram matrices coincide.  The formalized
+proof replaces the singular value decomposition (SVD) with an isometric first
+isomorphism theorem, and needs no finite-dimensionality for the span-level
+statement.  A closing section records what is left unformalized.
+\end{abstract}
+
+\vspace{1.5em}
+% NOTE: Update permalink if underlying proof changes, so this always is up to date wrt to the referenced lean file.
+\noindent Companion note to \href{https://github.com/AIQ-Kitware/aiq-dkps-formalization/blob/37d857e52be20d145cb90f29e8fe5d2a0928c3d1/ForMathlib/Analysis/InnerProductSpace/GramMatrix.lean}{ForMathlib/Analysis/InnerProductSpace/GramMatrix.lean}, part of a larger formalization effort at \href{https://github.com/AIQ-Kitware/aiq-dkps-formalization}{github.com/AIQ-Kitware/aiq-dkps-formalization}.
+
+\section{Setup and notation}
+
+Let $E$ and $F$ be inner product spaces over $\KK\in\{\mathbb R,\mathbb C\}$, and
+let $\varphi=(\varphi_i)_{i\in I}$ in $E$ and $\psi=(\psi_i)_{i\in I}$ in $F$ be
+two families of vectors sharing an index set $I$.  Their Gram matrices are
+$\gram(\varphi)=[\inner{\varphi_i}{\varphi_j}]$ and
+$\gram(\psi)=[\inner{\psi_i}{\psi_j}]$.  The families have \emph{equal Gram data}
+when
+\begin{equation}\label{eq:equalgram}
+  \inner{\varphi_i}{\varphi_j}=\inner{\psi_i}{\psi_j}\qquad\text{for all }i,j,
+\end{equation}
+equivalently $\gram(\varphi)=\gram(\psi)$.  A \emph{linear isometry} is a linear
+map preserving the inner product, and a \emph{linear isometry equivalence} is a
+bijective one; over $\KK$ these are the (real) orthogonal and (complex) unitary
+maps.  Write $\spann\varphi=\spann\{\varphi_i:i\in I\}$.
+
+In matrix terms a family in $\KK^{p}$ is the columns of a matrix $A\in\M_{p,n}$,
+its Gram matrix is $A\adj A$, and \eqref{eq:equalgram} is $A\adj A=B\adj B$.  A
+positive semidefinite (PSD) matrix is a Hermitian $M$ with $x\adj Mx\ge 0$; it is
+positive definite (PD) when the inequality is strict for $x\ne 0$.
+
+\section{The formalized theorems}
+
+Two blocks are formalized: the characterization of Gram matrices, and the
+rigidity.
+
+\begin{theorem}[Gram characterization]\label{thm:char}
+$\gram(\varphi)$ is Hermitian and positive semidefinite, and it is positive
+definite if and only if the family $\varphi$ is linearly independent.
+\end{theorem}
+
+\begin{theorem}[Gram rigidity]\label{thm:rigid}
+Suppose $\varphi$ and $\psi$ have equal Gram data \eqref{eq:equalgram}.
+\begin{enumerate}
+\item[(a)] There is a linear isometry equivalence
+  $\spann\varphi\xrightarrow{\ \sim\ }\spann\psi$ sending each $\varphi_i$ to
+  $\psi_i$.  No finiteness is assumed, and $E,F$ may differ.
+\item[(b)] If $F=E$ is finite-dimensional, this extends to a linear isometry
+  equivalence $W$ of $E$ with $W\varphi_i=\psi_i$ for all $i$.
+\end{enumerate}
+Consequently, for families in a finite-dimensional $E$,
+\[
+  \gram(\varphi)=\gram(\psi)
+  \quad\Longleftrightarrow\quad
+  \exists\,W\ \text{a linear isometry equivalence of }E\ \text{with }
+  W\varphi_i=\psi_i .
+\]
+\end{theorem}
+
+Part (a) is the fundamental statement; (b) and the equivalence follow from it by
+extending the span isometry to the ambient space.  The aligning map in (a) is
+determined on $\spann\varphi$, so it is unique.
+
+\section{The proof mechanism}
+
+The proof is coordinate-free and uses no SVD.  Encode each family by its
+linear-combination map $L_\varphi:\KK^{(I)}\to E$, $c\mapsto\sum_i c_i\varphi_i$,
+whose range is $\spann\varphi$.  Equal Gram data \eqref{eq:equalgram} makes the
+two maps carry the same pullback inner product,
+$\inner{L_\varphi c}{L_\varphi c'}=\inner{L_\psi c}{L_\psi c'}$, by expanding
+bilinearly over the entries; in particular $L_\varphi c=0$ if and only if
+$L_\psi c=0$, since a vector vanishes exactly when its self-inner-product does, so
+$\ker L_\varphi=\ker L_\psi$.  An isometric refinement of the first isomorphism
+theorem then applies: the assignment $L_\varphi c\mapsto L_\psi c$ is a
+well-defined linear isometry equivalence $\ran L_\varphi\to\ran L_\psi$, that is
+$\spann\varphi\to\spann\psi$, sending $\varphi_i$ to $\psi_i$.  In finite
+dimension it extends to the ambient space.  The engine is stated once, as a fact
+about a pair of linear maps $S,T$ with $\inner{Sx}{Sy}=\inner{Tx}{Ty}$: they have
+equal kernels and canonically isometric ranges via $Sx\mapsto Tx$.
+
+\section{Relation to Horn--Johnson (2013)}
+
+Horn and Johnson~\cite{HornJohnson2013} record both blocks.  The characterization
+is Theorem 7.2.10: a matrix is a Gram matrix if and only if it is positive
+semidefinite, it is positive definite if and only if the vectors are linearly
+independent, and $\rank\gram=\dim\spann\{v_i\}$; the proof is the identity
+$x\adj\gram x=\bigl\|\sum_i x_i v_i\bigr\|^2$, which is the same computation
+behind Theorem~\ref{thm:char}.  The rigidity is Theorem 7.3.11: for $p\le q$,
+$A\in\M_{p,n}$, and $B\in\M_{q,n}$, one has $A\adj A=B\adj B$ if and only if
+$B=VA$ for some $V\in\M_{q,p}$ with orthonormal columns (an isometry).  The square
+case is Problem 2.6.P10, and a positive-definite special case, $C\adj C=A$ giving
+$C=VA^{1/2}$, is a \S7.2 exercise.
+
+Their proof of 7.3.11 uses the SVD.  Writing $A=V_1\Sigma_r W_1\adj$ and
+$B=V_2\Sigma_r W_1\adj$, the two matrices share the right factor $\Sigma_r W_1\adj$
+because $A\adj A=W_1\Sigma_r^2 W_1\adj=B\adj B$, so they differ only in the
+left-singular frames $V_1,V_2$, and $V_2=VV_1$ for an isometry $V$ obtained by
+extending $V_1$ to a unitary.  The formalized proof is this argument with the
+shared right factor replaced by the common coimage $\KK^{(I)}/\ker L_\varphi$: the
+quotient plays the role of $\Sigma_r W_1\adj$, and extending the span isometry to
+the ambient space plays the role of extending $V_1$ to a unitary.  Two differences
+of scope: the formalized part~(a) needs no finiteness and allows $E\ne F$, whereas
+7.3.11 is finite matrices with $p\le q$; and the construction is by the quotient
+rather than the SVD.
+
+\section{Relation to finite frames}
+
+In frame theory a family $(\varphi_i)$ in $\KK^{d}$ is a finite frame, and
+Theorem~\ref{thm:rigid}(b) reads: two finite frames are unitarily equivalent,
+$\varphi_i\mapsto U\varphi_i=\psi_i$ for one unitary $U$, if and only if they have
+the same Gram matrix.  Chien and Waldron~\cite{ChienWaldron2016} study the finer
+\emph{projective} unitary equivalence, where the frames agree up to unimodular
+scalars, $\varphi_i\mapsto z_i\,U\varphi_i$ with $|z_i|=1$.  Projective equivalence
+is not detected by the Gram matrix alone; it is characterized by a family of
+higher frame invariants, products of inner products taken around cycles of
+indices.  That refinement is not formalized here.
+
+\section{What is not formalized}
+
+The formalization covers parts (a),(b) of the characterization 7.2.10 and the
+isometric rigidity.  The remaining pieces, and what each needs, are as follows.
+
+\begin{itemize}
+\item \emph{The rank identity} $\rank\gram(\varphi)=\dim\spann\{\varphi_i\}$
+  (7.2.10(c)).  It rests on the rank-principal structure of a positive
+  semidefinite matrix.
+\item \emph{Realization in the reverse direction:} that every positive
+  semidefinite $G$ is the Gram matrix of an explicit family, the columns of
+  $G^{1/2}$, with a rank-$d$ refinement.  This is a separate development, driven
+  by the positive semidefinite square root.
+\item \emph{The explicit isometry via the SVD.}  The formalized $W$ is obtained
+  abstractly, through the coimage and an extension step; the singular value
+  decomposition that would present it in coordinates is not built.
+\item \emph{Uniqueness as a stand-alone theorem.}  The aligning map is determined
+  on $\spann\varphi$, so uniqueness holds, but it is stated as a remark rather
+  than formalized separately.
+\item \emph{Projective unitary equivalence} of finite frames up to unimodular
+  scalars (Chien--Waldron), characterized by higher frame invariants rather than
+  by the Gram matrix.
+\item \emph{The companion factorizations} (QR, Cholesky; 7.2.9) as other
+  realizations of a positive semidefinite matrix.
+\end{itemize}
+
+\section{Dictionary to the Lean source}
+
+The characterization lemmas are in Mathlib's
+\texttt{Analysis/InnerProductSpace/GramMatrix.lean}; the rigidity declarations are
+the \texttt{ForMathlib} additions staged for the same file.
+
+\begin{center}
+\footnotesize
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{@{}p{0.46\linewidth}l@{}}
+\toprule
+Statement here & Lean name \\
+\midrule
+Gram matrix $\gram(\varphi)=[\inner{\varphi_i}{\varphi_j}]$
+  & \texttt{Matrix.gram} \\
+Thm~\ref{thm:char}, positive semidefinite (7.2.10a)
+  & \texttt{Matrix.posSemidef\_gram} \\
+Thm~\ref{thm:char}, positive definite $\iff$ independent (7.2.10b)
+  & \texttt{Matrix.posDef\_gram\_iff\_linearIndependent} \\
+Factorization $\gram=m\adj m$ (7.2.7)
+  & \texttt{Matrix.gram\_eq\_conjTranspose\_mul} \\
+Engine: isometric first isomorphism theorem
+  & \texttt{LinearMap.rangeEquivOfInnerEq} \\
+Thm~\ref{thm:rigid}(a), span isometry
+  & \texttt{linearIsometryEquivSpanOfInnerEq} \\
+Thm~\ref{thm:rigid}(b), ambient isometry equivalence
+  & \texttt{exists\_linearIsometryEquiv\_map\_eq\_of\_inner\_eq} \\
+Thm~\ref{thm:rigid}, the $\gram(\varphi)=\gram(\psi)$ iff
+  & \texttt{Matrix.gram\_eq\_gram\_iff\_\dots\_map\_eq} \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+The span isometry of Theorem~\ref{thm:rigid}(a) is
+\texttt{linearIsometryEquivSpanOfInnerEq}, built from the engine
+\texttt{LinearMap.rangeEquivOfInnerEq} applied to the two linear-combination maps;
+the ambient extension uses \texttt{LinearIsometry.extend}.
+
+\begin{thebibliography}{9}
+\bibitem{HornJohnson2013}
+Roger A.\ Horn and Charles R.\ Johnson.
+\newblock \href{https://doi.org/10.1017/CBO9781139020411}{\emph{Matrix Analysis}}, 2nd ed.
+\newblock Cambridge University Press, 2013.
+\newblock Sections 7.2--7.3; Problem 2.6.P10.
+
+\bibitem{ChienWaldron2016}
+Tuan-Yow Chien and Shayne Waldron.
+\newblock \href{https://doi.org/10.1137/15M1042140}{A characterization of projective unitary equivalence of finite frames and applications}.
+\newblock \emph{SIAM J.\ Discrete Math.}\ \textbf{30} (2016), no.\ 2, 976--994.
+\newblock arXiv:\href{https://arxiv.org/abs/1312.5393}{1312.5393}.
+\end{thebibliography}
+
+\end{document}

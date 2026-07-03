@@ -68,14 +68,14 @@ namespace ForMathlib
 
 open scoped InnerProductSpace
 
-variable {𝕜 E F M ι : Type*} [RCLike 𝕜] [NormedAddCommGroup E] [InnerProductSpace 𝕜 E]
+variable {𝕜 E F ι : Type*} [RCLike 𝕜] [NormedAddCommGroup E] [InnerProductSpace 𝕜 E]
   [NormedAddCommGroup F] [InnerProductSpace 𝕜 F]
 
 /-! ### The isometric first isomorphism theorem -/
 
 namespace LinearMap
 
-variable [AddCommGroup M] [Module 𝕜 M]
+variable {M : Type*} [AddCommGroup M] [Module 𝕜 M]
 variable (S : M →ₗ[𝕜] E) (T : M →ₗ[𝕜] F) (h : ∀ x y, ⟪S x, S y⟫_𝕜 = ⟪T x, T y⟫_𝕜)
 include h
 

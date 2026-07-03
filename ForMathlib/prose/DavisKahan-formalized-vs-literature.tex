@@ -15,7 +15,7 @@
 \usepackage[margin=1.1in]{geometry}
 \usepackage{amsmath,amssymb,amsthm,mathtools}
 \usepackage{booktabs}
-\usepackage[hidelinks]{hyperref}
+\usepackage[colorlinks=true, urlcolor=blue]{hyperref}
 
 \newcommand{\norm}[1]{\left\lVert #1\right\rVert}
 \newcommand{\eps}{\varepsilon}
@@ -37,7 +37,7 @@
 
 \title{Davis--Kahan $\sin\Theta$: what the Lean formalization proves,\\
 and how it relates to Davis (1963/1970) and Yu--Wang--Samworth (2015)}
-\author{Companion note to \texttt{ForMathlib/Analysis/InnerProductSpace/DavisKahan.lean}}
+\author{Companion note to \href{https://github.com/AIQ-Kitware/aiq-dkps-formalization/blob/main/ForMathlib/Analysis/InnerProductSpace/DavisKahan.lean}{ForMathlib/Analysis/InnerProductSpace/DavisKahan.lean}}
 \date{}
 
 \begin{document}
@@ -289,18 +289,18 @@ $\sum_k\norm{(\widehat P-P)u_k}^2$, which equals $\norm{\widehat P-P}_{\F}^2$.
 \begin{thebibliography}{9}
 \bibitem{Davis1963}
 Chandler Davis.
-\newblock The rotation of eigenvectors by a perturbation.
+\newblock \href{https://www.sciencedirect.com/science/article/pii/0022247X63900015}{The rotation of eigenvectors by a perturbation.}
 \newblock \emph{J.\ Math.\ Anal.\ Appl.}\ \textbf{6} (1963), 159--173.
 \newblock DOI: 10.1016/0022-247X(63)90001-5.
 
 \bibitem{DavisKahan1970}
 Chandler Davis and W.\ M.\ Kahan.
-\newblock The rotation of eigenvectors by a perturbation. III.
+\newblock \href{https://dl.acm.org/doi/10.1137/0707001}{The rotation of eigenvectors by a perturbation. III.}
 \newblock \emph{SIAM J.\ Numer.\ Anal.}\ \textbf{7} (1970), 1--46.
 
 \bibitem{YWS2015}
 Yi Yu, Tengyao Wang, and Richard J.\ Samworth.
-\newblock A useful variant of the Davis--Kahan theorem for statisticians.
+\newblock \href{https://arxiv.org/abs/1405.0680}{A useful variant of the Davis--Kahan theorem for statisticians.}
 \newblock \emph{Biometrika} \textbf{102} (2015), 315--323.
 \newblock arXiv:1405.0680.
 \end{thebibliography}

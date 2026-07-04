@@ -226,6 +226,44 @@ automation:
         wall_time: "multi-session effort from early 2026 through 2026-06-14"
         spend_usd: "not fully reconstructed"
         hardware: "local development machine plus hosted model access"
+        measured_lower_bound:
+          note: >
+            LOWER BOUND ONLY. Figures below are measured verbatim from retained
+            agent session transcripts by the llm_resource_tally tool (see
+            .llm_resource_tally/; rolled up in lifetime-totals.json,
+            schema llm-resource-tally/v3, generated 2026-07-04). They
+            under-count true project cost for several reasons, so every number
+            is a strict lower bound: (1) only Claude sessions with transcripts
+            still within the agent's retention window (Claude Code defaults to
+            ~30 days) were backfilled; earlier or expired sessions are absent;
+            (2) GPT-5.2/5.5, Codex, and Harmonic Aristotle work listed under
+            automation.methods.models has no token/time capture here at all;
+            (3) non-committing planning/chat/review turns are only included
+            where a reconcile sweep captured them. Tokens are exact for the
+            captured sessions; wall time is cumulative model-session active
+            seconds (concurrent sessions are summed, so it bounds compute-time,
+            not calendar elapsed time).
+          basis: "measured from retained Claude session transcripts only"
+          captured_turns: 3453
+          cumulative_session_wall_time_seconds: 831381
+          cumulative_session_wall_time_hours: 231
+          per_model:
+            - model: "claude-opus-4-8"
+              output_tokens: 5523524
+              billable_input_tokens: 1356014278
+              total_tokens: 1361537802
+            - model: "claude-fable-5"
+              output_tokens: 955200
+              billable_input_tokens: 175838936
+              total_tokens: 176794136
+          totals:
+            output_tokens: 6478724
+            billable_input_tokens: 1531853214
+            total_tokens: 1538331938
+          uncaptured_models:
+            - "GPT-5.2 / ChatGPT 5.2"
+            - "GPT-5.5 family (Codex 5.5 High, GPT-5.5 Thinking)"
+            - "Harmonic Aristotle"
 
 
 challenge_packages:

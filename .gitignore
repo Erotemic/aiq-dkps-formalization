@@ -9,3 +9,5 @@ build/
 *.synctex
 *.pdf
 *.tar.gz
+__pycache__
+*.pyc

@@ -150,8 +150,13 @@ the verbatim quote).
 `𝕜 : RCLike` (ℝ+ℂ), `E` finite-dim; on `LinearMap.IsPositive`. Weakest setting supporting the
 eigenbasis. ~40 LOC (mathlib inline analog is ~6 lines; named def + bookkeeping adds overhead).
 
-### [PD-02] `sqrt_mul_self` + `sq_norm_sqrt_apply`
-- **Status**: open · **File**: PositiveSqrt.lean:47,63 · **Depends on**: PD-01 · **Parallel**: with PD-03 · **Type**: lemma
+### [PD-02] `sqrt_mul_self` + `sq_norm_sqrt_apply`  ✅ DONE
+- **Status**: done · **File**: PositiveSqrt.lean · **Depends on**: PD-01 · **Parallel**: with PD-03 · **Type**: lemma
+- Added helper `sqrt_apply_eigenvectorBasis` (`sqrt (bₖ) = √λₖ • bₖ`, via `LinearMap.sum_apply` +
+  `Finset.sum_eq_single` + `orthonormal_iff_ite`). `sqrt_mul_self` via `(...).toBasis.ext` +
+  `Real.mul_self_sqrt`; `sq_norm_sqrt_apply` via `norm_sq_eq_re_inner` + `sqrt_isSymmetric` + T-symmetry.
+  Sorry-free, axiom-clean (`propext, Classical.choice, Quot.sound`), `lake build` green.
+  NB: `Basis.ext` as a qualified name failed to resolve — use dot notation `b.toBasis.ext`.
 #### Statement
 ```lean
 theorem sqrt_mul_self (hT : T.IsPositive) : hT.sqrt ∘ₗ hT.sqrt = T

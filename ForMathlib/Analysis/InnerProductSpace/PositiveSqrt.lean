@@ -54,10 +54,32 @@ theorem sqrt_isSymmetric {T : E →ₗ[𝕜] E} (hT : T.IsPositive) :
     hT.sqrt.IsSymmetric :=
   hT.sqrt_isPositive.isSymmetric
 
+/-- `sqrt T` acts on the `k`-th eigenvector as multiplication by `√λₖ` (it is diagonal in the same
+eigenbasis as `T`). -/
+theorem sqrt_apply_eigenvectorBasis {T : E →ₗ[𝕜] E} (hT : T.IsPositive)
+    (k : Fin (Module.finrank 𝕜 E)) :
+    hT.sqrt (hT.isSymmetric.eigenvectorBasis rfl k)
+      = (Real.sqrt (hT.isSymmetric.eigenvalues rfl k) : 𝕜)
+          • hT.isSymmetric.eigenvectorBasis rfl k := by
+  classical
+  unfold IsPositive.sqrt
+  rw [LinearMap.sum_apply]
+  refine (Finset.sum_eq_single k ?_ ?_).trans ?_
+  · intro i _ hik
+    simp [rankOne_apply,
+      orthonormal_iff_ite.mp (hT.isSymmetric.eigenvectorBasis rfl).orthonormal i k, if_neg hik]
+  · intro hk; exact absurd (Finset.mem_univ k) hk
+  · simp [rankOne_apply]
+
 /-- **Defining property:** `sqrt T` squares to `T`. HJ 7.2.6 (`B² = A`). -/
 theorem sqrt_mul_self {T : E →ₗ[𝕜] E} (hT : T.IsPositive) :
-    hT.sqrt ∘ₗ hT.sqrt = T :=
-  sorry
+    hT.sqrt ∘ₗ hT.sqrt = T := by
+  apply (hT.isSymmetric.eigenvectorBasis rfl).toBasis.ext
+  intro k
+  have hnn := hT.nonneg_eigenvalues rfl k
+  simp only [OrthonormalBasis.coe_toBasis, LinearMap.comp_apply, sqrt_apply_eigenvectorBasis,
+    map_smul, smul_smul, hT.isSymmetric.apply_eigenvectorBasis]
+  rw [← RCLike.ofReal_mul, Real.mul_self_sqrt hnn]
 
 /-- **Uniqueness:** any positive `S` with `S² = T` is `sqrt T`. HJ 7.2.6(a). -/
 theorem sqrt_unique {T S : E →ₗ[𝕜] E} (hT : T.IsPositive) (hS : S.IsPositive)
@@ -67,8 +89,11 @@ theorem sqrt_unique {T S : E →ₗ[𝕜] E} (hT : T.IsPositive) (hS : S.IsPosit
 /-- **The isometry-defect identity** `‖sqrt T x‖² = re ⟪T x, x⟫`. This is the seed of the polar
 decomposition norm identity `‖A x‖ = ‖|A| x‖`. -/
 theorem sq_norm_sqrt_apply {T : E →ₗ[𝕜] E} (hT : T.IsPositive) (x : E) :
-    ‖hT.sqrt x‖ ^ 2 = RCLike.re ⟪T x, x⟫_𝕜 :=
-  sorry
+    ‖hT.sqrt x‖ ^ 2 = RCLike.re ⟪T x, x⟫_𝕜 := by
+  have hss : hT.sqrt (hT.sqrt x) = T x := by
+    rw [← LinearMap.comp_apply, sqrt_mul_self]
+  rw [norm_sq_eq_re_inner (𝕜 := 𝕜), hT.sqrt_isSymmetric x (hT.sqrt x), hss,
+    ← hT.isSymmetric x x]
 
 /-- `ker (sqrt T) = ker T`. HJ 7.2.7(b) applied through `sqrt T ∘ₗ sqrt T = T`. -/
 theorem ker_sqrt {T : E →ₗ[𝕜] E} (hT : T.IsPositive) :

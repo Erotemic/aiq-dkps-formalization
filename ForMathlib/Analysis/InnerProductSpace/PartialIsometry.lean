@@ -35,15 +35,20 @@ variable {R : Type*} [Monoid R] [StarMul R]
 /-- For a partial isometry, `star u * u` is a projection. Conway VI.3.2. -/
 theorem isStarProjection_star_mul_self {u : R} (hu : IsPartialIsometry u) :
     IsStarProjection (star u * u) :=
-  sorry
+  isStarProjection_iff'.mpr
+    ⟨by rw [mul_assoc, ← mul_assoc u (star u) u, hu], by rw [star_mul, _root_.star_star]⟩
 
 /-- `star u` is a partial isometry when `u` is. -/
-theorem star_star {u : R} (hu : IsPartialIsometry u) : IsPartialIsometry (star u) :=
-  sorry
+theorem star_star {u : R} (hu : IsPartialIsometry u) : IsPartialIsometry (star u) := by
+  unfold IsPartialIsometry
+  rw [_root_.star_star]
+  have h := congrArg star hu
+  rwa [star_mul, star_mul, _root_.star_star, ← mul_assoc] at h
 
 /-- A unitary element is a partial isometry (`star u * u = 1`). -/
-theorem of_star_mul_self_eq_one {u : R} (h : star u * u = 1) : IsPartialIsometry u :=
-  sorry
+theorem of_star_mul_self_eq_one {u : R} (h : star u * u = 1) : IsPartialIsometry u := by
+  unfold IsPartialIsometry
+  rw [mul_assoc, h, mul_one]
 
 end IsPartialIsometry
 

@@ -223,8 +223,12 @@ HJ 7.2.6(a) uniqueness verbatim (decomposition-polar.md I.6). #### Generality: a
 ### [CLEANUP-PD-2] /cleanup on PositiveSqrt.lean (final per-file)
 - **Status**: open · **Depends on**: PD-04 · **Type**: cleanup
 
-### [PD-05] `IsPartialIsometry` def + abstract API
-- **Status**: open · **File**: PartialIsometry.lean:33 · **Depends on**: none · **Parallel**: yes (with PD-01) · **Type**: def + API
+### [PD-05] `IsPartialIsometry` def + abstract API  ✅ DONE
+- **Status**: done · **File**: PartialIsometry.lean · **Depends on**: none · **Type**: def + API
+- `isStarProjection_star_mul_self` via `isStarProjection_iff'` + assoc/`hu`; `star_star` via
+  `congrArg star hu` + `star_mul`; `of_star_mul_self_eq_one` via `mul_assoc`+`h`. All three depend
+  on **no axioms** (pure star-monoid algebra). NB: theorem named `star_star` (not `star`, which
+  shadows the operation); use `_root_.star_star` for the `star(star u)=u` lemma inside.
 #### Statement
 ```lean
 def IsPartialIsometry {R : Type*} [Monoid R] [StarMul R] (u : R) : Prop := u * star u * u = u

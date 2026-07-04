@@ -2,8 +2,8 @@
 Staged for Mathlib: additions to `Mathlib/Analysis/InnerProductSpace/Positive.lean`
 (and a new `Mathlib/Analysis/InnerProductSpace/PositiveSqrt.lean`).
 
-SKELETON (`/develop` Phase 1e Step 2.5): every declaration is stated with `sorry`.
-`lake build` must pass (sorries are warnings). Bodies are filled by `/beastmode` tickets.
+Sub-dev I of the operator polar decomposition project — COMPLETE (sorry-free, axiom-clean:
+`propext, Classical.choice, Quot.sound`). Tickets PD-01..PD-04.
 -/
 
 import Mathlib.Analysis.InnerProductSpace.Positive
@@ -81,10 +81,49 @@ theorem sqrt_mul_self {T : E →ₗ[𝕜] E} (hT : T.IsPositive) :
     map_smul, smul_smul, hT.isSymmetric.apply_eigenvectorBasis]
   rw [← RCLike.ofReal_mul, Real.mul_self_sqrt hnn]
 
+omit [FiniteDimensional 𝕜 E] in
+/-- Pointwise root: if `S ≥ 0` and `S² v = μ² v` with `μ ≥ 0`, then `S v = μ v`. The crux of
+uniqueness — `v` lies in the `μ²`-eigenspace of `S²`, on which the positive `S` acts as `μ`. -/
+private theorem sq_root_pointwise {S : E →ₗ[𝕜] E} (hS : S.IsPositive) {v : E} {μ : ℝ}
+    (hμ : 0 ≤ μ) (hv : S (S v) = ((μ : 𝕜) * (μ : 𝕜)) • v) :
+    S v = (μ : 𝕜) • v := by
+  rcases hμ.eq_or_lt with hμ0 | hμpos
+  · -- μ = 0: `S² v = 0`, so `‖S v‖² = re⟪v, S² v⟫ = 0`.
+    have hμz : (μ : 𝕜) = 0 := by rw [← hμ0]; simp
+    rw [hμz, zero_smul]
+    have hSSv : S (S v) = 0 := by rw [hv, hμz]; simp
+    have h2 : ‖S v‖ ^ 2 = 0 := by
+      rw [norm_sq_eq_re_inner (𝕜 := 𝕜), hS.isSymmetric v (S v), hSSv]; simp
+    have : ‖S v‖ = 0 := by
+      by_contra hne
+      exact absurd h2 (ne_of_gt (pow_pos (lt_of_le_of_ne (norm_nonneg _) (Ne.symm hne)) 2))
+    exact norm_eq_zero.mp this
+  · -- μ > 0: with `w = S v - μ v`, `(S + μ) w = S² v - μ² v = 0`, and `S ≥ 0` forces `w = 0`.
+    set w := S v - (μ : 𝕜) • v with hwdef
+    have hkey : S w + (μ : 𝕜) • w = 0 := by
+      rw [hwdef, map_sub, map_smul, hv, smul_sub, smul_smul]; abel
+    have hSw : S w = (-(μ : 𝕜)) • w := by
+      rw [neg_smul, eq_neg_iff_add_eq_zero]; exact hkey
+    have h1 := hS.re_inner_nonneg_left w
+    rw [hSw, inner_smul_left, map_neg, RCLike.conj_ofReal, ← RCLike.ofReal_neg,
+      RCLike.re_ofReal_mul, ← norm_sq_eq_re_inner] at h1
+    have hw0 : w = 0 := by
+      by_contra hne
+      have hpos : 0 < ‖w‖ ^ 2 :=
+        pow_pos (lt_of_le_of_ne (norm_nonneg _) (fun hq => hne (norm_eq_zero.mp hq.symm))) 2
+      nlinarith [h1, hμpos, hpos]
+    rw [hwdef, sub_eq_zero] at hw0
+    exact hw0
+
 /-- **Uniqueness:** any positive `S` with `S² = T` is `sqrt T`. HJ 7.2.6(a). -/
 theorem sqrt_unique {T S : E →ₗ[𝕜] E} (hT : T.IsPositive) (hS : S.IsPositive)
-    (h : S ∘ₗ S = T) : S = hT.sqrt :=
-  sorry
+    (h : S ∘ₗ S = T) : S = hT.sqrt := by
+  apply (hT.isSymmetric.eigenvectorBasis rfl).toBasis.ext
+  intro i
+  rw [OrthonormalBasis.coe_toBasis, sqrt_apply_eigenvectorBasis]
+  refine sq_root_pointwise hS (Real.sqrt_nonneg _) ?_
+  rw [← LinearMap.comp_apply, h, hT.isSymmetric.apply_eigenvectorBasis,
+    ← RCLike.ofReal_mul, Real.mul_self_sqrt (hT.nonneg_eigenvalues rfl i)]
 
 /-- **The isometry-defect identity** `‖sqrt T x‖² = re ⟪T x, x⟫`. This is the seed of the polar
 decomposition norm identity `‖A x‖ = ‖|A| x‖`. -/
@@ -97,18 +136,25 @@ theorem sq_norm_sqrt_apply {T : E →ₗ[𝕜] E} (hT : T.IsPositive) (x : E) :
 
 /-- `ker (sqrt T) = ker T`. HJ 7.2.7(b) applied through `sqrt T ∘ₗ sqrt T = T`. -/
 theorem ker_sqrt {T : E →ₗ[𝕜] E} (hT : T.IsPositive) :
-    ker hT.sqrt = ker T :=
-  sorry
+    ker hT.sqrt = ker T := by
+  have h := LinearMap.ker_adjoint_comp_self hT.sqrt
+  rw [hT.sqrt_isPositive.adjoint_eq, hT.sqrt_mul_self] at h
+  exact h.symm
 
 /-- `range (sqrt T) = range T`. HJ 7.2.6(c). -/
 theorem range_sqrt {T : E →ₗ[𝕜] E} (hT : T.IsPositive) :
-    range hT.sqrt = range T :=
-  sorry
+    range hT.sqrt = range T := by
+  have hs : (ker hT.sqrt)ᗮ = range hT.sqrt := by
+    rw [LinearMap.orthogonal_ker, hT.sqrt_isPositive.adjoint_eq]
+  have hTr : (ker T)ᗮ = range T := by
+    rw [LinearMap.orthogonal_ker, hT.adjoint_eq]
+  rw [← hs, ← hTr, ker_sqrt hT]
 
 /-- On the invertible (strictly positive) case, `sqrt T` is invertible; this provides the inverse
 square root used by the intertwining unitary. -/
 theorem isUnit_sqrt_of_isUnit {T : E →ₗ[𝕜] E} (hT : T.IsPositive)
-    (hunit : IsUnit T) : IsUnit hT.sqrt :=
-  sorry
+    (hunit : IsUnit T) : IsUnit hT.sqrt := by
+  rw [LinearMap.isUnit_iff_ker_eq_bot] at hunit ⊢
+  rwa [ker_sqrt hT]
 
 end LinearMap.IsPositive

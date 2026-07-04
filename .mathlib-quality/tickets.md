@@ -174,8 +174,10 @@ theorem sq_norm_sqrt_apply (hT : T.IsPositive) (x : E) : ‖hT.sqrt x‖ ^ 2 = R
 #### Sources
 HJ 7.2.6 (`B²=A`). #### Generality: as PD-01. ~45 LOC combined.
 
-### [PD-03] `ker_sqrt` + `range_sqrt`
-- **Status**: open · **File**: PositiveSqrt.lean:69,75 · **Depends on**: PD-02 · **Parallel**: with PD-02 · **Type**: lemma
+### [PD-03] `ker_sqrt` + `range_sqrt`  ✅ DONE
+- **Status**: done · **File**: PositiveSqrt.lean · **Depends on**: PD-02 · **Type**: lemma
+- `ker_sqrt` via `ker_adjoint_comp_self` + `adjoint_eq` + `sqrt_mul_self`; `range_sqrt` via
+  `orthogonal_ker` (range = kerᗮ for symmetric) + `ker_sqrt`. Axiom-clean.
 #### Statement
 ```lean
 theorem ker_sqrt (hT : T.IsPositive) : ker hT.sqrt = ker T
@@ -196,8 +198,13 @@ HJ 7.2.6(c) (`range A = range B`), 7.2.7(b) (`ker`). #### Generality: as PD-01. 
 ### [CLEANUP-PD-1] /cleanup on PositiveSqrt.lean
 - **Status**: open · **Depends on**: PD-03 · **Type**: cleanup (3 tickets on file since start)
 
-### [PD-04] `sqrt_unique` + `isUnit_sqrt_of_isUnit`
-- **Status**: open · **File**: PositiveSqrt.lean:57,81 · **Depends on**: CLEANUP-PD-1 · **Type**: lemma
+### [PD-04] `sqrt_unique` + `isUnit_sqrt_of_isUnit`  ✅ DONE
+- **Status**: done · **File**: PositiveSqrt.lean · **Depends on**: PD-03 · **Type**: lemma
+- `isUnit_sqrt_of_isUnit` via `isUnit_iff_ker_eq_bot` + `ker_sqrt`. `sqrt_unique` via a private
+  pointwise helper `sq_root_pointwise` (S≥0, S²v=μ²v, μ≥0 ⟹ Sv=μv: case μ=0 by ‖Sv‖²=re⟪v,S²v⟫=0;
+  case μ>0 by (S+μ)(Sv−μv)=0 + positivity forcing w=0), then `Basis.ext` on T's eigenbasis with
+  `sqrt_apply_eigenvectorBasis`. All axiom-clean (`propext, Classical.choice, Quot.sound`).
+  **Sub-dev I (PositiveSqrt.lean) is now fully sorry-free.**
 #### Statement
 ```lean
 theorem sqrt_unique (hT : T.IsPositive) (hS : S.IsPositive) (h : S ∘ₗ S = T) : S = hT.sqrt

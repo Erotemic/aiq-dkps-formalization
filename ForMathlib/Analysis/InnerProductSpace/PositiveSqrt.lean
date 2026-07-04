@@ -35,13 +35,19 @@ variable {𝕜 E : Type*} [RCLike 𝕜] [NormedAddCommGroup E] [InnerProductSpac
 /-- **Spectral positive square root** of a positive symmetric operator `T`:
 `sqrt T = ∑ᵢ √λᵢ • (rank-one projection onto the `i`-th eigenvector)`, where `λᵢ ≥ 0` are the
 eigenvalues of `T`. Source: Horn–Johnson Thm 7.2.6. -/
-noncomputable def sqrt {T : E →ₗ[𝕜] E} (_hT : T.IsPositive) : E →ₗ[𝕜] E :=
-  sorry
+noncomputable def sqrt {T : E →ₗ[𝕜] E} (hT : T.IsPositive) : E →ₗ[𝕜] E :=
+  ∑ i : Fin (Module.finrank 𝕜 E),
+    (Real.sqrt (hT.isSymmetric.eigenvalues rfl i) : 𝕜) •
+      (InnerProductSpace.rankOne 𝕜 (hT.isSymmetric.eigenvectorBasis rfl i)
+        (hT.isSymmetric.eigenvectorBasis rfl i)).toLinearMap
 
 /-- The square root is positive. HJ 7.2.6 (it is the PSD square root). -/
 theorem sqrt_isPositive {T : E →ₗ[𝕜] E} (hT : T.IsPositive) :
-    hT.sqrt.IsPositive :=
-  sorry
+    hT.sqrt.IsPositive := by
+  unfold IsPositive.sqrt
+  refine isPositive_sum _ fun i _ => ?_
+  refine IsPositive.smul_of_nonneg ?_ (RCLike.ofReal_nonneg.mpr (Real.sqrt_nonneg _))
+  exact (InnerProductSpace.isPositive_rankOne_self _).toLinearMap
 
 /-- The square root is symmetric. -/
 theorem sqrt_isSymmetric {T : E →ₗ[𝕜] E} (hT : T.IsPositive) :

@@ -118,8 +118,12 @@ below. Result B (BL1–BL6) resumes once Milestone 3 of that board unblocks BL3/
 
 ## Milestone 1 — general polar decomposition
 
-### [PD-01] `IsPositive.sqrt` + positivity/symmetry
-- **Status**: open · **File**: PositiveSqrt.lean:33 · **Depends on**: none · **Parallel**: yes · **Type**: def + API
+### [PD-01] `IsPositive.sqrt` + positivity/symmetry  ✅ DONE
+- **Status**: done · **File**: PositiveSqrt.lean:33 · **Depends on**: none · **Parallel**: yes · **Type**: def + API
+- Def `∑ᵢ √λᵢ • (rankOne eᵢ eᵢ)`; `sqrt_isPositive` via `isPositive_sum` + `smul_of_nonneg` +
+  `isPositive_rankOne_self.toLinearMap`; `sqrt_isSymmetric` derived. Sorry-free, axiom-clean
+  (`propext, Classical.choice, Quot.sound`), `lake build` green (70s). NB: `positivity` hangs on
+  `0 ≤ (√λ : 𝕜)` — use `RCLike.ofReal_nonneg.mpr (Real.sqrt_nonneg _)`.
 #### Statement
 Fill the def body and the two API sorries:
 ```lean

@@ -246,8 +246,17 @@ Conway *A Course in Functional Analysis* 2nd ed. VI.3.1–VI.3.2.
 #### Generality decision
 Abstract `[Monoid R] [StarMul R]` — max generality (both `→ₗ`/`→L` and any C⋆-algebra). ~25 LOC.
 
-### [PD-06] partial-isometry operator characterization
-- **Status**: open · **File**: PartialIsometry.lean:56,62 · **Depends on**: PD-05 · **Type**: lemma
+### [PD-06] partial-isometry operator characterization  ✅ DONE
+- **Status**: done · **File**: PartialIsometry.lean:60,73 · **Depends on**: PD-05 · **Type**: lemma
+- **Impl notes**: Both `isPartialIsometry_iff_norm_map` and
+  `IsPartialIsometry.star_mul_self_eq_starProjection` proved, axiom-clean. Added a private helper
+  `re_inner_star_mul_self` (`‖u x‖²=re⟪(star u*u)x,x⟫`, holds for any operator). `star_mul_self_eq_
+  starProjection` proved *directly* from `hu` via `Submodule.eq_starProjection_of_mem_orthogonal'`
+  (no polarization). Forward `iff` uses it + `starProjection_eq_self_iff`. Backward `iff` needs the
+  polarization lemma `LinearMap.norm_map_iff_inner_map_map` applied to the *restriction*
+  `u ∘ₗ Wᗮ.subtype` (norm-preservation on `W=(ker u)ᗮ` ⟹ inner-preservation on `W`), then
+  `star u (u x) = P x` by inner-nondegeneracy on `W`. Key mathlib: `LinearMap.orthogonal_ker`,
+  `Submodule.orthogonal_orthogonal`, `Submodule.coe_inner`, `ContinuousLinearMap.coe_coe`.
 #### Statement
 ```lean
 theorem isPartialIsometry_iff_norm_map {u : E →ₗ[𝕜] E} :
@@ -264,8 +273,11 @@ theorem IsPartialIsometry.star_mul_self_eq_starProjection (hu : IsPartialIsometr
 #### Sources
 Conway VI.3.2. #### Generality: operator instance, `𝕜 : RCLike`, finite-dim. ~55 LOC combined.
 
-### [PD-07] partial-isometry constructor (isometry-on-a-subspace)
-- **Status**: open · **File**: PartialIsometry.lean:71 · **Depends on**: PD-06 · **Type**: lemma
+### [PD-07] partial-isometry constructor (isometry-on-a-subspace)  ✅ DONE
+- **Status**: done · **File**: PartialIsometry.lean:112 · **Depends on**: PD-06 · **Type**: lemma
+- **Impl notes**: 4-line proof exactly as sketched — `rw [isPartialIsometry_iff_norm_map]`, then
+  `ker u = Kᗮ` + `Submodule.orthogonal_orthogonal` turns `(ker u)ᗮ = Kᗮᗮ = K`, discharge by `hiso`.
+  Completes Sub-dev II (`PartialIsometry.lean`), fully sorry-free / axiom-clean.
 #### Statement
 ```lean
 theorem isPartialIsometry_of_isometryOn {u : E →ₗ[𝕜] E} {K : Submodule 𝕜 E}

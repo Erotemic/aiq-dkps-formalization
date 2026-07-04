@@ -11,3 +11,6 @@ build/
 *.tar.gz
 __pycache__
 *.pyc
+
+# Local reference clones of external Lean repos (not vendored; see dev/external-lean-references.md)
+dev/reference-repos/

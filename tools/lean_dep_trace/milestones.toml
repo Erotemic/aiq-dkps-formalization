@@ -1,0 +1,178 @@
+# Editable milestone map for the DKPSQuench dependency story.
+#
+# The Python tracer matches each milestone by substring against declaration
+# names, fully-qualified names, module names, and docstrings. Edit labels,
+# colors, patterns, and edges to tune the slide-level narrative.
+
+[target]
+name = "DkpsQuench.AcharyyaBridge.queryEfficient_nn_of_second_moment"
+label = "DKPSQuench query-efficiency theorem"
+
+[[milestone]]
+id = "second_moment"
+label = "Second-moment response input"
+subtitle = "Chebyshev / high-probability response means"
+color = "#eadcf8"
+patterns = [
+  "secondMoment",
+  "second_moment",
+  "meas_gt_le_ofReal_secondMoment_div_sq",
+  "highProb_uniformResponseMeanClose_of_secondMoment",
+]
+
+[[milestone]]
+id = "response_to_cmds"
+label = "Response → CMDS Gram closeness"
+subtitle = "Frobenius, entrywise, double-centering"
+color = "#d9d2e9"
+patterns = [
+  "response_mean_close_hp_to_frob_hp",
+  "frob_close_hp_to_entrywise_close_hp",
+  "entrywise_close_to_cmds_entrywise_close_of_bounded",
+  "cmds_entrywise",
+  "response_mean_close",
+]
+
+[[milestone]]
+id = "operator_bridge"
+label = "Entrywise → operator norm"
+subtitle = "finite matrix norm transport"
+color = "#cfe2f3"
+patterns = [
+  "matrixL2OperatorClose_of_entrywise",
+  "OperatorBridge",
+  "entrywise_close_to_opNorm",
+  "opNorm",
+]
+
+[[milestone]]
+id = "courant_fischer_weyl"
+label = "Courant-Fischer / Weyl"
+subtitle = "eigenvalue perturbation control"
+color = "#cfe2f3"
+patterns = [
+  "CourantFischer",
+  "abs_eigenvalues_sub_le",
+  "eigenvalue_le",
+  "Weyl",
+]
+
+[[milestone]]
+id = "davis_kahan"
+label = "Davis-Kahan / rank gap"
+subtitle = "top-d subspace leakage bound"
+color = "#cfe2f3"
+patterns = [
+  "DavisKahan",
+  "sum_cross_inner_sq_le",
+  "sum_cross_norm_inner_eigenvectorBasis_sq_le",
+  "rank_floor",
+  "RankGap",
+]
+
+[[milestone]]
+id = "gram_rigidity"
+label = "Gram rigidity"
+subtitle = "same Gram ⇒ isometric configurations"
+color = "#cfe2f3"
+patterns = [
+  "gram_spectralConfig_eq",
+  "exists_linearIsometryEquiv_of_gram_eq",
+  "GramRealization",
+  "GramRigidity",
+  "gram_eq",
+]
+
+[[milestone]]
+id = "polar_overlap"
+label = "Overlap / polar alignment"
+subtitle = "near-isometry ⇒ exact isometry"
+color = "#cfe2f3"
+patterns = [
+  "Overlap",
+  "PolarFactor",
+  "exists_isometry_close_of_self_adjoint_comp_close",
+  "abs_overlapT_mul_overlap_sub_one_le",
+  "gram_dev_le",
+]
+
+[[milestone]]
+id = "config_error"
+label = "Aligned spectral ConfigError"
+subtitle = "deterministic CMDS perturbation capstone"
+color = "#b6d7a8"
+patterns = [
+  "exists_isometry_configError_spectralConfig_le",
+  "exists_isometry_configError_le_of_entrywise_close",
+  "configBound",
+  "configError_alignedSpectralConfig_le_iff_alignExists",
+]
+
+[[milestone]]
+id = "high_probability_aligned"
+label = "High-probability aligned DKPS error"
+subtitle = "measurable AlignExists event"
+color = "#b6d7a8"
+patterns = [
+  "highProb_aligned_configError_of_entrywise_close",
+  "highProb_aligned_configError_of_response_mean",
+  "measurableSet_setOf_alignExists",
+  "AlignExists",
+]
+
+[[milestone]]
+id = "quench_nn"
+label = "Quench NN MSE bound"
+subtitle = "aligned DKPS error ⇒ nearest-neighbor prediction"
+color = "#d9ead3"
+patterns = [
+  "highProb_queryEfficient_nn_of_subevent",
+  "quench_part2_from_aligned_configError_hp",
+  "queryEfficient_nn_of_response_mean",
+  "queryEfficient_nn_of_second_moment",
+]
+
+[[edge]]
+source = "second_moment"
+target = "response_to_cmds"
+label = "response concentration"
+
+[[edge]]
+source = "response_to_cmds"
+target = "operator_bridge"
+label = "norm transport"
+
+[[edge]]
+source = "operator_bridge"
+target = "config_error"
+label = "perturbation input"
+
+[[edge]]
+source = "courant_fischer_weyl"
+target = "config_error"
+label = "eigenvalue bounds"
+
+[[edge]]
+source = "davis_kahan"
+target = "config_error"
+label = "subspace leakage"
+
+[[edge]]
+source = "gram_rigidity"
+target = "config_error"
+label = "rigidity"
+
+[[edge]]
+source = "polar_overlap"
+target = "config_error"
+label = "alignment"
+
+[[edge]]
+source = "config_error"
+target = "high_probability_aligned"
+label = "event lift"
+
+[[edge]]
+source = "high_probability_aligned"
+target = "quench_nn"
+label = "Quench reduction"

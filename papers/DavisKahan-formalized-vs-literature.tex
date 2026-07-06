@@ -66,16 +66,165 @@ each of them requires.
 % NOTE: Update permalink if underlying proof changes, so this always is up to date wrt to the referenced lean file.
 \noindent Companion note to \href{https://github.com/AIQ-Kitware/aiq-dkps-formalization/blob/375251df7ab712397977635e8f607c11c3a8083d/ForMathlib/Analysis/InnerProductSpace/DavisKahan.lean}{ForMathlib/Analysis/InnerProductSpace/DavisKahan.lean}, part of a larger formalization effort at \href{https://github.com/AIQ-Kitware/aiq-dkps-formalization}{github.com/AIQ-Kitware/aiq-dkps-formalization}.
 
+
+
+\section{Prerequisites}
+
+This note assumes basic familiarity with the following finite-dimensional linear
+algebra concepts.
+
+\begin{itemize}
+\item \textbf{Inner product spaces.}
+We work over $\mathbb R$ or $\mathbb C$.  Inner products let us define
+orthogonality, norms, orthonormal bases, and orthogonal projections.
+
+\item \textbf{Self-adjoint operators.}
+An operator $T$ is self-adjoint if $T=T^*$.  For complex matrices in an
+orthonormal basis, this means $T$ equals its conjugate transpose; over
+$\mathbb R$, this is the usual notion of a symmetric matrix.  Self-adjoint
+operators have real eigenvalues and orthonormal eigenbases.
+
+\item \textbf{Eigenvectors, eigenspaces, and spectral subspaces.}
+An eigenspace is the span of all eigenvectors associated with a given
+eigenvalue.  A spectral subspace is the span of eigenvectors associated with a
+chosen group of eigenvalues, such as the largest $d$ eigenvalues.
+
+\item \textbf{Orthogonal projections.}
+Every subspace $U$ of a finite-dimensional inner product space has an
+orthogonal projection $P_U$.  Comparing subspaces can often be reduced to
+comparing their projection operators.
+
+\item \textbf{Spectral gaps.}
+A spectral gap is a positive separation between a group of eigenvalues of
+interest and the rest of the spectrum.  For ordered eigenvalues
+$\lambda_1\geq\lambda_2\geq\cdots\geq\lambda_n$, the leading-$d$ gap is often
+$\lambda_d-\lambda_{d+1}$.
+
+\item \textbf{Perturbation size.}
+If $S$ is a perturbed version of $T$, the perturbation is $E=S-T$.  Its size is
+measured using a norm, such as the operator norm or the
+Frobenius/Hilbert--Schmidt norm.
+
+\item \textbf{Frobenius/Hilbert--Schmidt norm.}
+For matrices, the Frobenius norm is the square root of the sum of squared
+entry magnitudes.  For operators on finite-dimensional inner product spaces,
+the analogous basis-independent norm is the Hilbert--Schmidt norm.
+\end{itemize}
+
+
+\section{Introduction to Davis--Kahan theory}
+
+Davis--Kahan theory is about the stability of eigenspaces under perturbation.
+Suppose $T$ is a self-adjoint operator and $S=T+E$ is a nearby self-adjoint
+operator. The eigenvalues and eigenvectors of $S$ may differ from those of $T$,
+but if the perturbation $E=S-T$ is small, we would like to know whether the
+important eigenspaces of $S$ remain close to the corresponding eigenspaces of
+$T$.
+
+This question appears naturally in principal component analysis. For example,
+$T$ might be an ideal or population covariance operator, while $S$ is an
+empirical covariance operator estimated from finite data. The leading
+eigenvectors of $T$ define the true principal subspace, while the leading
+eigenvectors of $S$ define the empirical principal subspace. Davis--Kahan theory
+gives deterministic bounds on how far the empirical subspace can be from the true
+subspace.
+
+The main qualitative message is simple: eigenspaces are stable when the
+perturbation is small compared to the relevant spectral gap. More explicitly,
+the amount the eigenspace moves is bounded, up to constants, by the size of the
+perturbation divided by the spectral gap. Thus a small perturbation causes only
+a small rotation when the eigenvalues defining the subspace are well separated
+from the rest of the spectrum. If the gap is tiny, however, even a small
+perturbation can cause a large change, because nearby eigenspaces can mix or
+exchange roles.
+
+It is important that Davis--Kahan theory compares subspaces, not individual
+eigenvectors. Individual eigenvectors are not always stable or canonical. If an
+eigenvalue has multiplicity greater than one, then its eigenspace has many
+possible orthonormal bases, and no single basis is preferred. Even for a
+one-dimensional eigenspace, an eigenvector is only determined up to sign over
+$\mathbb R$, or up to phase over $\mathbb C$. The eigenspace itself is the
+stable geometric object.
+
+There are several equivalent ways to measure the distance between two subspaces.
+One way is through principal angles. If $U$ and $V$ are two $d$-dimensional
+subspaces, their principal angles $\theta_1,\dots,\theta_d$ measure how far the
+directions in one subspace are from the directions in the other. The notation
+$\sin\Theta$ refers to the collection of numbers
+$\sin\theta_1,\dots,\sin\theta_d$. A norm such as
+$|\sin\Theta|_{\mathrm F}$ then measures the total misalignment between the two
+subspaces.
+
+Another way to measure subspace distance is through orthogonal projections. Let
+$P_U$ and $P_V$ be the orthogonal projection operators onto $U$ and $V$. If the
+subspaces are close, then the projections $P_U$ and $P_V$ are close as
+operators. Many versions of Davis--Kahan theory can therefore be stated either
+in terms of principal angles or in terms of projection differences such as
+$|P_U-P_V|_{\mathrm F}$.
+
+A third way is through basis overlaps. Suppose $U$ is spanned by orthonormal
+vectors $u_1,\dots,u_d$, and $V$ is spanned by orthonormal vectors
+$v_1,\dots,v_d$. To measure how far $U$ is from $V$, one can measure how much of
+the $u_i$ directions lie outside $V$. If
+$v_{d+1},\dots,v_n$ span the orthogonal complement of $V$, then the quantity
+\begin{equation}
+\sum_{i=1}^d \sum_{j=d+1}^n |\langle u_i, v_j\rangle|^2
+\end{equation}
+measures how much the $U$-subspace leaks into the complement of the
+$V$-subspace. This is another expression of the same $\sin\Theta$ geometry.
+Here ``trailing'' means the complementary block $v_{d+1},\dots,v_n$, not another
+block of size $d$.
+
+The current Lean formalization is closest to this basis-overlap viewpoint, with
+additional lemmas connecting it to projection distance. It works in a
+finite-dimensional inner product space over $\mathbb R$ or $\mathbb C$, for
+self-adjoint operators $T$ and $S$. The formalized theorem fixes a block size
+$d$ and compares the span of the first $d$ eigenvectors of one operator with the
+span of the first $d$ eigenvectors of the other. The theorem itself does not
+require the eigenvalues to be globally sorted; it only requires an explicit gap
+hypothesis separating the chosen block from its complement. In the usual
+application, however, the chosen block is the leading eigenspace associated with
+the largest $d$ eigenvalues.
+
+The main formalized estimate is a Frobenius/Hilbert--Schmidt version of the
+Davis--Kahan $\sin\Theta$ bound. It proves that a spectral gap controls the
+cross-overlap between the chosen eigenspace of one operator and the complementary
+eigenspace of the other. The proof then bounds this cross-overlap by
+successively larger and easier-to-use quantities: first by an off-diagonal block
+of the perturbation, then by a one-sided residual, and finally by the full
+Hilbert--Schmidt norm of $S-T$. Additional lemmas use Weyl-type eigenvalue
+perturbation bounds to turn more standard population-gap assumptions into the
+hybrid gap assumption used by the main theorem.
+
+This means the current formalization contains a substantial Frobenius-norm core
+of Davis--Kahan theory, but it is not yet a complete formalization of all the
+forms found in the literature. In particular, it does not yet provide a full
+canonical-angle API, the dimension-free operator-norm $\sin\Theta$ theorem,
+general unitarily invariant norm versions, arbitrary spectral intervals, the
+aligned-basis conclusion from Yu--Wang--Samworth, or the full rotation theory
+from Davis's 1963 paper. The purpose of this note is to explain exactly which
+part has been formalized, how it relates to the paper statements, and what still
+remains to be built.
+
+
+
+
 \section{Setup and notation}
 
-Let $\HH$ be a finite-dimensional inner product space over
-$\mathbb K\in\{\mathbb R,\mathbb C\}$ with $\dim\HH=n$, and let $T,S:\HH\to\HH$ be
-self-adjoint.  Write the eigenvalues and an orthonormal eigenbasis of $T$ as
-$\lambda_1(T),\dots,\lambda_n(T)$ and $u_1,\dots,u_n$, and those of $S$ as
-$\lambda_1(S),\dots,\lambda_n(S)$ and $v_1,\dots,v_n$.  Fix a block size $d$; in
-the intended application indices $1,\dots,d$ are the top $d$ eigenvalues, while
-the statements below use only the split $\{1,\dots,d\}$ against
-$\{d+1,\dots,n\}$, so sorting is not required.
+Let $\mathcal H$ be a finite-dimensional inner product space over
+$\mathbb K\in{\mathbb R,\mathbb C}$ with $\dim\mathcal H=n$, and let
+$T,S:\mathcal H\to\mathcal H$ be self-adjoint.  Write the eigenvalues and an
+orthonormal eigenbasis of $T$ as $\lambda_1(T),\dots,\lambda_n(T)$ and
+$u_1,\dots,u_n$, and those of $S$ as $\lambda_1(S),\dots,\lambda_n(S)$ and
+$v_1,\dots,v_n$.  Fix a block size $d$.  In the intended top-eigenspace
+application, the indices $1,\dots,d$ denote the leading eigenvectors, while
+$d+1,\dots,n$ denote the complementary trailing eigenspace.  The formalized
+hybrid-gap statement itself, however, only uses the block split
+${1,\dots,d}$ versus ${d+1,\dots,n}$ together with an explicit separation
+hypothesis between the two blocks; it does not require the eigenvalues to be
+globally sorted unless one wants to derive that separation hypothesis from a
+standard leading-eigenvalue gap.
+
 
 Let $P$, $\widehat P$, and $Q=I-\widehat P$ be the orthogonal projections onto,
 respectively,

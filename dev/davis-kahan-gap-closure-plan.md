@@ -243,11 +243,13 @@ Frobenius branch of `‖sinΘ‖_F ≤ 2·min{√d‖E‖_op, ‖E‖_F}/Δ` the
 (`2‖E‖_F/Δ` can be far below the trivial bound `√d`). YWS's own residual
 sandwich with Hoffman–Wielandt closes it uniformly.
 
-**W2.1 — Sorted rearrangement lemma. Difficulty 2/5.**
-For antitone `λ μ : Fin n → ℝ` and any `σ : Equiv.Perm (Fin n)`:
-`∑ i, λ i * μ (σ i) ≤ ∑ i, λ i * μ i`. Route: Mathlib
-`Algebra/Order/Rearrangement.lean` (`MonovaryOn.sum_smul_comp_perm_le_sum_smul`);
-antitone-with-antitone monovary. Mostly API plumbing.
+**W2.1 — Sorted rearrangement lemma. Difficulty 2/5. ✅ DONE 2026-07-07
+(Opus).** `HoffmanWielandt.lean` (new file):
+`sum_mul_comp_perm_le_sum_mul_of_antitone` —
+`∑ i, f (σ i) * g i ≤ ∑ i, f i * g i` for antitone `f g : Fin n → ℝ`. One line
+via `Antitone.monovary` + `Monovary.sum_comp_perm_smul_le_sum_smul`. Registered,
+build green, axiom-clean. (Note: needs `import Mathlib.Data.Real.Basic` — the
+abstract Rearrangement file does not pull in ℝ's order instances.)
 
 **W2.2 — Trace inequality `tr(TS) ≤ ∑ λᵢ(T)·λᵢ(S)`. Difficulty 3/5.**
 Statement (basis-free trace avoided): `∑ₖ re ⟪T (vₖ), S? …⟫` — cleanest form:

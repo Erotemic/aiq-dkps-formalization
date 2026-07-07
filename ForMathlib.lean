@@ -18,6 +18,7 @@ import ForMathlib.Analysis.InnerProductSpace.PositiveSqrt
 import ForMathlib.Analysis.InnerProductSpace.RotationBound
 import ForMathlib.Analysis.InnerProductSpace.SchurHorn
 import ForMathlib.Analysis.InnerProductSpace.Spectrum
+import ForMathlib.Analysis.InnerProductSpace.SylvesterBound
 import ForMathlib.Analysis.Matrix.EntrywiseOpNorm
 import ForMathlib.Analysis.Matrix.SpectralFunctionMeasurable
 import ForMathlib.Analysis.Matrix.EntrywiseEigenvalue

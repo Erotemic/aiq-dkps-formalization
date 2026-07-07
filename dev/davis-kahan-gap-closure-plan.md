@@ -186,7 +186,12 @@ and restate the sharp DK rung as a thin wrapper over
 Extend `DavisKahan.lean` (or new sibling `DavisKahanInterval.lean` if the file
 would pass ~900 lines).
 
-**W1.1 — Engine over an arbitrary index block. Difficulty 2/5.**
+**W1.1 — Engine over an arbitrary index block. Difficulty 2/5. ✅ DONE
+2026-07-07 (Opus).** Added `sum_cross_norm_inner_eigenvectorBasis_sq_le_{offDiag,residual,hilbertSchmidt}_block`
+taking independent row/column finsets `s t : Finset (Fin n)` with membership gap
+hypothesis `∀ i ∈ s, ∀ j ∈ t, gap ≤ |λᵢ(T) − λⱼ(S)|`; the three `d`-block
+lemmas are now one-line corollaries (signatures unchanged, external Acharyya
+consumer intact). Library build green.
 The cross-term engine never uses that the block is `{i | i < d}`; the
 projector section already takes `s : Finset (Fin m)`. Generalize
 `sum_cross_norm_inner_eigenvectorBasis_sq_le_offDiag/_residual/_hilbertSchmidt`
@@ -197,7 +202,14 @@ Keep the current `d`-block statements as one-line corollaries
 re-run the same proofs with `Finset.sum_filter`-style bookkeeping replaced by
 `∈ s` / `∉ s`.
 
-**W1.2 — Interval-selected subspaces and two-sided gap. Difficulty 2/5.**
+**W1.2 — Interval-selected subspaces and two-sided gap. Difficulty 2/5. ✅ DONE
+2026-07-07 (Opus).** Added `sum_cross_interval_sq_le_hilbertSchmidt` (rows =
+`{i | λᵢ(T) ∈ [a,b]}`, any column block avoiding the `g`-enlarged interval),
+the two-sided Weyl bridge `notMem_Ioo_eigenvalues_of_notMem_Ioo`, and the
+composed `sum_cross_interval_sq_le_hilbertSchmidt_of_eigengap` (population
+interval gap `δ`, `ε`-close ⇒ sharp bound with gap `δ − ε`). Uses the W1.1
+block engine with independent row/column finsets exactly as the pitfall note
+anticipated. G5 closed.
 Define the selected block by spectral membership:
 `s := univ.filter (fun i => hT.eigenvalues hn i ∈ Set.Icc a b)` and state:
 if every eigenvalue of `S` outside the enlarged interval

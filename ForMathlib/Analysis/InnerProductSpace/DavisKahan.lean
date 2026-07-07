@@ -165,6 +165,106 @@ theorem sum_norm_inner_eigenvectorBasis_map_sub_sq_le
   rw [sum_sq_norm_inner_eigenvectorBasis_map_sub_eq hT hS hn]
   exact sum_norm_eigenvectorBasis_map_sub_sq_le hS hn hε
 
+/-! ### General index blocks
+
+The engine and its two Frobenius corollaries hold for the overlap over *any* pair
+of index blocks: a row block `s` (selecting eigenvectors of `T`) and a column
+block `t` (selecting eigenvectors of `S`), with a gap hypothesis separating the
+selected eigenvalues of `T` from the selected eigenvalues of `S`.  No
+relationship between `s` and `t` is required — the sorted leading-cutoff case
+`s = {i | (i : ℕ) < d}`, `t = {j | d ≤ (j : ℕ)}` is one instance, and general
+spectral intervals with independent `T`- and `S`-blocks are another.  The
+`d`-block statements below are one-line corollaries. -/
+
+/--
+**Cross-block engine over arbitrary index blocks.** For a row block `s` and a
+column block `t`, if `gap ≤ |λᵢ(T) − λⱼ(S)|` for every selected pair `i ∈ s`,
+`j ∈ t`, then the block overlap is controlled by the same block of the
+perturbation over `gap²`:
+`∑_{i ∈ s} ∑_{j ∈ t} ‖⟪uᵢ, v̂ⱼ⟫‖² ≤ (∑_{i ∈ s} ∑_{j ∈ t} ‖⟪uᵢ, (S − T) v̂ⱼ⟫‖²) / gap²`.
+The cross-term identity `⟪uᵢ, (S − T) v̂ⱼ⟫ = (λ̂ⱼ − λᵢ) ⟪uᵢ, v̂ⱼ⟫` gives
+`gap² ‖⟪uᵢ, v̂ⱼ⟫‖² ≤ ‖⟪uᵢ, (S − T) v̂ⱼ⟫‖²` pairwise, summed over the block. -/
+theorem sum_cross_norm_inner_eigenvectorBasis_sq_le_offDiag_block
+    (hT : T.IsSymmetric) (hS : S.IsSymmetric) (hn : finrank 𝕜 E = n)
+    (s t : Finset (Fin n)) {gap : ℝ} (hgap_pos : 0 < gap)
+    (hgap : ∀ i ∈ s, ∀ j ∈ t, gap ≤ |hT.eigenvalues hn i - hS.eigenvalues hn j|) :
+    ∑ i ∈ s, ∑ j ∈ t,
+        ‖⟪hT.eigenvectorBasis hn i, hS.eigenvectorBasis hn j⟫_𝕜‖ ^ 2
+      ≤ (∑ i ∈ s, ∑ j ∈ t,
+            ‖⟪hT.eigenvectorBasis hn i, (S - T) (hS.eigenvectorBasis hn j)⟫_𝕜‖ ^ 2)
+        / gap ^ 2 := by
+  set u := hT.eigenvectorBasis hn with hu
+  set v := hS.eigenvectorBasis hn with hv
+  -- Per-pair: `gap² ‖⟪uᵢ, v̂ⱼ⟫‖² ≤ ‖⟪uᵢ, (S − T) v̂ⱼ⟫‖²` for selected pairs.
+  have hpair : ∀ i ∈ s, ∀ j ∈ t,
+      gap ^ 2 * ‖⟪u i, v j⟫_𝕜‖ ^ 2 ≤ ‖⟪u i, (S - T) (v j)⟫_𝕜‖ ^ 2 := by
+    intro i hi j hj
+    have hsq : ‖⟪u i, (S - T) (v j)⟫_𝕜‖ ^ 2
+        = (hS.eigenvalues hn j - hT.eigenvalues hn i) ^ 2 * ‖⟪u i, v j⟫_𝕜‖ ^ 2 := by
+      rw [hu, hv, inner_eigenvectorBasis_map_sub_eigenvectorBasis hT hS hn i j,
+        norm_mul, RCLike.norm_ofReal, mul_pow, sq_abs]
+    have hsqgap : gap ^ 2 ≤ (hS.eigenvalues hn j - hT.eigenvalues hn i) ^ 2 := by
+      rw [show (hS.eigenvalues hn j - hT.eigenvalues hn i) ^ 2
+          = |hT.eigenvalues hn i - hS.eigenvalues hn j| ^ 2 by rw [sq_abs]; ring]
+      exact pow_le_pow_left₀ hgap_pos.le (hgap i hi j hj) 2
+    rw [hsq]
+    exact mul_le_mul_of_nonneg_right hsqgap (sq_nonneg _)
+  have hcross : gap ^ 2 * (∑ i ∈ s, ∑ j ∈ t, ‖⟪u i, v j⟫_𝕜‖ ^ 2)
+      ≤ ∑ i ∈ s, ∑ j ∈ t, ‖⟪u i, (S - T) (v j)⟫_𝕜‖ ^ 2 := by
+    rw [Finset.mul_sum]
+    refine Finset.sum_le_sum fun i hi => ?_
+    rw [Finset.mul_sum]
+    exact Finset.sum_le_sum fun j hj => hpair i hi j hj
+  rw [le_div_iff₀ (by positivity : (0 : ℝ) < gap ^ 2), mul_comm]
+  exact hcross
+
+/--
+**Residual form over arbitrary index blocks.** Enlarging the column block `t` to
+all columns and applying row Parseval bounds the block overlap by the
+perturbation restricted to the selected `T`-eigenvectors:
+`∑_{i ∈ s} ∑_{j ∈ t} ‖⟪uᵢ, v̂ⱼ⟫‖² ≤ (∑_{i ∈ s} ‖(S − T) uᵢ‖²) / gap²`. -/
+theorem sum_cross_norm_inner_eigenvectorBasis_sq_le_residual_block
+    (hT : T.IsSymmetric) (hS : S.IsSymmetric) (hn : finrank 𝕜 E = n)
+    (s t : Finset (Fin n)) {gap : ℝ} (hgap_pos : 0 < gap)
+    (hgap : ∀ i ∈ s, ∀ j ∈ t, gap ≤ |hT.eigenvalues hn i - hS.eigenvalues hn j|) :
+    ∑ i ∈ s, ∑ j ∈ t,
+        ‖⟪hT.eigenvectorBasis hn i, hS.eigenvectorBasis hn j⟫_𝕜‖ ^ 2
+      ≤ (∑ i ∈ s, ‖(S - T) (hT.eigenvectorBasis hn i)‖ ^ 2) / gap ^ 2 := by
+  refine (sum_cross_norm_inner_eigenvectorBasis_sq_le_offDiag_block
+    hT hS hn s t hgap_pos hgap).trans ?_
+  gcongr with i hi
+  calc ∑ j ∈ t, ‖⟪hT.eigenvectorBasis hn i, (S - T) (hS.eigenvectorBasis hn j)⟫_𝕜‖ ^ 2
+      ≤ ∑ j : Fin n, ‖⟪hT.eigenvectorBasis hn i, (S - T) (hS.eigenvectorBasis hn j)⟫_𝕜‖ ^ 2 :=
+        Finset.sum_le_sum_of_subset_of_nonneg (Finset.subset_univ t) fun j _ _ => sq_nonneg _
+    _ = ‖(S - T) (hT.eigenvectorBasis hn i)‖ ^ 2 :=
+        sum_sq_norm_inner_eigenvectorBasis_map_sub_eq_row hT hS hn i
+
+/--
+**Sharp (Hilbert–Schmidt) form over arbitrary index blocks.** Enlarging both
+blocks to the full index set bounds the block overlap by the full squared
+Frobenius norm of the perturbation over `gap²`:
+`∑_{i ∈ s} ∑_{j ∈ t} ‖⟪uᵢ, v̂ⱼ⟫‖² ≤ (∑ⱼ ‖(S − T) v̂ⱼ‖²) / gap²`. -/
+theorem sum_cross_norm_inner_eigenvectorBasis_sq_le_hilbertSchmidt_block
+    (hT : T.IsSymmetric) (hS : S.IsSymmetric) (hn : finrank 𝕜 E = n)
+    (s t : Finset (Fin n)) {gap : ℝ} (hgap_pos : 0 < gap)
+    (hgap : ∀ i ∈ s, ∀ j ∈ t, gap ≤ |hT.eigenvalues hn i - hS.eigenvalues hn j|) :
+    ∑ i ∈ s, ∑ j ∈ t,
+        ‖⟪hT.eigenvectorBasis hn i, hS.eigenvectorBasis hn j⟫_𝕜‖ ^ 2
+      ≤ (∑ j : Fin n, ‖(S - T) (hS.eigenvectorBasis hn j)‖ ^ 2) / gap ^ 2 := by
+  refine (sum_cross_norm_inner_eigenvectorBasis_sq_le_offDiag_block
+    hT hS hn s t hgap_pos hgap).trans ?_
+  gcongr
+  calc ∑ i ∈ s, ∑ j ∈ t,
+        ‖⟪hT.eigenvectorBasis hn i, (S - T) (hS.eigenvectorBasis hn j)⟫_𝕜‖ ^ 2
+      ≤ ∑ i : Fin n, ∑ j : Fin n,
+          ‖⟪hT.eigenvectorBasis hn i, (S - T) (hS.eigenvectorBasis hn j)⟫_𝕜‖ ^ 2 :=
+        (Finset.sum_le_sum fun i _ => Finset.sum_le_sum_of_subset_of_nonneg
+            (Finset.subset_univ t) fun j _ _ => sq_nonneg _).trans
+          (Finset.sum_le_sum_of_subset_of_nonneg (Finset.subset_univ s)
+            fun i _ _ => Finset.sum_nonneg fun j _ => sq_nonneg _)
+    _ = ∑ j : Fin n, ‖(S - T) (hS.eigenvectorBasis hn j)‖ ^ 2 :=
+        sum_sq_norm_inner_eigenvectorBasis_map_sub_eq hT hS hn
+
 /--
 **Cross-block (off-diagonal) form — the engine.** Suppose `T`, `S` are self-adjoint
 and there is a positive `gap` separating the first `d` eigenvalues of `T` from the
@@ -193,39 +293,9 @@ theorem sum_cross_norm_inner_eigenvectorBasis_sq_le_offDiag
       ≤ (∑ i ∈ Finset.univ.filter (fun i : Fin n => (i : ℕ) < d),
           ∑ j ∈ Finset.univ.filter (fun j : Fin n => d ≤ (j : ℕ)),
             ‖⟪hT.eigenvectorBasis hn i, (S - T) (hS.eigenvectorBasis hn j)⟫_𝕜‖ ^ 2)
-        / gap ^ 2 := by
-  set u := hT.eigenvectorBasis hn with hu
-  set v := hS.eigenvectorBasis hn with hv
-  -- Per-pair: `gap² ‖⟪uᵢ, v̂ⱼ⟫‖² ≤ ‖⟪uᵢ, (S − T) v̂ⱼ⟫‖²` for cross pairs.
-  have hpair : ∀ i j : Fin n, (i : ℕ) < d → d ≤ (j : ℕ) →
-      gap ^ 2 * ‖⟪u i, v j⟫_𝕜‖ ^ 2 ≤ ‖⟪u i, (S - T) (v j)⟫_𝕜‖ ^ 2 := by
-    intro i j hi hj
-    -- The cross-term identity turns the perturbation entry into the eigenvalue
-    -- difference times the overlap.
-    have hsq : ‖⟪u i, (S - T) (v j)⟫_𝕜‖ ^ 2
-        = (hS.eigenvalues hn j - hT.eigenvalues hn i) ^ 2 * ‖⟪u i, v j⟫_𝕜‖ ^ 2 := by
-      rw [hu, hv, inner_eigenvectorBasis_map_sub_eigenvectorBasis hT hS hn i j,
-        norm_mul, RCLike.norm_ofReal, mul_pow, sq_abs]
-    have hsqgap : gap ^ 2 ≤ (hS.eigenvalues hn j - hT.eigenvalues hn i) ^ 2 := by
-      rw [show (hS.eigenvalues hn j - hT.eigenvalues hn i) ^ 2
-          = |hT.eigenvalues hn i - hS.eigenvalues hn j| ^ 2 by rw [sq_abs]; ring]
-      exact pow_le_pow_left₀ hgap_pos.le (hgap i j hi hj) 2
-    rw [hsq]
-    exact mul_le_mul_of_nonneg_right hsqgap (sq_nonneg _)
-  -- Sum the per-pair bound over the cross block.
-  have hcross : gap ^ 2 * (∑ i ∈ Finset.univ.filter (fun i : Fin n => (i : ℕ) < d),
-        ∑ j ∈ Finset.univ.filter (fun j : Fin n => d ≤ (j : ℕ)),
-          ‖⟪u i, v j⟫_𝕜‖ ^ 2)
-      ≤ ∑ i ∈ Finset.univ.filter (fun i : Fin n => (i : ℕ) < d),
-          ∑ j ∈ Finset.univ.filter (fun j : Fin n => d ≤ (j : ℕ)),
-            ‖⟪u i, (S - T) (v j)⟫_𝕜‖ ^ 2 := by
-    rw [Finset.mul_sum]
-    refine Finset.sum_le_sum fun i hi => ?_
-    rw [Finset.mul_sum]
-    refine Finset.sum_le_sum fun j hj => ?_
-    exact hpair i j (Finset.mem_filter.mp hi).2 (Finset.mem_filter.mp hj).2
-  rw [le_div_iff₀ (by positivity : (0 : ℝ) < gap ^ 2), mul_comm]
-  exact hcross
+        / gap ^ 2 :=
+  sum_cross_norm_inner_eigenvectorBasis_sq_le_offDiag_block hT hS hn _ _ hgap_pos
+    fun i hi j hj => hgap i j (Finset.mem_filter.mp hi).2 (Finset.mem_filter.mp hj).2
 
 /--
 **Davis–Kahan one-sided residual form (Frobenius).** The overlap is bounded by the
@@ -243,17 +313,9 @@ theorem sum_cross_norm_inner_eigenvectorBasis_sq_le_residual
       ∑ j ∈ Finset.univ.filter (fun j : Fin n => d ≤ (j : ℕ)),
         ‖⟪hT.eigenvectorBasis hn i, hS.eigenvectorBasis hn j⟫_𝕜‖ ^ 2
       ≤ (∑ i ∈ Finset.univ.filter (fun i : Fin n => (i : ℕ) < d),
-          ‖(S - T) (hT.eigenvectorBasis hn i)‖ ^ 2) / gap ^ 2 := by
-  refine (sum_cross_norm_inner_eigenvectorBasis_sq_le_offDiag
-    hT hS hn d hgap_pos hgap).trans ?_
-  gcongr with i hi
-  calc ∑ j ∈ Finset.univ.filter (fun j : Fin n => d ≤ (j : ℕ)),
-        ‖⟪hT.eigenvectorBasis hn i, (S - T) (hS.eigenvectorBasis hn j)⟫_𝕜‖ ^ 2
-      ≤ ∑ j : Fin n, ‖⟪hT.eigenvectorBasis hn i, (S - T) (hS.eigenvectorBasis hn j)⟫_𝕜‖ ^ 2 :=
-        Finset.sum_le_sum_of_subset_of_nonneg (Finset.filter_subset _ _)
-          fun j _ _ => sq_nonneg _
-    _ = ‖(S - T) (hT.eigenvectorBasis hn i)‖ ^ 2 :=
-        sum_sq_norm_inner_eigenvectorBasis_map_sub_eq_row hT hS hn i
+          ‖(S - T) (hT.eigenvectorBasis hn i)‖ ^ 2) / gap ^ 2 :=
+  sum_cross_norm_inner_eigenvectorBasis_sq_le_residual_block hT hS hn _ _ hgap_pos
+    fun i hi j hj => hgap i j (Finset.mem_filter.mp hi).2 (Finset.mem_filter.mp hj).2
 
 /--
 **Sharp Davis–Kahan cross-block bound (Frobenius sin-Θ).** The overlap is bounded by the
@@ -274,21 +336,9 @@ theorem sum_cross_norm_inner_eigenvectorBasis_sq_le_hilbertSchmidt
     ∑ i ∈ Finset.univ.filter (fun i : Fin n => (i : ℕ) < d),
       ∑ j ∈ Finset.univ.filter (fun j : Fin n => d ≤ (j : ℕ)),
         ‖⟪hT.eigenvectorBasis hn i, hS.eigenvectorBasis hn j⟫_𝕜‖ ^ 2
-      ≤ (∑ j : Fin n, ‖(S - T) (hS.eigenvectorBasis hn j)‖ ^ 2) / gap ^ 2 := by
-  refine (sum_cross_norm_inner_eigenvectorBasis_sq_le_offDiag
-    hT hS hn d hgap_pos hgap).trans ?_
-  gcongr
-  calc ∑ i ∈ Finset.univ.filter (fun i : Fin n => (i : ℕ) < d),
-        ∑ j ∈ Finset.univ.filter (fun j : Fin n => d ≤ (j : ℕ)),
-          ‖⟪hT.eigenvectorBasis hn i, (S - T) (hS.eigenvectorBasis hn j)⟫_𝕜‖ ^ 2
-      ≤ ∑ i : Fin n, ∑ j : Fin n,
-          ‖⟪hT.eigenvectorBasis hn i, (S - T) (hS.eigenvectorBasis hn j)⟫_𝕜‖ ^ 2 :=
-        (Finset.sum_le_sum fun i _ => Finset.sum_le_sum_of_subset_of_nonneg
-            (Finset.filter_subset _ _) fun j _ _ => sq_nonneg _).trans
-          (Finset.sum_le_sum_of_subset_of_nonneg (Finset.filter_subset _ _)
-            fun i _ _ => Finset.sum_nonneg fun j _ => sq_nonneg _)
-    _ = ∑ j : Fin n, ‖(S - T) (hS.eigenvectorBasis hn j)‖ ^ 2 :=
-        sum_sq_norm_inner_eigenvectorBasis_map_sub_eq hT hS hn
+      ≤ (∑ j : Fin n, ‖(S - T) (hS.eigenvectorBasis hn j)‖ ^ 2) / gap ^ 2 :=
+  sum_cross_norm_inner_eigenvectorBasis_sq_le_hilbertSchmidt_block hT hS hn _ _ hgap_pos
+    fun i hi j hj => hgap i j (Finset.mem_filter.mp hi).2 (Finset.mem_filter.mp hj).2
 
 /--
 **Davis–Kahan cross-block bound (crude operator-norm form).**
@@ -449,6 +499,82 @@ theorem sum_cross_norm_inner_eigenvectorBasis_sq_le_of_rank_floor
           sum_cross_norm_inner_eigenvectorBasis_sq_le hT hS hn d
             (by positivity : (0 : ℝ) < α / 2) hgap hε
     _ = 4 * (n : ℝ) * ε ^ 2 / α ^ 2 := by field_simp; ring
+
+/-! ### General spectral intervals
+
+Instead of a sorted leading cutoff, select the `T`-block by an interval:
+`s = {i | λᵢ(T) ∈ [a, b]}`.  Whenever the `S`-column block `t` avoids the
+`g`-enlarged interval `(a − g, b + g)`, the two-block engine applies with gap
+`g`, giving the sharp Frobenius sin-Θ bound between the interval subspace of `T`
+and the chosen trailing subspace of `S`.  A two-sided Weyl bridge derives the
+separation from a population interval gap of `T` alone. -/
+
+/-- If `x` lies in `[a, b]` and `y` avoids the `g`-enlarged interval
+`(a − g, b + g)`, then `x` and `y` are at least `g` apart.  The real-analysis
+core of the interval separation. -/
+private theorem le_abs_sub_of_mem_Icc_of_notMem_Ioo {a b g x y : ℝ}
+    (hx : x ∈ Set.Icc a b) (hy : y ∉ Set.Ioo (a - g) (b + g)) : g ≤ |x - y| := by
+  rw [Set.mem_Icc] at hx
+  rw [Set.mem_Ioo, not_and_or, not_lt, not_lt] at hy
+  rw [le_abs]
+  rcases hy with hy | hy
+  · exact Or.inl (by linarith [hx.1])
+  · exact Or.inr (by linarith [hx.2])
+
+/--
+**Sharp interval sin-Θ bound.** Let the `T`-block be the eigenvectors with
+eigenvalue in `[a, b]`, and let `t` be any `S`-column block whose eigenvalues
+avoid the `g`-enlarged interval `(a − g, b + g)`.  Then the overlap between the
+`T`-interval subspace and `span (v̂ⱼ : j ∈ t)` obeys the sharp bound
+`∑ ∑ ‖⟪uᵢ, v̂ⱼ⟫‖² ≤ (∑ⱼ ‖(S − T) v̂ⱼ‖²) / g²`. -/
+theorem sum_cross_interval_sq_le_hilbertSchmidt
+    (hT : T.IsSymmetric) (hS : S.IsSymmetric) (hn : finrank 𝕜 E = n)
+    {a b g : ℝ} (hg_pos : 0 < g) (t : Finset (Fin n))
+    (hsep : ∀ j ∈ t, hS.eigenvalues hn j ∉ Set.Ioo (a - g) (b + g)) :
+    ∑ i ∈ Finset.univ.filter (fun i : Fin n => hT.eigenvalues hn i ∈ Set.Icc a b),
+      ∑ j ∈ t,
+        ‖⟪hT.eigenvectorBasis hn i, hS.eigenvectorBasis hn j⟫_𝕜‖ ^ 2
+      ≤ (∑ j : Fin n, ‖(S - T) (hS.eigenvectorBasis hn j)‖ ^ 2) / g ^ 2 :=
+  sum_cross_norm_inner_eigenvectorBasis_sq_le_hilbertSchmidt_block hT hS hn _ t hg_pos
+    fun _ hi j hj =>
+      le_abs_sub_of_mem_Icc_of_notMem_Ioo (Finset.mem_filter.mp hi).2 (hsep j hj)
+
+/--
+**Two-sided Weyl bridge for intervals.** If every `T`-eigenvalue at an index in
+`t` avoids the `δ`-enlarged interval `(a − δ, b + δ)`, and `S` is
+`ε`-operator-close to `T`, then every `S`-eigenvalue at an index in `t` avoids
+the smaller `(δ − ε)`-enlarged interval `(a − (δ − ε), b + (δ − ε))`.  This is
+`gap_of_eigengap` run on both interval endpoints via Weyl's inequality. -/
+theorem notMem_Ioo_eigenvalues_of_notMem_Ioo
+    (hT : T.IsSymmetric) (hS : S.IsSymmetric) (hn : finrank 𝕜 E = n)
+    {a b δ ε : ℝ} (t : Finset (Fin n))
+    (htail : ∀ j ∈ t, hT.eigenvalues hn j ∉ Set.Ioo (a - δ) (b + δ))
+    (hε : ∀ x : E, ‖(T - S) x‖ ≤ ε * ‖x‖) :
+    ∀ j ∈ t, hS.eigenvalues hn j ∉ Set.Ioo (a - (δ - ε)) (b + (δ - ε)) := by
+  intro j hj
+  have hw := abs_le.mp (abs_eigenvalues_sub_le hT hS hn hε j)
+  have htj := htail j hj
+  rw [Set.mem_Ioo, not_and_or, not_lt, not_lt] at htj ⊢
+  rcases htj with h | h
+  · exact Or.inl (by linarith [hw.1])
+  · exact Or.inr (by linarith [hw.2])
+
+/--
+**Sharp interval sin-Θ bound from a population interval gap.** Composition of the
+Weyl bridge with the interval bound: if the `T`-eigenvalues at indices in `t`
+avoid the `δ`-enlarged interval and `S` is `ε`-operator-close with `ε < δ`, the
+overlap obeys the sharp bound with gap `δ − ε`. -/
+theorem sum_cross_interval_sq_le_hilbertSchmidt_of_eigengap
+    (hT : T.IsSymmetric) (hS : S.IsSymmetric) (hn : finrank 𝕜 E = n)
+    {a b δ ε : ℝ} (hgap_pos : 0 < δ - ε) (t : Finset (Fin n))
+    (htail : ∀ j ∈ t, hT.eigenvalues hn j ∉ Set.Ioo (a - δ) (b + δ))
+    (hε : ∀ x : E, ‖(T - S) x‖ ≤ ε * ‖x‖) :
+    ∑ i ∈ Finset.univ.filter (fun i : Fin n => hT.eigenvalues hn i ∈ Set.Icc a b),
+      ∑ j ∈ t,
+        ‖⟪hT.eigenvectorBasis hn i, hS.eigenvectorBasis hn j⟫_𝕜‖ ^ 2
+      ≤ (∑ j : Fin n, ‖(S - T) (hS.eigenvectorBasis hn j)‖ ^ 2) / (δ - ε) ^ 2 :=
+  sum_cross_interval_sq_le_hilbertSchmidt hT hS hn hgap_pos t
+    (notMem_Ioo_eigenvalues_of_notMem_Ioo hT hS hn t htail hε)
 
 /-! ### Projector (sin-Θ) form via `Submodule.starProjection`
 

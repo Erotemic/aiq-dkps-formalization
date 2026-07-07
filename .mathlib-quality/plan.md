@@ -74,8 +74,14 @@ Milestone 1 = {I, II, III, CFC bridge} lands first (self-contained). M2 = {I.5, 
 ## Milestone acceptance
 - **M1 done** when PolarDecomposition.lean is sorry-free, `lake build` green, `#print axioms
   ForMathlib.continuousLinearMap_polar_decomposition` clean (`propext, Classical.choice, Quot.sound`).
+  ✅ **DONE 2026-07-07** (axiom check verified on all five M1 headline declarations).
 - **M2 done** when `intertwiningUnitary` + `WPⱼ=P'ⱼW` + angle interpretation are sorry-free.
+  ✅ **DONE 2026-07-07.** Route note: `blockPolar` is derived by *restricting* the assembled
+  unitary — surjectivity of each block comes from the intertwining relation, so no
+  rank-equality/dimension-count lemma was needed.
 - **M3 done** when Davis BL3/BL4 consume `W` (parent Result B unblocked).
+  ✅ **DONE 2026-07-07** — `RotationBound.lean` discharges BL1–BL6 (Davis Thm 3.2 + the
+  `(γ')²‖𝒞⊥U‖² ≤ 2‖𝒞⊥H‖²` corollary). Result B complete.
 
 ## Deferred / flagged
 - Davis Thm 2.1/2.3 **minimality** of `W`: source (Davis1958 §7) unavailable, off the BL3 path →

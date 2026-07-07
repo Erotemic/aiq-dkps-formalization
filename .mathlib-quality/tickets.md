@@ -75,26 +75,38 @@
 - Decomposition written to `.mathlib-quality/decomposition-B.md` (Davis Thm 3.2, transcribed
   from §3 + §2). Surfaced the gating API gap (BL3, below).
 
-## Result B formalization tickets (all BLOCKED on BL3)
+## Result B formalization tickets — ✅ ALL DONE (2026-07-07, `RotationBound.lean`)
 
-### [BL1] cross-term identity `⟨(A+𝒞H−λ'ᵢ)²xᵢ,xᵢ⟩ = (λᵢ−λ'ᵢ)² + ⟨(𝒞⊥H)²xᵢ,xᵢ⟩`
-- **Status**: open · feasible from `Spectrum.lean` cross-term + pinching split.
-### [BL2] Rayleigh lower bound `≥ (λᵢ−λ'ᵢ)² + (γ')² sin²θᵢ`
-- **Status**: blocked on BL3 (needs the angles θᵢ) · feasible otherwise (cf. CourantFischer).
-### [BL3] ⚠️ **API GAP (B3) — operator polar decomposition / canonical matching unitary**
-- **Status**: BLOCKED — needs user scope decision.
-- **Reason**: Mathlib has NO polar decomposition and NO partial-isometry API (grep-confirmed
-  2026-07-04, empty across all of Mathlib). Davis's `U` = polar factor of `P'ⱼPⱼ` on each block.
-  Building `A = U|A|` (`|A| = √(A*A)` via CFC) + the intertwining unitary is a **standalone
-  multi-lemma development at Mathlib-contribution scale** — recommend its own `/develop` project.
-### [BL4] `‖𝒞⊥U‖²_F = ∑ᵢ sin²θᵢ` · blocked on BL3.
-### [BL5] assemble eq. 3.1 (Thm 3.2) · blocked on BL1–BL4.
-### [BL6] corollary `(γ')²‖𝒞⊥U‖²_F ≤ 2‖𝒞⊥H‖²_F` (combine BL5 + Result A) · blocked on BL5.
+> Implemented in `ForMathlib/Analysis/InnerProductSpace/RotationBound.lean`, sorry-free,
+> axiom-clean. The two-sided evaluation is run on `⟨(S−λᵢ)²xᵢ,xᵢ⟩ = ‖Hxᵢ‖²` (since `(A−λᵢ)xᵢ=0`),
+> which fuses BL1+BL2+BL5 into one clean per-`i` estimate — no pinching *operator* is needed.
+
+### [BL1] cross-term / computing side  ✅ DONE
+- `‖Hxᵢ‖² = ∑ⱼ(λ'ⱼ−λᵢ)²‖⟪vⱼ,xᵢ⟫‖²` via `inner_eigenvectorBasis_map_sub_eigenvectorBasis`
+  (Spectrum.lean, roles swapped) + Parseval (`sum_sq_norm_inner_right`). Inside
+  `rotation_add_displacement_le_hilbertSchmidt` (`hcross`).
+### [BL2] Rayleigh lower bound `≥ (λᵢ−λ'ᵢ)² + (γ')² sin²θᵢ`  ✅ DONE
+- The `j≠i` mass is bounded by the hybrid separation `γ'² + (λᵢ−λ'ᵢ)² ≤ (λᵢ−λ'ⱼ)²`
+  (Davis's `γ'² = minᵢ{γᵢ²−(λᵢ−λ'ᵢ)²}`); erase-sum split + `Finset.add_sum_erase`.
+### [BL3] operator polar decomposition / canonical matching unitary  ✅ DONE (was the API gap)
+- Unblocked by the polar-decomposition board below (PD-01..PD-18): `polarFactor`,
+  `OrthoProjFamily.intertwiningUnitary`, `blockPolar`. Instantiated for the rank-one
+  eigen-families via `OrthoProjFamily.ofOrthonormalBasis` + `nonDegenerate_ofOrthonormalBasis`;
+  `intertwiningUnitary_apply_ofOrthonormalBasis` computes `U xᵢ = (c/‖c‖)•vᵢ`, `c = ⟪vᵢ,xᵢ⟫`.
+### [BL4] `‖𝒞⊥U‖²_F = ∑ᵢ sin²θᵢ`  ✅ DONE
+- `sqSinAngle_ofOrthonormalBasis : sin²θᵢ = 1 − ‖⟪vᵢ,xᵢ⟫‖²` (+ `OrthoProjFamily.sum_sqSinAngle`).
+### [BL5] assemble eq. 3.1 (Thm 3.2)  ✅ DONE
+- `rotation_add_displacement_le_hilbertSchmidt` (overlap form) and
+  `rotation_add_displacement_le_hilbertSchmidt_intertwining` (canonical-unitary form):
+  `γ'² ∑sin²θᵢ + ∑(λᵢ−λ'ᵢ)² ≤ ‖H‖²_F`.
+### [BL6] corollary `(γ')²‖𝒞⊥U‖²_F ≤ 2‖𝒞⊥H‖²_F`  ✅ DONE
+- `rotation_le_two_mul_offDiag`, combining BL5 + Result A (`sum_sq_eigenvalues_sub_ge`) +
+  the encoding identity `sum_sq_eigenvalues_sub_diag_eq` (`∑λ'² − ∑(diag S)² = ‖𝒞⊥H‖²_F`).
 
 ## Next
-Result A (the stated target) is complete. Result B is gated on BL3 (operator polar
-decomposition), now opened as its own development — see the **Polar decomposition** board
-below. Result B (BL1–BL6) resumes once Milestone 3 of that board unblocks BL3/BL4.
+Result A and Result B are both complete. The polar-decomposition board below (PD-01..PD-18)
+is complete. Remaining known deferrals: Davis Thm 2.1/2.3 minimality of `W` (source
+unavailable, off critical path).
 
 ---
 ---
@@ -108,11 +120,21 @@ below. Result B (BL1–BL6) resumes once Milestone 3 of that board unblocks BL3/
 > "fill the sorry at file:line". M2/M3 skeleton is authored as the first step of their tickets.
 
 ## Summary
-- Total: 18 proof/def tickets + 7 cleanups. Open: all. In Progress/Done: 0.
-- Milestone 1 (PD-01..PD-12): general polar decomposition — self-contained, lands first.
-- Milestone 2 (PD-13..PD-17): intertwining unitary (Davis §2) + spectral-projection prereq.
-- Milestone 3 (PD-18): wire into Davis BL3/BL4.
-- Parallel capacity at peak: 3 (Sub-devs I and II are independent; III depends on both).
+- Total: 18 proof/def tickets + 7 cleanups. **ALL PROOF TICKETS DONE (2026-07-07).**
+- **Rename (mathlib polish):** the planning name `polarUnitary` landed as **`polarFactor`**
+  (it is a partial isometry; only the invertible-case `polarUnitaryEquiv` is unitary), and
+  `abs_nonneg` landed as **`isPositive_abs`** (conclusion-first naming).
+- Milestone 1 (PD-01..PD-12) ✅: `PositiveSqrt.lean`, `PartialIsometry.lean`,
+  `PolarDecomposition.lean` all sorry-free; `#print axioms` clean
+  (`propext, Classical.choice, Quot.sound`) on `continuousLinearMap_polar_decomposition`,
+  `polar_decomposition`, `polarUnitary_isPartialIsometry`, `polar_decomposition_of_isUnit`,
+  `abs_toContinuousLinearMap_eq_cfcAbs`.
+- Milestone 2 (PD-13..PD-17) ✅: `IntertwiningUnitary.lean` sorry-free — `spectralProjection`
+  API, `OrthoProjFamily` (+ `ofOrthonormalBasis`), `intertwiningUnitary` (unitary via
+  per-block isometry + Pythagoras; **no dimension count needed** — block surjectivity is
+  derived from the intertwining relation), `blockPolar`, `sum_sqSinAngle`.
+- Milestone 3 (PD-18) ✅: `RotationBound.lean` wires the canonical unitary into Davis
+  Result B; BL1–BL6 all discharged (see the Result B board above).
 - **Deferred (NOT ticketed):** Davis Thm 2.1/2.3 minimality of `W` — source Davis1958 §7 unavailable,
   off the BL3 critical path. Revisit via `/expert-review` only on request.
 
@@ -293,8 +315,8 @@ Conway VI.3.9 (the workhorse for the polar factor). #### Generality: as PD-06. ~
 ### [CLEANUP-PD-3] /cleanup on PartialIsometry.lean (3 tickets + final)
 - **Status**: open · **Depends on**: PD-07 · **Type**: cleanup
 
-### [PD-08] modulus `|A|` + `abs_mul_self` + `norm_abs_apply`
-- **Status**: open · **File**: PolarDecomposition.lean:37,47,52 · **Depends on**: PD-02 · **Parallel**: no · **Type**: def + lemma
+### [PD-08] modulus `|A|` + `abs_mul_self` + `norm_abs_apply`  ✅ DONE
+- **Status**: done · norm_abs_apply via `sq_norm_sqrt_apply` + `adjoint_inner_left`; ker/range as sketched.
 #### Statement
 ```lean
 noncomputable def ForMathlib.abs (A : E →ₗ[𝕜] E) : E →ₗ[𝕜] E := (isPositive_adjoint_comp_self A).sqrt
@@ -311,8 +333,8 @@ sides — `‖abs A x‖² = re⟪A⋆A x,x⟫` (`sq_norm_sqrt_apply`) `= ‖Ax�
 HJ 7.3.1 (`Q=(A⋆A)^{1/2}`); (★) is route-ii (Conway VI.3.9). Cross-check `CFC.abs_mul_abs`
 (Abs.lean:64). #### Generality: `𝕜 : RCLike`, finite-dim, `ForMathlib` namespace. ~20 LOC.
 
-### [PD-09] `ker_abs` + `range_abs`
-- **Status**: open · **File**: PolarDecomposition.lean:57,62 · **Depends on**: PD-08, PD-03 · **Type**: lemma
+### [PD-09] `ker_abs` + `range_abs`  ✅ DONE
+- **Status**: done · `ker_abs` = `ker_sqrt` ∘ `ker_adjoint_comp_self`; `range_abs` via `orthogonal_ker` + `adjoint_eq`. Motive-safe rewriting: rewrite `ker (abs A)` hypotheses, never `ker A` under subtypes.
 #### Statement
 ```lean
 theorem ker_abs (A) : ker (abs A) = ker A
@@ -329,8 +351,8 @@ theorem range_abs (A) : range (abs A) = (ker A)ᗮ
 ### [CLEANUP-PD-4] /cleanup on PolarDecomposition.lean (3 tickets)
 - **Status**: open · **Depends on**: PD-09 · **Type**: cleanup
 
-### [PD-10] the polar factor `U` and `A = U|A|` (construction — the meaty one)
-- **Status**: open · **File**: PolarDecomposition.lean:68,73,78,83,88 · **Depends on**: PD-07, PD-09, CLEANUP-PD-4 · **Type**: def + lemma
+### [PD-10] the polar factor `U` and `A = U|A|` (construction — the meaty one)  ✅ DONE
+- **Status**: done · Construction: private `absRestrict : (ker A)ᗮ ≃ₗ (ker A)ᗮ` (restriction of `abs A`, bijective by `injective_iff_surjective`); `polarFactor := A ∘ₗ subtype ∘ₗ absRestrict.symm ∘ₗ orthogonalProjectionOnto`. Key lemma `polarFactor_apply_abs_apply : U (|A| x) = A x`. Bonus lemma `range_polarFactor : range U = range A` (needed by M2).
 #### Statement
 ```lean
 noncomputable def polarUnitary (A : E →ₗ[𝕜] E) : E →ₗ[𝕜] E
@@ -356,8 +378,8 @@ Conway VI.3.9 (route-ii construction); HJ 7.3.1(b) statement (decomposition-pola
 #### Generality decision
 `𝕜 : RCLike`, finite-dim. The construction is finite-dim (no closure). ~90 LOC (hardest ticket).
 
-### [PD-11] invertible case — the unitary factor
-- **Status**: open · **File**: PolarDecomposition.lean:97,102,107 · **Depends on**: PD-10, PD-04 · **Type**: def + lemma
+### [PD-11] invertible case — the unitary factor  ✅ DONE
+- **Status**: done · LinearEquiv.ofBijective + norm_map′ from `norm_polarFactor_apply_of_mem` with `(ker A)ᗮ = ⊤`; `coe_polarUnitaryEquiv` is `rfl`.
 #### Statement
 ```lean
 noncomputable def polarUnitaryEquiv {A : E →ₗ[𝕜] E} (hA : IsUnit A) : E ≃ₗᵢ[𝕜] E
@@ -370,7 +392,7 @@ bijective isometry (isometric everywhere since `(ker A)ᗮ=⊤`, PD-10) ⟹ pack
 `LinearIsometryEquiv` (`LinearIsometryEquiv.ofBijective` / `Unitary.linearIsometryEquiv`).
 #### Mathlib lemmas needed
 `isUnit_sqrt_of_isUnit` (PD-04), `LinearIsometryEquiv.ofBijective`/`Unitary.linearIsometryEquiv`
-(Adjoint.lean:944), `norm_polarUnitary_apply_of_mem` (PD-10), `ker`-triviality of a unit.
+(Adjoint.lean:944), `norm_polarFactor_apply_of_mem` (PD-10), `ker`-triviality of a unit.
 #### Sources
 HJ 7.3.1(b) verbatim: "U uniquely determined if A nonsingular", `U = P⁻¹A = AQ⁻¹`. #### Generality:
 as PD-10. ~35 LOC.
@@ -378,8 +400,8 @@ as PD-10. ~35 LOC.
 ### [CLEANUP-ALL-PD-1] /cleanup-all on the polar project so far (pre-milestone)
 - **Status**: open · **Depends on**: PD-11, CLEANUP-PD-2, CLEANUP-PD-3 · **Type**: cleanup
 
-### [PD-12] ★ MILESTONE 1 ★ CFC bridge — the via-CFC headline
-- **Status**: open · **File**: PolarDecomposition.lean:116,122 · **Depends on**: PD-11, PD-04, CLEANUP-ALL-PD-1 · **Type**: theorem (milestone)
+### [PD-12] ★ MILESTONE 1 ★ CFC bridge — the via-CFC headline  ✅ DONE
+- **Status**: done · Via `CFC.sqrt_unique` (Rpow/Basic.lean:283): `|A|.toCLM` squares to `star A * A` (pointwise transport of `abs_mul_self` across the `rfl` adjoint bridge) and is `0 ≤` via `isPositive_toContinuousLinearMap_iff` + `nonneg_iff_isPositive`. Headline transports `polar_decomposition` pointwise. **M1 axiom check clean.**
 #### Statement
 ```lean
 theorem abs_toContinuousLinearMap_eq_cfcAbs (A : H →ₗ[ℂ] H) :
@@ -413,8 +435,8 @@ Headline necessarily **ℂ / `H →L[ℂ] H`** (mathlib's C⋆ instance on CLM i
 > "fill the sorry at file:line", same contract as M1. Signatures may need light edits once M1's exact
 > API lands. Full source quotes: decomposition-polar.md Milestone 2 (Davis §2 lines 218–312, verbatim).
 
-### [PD-13] spectral-projection prerequisite (API gap I.5)
-- **Status**: open · **File**: IntertwiningUnitary.lean (new) · **Depends on**: CLEANUP-PD-5 · **Type**: def + API
+### [PD-13] spectral-projection prerequisite (API gap I.5)  ✅ DONE
+- **Status**: done · `spectralProjection b S := ∑ i ∈ S, rankOne (b i) (b i)`; `spectralProjection_comp` (S ∩ T composition law), `_of_disjoint`, `_univ`, `_apply_basis`, `_singleton_apply`, `isPositive_`, `isStarProjection_`. Plus `OrthoProjFamily.ofOrthonormalBasis` (rank-one family).
 #### Statement (shape)
 `spectralProjection` of a symmetric operator onto the eigenspace for a value / index-set, as an
 `E →ₗ[𝕜] E`; `IsStarProjection`, `∑ⱼ Pⱼ = 1`, `Pⱼ ∘ₗ Pₖ = 0 (j≠k)`, `range Pⱼ = eigenspace`.
@@ -426,15 +448,15 @@ properties from orthonormality of the eigenbasis.
 API, `OrthonormalBasis.sum_repr`. #### Sources Davis §2 setup (lines 183–188). #### Generality:
 `𝕜 : RCLike`, finite-dim. ~70 LOC. (API gap — its own mini-tree.)
 
-### [PD-14] non-degeneracy ⟹ `(P'ⱼPⱼP'ⱼ)^{-1/2}` exists
-- **Status**: open · **File**: IntertwiningUnitary.lean · **Depends on**: PD-13, PD-04 · **Type**: lemma
+### [PD-14] non-degeneracy ⟹ `(P'ⱼPⱼP'ⱼ)^{-1/2}` exists  ✅ DONE
+- **Status**: done · `ker_comp_of_nonDegenerate : ker (P′ⱼPⱼ) = ker Pⱼ` + `injOn_of_nonDegenerate` via `orthogonal_disjoint`.
 #### Statement (shape)
 `Pⱼx≠0 ⟹ P'ⱼPⱼx≠0` (per block) ⟹ `P'ⱼPⱼP'ⱼ` strictly positive on `range P'ⱼ`; inverse sqrt via
 `isUnit_sqrt_of_isUnit` (PD-04).
 #### Sources Davis §2 line 224 (verbatim in decomposition-polar.md M2.1). #### ~50 LOC.
 
-### [PD-15] block polar factor `Wⱼ` is unitary
-- **Status**: open · **File**: IntertwiningUnitary.lean · **Depends on**: PD-14, PD-11 · **Type**: lemma
+### [PD-15] block polar factor `Wⱼ` is unitary  ✅ DONE
+- **Status**: done · `blockPolar` built as the *restriction of the assembled intertwining unitary* — surjectivity onto `range P′ⱼ` follows from the intertwining relation `U Pⱼ = P′ⱼ U`, so NO rank/dimension count is needed (route change vs. plan).
 #### Statement (shape)
 `Wⱼ := (P'ⱼPⱼP'ⱼ)^{-1/2} P'ⱼPⱼ : range Pⱼ ≃ₗᵢ range P'ⱼ` unitary — the invertible-case polar
 decomposition (PD-11, `polarUnitaryEquiv`) of `P'ⱼPⱼ` restricted to the block.
@@ -443,15 +465,15 @@ decomposition (PD-11, `polarUnitaryEquiv`) of `P'ⱼPⱼ` restricted to the bloc
 ### [CLEANUP-PD-6] /cleanup on IntertwiningUnitary.lean (3 tickets)
 - **Status**: open · **Depends on**: PD-15 · **Type**: cleanup
 
-### [PD-16] assemble `intertwiningUnitary` + `W Pⱼ = P'ⱼ W`
-- **Status**: open · **File**: IntertwiningUnitary.lean · **Depends on**: PD-15, CLEANUP-PD-6 · **Type**: def + theorem
+### [PD-16] assemble `intertwiningUnitary` + `W Pⱼ = P'ⱼ W`  ✅ DONE
+- **Status**: done · `intertwiningUnitary := ∑ⱼ polarFactor (P′ⱼ∘ₗPⱼ) ∘ₗ Pⱼ`, unitary via per-block isometry (`ker_comp_of_nonDegenerate` + `norm_polarFactor_apply_of_mem`) + pairwise-orthogonal Pythagoras (private lemma); `intertwiningUnitary_comp_proj` by double `Finset.sum_eq_single` collapse; `_mapsTo` from the relation.
 #### Statement (shape)
 `intertwiningUnitary : E ≃ₗᵢ[𝕜] E := ∑ⱼ Wⱼ ∘ Pⱼ`; `W` unitary; `intertwiningUnitary_apply_proj :
 W ∘ₗ Pⱼ = P'ⱼ ∘ₗ W`.
 #### Sources Davis §2 line 229 (verbatim). #### ~70 LOC.
 
-### [PD-17] angle interpretation `‖𝒞⊥W‖²_F = ∑ᵢ sin²θᵢ`
-- **Status**: open · **File**: IntertwiningUnitary.lean · **Depends on**: PD-16 · **Type**: theorem
+### [PD-17] angle interpretation `‖𝒞⊥W‖²_F = ∑ᵢ sin²θᵢ`  ✅ DONE
+- **Status**: done · `sum_sqSinAngle` (finite-sum arithmetic). The `‖𝒞⊥U‖²_F` identification is BL4 in RotationBound.lean (`sqSinAngle_ofOrthonormalBasis`).
 #### Statement (shape)
 `θᵢ = arccos⟨Wxᵢ,xᵢ⟩`; `‖𝒞⊥W‖²_F = ∑ᵢ sin²θᵢ` via `‖Off W‖² = ‖W‖² − ‖𝒞W‖²` (pinching orthogonality)
 and `‖W‖²_F = dim`. Needed by parent BL4.
@@ -462,8 +484,8 @@ and `‖W‖²_F = dim`. Needed by parent BL4.
 
 ## Milestone 3 — wire into Davis Result B
 
-### [PD-18] unblock Davis BL3/BL4
-- **Status**: open · **File**: EigenvalueChange.lean / new bridge · **Depends on**: PD-17, CLEANUP-PD-7 · **Type**: theorem (milestone)
+### [PD-18] unblock Davis BL3/BL4  ✅ DONE
+- **Status**: done · `RotationBound.lean`: `nonDegenerate_ofOrthonormalBasis`, `intertwiningUnitary_apply_ofOrthonormalBasis` (`U xᵢ = (c/‖c‖)•vᵢ` via `apply_eq_smul_of_apply_apply_eq_smul`, made public in PositiveSqrt.lean), `sqSinAngle_ofOrthonormalBasis`, and Davis Thm 3.2 + BL6 corollary. Parent Result B board fully discharged.
 #### Statement (shape)
 Instantiate `intertwiningUnitary` with the spectral projection families of the parent's `T`,`S`;
 supply `W`, `W Pⱼ = P'ⱼ W`, angles `θᵢ`, `‖𝒞⊥W‖²=∑sin²θᵢ` to Result B's BL3/BL4. Then BL1,BL2,BL5,BL6

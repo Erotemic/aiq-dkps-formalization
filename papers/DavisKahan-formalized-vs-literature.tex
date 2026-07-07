@@ -41,7 +41,7 @@ and how it relates to Davis (1963/1970) and Yu--Wang--Samworth (2015)}
 
 % NOTE: if you are a different model making a substantial addition and are not
 % yet credited, add yourself to the author list above.
-\author{Claude Opus 4.8 \and Jonathan Crall}
+\author{Claude Opus 4.8 \and Jonathan Crall \and Claude Fable 5}
 
 \date{\today}
 
@@ -362,8 +362,32 @@ $\norm{\sinT}_{\F}\le d^{1/2}\eps/\gap$.
 \section{What is not formalized}
 
 The formalization covers the Frobenius $\sin\Theta$ theorem with a hybrid or
-population gap.  The remaining DK-family results, and the machinery each would
-require, are as follows.
+population gap.
+
+Since this note was first written, \emph{Davis's sharper total-rotation
+estimate} (his Theorem~3.2) has also been formalized, in a separate chain of
+files: the refinement
+\[
+  (\gamma')^2\sum_i\sin^2\theta_i+\sum_i(\lambda_i-\lambda_i')^2
+  \le\norm{H}_{\F}^2,
+  \qquad
+  (\gamma')^2=\min_i\bigl\{\gamma_i^2-(\lambda_i-\lambda_i')^2\bigr\},
+\]
+which subtracts the eigenvalue displacement, and its corollary
+$(\gamma')^2\norm{\mathcal C^{\perp}U}_{\F}^2\le 2\norm{\mathcal
+C^{\perp}H}_{\F}^2$ combining Davis's Schur--Horn eigenvalue-change lower bound
+(his Theorem~4.1, \texttt{EigenvalueChange.lean}).  The supporting machinery —
+the positive square root, a partial-isometry API, the operator polar
+decomposition $A=U\lvert A\rvert$ (with a $\mathbb C$/\texttt{CFC.abs}
+headline), and Davis's \S2 canonical intertwining unitary of two complete
+orthogonal projection families — lives in \texttt{PositiveSqrt.lean},
+\texttt{PartialIsometry.lean}, \texttt{PolarDecomposition.lean},
+\texttt{IntertwiningUnitary.lean}; the rotation theorems themselves are in
+\texttt{RotationBound.lean} (all under
+\texttt{ForMathlib/Analysis/InnerProductSpace/}).
+
+The remaining DK-family results, and the machinery each would require, are as
+follows.
 
 \begin{itemize}
 \item \emph{Operator-norm and general unitarily-invariant-norm $\sin\Theta$.} The
@@ -373,11 +397,6 @@ require, are as follows.
   needs the largest singular value of the residual, and the general one needs the
   theory of unitarily invariant norms (symmetric gauge functions, Ky Fan
   majorization), which Mathlib does not yet carry.
-\item \emph{Davis's sharper total-rotation estimate.} The refinement that
-  subtracts the eigenvalue displacement $\sum_i(\lambda_i-\lambda_i')^2$, and its
-  $\norm{\mathcal C^{\perp}H}_{\F}$ form.  These rest on the canonical matching
-  unitary, built from the polar factor of $P_j\widehat P_jP_j$, together with
-  Davis's Schur--Horn eigenvalue-change lower bound.
 \item \emph{The $\tan\Theta$, $\sin2\Theta$, and $\tan2\Theta$ theorems.} The
   other members of the DK family, each with its own gap condition and $2\times2$
   compression argument.

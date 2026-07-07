@@ -10,7 +10,12 @@ import ForMathlib.Analysis.InnerProductSpace.CourantFischer
 import ForMathlib.Analysis.InnerProductSpace.DavisKahan
 import ForMathlib.Analysis.InnerProductSpace.EigenvalueChange
 import ForMathlib.Analysis.InnerProductSpace.GramMatrix
+import ForMathlib.Analysis.InnerProductSpace.IntertwiningUnitary
 import ForMathlib.Analysis.InnerProductSpace.NearIsometry
+import ForMathlib.Analysis.InnerProductSpace.PartialIsometry
+import ForMathlib.Analysis.InnerProductSpace.PolarDecomposition
+import ForMathlib.Analysis.InnerProductSpace.PositiveSqrt
+import ForMathlib.Analysis.InnerProductSpace.RotationBound
 import ForMathlib.Analysis.InnerProductSpace.SchurHorn
 import ForMathlib.Analysis.InnerProductSpace.Spectrum
 import ForMathlib.Analysis.Matrix.EntrywiseOpNorm

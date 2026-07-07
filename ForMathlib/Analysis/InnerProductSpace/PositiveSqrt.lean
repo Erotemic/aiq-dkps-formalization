@@ -84,7 +84,7 @@ theorem sqrt_mul_self {T : E →ₗ[𝕜] E} (hT : T.IsPositive) :
 omit [FiniteDimensional 𝕜 E] in
 /-- Pointwise root: if `S ≥ 0` and `S² v = μ² v` with `μ ≥ 0`, then `S v = μ v`. The crux of
 uniqueness — `v` lies in the `μ²`-eigenspace of `S²`, on which the positive `S` acts as `μ`. -/
-private theorem sq_root_pointwise {S : E →ₗ[𝕜] E} (hS : S.IsPositive) {v : E} {μ : ℝ}
+theorem apply_eq_smul_of_apply_apply_eq_smul {S : E →ₗ[𝕜] E} (hS : S.IsPositive) {v : E} {μ : ℝ}
     (hμ : 0 ≤ μ) (hv : S (S v) = ((μ : 𝕜) * (μ : 𝕜)) • v) :
     S v = (μ : 𝕜) • v := by
   rcases hμ.eq_or_lt with hμ0 | hμpos
@@ -121,7 +121,7 @@ theorem sqrt_unique {T S : E →ₗ[𝕜] E} (hT : T.IsPositive) (hS : S.IsPosit
   apply (hT.isSymmetric.eigenvectorBasis rfl).toBasis.ext
   intro i
   rw [OrthonormalBasis.coe_toBasis, sqrt_apply_eigenvectorBasis]
-  refine sq_root_pointwise hS (Real.sqrt_nonneg _) ?_
+  refine apply_eq_smul_of_apply_apply_eq_smul hS (Real.sqrt_nonneg _) ?_
   rw [← LinearMap.comp_apply, h, hT.isSymmetric.apply_eigenvectorBasis,
     ← RCLike.ofReal_mul, Real.mul_self_sqrt (hT.nonneg_eigenvalues rfl i)]
 

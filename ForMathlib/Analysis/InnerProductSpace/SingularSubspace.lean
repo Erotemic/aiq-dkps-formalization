@@ -103,9 +103,9 @@ theorem norm_gram_sub_gram_apply_le {A Â : E →ₗ[𝕜] F} {a â ε : ℝ}
 The modulus `|A| = √(A⋆A)` is diagonal in the `A⋆A`-eigenbasis with entries
 `√λᵢ(A⋆A) = σᵢ(A)`, and the trace is basis-independent. -/
 theorem sum_re_inner_abs_self_eq_sum_singularValues (A : E →ₗ[𝕜] E)
-    (b : OrthonormalBasis (Fin (finrank 𝕜 E)) 𝕜 E) :
-    ∑ k, RCLike.re ⟪abs A (b k), b k⟫_𝕜
-      = ∑ i : Fin (finrank 𝕜 E), A.singularValues (i : ℕ) := by
+    {n : ℕ} (hn : finrank 𝕜 E = n) (b : OrthonormalBasis (Fin n) 𝕜 E) :
+    ∑ k, RCLike.re ⟪abs A (b k), b k⟫_𝕜 = ∑ i : Fin n, A.singularValues (i : ℕ) := by
+  subst hn
   have hP := LinearMap.isPositive_adjoint_comp_self A
   have hsym : (abs A).IsSymmetric := (isPositive_abs A).isSymmetric
   -- Basis independence: the trace of `|A|` is the same in any basis.
@@ -169,11 +169,11 @@ is a contraction, then `∑ₖ ‖A bₖ‖² ≤ ∑ₖ re⟪|A| bₖ, bₖ⟫`
 (each `σᵢ ∈ [0, 1]`).  This is the core inequality of the aligned-basis
 (orthogonal-Procrustes) argument: `∑‖wⱼ − uⱼ‖² = 2d − 2∑σ ≤ 2d − 2∑σ² = 2·sinΘ²`. -/
 theorem sum_sq_norm_le_sum_re_inner_abs_of_contraction {A : E →ₗ[𝕜] E}
-    (h : ∀ x, ‖A x‖ ≤ ‖x‖) (b : OrthonormalBasis (Fin (finrank 𝕜 E)) 𝕜 E) :
+    (h : ∀ x, ‖A x‖ ≤ ‖x‖) {n : ℕ} (hn : finrank 𝕜 E = n) (b : OrthonormalBasis (Fin n) 𝕜 E) :
     ∑ k, ‖A (b k)‖ ^ 2 ≤ ∑ k, RCLike.re ⟪abs A (b k), b k⟫_𝕜 := by
-  rw [← sum_sq_singularValues A rfl b, sum_re_inner_abs_self_eq_sum_singularValues A b]
+  rw [← sum_sq_singularValues A hn b, sum_re_inner_abs_self_eq_sum_singularValues A hn b]
   refine Finset.sum_le_sum fun i _ => ?_
-  have h1 := singularValues_le_one_of_contraction h rfl i
+  have h1 := singularValues_le_one_of_contraction h hn i
   have h0 := A.singularValues_nonneg (i : ℕ)
   nlinarith
 

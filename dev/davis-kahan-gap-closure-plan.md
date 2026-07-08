@@ -58,6 +58,20 @@ check `propext, Classical.choice, Quot.sound` on headline declarations).
   `papers/DavisKahan-formalized-vs-literature.tex` synced to this state
   (extensions section + remaining-work ranking).
 
+- **v6 (2026-07-08, Opus — remaining-work sweep):** executed every item
+  assigned to Opus in the v5 plan, each committed separately, all axiom-clean,
+  full library build green (8716 jobs). **Closed: W6.2** (tan2θ), **W0.1(d)**
+  (`singularValues_adjoint` + reusable `eigenvalues_conj_unitary`), **W0.2**
+  (canonical principal-angle API, new `PrincipalAngles.lean`), **W5.2**
+  (operator-norm sin-Θ, new `SinThetaOpNorm.lean` — closing the op-norm half of
+  G1). W6.1 (sin2θ) had already been landed by Fable. Two route improvements
+  vs the v5 text, both recorded in-step: W5.2 uses a full-space scalar-extension
+  argument (no subtype compressions, no CourantFischer un-privatizing), and
+  W0.1(d)'s reverse eigenvalue direction reuses the forward `_le` helper via
+  `eigenvalues_congr`. **Everything the DKPS pipeline consumes is now
+  formalized; only W6.3 (subspace sin2Θ) and W7 (UI norms) remain, both
+  deferred by design.**
+
 ## The five gaps (from the paper)
 
 | # | Gap | Workstream | Status (2026-07-07) |

@@ -11,7 +11,8 @@ adjoint norm bound `‖A⋆‖ = ‖A‖` in elementwise form.
 To be re-authored per Mathlib's AI-contribution policy at PR time.
 -/
 
-import Mathlib.Analysis.InnerProductSpace.Adjoint
+import Mathlib.Analysis.InnerProductSpace.SingularValues
+import ForMathlib.Analysis.InnerProductSpace.CourantFischer
 
 /-! # Gram-operator perturbation
 
@@ -28,6 +29,9 @@ terms of `Â − A`.
 * `ForMathlib.norm_gram_sub_gram_apply_le`: `‖(Â⋆Â − A⋆A) x‖ ≤ (a + â) ε ‖x‖`
   when `A, Â, Â − A` are `a`-, `â`-, `ε`-bounded, via
   `Â⋆Â − A⋆A = Â⋆(Â − A) + (Â − A)⋆A`.
+* `ForMathlib.abs_sq_singularValues_sub_le`: Weyl for squared singular values,
+  `|σₖ(Â)² − σₖ(A)²| ≤ (a + â) ε` — the singular-value stability underlying the
+  singular-subspace bound.
 
 ## References
 
@@ -39,6 +43,7 @@ namespace ForMathlib
 
 open scoped InnerProductSpace
 open LinearMap
+open Module (finrank)
 
 variable {𝕜 E F : Type*} [RCLike 𝕜]
   [NormedAddCommGroup E] [InnerProductSpace 𝕜 E] [FiniteDimensional 𝕜 E]
@@ -88,5 +93,20 @@ theorem norm_gram_sub_gram_apply_le {A Â : E →ₗ[𝕜] F} {a â ε : ℝ}
         · exact hE x
         · exact hA x
     _ = (a + â) * ε * ‖x‖ := by ring
+
+/-- **Weyl's inequality for squared singular values.** The `k`-th squared singular
+values of `A` and `Â` differ by at most the Gram perturbation bound:
+`|σₖ(Â)² − σₖ(A)²| ≤ (a + â) ε`.  Via the dictionary `σₖ² = λₖ(·⋆·)`
+(`sq_singularValues_fin`) and Weyl's inequality on the Gram operators, fed by the
+perturbation bound `norm_gram_sub_gram_apply_le`. -/
+theorem abs_sq_singularValues_sub_le {A Â : E →ₗ[𝕜] F} {a â ε : ℝ}
+    (hâ : 0 ≤ â) (hε : 0 ≤ ε)
+    (hA : ∀ x, ‖A x‖ ≤ a * ‖x‖) (hÂ : ∀ x, ‖Â x‖ ≤ â * ‖x‖)
+    (hE : ∀ x, ‖(Â - A) x‖ ≤ ε * ‖x‖)
+    {n : ℕ} (hn : finrank 𝕜 E = n) (k : Fin n) :
+    |Â.singularValues k ^ 2 - A.singularValues k ^ 2| ≤ (a + â) * ε := by
+  rw [Â.sq_singularValues_fin hn, A.sq_singularValues_fin hn]
+  exact abs_eigenvalues_sub_le Â.isSymmetric_adjoint_comp_self A.isSymmetric_adjoint_comp_self hn
+    (fun x => norm_gram_sub_gram_apply_le hâ hε hA hÂ hE x) k
 
 end ForMathlib

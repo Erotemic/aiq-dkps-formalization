@@ -456,7 +456,12 @@ used by the DK gap bridges. Route:
 throughout, prove the adjoint step via
 `‖A† y‖² = re⟪A A† y, y⟫ ≤ ‖A‖‖A†y‖‖y‖`).
 
-**W4.2 — Singular-value Weyl + eigen/singular dictionary. Difficulty 3/5.**
+**W4.2 — Singular-value Weyl + eigen/singular dictionary. Difficulty 3/5. ✅ DONE
+2026-07-07 (Opus).** `SingularSubspace.lean`: `abs_sq_singularValues_sub_le`
+(`|σₖ(Â)² − σₖ(A)²| ≤ (a+â)ε`). The dictionary `σₖ² = λₖ(·⋆·)` is Mathlib's
+`sq_singularValues_fin` directly, composed with `abs_eigenvalues_sub_le` (Weyl)
+on the Gram operators via W4.1. Build green, axiom-clean. (W4.3 main
+singular-subspace theorem remains.)
 (a) `λᵢ(A†A) = σᵢ(A)²` sorted-form dictionary between
     `(isSymmetric_adjoint_mul_self).eigenvalues hn` and
     `LinearMap.singularValues` (Mathlib's `sq_singularValues_fin` is close;

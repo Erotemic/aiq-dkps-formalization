@@ -427,18 +427,23 @@ flat `d×d` matrix `Mᵢⱼ = ⟪uᵢ, v̂ⱼ⟫` — prefer the flat matrix on
 (c) `∑ᵢ σᵢ(M) ≥ ∑ᵢ σᵢ(M)² = ∑ᵢⱼ ‖Mᵢⱼ‖² = d − overlap` (W0.1(a) +
     complementary Parseval).
 
-**W3.4 — Assemble the aligned-basis theorem. Difficulty 4/5. ◑ CORE DONE
-2026-07-07 (Opus).** The mathematically-substantive core is proved:
-`sum_sq_norm_le_sum_re_inner_abs_of_contraction` in `SingularSubspace.lean`
-(`∑σ² ≤ ∑σ` for a contraction, i.e. Frobenius² ≤ trace of modulus — the heart of
-`∑‖wⱼ−uⱼ‖² = 2d − 2∑σ ≤ 2d − 2∑σ² = 2·sinΘ²`), combining W3.1 + W0.1(a,b,c).
-**Remaining = connective plumbing** (not deep math): build the `d×d` overlap
-operator via `Matrix.toLpLin` (note: `toEuclideanLin` is now deprecated; carries
-`WithLp` `ofLp`/`toLp` friction), prove it is a contraction (Bessel), take its
-`polarUnitary` (W3.1) as the Procrustes `O`, define `wⱼ = ∑ᵢ Oᵢⱼ vᵢ`, and wire the
-two trace identities `∑‖wⱼ−uⱼ‖² = 2d − 2 tr|M|` (from `O⋆M = |M|`) and
-`overlap = d − ∑σ²` (Parseval). All ingredients are proved and verified; this is
-the final assembly step.
+**W3.4 — Assemble the aligned-basis theorem. Difficulty 4/5. ◑ ANALYTIC CORE +
+INFRASTRUCTURE DONE 2026-07-07 (Opus).** Substantial progress in
+`AlignedBasis.lean` (new file) + `SingularSubspace.lean`:
+- `sum_sq_norm_le_sum_re_inner_abs_of_contraction` (`∑σ² ≤ ∑σ` for a contraction).
+- `familyMap`/`familyIsometry` — the coordinate isometry `EuclideanSpace 𝕜 (Fin d)
+  →ₗᵢ E` of an orthonormal family (built via `Fintype.linearCombination` +
+  `WithLp.linearEquiv`; the `Basis.constr` route is absent in this Mathlib).
+- `overlapOp` + `overlapOp_contraction` — the `d×d` overlap operator
+  `(familyIsometry hu)⋆ ∘ (familyIsometry hv)`, matrix `⟪uᵢ,vⱼ⟫`, a contraction.
+- `sum_sq_singularValues_overlapOp` (`∑σ² = ∑ᵢⱼ‖⟪uᵢ,vⱼ⟫‖²`) and
+  `sum_overlap_le_sum_singularValues` (**`d − ‖sinΘ‖²_F ≤ ∑ cos θ`** — the
+  analytic heart), handling the `finrank(EuclideanSpace (Fin d)) = d` reindex.
+**Remaining:** the geometric Procrustes identity `∑‖wⱼ−uⱼ‖² = 2d − 2∑cos θ` for
+the explicit rotated basis `wⱼ = familyIsometry hv (O⁻¹ eⱼ)` (`O = polarUnitary
+overlapOp`), via `polar_decomposition_unitary` (W3.1) + W0.1(c) on the
+`O⁻¹`-image basis; then combine with the analytic core. All ingredients proved
+and verified; this is bookkeeping (polar computation + one more finrank reindex).
 *(Corrected per Opus R5, load-bearing:)* `O` **must** be the genuine
 *kernel-completed unitary* from W3.1, **never** the bare `polarFactor M`
 partial isometry. When a principal angle hits `π/2`, `M` is singular; with the

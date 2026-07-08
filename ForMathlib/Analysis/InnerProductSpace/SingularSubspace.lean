@@ -164,6 +164,19 @@ theorem sum_sq_singularValues (A : E →ₗ[𝕜] F) {n : ℕ} (hn : finrank �
   exact Finset.sum_congr rfl fun k _ => by
     rw [LinearMap.comp_apply, LinearMap.adjoint_inner_left, inner_self_eq_norm_sq]
 
+/-- **Frobenius² ≤ trace of the modulus, for a contraction.** If `A : E →ₗ[𝕜] E`
+is a contraction, then `∑ₖ ‖A bₖ‖² ≤ ∑ₖ re⟪|A| bₖ, bₖ⟫`, i.e. `∑ σᵢ² ≤ ∑ σᵢ`
+(each `σᵢ ∈ [0, 1]`).  This is the core inequality of the aligned-basis
+(orthogonal-Procrustes) argument: `∑‖wⱼ − uⱼ‖² = 2d − 2∑σ ≤ 2d − 2∑σ² = 2·sinΘ²`. -/
+theorem sum_sq_norm_le_sum_re_inner_abs_of_contraction {A : E →ₗ[𝕜] E}
+    (h : ∀ x, ‖A x‖ ≤ ‖x‖) (b : OrthonormalBasis (Fin (finrank 𝕜 E)) 𝕜 E) :
+    ∑ k, ‖A (b k)‖ ^ 2 ≤ ∑ k, RCLike.re ⟪abs A (b k), b k⟫_𝕜 := by
+  rw [← sum_sq_singularValues A rfl b, sum_re_inner_abs_self_eq_sum_singularValues A b]
+  refine Finset.sum_le_sum fun i _ => ?_
+  have h1 := singularValues_le_one_of_contraction h rfl i
+  have h0 := A.singularValues_nonneg (i : ℕ)
+  nlinarith
+
 /-- **Unitary invariance of the Frobenius sum.** Pre-composing with a unitary `U`
 does not change `∑ₖ ‖A (b k)‖²`: `∑ₖ ‖A (U bₖ)‖² = ∑ₖ ‖A bₖ‖²`.  Both equal the
 sum of squared singular values (`sum_sq_singularValues`), since `k ↦ U bₖ` is

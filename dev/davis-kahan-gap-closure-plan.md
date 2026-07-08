@@ -36,13 +36,13 @@ check `propext, Classical.choice, Quot.sound` on headline declarations).
 
 ## The five gaps (from the paper)
 
-| # | Gap | Workstream |
-|---|-----|------------|
-| G1 | Operator-norm `‖sinΘ‖_op ≤ ‖S−T‖_op/g` and general unitarily-invariant-norm sinΘ | W5, W7 |
-| G2 | tanΘ, sin2Θ, tan2Θ theorems | W6 |
-| G3 | YWS aligned-basis bound (`‖V̂O−V‖_F ≤ 2^{3/2}·min{…}/Δ`) | W3 |
-| G4 | YWS singular-vector extension (rectangular `A, Â`) | W4 |
-| G5 | General-interval spectral subspaces (two-sided gap) | W1 |
+| # | Gap | Workstream | Status (2026-07-07) |
+|---|-----|------------|---------------------|
+| G1 | Operator-norm `‖sinΘ‖_op ≤ ‖S−T‖_op/g` and general unitarily-invariant-norm sinΘ | W5, W7 | ◑ W5.1 done; W5.2 remains; W7 deferred |
+| G2 | tanΘ, sin2Θ, tan2Θ theorems | W6 | ☐ not started |
+| G3 | YWS aligned-basis bound | W3 | ✅ **closed** (W3.1–W3.4) |
+| G4 | YWS singular-vector extension (rectangular `A, Â`) | W4 | ✅ **closed** (W4.1–W4.3) |
+| G5 | General-interval spectral subspaces (two-sided gap) | W1 | ✅ **closed** (W1.1, W1.2) |
 
 Plus two enabling workstreams the paper implies but does not list: a canonical
 principal-angle API (W0) and Hoffman–Wielandt (W2 — required for the *exact*
@@ -427,8 +427,17 @@ flat `d×d` matrix `Mᵢⱼ = ⟪uᵢ, v̂ⱼ⟫` — prefer the flat matrix on
 (c) `∑ᵢ σᵢ(M) ≥ ∑ᵢ σᵢ(M)² = ∑ᵢⱼ ‖Mᵢⱼ‖² = d − overlap` (W0.1(a) +
     complementary Parseval).
 
-**W3.4 — Assemble the aligned-basis theorem. Difficulty 4/5. ◑ ANALYTIC CORE +
-INFRASTRUCTURE DONE 2026-07-07 (Opus).** Substantial progress in
+**W3.4 — Assemble the aligned-basis theorem. Difficulty 4/5. ✅ DONE 2026-07-07
+(Opus) — closes G3.** `sum_sq_norm_aligned_le` in `AlignedBasis.lean`:
+`∑ⱼ‖wⱼ−uⱼ‖² ≤ 2(d − ∑ⱼᵢ‖⟪uᵢ,vⱼ⟫‖²) = 2‖sinΘ‖²_F` for the Procrustes-rotated
+basis `wⱼ = (familyIsometry hv)(O⁻¹ eⱼ)`, `O = polarUnitary (overlapOp hu hv)`.
+Assembled from `sum_re_inner_u_aligned` (cross-term sum = ∑cos θ), the norm
+expansion (`‖wⱼ−uⱼ‖² = 2 − 2 re⟪uⱼ,wⱼ⟫`), and the analytic core
+`sum_overlap_le_sum_singularValues`. The finrank/`d` friction was resolved by
+generalizing W0.1(c) + the core lemma to `(hn : finrank = n)` via `subst`.
+Full build green, axiom-clean.
+
+Historical detail (superseded by the ✅ above): Substantial progress in
 `AlignedBasis.lean` (new file) + `SingularSubspace.lean`:
 - `sum_sq_norm_le_sum_re_inner_abs_of_contraction` (`∑σ² ≤ ∑σ` for a contraction).
 - `familyMap`/`familyIsometry` — the coordinate isometry `EuclideanSpace 𝕜 (Fin d)

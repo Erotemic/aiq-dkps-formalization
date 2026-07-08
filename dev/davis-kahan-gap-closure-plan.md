@@ -368,7 +368,13 @@ Operator-native statement of `∃ orthogonal O, ‖V̂O − V‖_F ≤ 2^{3/2}·
 (`w = V̂O` in matrix language; spanning + orthonormality is the faithful
 operator rendering of right-multiplication by orthogonal `O`.)
 
-**W3.1 — Unitary polar decomposition in finite dimension. Difficulty 3/5.**
+**W3.1 — Unitary polar decomposition in finite dimension. Difficulty 3/5. ✅ DONE
+2026-07-07 (Opus).** `PolarDecomposition.lean`: `polarUnitary A : E ≃ₗᵢ[𝕜] E`
+(the kernel-completed unitary — restrict `polarFactor A` to its initial space
+`(ker A)ᗮ` where it is isometric, extend via Mathlib's `LinearIsometry.extend`,
+upgrade to an equiv by `injective_iff_surjective`) and `polar_decomposition_unitary`
+(`A = U ∘ₗ |A|`, `U` unitary for every `A`, singular or not). This is the R5
+load-bearing prerequisite for W3.4. Build green, axiom-clean.
 Extend `polarFactor` to a genuine unitary when `E = F` (square case):
 `∃ U : E ≃ₗᵢ[𝕜] E, ∀ x, A x = U ((abs A) x)`. Route: `polarFactor A` is a
 partial isometry with `ker = ker A`, `range = range A`;

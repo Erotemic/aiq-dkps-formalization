@@ -190,6 +190,45 @@ theorem polar_decomposition_of_isUnit {A : E →ₗ[𝕜] E} (hA : IsUnit A) :
   rw [coe_polarUnitaryEquiv]
   exact polar_decomposition A
 
+/-! ### General square case: the kernel-completed unitary
+
+Even for a singular `A`, the partial isometry `polarFactor A` extends to a
+genuine unitary `E ≃ₗᵢ[𝕜] E` — map the initial space `(ker A)ᗮ` by
+`polarFactor A` (isometrically onto `range A`) and complete `ker A`
+isometrically onto `(range A)ᗮ` (equal dimensions by rank–nullity).  The
+identity `A = U |A|` survives, and `U` is a true unitary; this is the factor the
+orthogonal-Procrustes alignment argument needs (`polarUnitaryEquiv` above
+requires invertibility). -/
+
+/-- The polar factor restricted to `(ker A)ᗮ`, its initial space, where it is a
+genuine linear isometry. -/
+private noncomputable def polarIsometryOnOrthogonal (A : E →ₗ[𝕜] E) :
+    ↥((ker A)ᗮ) →ₗᵢ[𝕜] E where
+  toLinearMap := (polarFactor A) ∘ₗ ((ker A)ᗮ).subtype
+  norm_map' x := norm_polarFactor_apply_of_mem x.2
+
+/-- **The polar unitary (general square case).** The kernel-completed unitary
+extending `polarFactor A`; unitary for every `A`, singular or not. -/
+noncomputable def polarUnitary (A : E →ₗ[𝕜] E) : E ≃ₗᵢ[𝕜] E :=
+  LinearIsometryEquiv.ofSurjective (polarIsometryOnOrthogonal A).extend
+    (LinearMap.injective_iff_surjective.mp (polarIsometryOnOrthogonal A).extend.injective)
+
+theorem polarUnitary_apply_abs_apply (A : E →ₗ[𝕜] E) (x : E) :
+    polarUnitary A (abs A x) = A x := by
+  have hmem : abs A x ∈ (ker A)ᗮ := abs_apply_mem_orthogonal_ker A x
+  rw [polarUnitary, LinearIsometryEquiv.coe_ofSurjective,
+    show abs A x = ((⟨abs A x, hmem⟩ : ↥((ker A)ᗮ)) : E) from rfl,
+    LinearIsometry.extend_apply]
+  exact polarFactor_apply_abs_apply A x
+
+/-- **Polar decomposition with a unitary factor** (general square case),
+`A = U |A|` with `U = polarUnitary A` a genuine unitary. -/
+theorem polar_decomposition_unitary (A : E →ₗ[𝕜] E) :
+    A = (polarUnitary A : E →ₗ[𝕜] E) ∘ₗ abs A := by
+  ext x
+  simp only [LinearMap.comp_apply]
+  exact (polarUnitary_apply_abs_apply A x).symm
+
 /-! ### CFC bridge — the ℂ / ContinuousLinearMap headline (`|A| = CFC.abs A`) -/
 
 section CFCBridge

@@ -63,10 +63,10 @@ YWS theorem with its constant $2$ (via Hoffman--Wielandt and a von Neumann
 trace inequality), the YWS aligned-basis and singular-subspace extensions,
 general-interval spectral subspaces, Davis's sharper total-rotation estimate
 and per-eigenvector $\sin2\theta$ and $\tan2\theta$ theorems, and the operator
-Sylvester bound that underlies the dimension-free operator-norm theorem, and a
-canonical principal-angle API.  A closing section records what remains --- the
-operator-norm $\sin\Theta$ assembly and unitarily invariant norms --- each with
-a worked proof route.
+Sylvester bound and the dimension-free operator-norm $\sin\Theta$ theorem it
+powers, and a canonical principal-angle API.  A closing section records what is
+left --- only the subspace-level $\sin2\Theta$ theorem and general unitarily
+invariant norms, both deliberately deferred.
 \end{abstract}
 
 \vspace{1.5em}
@@ -213,11 +213,11 @@ the singular-subspace extension are formalized, Davis's sharper 1963
 total-rotation theory is formalized together with its polar-decomposition
 substrate, and Davis's per-eigenvector $\sin2\theta$ and $\tan2\theta$ theorems
 are formalized in a phase-free product form, and a canonical principal-angle
-API is packaged.  What is still missing is the dimension-free operator-norm
-$\sin\Theta$ theorem (its analytic engine, an operator Sylvester bound, is
-already in place; only the compression assembly remains), the subspace-level
-$\sin2\Theta$ theorem, and general unitarily invariant norm versions. The
-purpose of this note is to explain
+API is packaged, and the dimension-free operator-norm $\sin\Theta$ theorem is
+formalized on top of the operator Sylvester bound.  What is still missing is
+only the subspace-level $\sin2\Theta$ theorem and general unitarily invariant
+norm versions, both deliberately deferred. The purpose of this note is to
+explain
 exactly which part has been formalized, how it relates to the paper statements,
 and what still remains to be built --- the closing section ranks the remaining
 steps by difficulty and records a checked proof route for each.
@@ -525,8 +525,8 @@ separated form, if the form of $A$ sits above $c+\gap$ and that of $B$ below
 $c$ and $AX-XB=Y$, then $\norm{X}\le\norm{Y}/\gap$.  The proof is a purely
 algebraic one-inequality argument (no resolvents, contour integrals, or
 Bochner integrals), and holds with no finite-dimensionality or completeness
-assumptions.  Only the compression assembly on top of it remains
-(item~\ref{it:opnorm} below).
+assumptions.  It is the engine of the operator-norm $\sin\Theta$ theorem
+recorded next.
 
 \paragraph{The canonical principal-angle API.}
 For two orthonormal families $u,v:\mathrm{Fin}\,d\to\HH$ spanning subspaces
@@ -545,14 +545,28 @@ the invariance of a symmetric operator's sorted eigenvalues under unitary
 conjugation ($AA^{*}=U(A^{*}A)U^{-1}$ with $U$ the kernel-completed unitary
 polar factor).
 
+\paragraph{The dimension-free operator-norm $\sin\Theta$ theorem.}
+The headline $\norm{\sinT}_{\op}\le\norm{S-T}_{\op}/\gap$ is now formalized,
+in the vocabulary $\norm{\widehat Q\,P}_{\op}\le\eps/\gap$ where $P$ projects
+onto a $T$-invariant subspace $U$ whose quadratic form sits above $c+\gap$ and
+$\widehat Q$ onto an $S$-invariant subspace $V$ whose form sits below $c$ (that
+operator norm \emph{is} $\norm{\sinT}_{\op}$).  The proof compresses nothing:
+on the full space, with $X=P\widehat Q$ and the scalar-extended operators
+$A=TP+(c+\gap)(I-P)$, $B=SQ+c(I-Q)$ (globally $(c+\gap)$-coercive and
+$c$-bounded by the block decomposition, since $U,U^{\perp}$ are $T$-invariant
+and $V,V^{\perp}$ are $S$-invariant), the projection algebra gives the exact
+Sylvester relation $AX-XB=P(T-S)Q$, and the operator Sylvester bound above
+finishes; $\norm{\widehat Q\,P}=\norm{P\,\widehat Q}$ by self-adjointness of
+the projections.  No dimension factor appears, and (unlike the Frobenius
+ladder) no eigenbasis or Courant--Fischer machinery is used --- the two
+quadratic-form hypotheses are taken abstractly.
+
 \section{What remains, ranked by difficulty}\label{sec:remains}
 
-One item remains, plus two deliberately deferred ones.  They are listed
-hardest first; the remaining item comes with the proof route that has been
-checked on paper, so that the remaining work is implementation rather than
-route discovery.  Lean-level detail (exact hypotheses, file placement,
-pitfalls) is maintained in \texttt{dev/davis-kahan-gap-closure-plan.md} (v5) in
-the repository.
+Both remaining items are deliberately deferred; each downstream consumer in
+this repository is already served by the Frobenius and operator-norm results
+above.  Lean-level detail is maintained in
+\texttt{dev/davis-kahan-gap-closure-plan.md} (v5) in the repository.
 
 \begin{enumerate}
 \item \emph{Subspace-level $\sin2\Theta$/$\tan2\Theta$ (difficulty 5/5 ---
@@ -569,17 +583,6 @@ the repository.
   functions, Ky Fan norms, Fan dominance, and the part~III $\sin\Theta$
   theorem for every unitarily invariant norm.  A Mathlib-sized library on its
   own; nothing downstream in this repository consumes it.
-
-\item \emph{Operator-norm $\sin\Theta$ assembly (difficulty 3/5).}\label{it:opnorm}
-  The headline $\norm{\widehat Q\,P}_{\op}\le\norm{S-T}_{\op}/\gap$ (that
-  operator norm \emph{is} $\norm{\sinT}_{\op}$; the principal-angle
-  identification can come later).  Route: compress to
-  $X\colon v\mapsto P_{U}v$ from the trailing $S$-span to the leading
-  $T$-span; invariance and the commutation $TP_U=P_UT$ give the Sylvester
-  relation $T_U X-X S_V=(\text{compressed }S-T)$; the quadratic-form
-  hypotheses of the separated Sylvester bound are exactly the Courant--Fischer
-  form bounds on spectral spans; un-compressing and taking adjoints yields the
-  theorem.  All ingredients exist; this is plumbing.
 \end{enumerate}
 
 \section{Dictionary to the Lean source}\label{sec:dictionary}
@@ -688,6 +691,10 @@ Per-eigenvector $\tan2\theta$ (vanishing pinch): decomposition / projection form
 Sylvester bound, coercive / separated form
   & \texttt{opNorm\_le\_div\_of\_comp\_add\_comp\_eq},
     \texttt{opNorm\_le\_div\_of\_comp\_sub\_comp\_eq} (\texttt{SylvesterBound.lean}) \\
+Operator-norm $\sin\Theta$ / projection--operator commutation
+  & \texttt{norm\_starProjection\_comp\_starProjection\_le},
+    \texttt{starProjection\_comp\_toContinuousLinearMap\_comm}
+    (\texttt{SinThetaOpNorm.lean}) \\
 $\sigma(A^{*})=\sigma(A)$ / eigenvalue conjugation-invariance
   & \texttt{singularValues\_adjoint}, \texttt{eigenvalues\_conj\_unitary}
     (\texttt{SingularSubspace.lean}) \\

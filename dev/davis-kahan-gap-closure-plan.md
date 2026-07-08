@@ -62,7 +62,7 @@ check `propext, Classical.choice, Quot.sound` on headline declarations).
 
 | # | Gap | Workstream | Status (2026-07-07) |
 |---|-----|------------|---------------------|
-| G1 | Operator-norm `‖sinΘ‖_op ≤ ‖S−T‖_op/g` and general unitarily-invariant-norm sinΘ | W5, W7 | ◑ W5.1 done; W5.2 remains (v5 recipe, 3/5, Opus); W7 deferred |
+| G1 | Operator-norm `‖sinΘ‖_op ≤ ‖S−T‖_op/g` and general unitarily-invariant-norm sinΘ | W5, W7 | ◑ W5.1 ✅ + W5.2 ✅ (op-norm half **closed**); W7 (UI norms) deferred |
 | G2 | tanΘ, sin2Θ, tan2Θ theorems | W6 | ◑ W6.1 ✅ (Fable) + W6.2 ✅ (Opus) done in `RotationSharp.lean`; W6.3 defer |
 | G3 | YWS aligned-basis bound | W3 | ✅ **closed** (W3.1–W3.4) |
 | G4 | YWS singular-vector extension (rectangular `A, Â`) | W4 | ✅ **closed** (W4.1–W4.3) |
@@ -674,8 +674,26 @@ Mathlib-idiomatic form.
 Do NOT attempt the general two-interval separation (constant π/2 territory);
 half-line is what the DK hybrid gap needs.
 
-**W5.2 — Operator-norm sinΘ. Difficulty 3/5 (was 3.5/5 — v5: decoupled from
-W0.2, concrete compression recipe below).**
+**W5.2 — Operator-norm sinΘ. Difficulty 3/5. ✅ DONE 2026-07-08 (Opus) — new
+file `SinThetaOpNorm.lean`, registered, full library build green (8716 jobs),
+both headlines axiom-clean.** Delivered `norm_starProjection_comp_starProjection_le`
+(`‖Q̂ ∘L P‖ ≤ ε/g`, abstract invariant-subspace + quadratic-form hypotheses) and
+the reusable commutation helper `starProjection_comp_toContinuousLinearMap_comm`
+(a symmetric operator commutes with the projection onto an invariant subspace).
+**Route improvement vs the plan's subtype recipe:** rather than compress to
+`↥U →L ↥V` subtypes (heavy coercion plumbing), the proof stays on the full
+space `E` with the *scalar-extended* operators `A = T P + (c+g)(1−P)` and
+`B = S Q + c(1−Q)`, which are globally `(c+g)`-coercive / `c`-bounded by the
+block decomposition (T-invariance of `U, Uᗮ`; S-invariance of `V, Vᗮ`), and the
+projection algebra gives the exact Sylvester relation
+`A ∘L X − X ∘L B = P ∘L (T − S) ∘L Q` with `X = P ∘L Q`; the existing
+`opNorm_le_div_of_comp_sub_comp_eq` finishes, and `‖Q̂ P‖ = ‖P Q̂‖` by
+self-adjointness. This needed **no un-privatizing of CourantFischer** (the
+form hypotheses are taken abstractly) — the eigenvector-block corollary using
+those private lemmas is an optional follow-up. One extra hypothesis `0 ≤ ε`
+(vacuous in the intended `ε = ‖S−T‖_op` application) makes the trivial-space
+edge case go through.
+*(historical subtype recipe retained below for reference.)*
 `‖Q̂ ∘L P‖ ≤ ε/g` where `P` = starProjection onto the `T`-leading block span
 `U`, `Q̂` = onto the `S`-trailing block span `V`. **State the headline in
 exactly this vocabulary — `‖Q̂ ∘L P‖` *is* `‖sinΘ‖_op`**; the principal-angle
@@ -915,7 +933,7 @@ Everything not listed here is ✅ done and verified (v4 sweep + v5 re-check).
 | 1 | W6.3 | Subspace-level sin2Θ | 5/5 | **defer** (with W7) | v5 warning: per-vector summation does *not* recover part III; only weaker forms reachable |
 | 2 | W7.1–7.4 | Unitarily invariant norms | 4–5/5 | **defer** (separate project) | unchanged |
 | 3 | W6.1 | Per-vector sin2θ, product form | 4/5 | **✅ DONE** (Fable, 2026-07-08) | `RotationSharp.lean`; polynomial-coefficient rotation, no `sqrt`/inverses; axiom-clean |
-| 4 | W5.2 | Op-norm sinΘ via Sylvester | 3/5 (was 3.5) | Opus | v5: decoupled from W0.2; 5-step recipe in the step text; step-2 helper now exists (`map_mem_orthogonal_of_forall_map_mem`) |
+| — | W5.2 | Op-norm sinΘ via Sylvester | 3/5 | **✅ DONE** (Opus, 2026-07-08) | `SinThetaOpNorm.lean`; full-space scalar-extension route (no subtypes), axiom-clean |
 | — | W0.2 | Principal-angle API | 3/5 | **✅ DONE** (Opus, 2026-07-08) | `PrincipalAngles.lean`; cos/sin defs + symmetry + overlap bridge, axiom-clean |
 | — | W0.1(d) | `singularValues_adjoint` (square case) | 2.5/5 | **✅ DONE** (Opus, 2026-07-08) | `SingularSubspace.lean`; `eigenvalues_conj_unitary` + polar identity, axiom-clean |
 | — | W6.2 | tan2θ under vanishing pinch | 2/5 | **✅ DONE** (Opus, 2026-07-08) | `RotationSharp.lean`; pure assembly on `key_identity`, axiom-clean |

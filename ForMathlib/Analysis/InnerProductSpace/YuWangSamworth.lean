@@ -14,6 +14,7 @@ and the upper bound is Hoffman–Wielandt.
 To be re-authored per Mathlib's AI-contribution policy at PR time.
 -/
 
+import ForMathlib.Analysis.InnerProductSpace.CourantFischer
 import ForMathlib.Analysis.InnerProductSpace.HoffmanWielandt
 
 /-! # The Yu–Wang–Samworth Davis–Kahan variant (Frobenius, population gap)
@@ -198,6 +199,47 @@ theorem sq_gap_mul_sum_cross_le_of_population_gap
       ≤ 4 * ∑ k, ‖(S - T) (hT.eigenvectorBasis hn k)‖ ^ 2 :=
   (sq_gap_mul_sum_cross_le_sum_sq_norm_residualColumn hT hS hn s hΔ hgap).trans
     (sum_sq_norm_residualColumn_le hT hS hn s)
+
+/-- **Upper bound, operator-norm branch.** With `S − T` `ε`-operator-close, each
+residual column obeys `‖Rⱼ‖ ≤ 2ε` (its two pieces are `‖(S − T) wⱼ‖ ≤ ε` and,
+by Weyl, `|λⱼ(S) − λⱼ(T)| ≤ ε`), so `∑_{j ∈ s} ‖Rⱼ‖² ≤ 4 · |s| · ε²`. -/
+theorem sum_sq_norm_residualColumn_le_of_opNorm (hT : T.IsSymmetric) (hS : S.IsSymmetric)
+    (hn : finrank 𝕜 E = n) (s : Finset (Fin n)) {ε : ℝ}
+    (hε : ∀ x : E, ‖(S - T) x‖ ≤ ε * ‖x‖) :
+    ∑ j ∈ s, ‖residualColumn hT hS hn j‖ ^ 2 ≤ 4 * s.card * ε ^ 2 := by
+  have hcol : ∀ j, ‖residualColumn hT hS hn j‖ ^ 2 ≤ 4 * ε ^ 2 := by
+    intro j
+    have hEwj : ‖(S - T) (hS.eigenvectorBasis hn j)‖ ≤ ε := by
+      have := hε (hS.eigenvectorBasis hn j)
+      rwa [(hS.eigenvectorBasis hn).orthonormal.norm_eq_one j, mul_one] at this
+    have hδ : |hS.eigenvalues hn j - hT.eigenvalues hn j| ≤ ε :=
+      abs_eigenvalues_sub_le hS hT hn hε j
+    have htri : ‖residualColumn hT hS hn j‖ ≤ 2 * ε := by
+      rw [residualColumn_eq]
+      refine (norm_sub_le _ _).trans ?_
+      rw [norm_smul, RCLike.norm_ofReal, (hS.eigenvectorBasis hn).orthonormal.norm_eq_one j,
+        mul_one]
+      linarith
+    calc ‖residualColumn hT hS hn j‖ ^ 2 ≤ (2 * ε) ^ 2 :=
+          pow_le_pow_left₀ (norm_nonneg _) htri 2
+      _ = 4 * ε ^ 2 := by ring
+  calc ∑ j ∈ s, ‖residualColumn hT hS hn j‖ ^ 2
+      ≤ ∑ _j ∈ s, 4 * ε ^ 2 := Finset.sum_le_sum fun j _ => hcol j
+    _ = 4 * s.card * ε ^ 2 := by rw [Finset.sum_const, nsmul_eq_mul]; ring
+
+/-- **Yu–Wang–Samworth sin-Θ bound (operator-norm branch, population gap).** With
+`S − T` `ε`-operator-close, `Δ² · overlap ≤ 4 · d · ε²` where `d = |s|` is the
+block size — the `√d ε` branch of Yu–Wang–Samworth. -/
+theorem sq_gap_mul_sum_cross_le_of_population_gap_opNorm
+    (hT : T.IsSymmetric) (hS : S.IsSymmetric) (hn : finrank 𝕜 E = n)
+    (s : Finset (Fin n)) {Δ ε : ℝ} (hΔ : 0 ≤ Δ)
+    (hgap : ∀ j ∈ s, ∀ k ∉ s, Δ ≤ |hT.eigenvalues hn j - hT.eigenvalues hn k|)
+    (hε : ∀ x : E, ‖(S - T) x‖ ≤ ε * ‖x‖) :
+    Δ ^ 2 * ∑ j ∈ s, ∑ k ∈ sᶜ,
+        ‖⟪hT.eigenvectorBasis hn k, hS.eigenvectorBasis hn j⟫_𝕜‖ ^ 2
+      ≤ 4 * s.card * ε ^ 2 :=
+  (sq_gap_mul_sum_cross_le_sum_sq_norm_residualColumn hT hS hn s hΔ hgap).trans
+    (sum_sq_norm_residualColumn_le_of_opNorm hT hS hn s hε)
 
 /-- **Yu–Wang–Samworth sin-Θ bound (Frobenius, population gap), `‖sinΘ‖_F` form.**
 For a positive population gap `Δ`, `√overlap ≤ 2 · √(∑ₖ ‖(S − T) uₖ‖²) / Δ`, the

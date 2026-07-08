@@ -152,4 +152,34 @@ theorem sum_overlap_le_sum_singularValues {u v : Fin d → E} (hu : Orthonormal 
         (sum_sq_singularValues_overlapOp hu hv).symm
     _ ≤ ∑ k : Fin d, (overlapOp hu hv).singularValues (k : ℕ) := hcore
 
+/-- **Cross-term identity** (Procrustes/polar).  With `O = polarUnitary
+(overlapOp hu hv)`, the aligned rotation `wⱼ = (familyIsometry hv)(O⁻¹ eⱼ)`
+satisfies `⟪uⱼ, wⱼ⟫ = ⟪O⁻¹ eⱼ, |M|(O⁻¹ eⱼ)⟫`, where `M = overlapOp hu hv`.
+Moves `familyIsometry hu` to its adjoint (giving `M`), then `M = O|M|` with `O`
+unitary. -/
+theorem inner_u_aligned_eq {u v : Fin d → E} (hu : Orthonormal 𝕜 u) (hv : Orthonormal 𝕜 v)
+    (j : Fin d) :
+    ⟪u j, familyIsometry hv ((polarUnitary (overlapOp hu hv)).symm (EuclideanSpace.single j 1))⟫_𝕜
+      = ⟪(polarUnitary (overlapOp hu hv)).symm (EuclideanSpace.single j 1),
+          abs (overlapOp hu hv)
+            ((polarUnitary (overlapOp hu hv)).symm (EuclideanSpace.single j 1))⟫_𝕜 := by
+  set M := overlapOp hu hv with hM
+  set O := polarUnitary M with hO
+  have hstep : ⟪u j, familyIsometry hv (O.symm (EuclideanSpace.single j 1))⟫_𝕜
+      = ⟪EuclideanSpace.single j 1, M (O.symm (EuclideanSpace.single j 1))⟫_𝕜 := by
+    rw [← familyIsometry_single hu j, ← LinearIsometry.coe_toLinearMap,
+      ← LinearMap.adjoint_inner_right]
+    rfl
+  rw [hstep]
+  -- `M = O ∘ |M|`, then `O` unitary moves across the inner product.
+  have hpolar : M (O.symm (EuclideanSpace.single j 1))
+      = O (abs M (O.symm (EuclideanSpace.single j 1))) := by
+    have h1 := LinearMap.congr_fun (polar_decomposition_unitary M)
+      (O.symm (EuclideanSpace.single j 1))
+    rw [LinearMap.comp_apply] at h1
+    rw [h1, hO]
+    rfl
+  rw [hpolar, ← O.apply_symm_apply (EuclideanSpace.single j 1)]
+  rw [O.inner_map_map, O.symm_apply_apply]
+
 end ForMathlib

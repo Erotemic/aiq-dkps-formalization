@@ -63,10 +63,10 @@ YWS theorem with its constant $2$ (via Hoffman--Wielandt and a von Neumann
 trace inequality), the YWS aligned-basis and singular-subspace extensions,
 general-interval spectral subspaces, Davis's sharper total-rotation estimate
 and per-eigenvector $\sin2\theta$ and $\tan2\theta$ theorems, and the operator
-Sylvester bound that underlies the dimension-free operator-norm theorem.  A
-closing section records what remains --- the operator-norm $\sin\Theta$
-assembly, the canonical principal-angle API, and unitarily invariant norms ---
-ranked by difficulty, each with a worked proof route.
+Sylvester bound that underlies the dimension-free operator-norm theorem, and a
+canonical principal-angle API.  A closing section records what remains --- the
+operator-norm $\sin\Theta$ assembly and unitarily invariant norms --- each with
+a worked proof route.
 \end{abstract}
 
 \vspace{1.5em}
@@ -212,10 +212,10 @@ formalized via Hoffman--Wielandt, the aligned-basis (Procrustes) conclusion and
 the singular-subspace extension are formalized, Davis's sharper 1963
 total-rotation theory is formalized together with its polar-decomposition
 substrate, and Davis's per-eigenvector $\sin2\theta$ and $\tan2\theta$ theorems
-are formalized in a phase-free product form.  What is still missing is the
-dimension-free operator-norm $\sin\Theta$ theorem (its analytic engine, an
-operator Sylvester bound, is already in place; only the compression assembly
-remains), a packaged canonical principal-angle API, the subspace-level
+are formalized in a phase-free product form, and a canonical principal-angle
+API is packaged.  What is still missing is the dimension-free operator-norm
+$\sin\Theta$ theorem (its analytic engine, an operator Sylvester bound, is
+already in place; only the compression assembly remains), the subspace-level
 $\sin2\Theta$ theorem, and general unitarily invariant norm versions. The
 purpose of this note is to explain
 exactly which part has been formalized, how it relates to the paper statements,
@@ -528,13 +528,31 @@ Bochner integrals), and holds with no finite-dimensionality or completeness
 assumptions.  Only the compression assembly on top of it remains
 (item~\ref{it:opnorm} below).
 
+\paragraph{The canonical principal-angle API.}
+For two orthonormal families $u,v:\mathrm{Fin}\,d\to\HH$ spanning subspaces
+$U,V$, the cosines of the principal angles are defined as the singular values
+of the flat overlap operator (matrix $\inner{u_i}{v_j}$), and $\sin\Theta$'s
+squared Frobenius norm as $\sum_i(1-\cos^2\theta_i)$.  The formalization records
+that the cosines lie in $[0,1]$ and are sorted, are \emph{symmetric} in the two
+families (the swapped overlap operator is the adjoint, and adjoints share
+singular values --- this is exactly where $\sigma(M^{*})=\sigma(M)$ is used, and
+the reason it was proved), and satisfy $\norm{\sinT}_{\F}^2=d-\mathrm{overlap}$
+with $\mathrm{overlap}=\sum_j\sum_i|\inner{u_i}{v_j}|^2$.  The Yu--Wang--Samworth
+aligned-basis bound is restated in this vocabulary as
+$\sum_j\norm{w_j-u_j}^2\le2\norm{\sinT}_{\F}^2$.  The singular-value symmetry
+$\sigma(A^{*})=\sigma(A)$ (square case) is itself a new addition, proved through
+the invariance of a symmetric operator's sorted eigenvalues under unitary
+conjugation ($AA^{*}=U(A^{*}A)U^{-1}$ with $U$ the kernel-completed unitary
+polar factor).
+
 \section{What remains, ranked by difficulty}\label{sec:remains}
 
-Two items remain, plus two deliberately deferred ones.  They are listed
-hardest first; each comes with the proof route that has been checked on paper,
-so that the remaining work is implementation rather than route discovery.
-Lean-level detail (exact hypotheses, file placement, pitfalls) is maintained
-in \texttt{dev/davis-kahan-gap-closure-plan.md} (v5) in the repository.
+One item remains, plus two deliberately deferred ones.  They are listed
+hardest first; the remaining item comes with the proof route that has been
+checked on paper, so that the remaining work is implementation rather than
+route discovery.  Lean-level detail (exact hypotheses, file placement,
+pitfalls) is maintained in \texttt{dev/davis-kahan-gap-closure-plan.md} (v5) in
+the repository.
 
 \begin{enumerate}
 \item \emph{Subspace-level $\sin2\Theta$/$\tan2\Theta$ (difficulty 5/5 ---
@@ -562,18 +580,6 @@ in \texttt{dev/davis-kahan-gap-closure-plan.md} (v5) in the repository.
   hypotheses of the separated Sylvester bound are exactly the Courant--Fischer
   form bounds on spectral spans; un-compressing and taking adjoints yields the
   theorem.  All ingredients exist; this is plumbing.
-
-\item \emph{Canonical principal-angle API (difficulty 3/5, with one 2.5/5
-  prerequisite).}  Define $\cos\Theta$ as the singular values of the (already
-  formalized) flat overlap operator, and prove: values in $[0,1]$ (done),
-  symmetry in the two subspaces, and the bridges to the overlap sum, the
-  projector distance, and the $\mathrm{sqSinAngle}$ of the intertwining-unitary
-  file.  Symmetry needs $\sigma(M^{*})=\sigma(M)$, which Mathlib lacks; in the
-  only case needed (square $M$) it follows from
-  $MM^{*}=U(M^{*}M)U^{*}$ with $U$ the kernel-completed unitary polar factor
-  --- already formalized --- plus ``unitary conjugation preserves sorted
-  eigenvalues,'' a Courant--Fischer consequence.
-
 \end{enumerate}
 
 \section{Dictionary to the Lean source}\label{sec:dictionary}
@@ -682,6 +688,13 @@ Per-eigenvector $\tan2\theta$ (vanishing pinch): decomposition / projection form
 Sylvester bound, coercive / separated form
   & \texttt{opNorm\_le\_div\_of\_comp\_add\_comp\_eq},
     \texttt{opNorm\_le\_div\_of\_comp\_sub\_comp\_eq} (\texttt{SylvesterBound.lean}) \\
+$\sigma(A^{*})=\sigma(A)$ / eigenvalue conjugation-invariance
+  & \texttt{singularValues\_adjoint}, \texttt{eigenvalues\_conj\_unitary}
+    (\texttt{SingularSubspace.lean}) \\
+Principal-angle cosines / $\sin\Theta$ / symmetry / overlap bridge
+  & \texttt{cosPrincipalAngles}, \texttt{sinThetaSq},
+    \texttt{cosPrincipalAngles\_comm}, \texttt{sinThetaSq\_eq\_sub\_overlap}
+    (\texttt{PrincipalAngles.lean}) \\
 \bottomrule
 \end{tabular}
 \end{center}

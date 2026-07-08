@@ -212,8 +212,23 @@ For `A : E →ₗ[𝕜] F` between finite-dim spaces, prove:
 Pitfall: `singularValues` is a `ℕ →₀ ℝ` (finsupp) — write index bookkeeping
 lemmas once (`singularValues_fin` mediates `Fin (finrank) → ℕ`).
 
-**W0.2 — Principal angles between equal-dimensional subspaces. Difficulty 3/5
-(was 3.5/5 — v5: the flat operator and half the lemma list already exist).**
+**W0.2 — Principal angles between equal-dimensional subspaces. Difficulty 3/5.
+✅ DONE 2026-07-08 (Opus) — new file `PrincipalAngles.lean`, registered,
+library build green (8715 jobs), all headlines axiom-clean.** Delivered:
+`cosPrincipalAngles hu hv := (overlapOp hu hv).singularValues`,
+`cosPrincipalAngles_{nonneg,le_one,antitone}` (range/order via the existing
+contraction lemmas), `overlapOp_adjoint` (`(overlapOp hu hv)⋆ = overlapOp hv hu`,
+one line from `adjoint_comp`), the symmetry `cosPrincipalAngles_comm` (the
+W0.1(d) payoff — `singularValues_adjoint`), `sinThetaSq hu hv := ∑ (1 − cos²)`,
+the bridge `sinThetaSq_eq_sub_overlap` (`‖sinΘ‖²_F = d − overlap`),
+`sinThetaSq_{nonneg,comm}`, and `sum_sq_norm_aligned_le_sinThetaSq` (the YWS
+aligned-basis bound restated as `∑‖wⱼ−uⱼ‖² ≤ 2‖sinΘ‖²_F`). Deferred as optional
+follow-ups (not on any consumer's critical path): the DavisKahan cross-block
+bridge (c)/(d) tying `sinThetaSq` of eigenvector blocks to the
+`sum_cross_…`/`sum_norm_sub_starProjection_span_sq_eq` encodings, the
+`sqSinAngle` rank-one bridge (e), and the op-norm identification (f) — W5.2 no
+longer needs (f).
+*(historical route notes below.)*
 *(Rewritten per Opus R3 — the original mixed a subspace-compression definition
 with flat-encoding lemmas; the flat encoding is now the definition itself.)*
 **v5 status note (Fable): do NOT redefine the flat operator — it already
@@ -901,7 +916,7 @@ Everything not listed here is ✅ done and verified (v4 sweep + v5 re-check).
 | 2 | W7.1–7.4 | Unitarily invariant norms | 4–5/5 | **defer** (separate project) | unchanged |
 | 3 | W6.1 | Per-vector sin2θ, product form | 4/5 | **✅ DONE** (Fable, 2026-07-08) | `RotationSharp.lean`; polynomial-coefficient rotation, no `sqrt`/inverses; axiom-clean |
 | 4 | W5.2 | Op-norm sinΘ via Sylvester | 3/5 (was 3.5) | Opus | v5: decoupled from W0.2; 5-step recipe in the step text; step-2 helper now exists (`map_mem_orthogonal_of_forall_map_mem`) |
-| 5 | W0.2 | Principal-angle API | 3/5 (was 3.5) | Opus | build on existing `overlapOp`; needs W0.1(d) only for symmetry |
+| — | W0.2 | Principal-angle API | 3/5 | **✅ DONE** (Opus, 2026-07-08) | `PrincipalAngles.lean`; cos/sin defs + symmetry + overlap bridge, axiom-clean |
 | — | W0.1(d) | `singularValues_adjoint` (square case) | 2.5/5 | **✅ DONE** (Opus, 2026-07-08) | `SingularSubspace.lean`; `eigenvalues_conj_unitary` + polar identity, axiom-clean |
 | — | W6.2 | tan2θ under vanishing pinch | 2/5 | **✅ DONE** (Opus, 2026-07-08) | `RotationSharp.lean`; pure assembly on `key_identity`, axiom-clean |
 

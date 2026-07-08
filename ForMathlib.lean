@@ -17,6 +17,7 @@ import ForMathlib.Analysis.InnerProductSpace.NearIsometry
 import ForMathlib.Analysis.InnerProductSpace.PartialIsometry
 import ForMathlib.Analysis.InnerProductSpace.PolarDecomposition
 import ForMathlib.Analysis.InnerProductSpace.PositiveSqrt
+import ForMathlib.Analysis.InnerProductSpace.PrincipalAngles
 import ForMathlib.Analysis.InnerProductSpace.RotationBound
 import ForMathlib.Analysis.InnerProductSpace.RotationSharp
 import ForMathlib.Analysis.InnerProductSpace.SchurHorn

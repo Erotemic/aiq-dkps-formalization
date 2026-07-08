@@ -58,13 +58,20 @@ Rayleigh-quotient inequality, and the separation is a hybrid gap between the
 leading eigenvalues of one operator and the trailing eigenvalues of the other.
 The hybrid-gap bound is the deterministic core of the Yu--Wang--Samworth (YWS)
 variant; recovering their population-only gap is a further Weyl step, also
-formalized.  A closing section records the DK variants left unformalized and what
-each of them requires.
+formalized.  Beyond the ladder, the formalization now also contains the exact
+YWS theorem with its constant $2$ (via Hoffman--Wielandt and a von Neumann
+trace inequality), the YWS aligned-basis and singular-subspace extensions,
+general-interval spectral subspaces, Davis's sharper total-rotation estimate,
+and the operator Sylvester bound that underlies the dimension-free
+operator-norm theorem.  A closing section records what remains --- the
+operator-norm $\sin\Theta$ assembly, the canonical principal-angle API, the
+$\sin2\Theta$/$\tan2\Theta$ family, and unitarily invariant norms --- ranked by
+difficulty, each with a worked proof route.
 \end{abstract}
 
 \vspace{1.5em}
 % NOTE: Update permalink if underlying proof changes, so this always is up to date wrt to the referenced lean file.
-\noindent Companion note to \href{https://github.com/AIQ-Kitware/aiq-dkps-formalization/blob/375251df7ab712397977635e8f607c11c3a8083d/ForMathlib/Analysis/InnerProductSpace/DavisKahan.lean}{ForMathlib/Analysis/InnerProductSpace/DavisKahan.lean}, part of a larger formalization effort at \href{https://github.com/AIQ-Kitware/aiq-dkps-formalization}{github.com/AIQ-Kitware/aiq-dkps-formalization}.
+\noindent Companion note to \href{https://github.com/AIQ-Kitware/aiq-dkps-formalization/blob/b9eee75734410c152d5e45b4e6a29ccda179cfaa/ForMathlib/Analysis/InnerProductSpace/DavisKahan.lean}{ForMathlib/Analysis/InnerProductSpace/DavisKahan.lean} and its sibling files under \href{https://github.com/AIQ-Kitware/aiq-dkps-formalization/tree/b9eee75734410c152d5e45b4e6a29ccda179cfaa/ForMathlib/Analysis/InnerProductSpace}{ForMathlib/Analysis/InnerProductSpace/}, part of a larger formalization effort at \href{https://github.com/AIQ-Kitware/aiq-dkps-formalization}{github.com/AIQ-Kitware/aiq-dkps-formalization}.
 
 
 
@@ -197,14 +204,21 @@ perturbation bounds to turn more standard population-gap assumptions into the
 hybrid gap assumption used by the main theorem.
 
 This means the current formalization contains a substantial Frobenius-norm core
-of Davis--Kahan theory, but it is not yet a complete formalization of all the
-forms found in the literature. In particular, it does not yet provide a full
-canonical-angle API, the dimension-free operator-norm $\sin\Theta$ theorem,
-general unitarily invariant norm versions, arbitrary spectral intervals, the
-aligned-basis conclusion from Yu--Wang--Samworth, or the full rotation theory
-from Davis's 1963 paper. The purpose of this note is to explain exactly which
-part has been formalized, how it relates to the paper statements, and what still
-remains to be built.
+of Davis--Kahan theory, and --- since the first version of this note --- most of
+the surrounding theory as well: the ladder now runs over arbitrary index blocks
+and spectral intervals, the exact Yu--Wang--Samworth theorem (population gap,
+constant $2$, both the Frobenius and $\sqrt d\,$-operator-norm branches) is
+formalized via Hoffman--Wielandt, the aligned-basis (Procrustes) conclusion and
+the singular-subspace extension are formalized, and Davis's sharper 1963
+total-rotation theory is formalized together with its polar-decomposition
+substrate.  What is still missing is the dimension-free operator-norm
+$\sin\Theta$ theorem (its analytic engine, an operator Sylvester bound, is
+already in place; only the compression assembly remains), a packaged canonical
+principal-angle API, the $\sin2\Theta$ and $\tan2\Theta$ theorems, and general
+unitarily invariant norm versions. The purpose of this note is to explain
+exactly which part has been formalized, how it relates to the paper statements,
+and what still remains to be built --- the closing section ranks the remaining
+steps by difficulty and records a checked proof route for each.
 
 
 
@@ -359,14 +373,89 @@ $(a-b)-\eps$; YWS's $\Delta=\lambda_d-\lambda_{d+1}$ is the case $a-b$, and
 operator-norm branch is Corollary~\ref{cor:opnorm},
 $\norm{\sinT}_{\F}\le d^{1/2}\eps/\gap$.
 
-\section{What is not formalized}
+Since the first version of this note, the \emph{exact} YWS theorem --- the
+population-only gap $\Delta$ with the constant $2$, in both the Frobenius and
+the $d^{1/2}$-operator-norm branches --- has also been formalized, following
+YWS's own residual sandwich through Hoffman--Wielandt rather than the Weyl
+bridge; see \S\ref{sec:extensions}.
 
-The formalization covers the Frobenius $\sin\Theta$ theorem with a hybrid or
-population gap.
+\section{Extensions formalized since the first version}\label{sec:extensions}
 
-Since this note was first written, \emph{Davis's sharper total-rotation
-estimate} (his Theorem~3.2) has also been formalized, in a separate chain of
-files: the refinement
+The first version of this note stopped at the ladder of
+Theorem~\ref{thm:ladder}.  Five of the gaps it recorded have since been closed;
+this section states each result in ordinary language.  Lean names for
+everything here appear in the second dictionary table of
+\S\ref{sec:dictionary}.
+
+\paragraph{General blocks and spectral intervals.}
+The engine behind Theorem~\ref{thm:ladder} never uses that the selected block
+is the \emph{leading} block.  It is now stated for two independent index sets
+$s$ (rows, for $T$) and $t$ (columns, for $S$) under the cross-gap hypothesis
+$\gap\le|\lambda_i(T)-\lambda_j(S)|$ for $i\in s$, $j\notin t$; the sorted
+$d$-block statements are one-line corollaries.  On top of this sit
+interval-selected subspaces: if the $T$-block is
+$\{i:\lambda_i(T)\in[a,b]\}$ and every trailing eigenvalue of $S$ avoids the
+enlarged interval $(a-\gap,\,b+\gap)$, the sharp rung applies verbatim; a
+two-sided Weyl bridge converts a population interval gap $\delta$ of $T$ plus
+$\norm{S-T}_{\op}\le\eps<\delta$ into the hypothesis with $\gap=\delta-\eps$.
+This closes the ``general-interval subspaces'' item of the first version.
+
+\paragraph{Hoffman--Wielandt and the exact YWS theorem.}
+The Weyl bridge alone cannot reach YWS's constant-$2$ Frobenius branch when
+$\norm{E}_{\op}>\Delta/2$ (the hybrid gap $\Delta-\norm{E}_{\op}$ degenerates).
+The formalization now follows YWS's own residual sandwich.  The
+Hoffman--Wielandt inequality
+\[
+  \sum_i\bigl(\lambda_i(T)-\lambda_i(S)\bigr)^2\;\le\;\norm{S-T}_{\F}^2
+\]
+is proved via a von Neumann-type trace inequality
+$\sum_k\lambda_k(T)\,\mathrm{re}\inner{u_k}{Su_k}\le\sum_i\lambda_i(T)\lambda_i(S)$,
+itself obtained from the Schur--Horn doubly stochastic matrix of the two
+eigenbases, Birkhoff's theorem, and the rearrangement inequality.  With
+Hoffman--Wielandt in hand, the residual columns
+$R_j=\lambda_j(T)\,\widehat v_j-T\widehat v_j$ satisfy the two-sided estimate
+$\Delta^2\norm{\sinT}_{\F}^2\le\sum_j\norm{R_j}^2\le
+\bigl(2\min\{d^{1/2}\norm{E}_{\op},\norm{E}_{\F}\}\bigr)^2$, giving the exact
+YWS headline
+\[
+  \norm{\sinT}_{\F}\;\le\;\frac{2\min\{d^{1/2}\norm{E}_{\op},\ \norm{E}_{\F}\}}{\Delta}
+\]
+with the population-only gap $\Delta$ and YWS's constant $2$, in both branches.
+
+\paragraph{The aligned-basis (Procrustes) bound.}
+There is an orthonormal family $w_1,\dots,w_d$ spanning the sample block
+$\spann(\widehat v_1,\dots,\widehat v_d)$ with
+\[
+  \sum_{j\le d}\norm{w_j-u_j}^2\;\le\;2\,\norm{\sinT}_{\F}^2,
+  \qquad\text{hence}\qquad
+  \Bigl(\sum_j\norm{w_j-u_j}^2\Bigr)^{1/2}
+  \le\frac{2^{3/2}\min\{d^{1/2}\norm{E}_{\op},\norm{E}_{\F}\}}{\Delta},
+\]
+which is YWS's $\norm{\widehat VO-V}_{\F}$ conclusion in operator language
+($w=\widehat VO$).  The rotation $O$ is the \emph{kernel-completed unitary}
+polar factor of the $d\times d$ overlap operator $M_{ij}=\inner{u_i}{\widehat
+v_j}$ --- genuinely unitary even when $M$ is singular (a principal angle of
+$\pi/2$), which is what lets the proof avoid the singular value decomposition
+entirely: the Procrustes cross term becomes the exact identity
+$\mathrm{re}\tr(O^{*}M)=\tr\lvert M\rvert=\sum_i\sigma_i(M)$, and the
+elementary chain $\sum_i\sigma_i\ge\sum_i\sigma_i^2=d-\norm{\sinT}_{\F}^2$
+(each $\sigma_i\le 1$ because $M$ is a contraction) finishes exactly as in
+YWS's identity $2d-2\sum\cos\theta_i\le2\sum\sin^2\theta_i$.
+
+\paragraph{The singular-subspace extension.}
+For rectangular $A,\widehat A$ the right-singular subspaces are the spectral
+subspaces of the Gram operators $A^{*}A,\widehat A^{*}\widehat A$, so the
+symmetric theory applies once the Gram perturbation is controlled:
+$\norm{(\widehat A^{*}\widehat A-A^{*}A)x}\le(\norm{A}+\norm{\widehat
+A})\,\norm{\widehat A-A}\,\norm{x}$, Weyl for squared singular values
+$|\sigma_k(\widehat A)^2-\sigma_k(A)^2|\le(\norm{A}+\norm{\widehat A})\eps$,
+and the YWS engine on the Gram pair give
+$\Gamma^2\,\norm{\sinT}_{\F}^2\le 4d\bigl((\norm{A}+\norm{\widehat
+A})\eps\bigr)^2$ for the population singular-value-squared gap $\Gamma$.  The
+left-singular mirror follows by swapping $A\leftrightarrow A^{*}$.
+
+\paragraph{Davis's sharper total-rotation estimate.}
+Davis's Theorem~3.2, the refinement
 \[
   (\gamma')^2\sum_i\sin^2\theta_i+\sum_i(\lambda_i-\lambda_i')^2
   \le\norm{H}_{\F}^2,
@@ -376,46 +465,112 @@ files: the refinement
 which subtracts the eigenvalue displacement, and its corollary
 $(\gamma')^2\norm{\mathcal C^{\perp}U}_{\F}^2\le 2\norm{\mathcal
 C^{\perp}H}_{\F}^2$ combining Davis's Schur--Horn eigenvalue-change lower bound
-(his Theorem~4.1, \texttt{EigenvalueChange.lean}).  The supporting machinery —
-the positive square root, a partial-isometry API, the operator polar
-decomposition $A=U\lvert A\rvert$ (with a $\mathbb C$/\texttt{CFC.abs}
-headline), and Davis's \S2 canonical intertwining unitary of two complete
-orthogonal projection families — lives in \texttt{PositiveSqrt.lean},
-\texttt{PartialIsometry.lean}, \texttt{PolarDecomposition.lean},
-\texttt{IntertwiningUnitary.lean}; the rotation theorems themselves are in
-\texttt{RotationBound.lean} (all under
-\texttt{ForMathlib/Analysis/InnerProductSpace/}).
+(his Theorem~4.1).  The supporting machinery --- the positive square root, a
+partial-isometry API, the operator polar decomposition $A=U\lvert A\rvert$
+(with a $\mathbb C$/\texttt{CFC.abs} headline), the kernel-completed
+\emph{unitary} polar decomposition used above, and Davis's \S2 canonical
+intertwining unitary of two complete orthogonal projection families --- lives
+in \texttt{PositiveSqrt.lean}, \texttt{PartialIsometry.lean},
+\texttt{PolarDecomposition.lean}, \texttt{IntertwiningUnitary.lean}; the
+rotation theorems themselves are in \texttt{RotationBound.lean}.
 
-The remaining DK-family results, and the machinery each would require, are as
-follows.
+\paragraph{The Sylvester (Lyapunov) solution bound.}
+The analytic engine for the dimension-free operator-norm $\sin\Theta$ theorem
+is in place: if $A,B$ are bounded symmetric with quadratic forms
+$\delta$-coercive ($\delta\norm{x}^2\le\mathrm{re}\inner{Ax}{x}$ and likewise
+for $B$) and $AX+XB=Y$, then $\norm{X}\le\norm{Y}/(2\delta)$; equivalently, in
+separated form, if the form of $A$ sits above $c+\gap$ and that of $B$ below
+$c$ and $AX-XB=Y$, then $\norm{X}\le\norm{Y}/\gap$.  The proof is a purely
+algebraic one-inequality argument (no resolvents, contour integrals, or
+Bochner integrals), and holds with no finite-dimensionality or completeness
+assumptions.  Only the compression assembly on top of it remains
+(item~\ref{it:opnorm} below).
 
-\begin{itemize}
-\item \emph{Operator-norm and general unitarily-invariant-norm $\sin\Theta$.} The
-  dimension-free $\norm{\sinT}_{\op}\le\norm{S-T}_{\op}/\gap$, and its extension
-  to every unitarily invariant norm (the full part~III statement).  The
-  sum-of-squares route delivers the Frobenius norm; the operator-norm version
-  needs the largest singular value of the residual, and the general one needs the
-  theory of unitarily invariant norms (symmetric gauge functions, Ky Fan
-  majorization), which Mathlib does not yet carry.
-\item \emph{The $\tan\Theta$, $\sin2\Theta$, and $\tan2\Theta$ theorems.} The
-  other members of the DK family, each with its own gap condition and $2\times2$
-  compression argument.
-\item \emph{The YWS aligned-basis bound.} An orthogonal matrix $O$, built from the
-  singular value decomposition of $\widehat V\tp V$, for which
-  $\norm{\widehat V O-V}_{\F}\le 2^{3/2}\min\{\cdots\}/\Delta$.  The argument also
-  uses the identity $2d-2\sum_k\cos\theta_k\le 2\sum_k\sin^2\theta_k$.
-\item \emph{The YWS singular-vector extension.} The bound for singular subspaces
-  of rectangular $A,\widehat A$, obtained by applying the symmetric result to
-  $A\tp A$; it needs singular value perturbation and a Gram-perturbation bound on
-  $\norm{\widehat A\tp\widehat A-A\tp A}$.
-\item \emph{General-interval subspaces.} Spectral subspaces cut out by an
-  arbitrary interval, with a two-sided gap, rather than the sorted leading block
-  used here.
-\end{itemize}
+\section{What remains, ranked by difficulty}\label{sec:remains}
 
-\section{Dictionary to the Lean source}
+Four items remain, plus two deliberately deferred ones.  They are listed
+hardest first; each comes with the proof route that has been checked on paper,
+so that the remaining work is implementation rather than route discovery.
+Lean-level detail (exact hypotheses, file placement, pitfalls) is maintained
+in \texttt{dev/davis-kahan-gap-closure-plan.md} (v5) in the repository.
 
-All declarations live in
+\begin{enumerate}
+\item \emph{Subspace-level $\sin2\Theta$/$\tan2\Theta$ (difficulty 5/5 ---
+  deferred).}  A warning for future attempts: summing the per-eigenvector
+  $\sin2\theta$ bound of item~\ref{it:sin2theta} over an eigenbasis does
+  \emph{not} recover the part~III subspace theorem --- the per-vector proof
+  tests $H$ against rotated vectors inside the two-plane
+  $\spann\{Px,(1-P)x\}$, so its right-hand side is the operator norm of $H$,
+  not the column norm $\norm{Hx_j}$; the naive sum yields only a
+  dimension-carrying bound.  The genuine subspace theorem is part-III
+  technology and belongs with the unitarily-invariant-norm project below.
+
+\item \emph{Unitarily invariant norms (deferred by design).}  Symmetric gauge
+  functions, Ky Fan norms, Fan dominance, and the part~III $\sin\Theta$
+  theorem for every unitarily invariant norm.  A Mathlib-sized library on its
+  own; nothing downstream in this repository consumes it.
+
+\item \emph{Per-eigenvector $\sin2\theta$ theorem (difficulty 4/5 --- in
+  progress, assigned).}\label{it:sin2theta}  Davis's sharp two-subspace
+  estimate: if the quadratic form of $T$ is $\ge b$ on an invariant subspace
+  $U$ and $\le a$ on $U^{\perp}$, $x$ is a unit eigenvector of $T+H$ (its
+  eigenvalue \emph{unconstrained}), and $P=P_U$, then in product form
+  \[
+    (b-a)\,\norm{Px}\,\norm{x-Px}\;\le\;\norm{H}_{\op},
+    \qquad\text{i.e.}\quad \sin2\theta\le\frac{2\norm{H}_{\op}}{b-a}.
+  \]
+  The checked route needs \emph{no complex phase alignment}, the classical
+  sore point: writing $c=\norm{Px}$, $s=\norm{x-Px}$, $p=Px/c$, $q=(x-Px)/s$,
+  the two eigen-equations paired with $p$ and $q$ subtract to the real
+  identity
+  \[
+    cs\,(\alpha-\beta)
+    =cs\,\bigl(\mathrm{re}\inner{Hq}{q}-\mathrm{re}\inner{Hp}{p}\bigr)
+     +(c^2-s^2)\,\mathrm{re}\inner{q}{Hp},
+  \]
+  ($\alpha=\mathrm{re}\inner{Tp}{p}\ge b$,
+  $\beta=\mathrm{re}\inner{Tq}{q}\le a$) because
+  $\mathrm{re}(c^2w-s^2\bar w)=(c^2-s^2)\,\mathrm{re}\,w$ identically.  The
+  right-hand side is then bounded by $\norm{H}_{\op}$ by testing $H$ against
+  the two rotated unit vectors $\gamma p+\sigma q$ and $-\sigma p+\gamma q$
+  with the \emph{real} half-angle choice $\gamma^2=(1-2cs)/2$,
+  $\sigma^2=(1+2cs)/2$, $2\gamma\sigma=c^2-s^2$.
+
+\item \emph{Operator-norm $\sin\Theta$ assembly (difficulty 3/5).}\label{it:opnorm}
+  The headline $\norm{\widehat Q\,P}_{\op}\le\norm{S-T}_{\op}/\gap$ (that
+  operator norm \emph{is} $\norm{\sinT}_{\op}$; the principal-angle
+  identification can come later).  Route: compress to
+  $X\colon v\mapsto P_{U}v$ from the trailing $S$-span to the leading
+  $T$-span; invariance and the commutation $TP_U=P_UT$ give the Sylvester
+  relation $T_U X-X S_V=(\text{compressed }S-T)$; the quadratic-form
+  hypotheses of the separated Sylvester bound are exactly the Courant--Fischer
+  form bounds on spectral spans; un-compressing and taking adjoints yields the
+  theorem.  All ingredients exist; this is plumbing.
+
+\item \emph{Canonical principal-angle API (difficulty 3/5, with one 2.5/5
+  prerequisite).}  Define $\cos\Theta$ as the singular values of the (already
+  formalized) flat overlap operator, and prove: values in $[0,1]$ (done),
+  symmetry in the two subspaces, and the bridges to the overlap sum, the
+  projector distance, and the $\mathrm{sqSinAngle}$ of the intertwining-unitary
+  file.  Symmetry needs $\sigma(M^{*})=\sigma(M)$, which Mathlib lacks; in the
+  only case needed (square $M$) it follows from
+  $MM^{*}=U(M^{*}M)U^{*}$ with $U$ the kernel-completed unitary polar factor
+  --- already formalized --- plus ``unitary conjugation preserves sorted
+  eigenvalues,'' a Courant--Fischer consequence.
+
+\item \emph{Per-eigenvector $\tan2\theta$ theorem (difficulty 2/5, after
+  item~\ref{it:sin2theta}).}  Add the vanishing-pinch hypotheses (the diagonal
+  blocks of $H$ vanish on $U$ and $U^{\perp}$); the identity of
+  item~\ref{it:sin2theta} collapses to
+  $cs(\alpha-\beta)=(c^2-s^2)\,\mathrm{re}\inner{q}{Hp}$ with
+  $|\mathrm{re}\inner{q}{Hp}|\le\norm{H}_{\op}$ directly --- no rotation trick
+  --- giving $(b-a)\,cs\le|c^2-s^2|\,\norm{H}_{\op}$, i.e.\
+  $\tan2\theta\le2\norm{H}_{\op}/(b-a)$.
+\end{enumerate}
+
+\section{Dictionary to the Lean source}\label{sec:dictionary}
+
+The core ladder declarations live in
 \texttt{ForMathlib/Analysis/InnerProductSpace/DavisKahan.lean}
 (namespace \texttt{ForMathlib}).
 
@@ -462,6 +617,58 @@ The projections $P,\widehat P$ are Mathlib's \texttt{Submodule.starProjection}
 of the spans of the selected eigenvectors; the Frobenius norm on the left of the
 projector bound is written in Lean as the basis sum
 $\sum_k\norm{(\widehat P-P)u_k}^2=\norm{\widehat P-P}_{\F}^2$.
+
+The extensions of \S\ref{sec:extensions} live in sibling files of the same
+directory (namespace \texttt{ForMathlib} throughout):
+
+\begin{center}
+\footnotesize
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{@{}p{0.40\linewidth}p{0.56\linewidth}@{}}
+\toprule
+Statement (\S\ref{sec:extensions}) & Lean name (file) \\
+\midrule
+General-block ladder (rows $s$, columns $t$)
+  & \texttt{sum\_cross\_\dots\_sq\_le\_\{offDiag,residual,hilbertSchmidt\}\_block} (\texttt{DavisKahan.lean}) \\
+Interval subspaces, sharp rung / two-sided Weyl bridge
+  & \texttt{sum\_cross\_interval\_sq\_le\_hilbertSchmidt(\_of\_eigengap)},
+    \texttt{notMem\_Ioo\_eigenvalues\_of\_notMem\_Ioo} (\texttt{DavisKahan.lean}) \\
+Rearrangement / Birkhoff bilinear / von Neumann trace
+  & \texttt{sum\_mul\_comp\_perm\_le\_sum\_mul\_of\_antitone},
+    \texttt{sum\_mul\_sum\_mul\_le\_sum\_mul\_of\_antitone},
+    \texttt{sum\_eigenvalues\_mul\_re\_inner\_self\_le} (\texttt{HoffmanWielandt.lean}) \\
+Hoffman--Wielandt
+  & \texttt{sum\_sq\_eigenvalues\_sub\_le\_sum\_sq\_norm\_apply} (\texttt{HoffmanWielandt.lean}) \\
+Exact YWS, Frobenius branch ($\Delta^2\cdot\text{overlap}\le4\norm{E}_{\F}^2$)
+  & \texttt{sq\_gap\_mul\_sum\_cross\_le\_of\_population\_gap},
+    \texttt{sqrt\_sum\_cross\_le\_of\_population\_gap} (\texttt{YuWangSamworth.lean}) \\
+Exact YWS, $d^{1/2}$ operator-norm branch
+  & \texttt{sq\_gap\_mul\_sum\_cross\_le\_of\_population\_gap\_opNorm} (\texttt{YuWangSamworth.lean}) \\
+Aligned-basis bound $\sum_j\norm{w_j-u_j}^2\le2\norm{\sinT}_{\F}^2$
+  & \texttt{sum\_sq\_norm\_aligned\_le} (\texttt{AlignedBasis.lean}) \\
+Overlap operator, contraction, $\sum\sigma^2$, $d-\text{overlap}\le\sum\sigma$
+  & \texttt{overlapOp}, \texttt{overlapOp\_contraction},
+    \texttt{sum\_sq\_singularValues\_overlapOp},
+    \texttt{sum\_overlap\_le\_sum\_singularValues} (\texttt{AlignedBasis.lean}) \\
+Singular-value glue ($\norm{\cdot}_{\F}^2=\sum\sigma^2$, $\sigma\le1$,
+$\tr\lvert A\rvert=\sum\sigma$)
+  & \texttt{sum\_sq\_singularValues},
+    \texttt{singularValues\_le\_one\_of\_contraction},
+    \texttt{sum\_re\_inner\_abs\_self\_eq\_sum\_singularValues} (\texttt{SingularSubspace.lean}) \\
+Gram perturbation / singular-value Weyl / YWS Theorem 3
+  & \texttt{norm\_gram\_sub\_gram\_apply\_le},
+    \texttt{abs\_sq\_singularValues\_sub\_le},
+    \texttt{sq\_gap\_mul\_sum\_cross\_singularVectors\_le} (\texttt{SingularSubspace.lean}) \\
+Kernel-completed unitary polar decomposition
+  & \texttt{polarUnitary}, \texttt{polar\_decomposition\_unitary} (\texttt{PolarDecomposition.lean}) \\
+Davis Thm 3.2 + off-diagonal corollary
+  & \texttt{RotationBound.lean} (see the file header for the statement map) \\
+Sylvester bound, coercive / separated form
+  & \texttt{opNorm\_le\_div\_of\_comp\_add\_comp\_eq},
+    \texttt{opNorm\_le\_div\_of\_comp\_sub\_comp\_eq} (\texttt{SylvesterBound.lean}) \\
+\bottomrule
+\end{tabular}
+\end{center}
 
 \begin{thebibliography}{9}
 \bibitem{Davis1963}

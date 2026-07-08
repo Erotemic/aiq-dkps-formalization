@@ -33,13 +33,37 @@ difficulty grade.
   routes below. Follow the house rules in `dev/mathlib-quality-adapter.md`
 (provenance headers, golf gates, `lake build` green after every step, axiom
 check `propext, Classical.choice, Quot.sound` on headline declarations).
+- **v5 (2026-07-08, Fable — remaining-work detail pass):** verified the v4
+  status sweep against source (all ✅ claims confirmed; no sorries anywhere).
+  Three route corrections/simplifications for the remaining items, each folded
+  into its step below:
+  1. **W6.1 needs no ℂ phase alignment** — taking real parts of the subtracted
+     eigenvector equations directly gives the key identity with `re ⟪q, H p⟫`;
+     the rotation trick then uses only *real* coefficients. The "phase
+     alignment" pitfall in the v1 text is dissolved. W6.1 stays 4/5 (the √
+     half-angle algebra and degenerate cases remain fiddly) and is **assigned
+     to Fable**; with its scaffolding in place W6.2 drops 3/5 → 2/5.
+  2. **W0.1(d) only needs the square case** (`E = F`): both W0.2 overlap-map
+     spaces are `EuclideanSpace 𝕜 (Fin d)`. There, `A ∘ A† = U ∘ (A† ∘ A) ∘ U†`
+     with `U = polarUnitary A` (already in `PolarDecomposition.lean`), so the
+     multiplicity-counting route is replaced by "unitary conjugation preserves
+     sorted eigenvalues" (Courant–Fischer, both directions already local).
+     Rerated 3/5 → 2.5/5.
+  3. **W5.2 is decoupled from W0.2**: state the headline as `‖Q̂ ∘L P‖ ≤ ε/g`
+     directly (that operator norm *is* `‖sinΘ‖_op`); the principal-angle
+     identification becomes an optional bridge lemma after W0.2. With the
+     concrete compression recipe below, rerated 3.5/5 → 3/5.
+  Updated division of labor: **Fable = W6.1**; **Opus = W0.1(d), W0.2, W5.2,
+  W6.2**, then optionally attempt W6.3-Frobenius. W7 stays deferred. Paper
+  `papers/DavisKahan-formalized-vs-literature.tex` synced to this state
+  (extensions section + remaining-work ranking).
 
 ## The five gaps (from the paper)
 
 | # | Gap | Workstream | Status (2026-07-07) |
 |---|-----|------------|---------------------|
-| G1 | Operator-norm `‖sinΘ‖_op ≤ ‖S−T‖_op/g` and general unitarily-invariant-norm sinΘ | W5, W7 | ◑ W5.1 done; W5.2 remains; W7 deferred |
-| G2 | tanΘ, sin2Θ, tan2Θ theorems | W6 | ☐ not started |
+| G1 | Operator-norm `‖sinΘ‖_op ≤ ‖S−T‖_op/g` and general unitarily-invariant-norm sinΘ | W5, W7 | ◑ W5.1 done; W5.2 remains (v5 recipe, 3/5, Opus); W7 deferred |
+| G2 | tanΘ, sin2Θ, tan2Θ theorems | W6 | ◑ v5 phase-free route committed; W6.1 = Fable, W6.2 = Opus (2/5), W6.3 defer |
 | G3 | YWS aligned-basis bound | W3 | ✅ **closed** (W3.1–W3.4) |
 | G4 | YWS singular-vector extension (rectangular `A, Â`) | W4 | ✅ **closed** (W4.1–W4.3) |
 | G5 | General-interval spectral subspaces (two-sided gap) | W1 | ✅ **closed** (W1.1, W1.2) |
@@ -154,22 +178,54 @@ For `A : E →ₗ[𝕜] F` between finite-dim spaces, prove:
     `√λᵢ = σᵢ` by `sqrt_apply_eigenvectorBasis` + `sqrt_unique`);
 (d) **`singularValues_adjoint : (A.adjoint).singularValues = A.singularValues`
     — confirmed ABSENT from the pinned Mathlib (Opus R4), must be built here.**
-    Route: `A†A` and `AA†` have equal nonzero spectra (if `A†A v = λv`, `λ≠0`,
-    then `Av` is an `AA†`-eigenvector; the two multiplicity counts match by
-    rank), hence equal sorted positive eigenvalue lists, hence equal singular
-    values after the zero-padding that `ℕ →₀ ℝ` handles for free. This is
-    independently Mathlib-attractive — file a `comparator/candidate-*.json`.
+    **v5 reroute (Fable) — do the SQUARE case only (`A : E →ₗ[𝕜] E`), which is
+    all W0.2 consumes** (both overlap-map spaces are `EuclideanSpace 𝕜 (Fin d)`).
+    Two lemmas:
+    - *(d-i) Unitary conjugation preserves sorted eigenvalues.* For
+      `hS : S.IsSymmetric`, `U : E ≃ₗᵢ[𝕜] E`, the conjugate
+      `S' = U.toLinearMap ∘ₗ S ∘ₗ U.symm.toLinearMap` is symmetric with
+      `hS'.eigenvalues hn = hS.eigenvalues hn`. Route: Courant–Fischer — both
+      minimax directions are already in `CourantFischer.lean`, and the
+      sup/inf over subspaces is invariant because `Submodule.map U` is a
+      dimension-preserving bijection of the subspace lattice that preserves
+      Rayleigh quotients (`⟪S'(Ux), Ux⟫ = ⟪S x, x⟫`, `‖Ux‖ = ‖x‖`). Sorted
+      lists that satisfy the same minimax characterization are equal
+      index-by-index — no multiset/char-poly uniqueness needed.
+      Independently Mathlib-attractive.
+    - *(d-ii) The conjugation identity.* With `U := polarUnitary A` (already in
+      `PolarDecomposition.lean`): `A = U ∘ |A|` and `|A|` self-adjoint give
+      `A† = |A| ∘ U†`, hence
+      `A ∘ A† = U ∘ |A|² ∘ U† = U ∘ (A† ∘ A) ∘ U†`.
+      Then `σᵢ(A†)² = λᵢ(A ∘ A†) = λᵢ(A† ∘ A) = σᵢ(A)²` by (d-i) and Mathlib's
+      `sq_singularValues_fin`, and `σ ≥ 0` upgrades squares to values.
+    The original cross-space multiplicity-counting route is *superseded*; only
+    revive it if some later consumer genuinely needs `E ≠ F` (none currently
+    does). This is independently Mathlib-attractive — file a
+    `comparator/candidate-*.json`. **Rerated 3/5 → 2.5/5.**
 Pitfall: `singularValues` is a `ℕ →₀ ℝ` (finsupp) — write index bookkeeping
 lemmas once (`singularValues_fin` mediates `Fin (finrank) → ℕ`).
 
-**W0.2 — Principal angles between equal-dimensional subspaces. Difficulty 3.5/5.**
+**W0.2 — Principal angles between equal-dimensional subspaces. Difficulty 3/5
+(was 3.5/5 — v5: the flat operator and half the lemma list already exist).**
 *(Rewritten per Opus R3 — the original mixed a subspace-compression definition
 with flat-encoding lemmas; the flat encoding is now the definition itself.)*
+**v5 status note (Fable): do NOT redefine the flat operator — it already
+exists as `overlapOp hu hv` in `AlignedBasis.lean`** (defined as
+`(familyIsometry hu).adjoint ∘ₗ (familyIsometry hv)`, with
+`overlapOp_apply` giving the matrix entries `⟪uᵢ, vⱼ⟫`). Already proved there:
+contraction (`overlapOp_contraction`), `∑σ² = ∑ᵢⱼ‖⟪uᵢ,vⱼ⟫‖²`
+(`sum_sq_singularValues_overlapOp`), σ ≤ 1
+(`singularValues_le_one_of_contraction` in `SingularSubspace.lean`), and
+`∑σ² ≤ ∑σ`. So W0.2 reduces to: the definition line, symmetry via W0.1(d)
+plus `adjoint (overlapOp hu hv) = overlapOp hv hu` (immediate from the
+`adjoint` of a composition — `(P⋆ ∘ Q)⋆ = Q⋆ ∘ P`), and bridges (c)–(e) below.
+Item (f) is **no longer on W5.2's critical path** (see W5.2 v5 note) — keep it
+as an optional bridge lemma.
 Given orthonormal families `u : Fin d → E` and `v : Fin d' → E` (chosen bases
-of the two subspaces), define the **flat overlap operator**
-`overlapMap u v : EuclideanSpace 𝕜 (Fin d') →ₗ[𝕜] EuclideanSpace 𝕜 (Fin d)`
-with `(overlapMap u v) eⱼ = ∑ᵢ ⟪u i, v j⟫ • eᵢ`, and set
-`cosPrincipalAngles u v := LinearMap.singularValues (overlapMap u v)`.
+of the two subspaces), the **flat overlap operator** is
+`overlapOp hu hv : EuclideanSpace 𝕜 (Fin d') →ₗ[𝕜] EuclideanSpace 𝕜 (Fin d)`
+with matrix entries `⟪u i, v j⟫`; set
+`cosPrincipalAngles hu hv := LinearMap.singularValues (overlapOp hu hv)`.
 Do **not** introduce `↥U →ₗ ↥V` compressions anywhere — all three consumers
 (W3.3, W5.2 identification, W6 angle forms) want the flat operator. Prove
 basis-independence at the level of singular values (conjugating `overlapMap`
@@ -596,32 +652,54 @@ Mathlib-idiomatic form.
 Do NOT attempt the general two-interval separation (constant π/2 territory);
 half-line is what the DK hybrid gap needs.
 
-**W5.2 — Operator-norm sinΘ. Difficulty 3.5/5 (was 4/5; simplified by the
-W5.1 reroute).**
-`‖Q̂ ∘ P‖ ≤ ε/g` where `P` = starProjection onto the `T`-leading block span,
-`Q̂` = onto the `S`-trailing block span, hybrid gap `g` as in the ladder.
-Route: compress to `X := (v ∈ ran P) ↦ Q̂ v` as a map `↥(ran P) →L ↥(ran Q̂)`;
-the Sylvester relation
-`(S compressed to ran Q̂) ∘ X − X ∘ (T compressed to ran P) = (compressed E)`
-follows from invariance (`S`-spectral subspaces are `S`-invariant, `T`'s are
-`T`-invariant; `Submodule`-restriction of a symmetric map to an invariant
-subspace is symmetric — Mathlib `LinearMap.IsSymmetric.restrict_invariant`,
-verify the exact name). Because W5.1's corollary takes **quadratic-form**
-hypotheses, no compression-spectrum lemma is needed: coercivity of the
-compressed `T` on the leading span (`(c+g)‖·‖² ≤ re⟪T·,·⟫`) and the upper
-form bound for compressed `S` on the trailing span are exactly the
-CourantFischer.lean private pair
-`le_re_inner_map_self_of_mem_specSubspace` /
-`re_inner_map_self_le_of_mem_specSubspace` — **un-`private` these two (and
-`specSubspace` if needed) as part of this step** rather than re-deriving.
-`‖compressed E‖ ≤ ‖S−T‖` since the inclusion is an isometry and `Q̂` is a
-contraction; finally `‖Q̂ ∘ P‖ ≤ ‖X‖` by factoring through `P`.
-Then identify `‖Q̂ P‖` with `sinΘ_op` (largest principal angle sine —
-W0-level lemma: `‖Q̂P‖ = max singular value of the cross compression`) and
-state the headline `‖sinΘ‖_op ≤ ‖S−T‖_op/g`, plus the projector corollary
-`‖P̂ − P‖_op ≤ …` if wanted (`‖P̂−P‖ = max(‖Q̂P‖, ‖P̂Q‖)` — optional, rank
-separately as a stretch lemma).
-Depends on: W0.2, W5.1, W1.1 (for the general-block statement).
+**W5.2 — Operator-norm sinΘ. Difficulty 3/5 (was 3.5/5 — v5: decoupled from
+W0.2, concrete compression recipe below).**
+`‖Q̂ ∘L P‖ ≤ ε/g` where `P` = starProjection onto the `T`-leading block span
+`U`, `Q̂` = onto the `S`-trailing block span `V`. **State the headline in
+exactly this vocabulary — `‖Q̂ ∘L P‖` *is* `‖sinΘ‖_op`**; the principal-angle
+identification (`‖Q̂P‖ = max sinθᵢ`) is an optional bridge lemma to add after
+W0.2, *not* a dependency. Use the **one-sided (half-line) gap shape** the
+Sylvester corollary consumes: `hU : ∀ i ∈ s, c + g ≤ λᵢ(T)` and
+`hV : ∀ j ∉ s', λⱼ(S) ≤ c` (the standard sin-θ setting; do not try to consume
+the symmetric hybrid `|λᵢ−λⱼ| ≥ g`, which also allows the blocks to sit on
+the other side).
+
+v5 concrete recipe (verified on paper):
+1. **Un-`private`** in `CourantFischer.lean`: `specSubspace`,
+   `re_inner_map_self_le_of_mem_specSubspace`,
+   `le_re_inner_map_self_of_mem_specSubspace` (update the file-header note —
+   they now have an external consumer, which is exactly the criterion the
+   header gives for un-privatizing).
+2. **Commutation helper** (new, independently useful — also wanted by W6's
+   spectral corollary): if `hT : T.IsSymmetric` and `U` is `T`-invariant
+   (`∀ u ∈ U, T u ∈ U`, finite-dim so `Uᗮ` is invariant by symmetry), then
+   `T ∘ₗ U.starProjection = U.starProjection ∘ₗ T`. Proof: split
+   `x = Px + (x − Px)`, apply invariance to each summand. Instantiate at
+   `U = span (eigenvectors in s)` (invariance is `apply_eigenvectorBasis`).
+3. **Compression.** `X : ↥V →L[𝕜] ↥U`, `X v := U.orthogonalProjection v`
+   (the `↥U`-valued projection; `starProjection = subtypeL ∘ orthogonalProjection`).
+   With `T_U : ↥U →L ↥U`, `S_V : ↥V →L ↥V` the restrictions (well-defined by
+   invariance; symmetric — restriction of symmetric to invariant is symmetric),
+   compute for `v : ↥V`:
+   `(T_U ∘L X − X ∘L S_V) v = U.orthogonalProjection ((T − S) v)`
+   using step 2 on the `T` term and `S`-invariance of `V` on the `S` term.
+   So `Y := X ∘L (T−S 	compressed)` — more precisely the map
+   `v ↦ U.orthogonalProjection ((T − S) v)` — has `‖Y‖ ≤ ε` (inclusion is an
+   isometry, projection is a contraction, `‖(T−S)z‖ ≤ ε‖z‖`).
+4. **Quadratic forms.** Coercivity of `T_U`: for `u ∈ U`,
+   `(c+g)‖u‖² ≤ re⟪T u, u⟫` — this is `le_re_inner_map_self_of_mem_specSubspace`
+   with `p := (· ∈ s)` and `hU`. Upper bound for `S_V`: the dual lemma with
+   `hV`. Apply `opNorm_le_div_of_comp_sub_comp_eq` (SylvesterBound.lean) ⇒
+   `‖X‖ ≤ ε/g`.
+5. **Un-compress.** `‖P ∘L Q̂‖ ≤ ‖X‖`: for any `z`,
+   `P (Q̂ z) = ↑(X ⟨Q̂ z, _⟩)` and `‖⟨Q̂ z, _⟩‖ ≤ ‖z‖`. Finally
+   `‖Q̂ ∘L P‖ = ‖P ∘L Q̂‖` because the two are adjoint to each other
+   (starProjections are self-adjoint) and `‖B⋆‖ = ‖B‖`
+   (`ContinuousLinearMap.opNorm_adjoint` or the elementwise route via
+   `norm_adjoint_apply_le` in SingularSubspace.lean).
+Optional extras, rank separately: the projector corollary
+`‖P̂−P‖ = max(‖Q̂P‖, ‖P̂Q‖)` (stretch), the W0.2 bridge `‖Q̂P‖ = max sinθᵢ`.
+Depends on: W5.1 (done), W1.1 (done). **No W0.2 dependency.**
 
 ---
 
@@ -631,41 +709,99 @@ New file `ForMathlib/Analysis/InnerProductSpace/RotationSharp.lean`.
 Davis's 2×2-compression results (digest: `prose/Davis-1963-core-arguments.tex`
 §"The sharp two-subspace estimate").
 
-**W6.1 — Per-eigenvector sin2θ bound. Difficulty 4/5.**
-Setting: `T` self-adjoint with `spec T ∩ (−1, 1) = ∅` (after rescaling — state
-with explicit `a < b` half-spaces and a midpoint/radius normalization done in
-the proof, not the statement: hypotheses `P := spectral proj of T on [b,∞)`,
-`spec T ⊆ (−∞,a] ∪ [b,∞)`), `x` a unit eigenvector of `S = T + H` with
-eigenvalue `≥ (a+b)/2`, `θ` the angle given by `cos θ = ‖P x‖`. Conclusion:
-`sin 2θ ≤ 2‖H‖/(b−a)` (Davis's `sin 2θ ≤ δ` after scaling).
-Route (Davis's compression): let `p = Px/‖Px‖`, `q = (1−P)x/‖(1−P)x‖`
-(degenerate cases `Px = 0` / `(1−P)x = 0` handled first — they give `θ ∈
-{0, π/2}` and the bound is direct), work entirely with the four scalars
-`⟪p, T p⟫, ⟪q, T q⟫, ⟪p, H p⟫, ⟪q, H q⟫, ⟪p, H q⟫` — the "2×2 matrix" never
-needs to exist as an object; the eigenvalue equation `⟪p, (S−λ̂)x⟫ = 0 =
-⟪q, (S−λ̂)x⟫` yields the two scalar identities, subtract and bound.
-`sin 2θ = 2 sinθ cosθ` via `Real.sin_two_mul`; define θ implicitly —
-cleanest: avoid θ entirely and state the conclusion as
-`2·‖Px‖·‖(1−P)x‖·(b−a) ≤ 2‖H‖` — i.e. a product-form inequality; provide the
-`Real.arccos`-angle corollary separately for the literature-facing form.
-Pitfalls: `⟪p, T q⟫ = 0` needs `P T = T P` and orthogonality of the spectral
-split (spectralProjection API); phase alignment over ℂ (Davis chooses a phase
-making `⟪p, H q⟫` effectively real — multiply `q` by the unimodular
-`conj (⟪p,Hq⟫)/‖⟪p,Hq⟫‖`, the idiom used in RotationBound.lean's
-intertwining lemma).
+**W6.1 — Per-eigenvector sin2θ bound. Difficulty 4/5. ASSIGNED: Fable.**
+*(v5 full reroute — the route below eliminates the ℂ phase alignment the v1
+text warned about, and needs no location assumption on the perturbed
+eigenvalue. Verified on paper end-to-end, Fable 2026-07-08.)*
 
-**W6.2 — Per-eigenvector tan2θ bound under vanishing pinch. Difficulty 3/5**
-(given W6.1's scaffolding). Add hypothesis `P H P = 0` and
-`(1−P) H (1−P) = 0` (diagonal blocks vanish); same scalar identities now give
-`tan 2θ ≤ 2‖H‖/(b−a)` with **no smallness assumption**. Reuses everything
-from W6.1; the only new content is the final scalar rearrangement.
+**Statement (abstract subspace form — no spectral projections, no rescaling).**
+In `RotationSharp.lean` (new file). Context: `T H : E →ₗ[𝕜] E`,
+`hT : T.IsSymmetric`, `hH : H.IsSymmetric`, a subspace `U` with
+`hUinv : ∀ u ∈ U, T u ∈ U`, form bounds
+`hb : ∀ u ∈ U, b * ‖u‖^2 ≤ re ⟪T u, u⟫` and
+`ha : ∀ w ∈ Uᗮ, re ⟪T w, w⟫ ≤ a * ‖w‖^2`, perturbation
+`hε : ∀ z, ‖H z‖ ≤ ε * ‖z‖`, and a unit eigenvector
+`hx : ‖x‖ = 1`, `hμ : (T + H) x = (μ:𝕜) • x` with `μ : ℝ` **unconstrained**
+(the sin2θ theorem's whole point: no smallness/location assumption).
+Conclusion, product form (θ never appears):
+`(b − a) * (‖P x‖ * ‖x − P x‖) ≤ ε`, `P := U.starProjection`.
+This is Davis's `sin 2θ ≤ 2‖H‖/(b−a)` since `sin 2θ = 2·‖Px‖·‖x−Px‖`.
+The literature-facing spectral instantiation (`U` = span of eigenvectors with
+`λᵢ ≥ b`, rest `≤ a`) is a corollary via the W5.2 step-1/2 assets
+(`specSubspace` form lemmas + invariance of eigen-spans) — leave it to the
+W5.2/W6.2 executor if not done in the first pass.
 
-**W6.3 — (Stretch) subspace-level sin2Θ theorem. Difficulty 5/5.**
-The full DK-family subspace `sin2Θ`/`tan2Θ` theorems in unitarily invariant
-norms are part-III material needing W7; the Frobenius-summed versions of
-W6.1/W6.2 over an eigenbasis of `S` are reachable (sum the per-vector squares
-— same pattern as the existing ladder) — do the Frobenius-summed version,
-defer the op-norm version to post-W7. Mark as optional in the same PR.
+**Proof (all real-part arithmetic; no phases).** Write `c := ‖Px‖`,
+`s := ‖x − Px‖`, so `c² + s² = 1`.
+1. *Degenerate cases* `c = 0` or `s = 0`: LHS `= 0 ≤ ε` (from `hε x`).
+2. Otherwise set `p := (c⁻¹:𝕜) • P x ∈ U`, `q := (s⁻¹:𝕜) • (x − Px) ∈ Uᗮ`;
+   unit, orthogonal, `x = (c:𝕜)•p + (s:𝕜)•q`.
+3. *Eigen-equations.* Pair `hμ` with `p` and `q`; `⟪p, T q⟫ = 0 = ⟪q, T p⟫`
+   (invariance of `U` and — via symmetry — of `Uᗮ`). With
+   `α := re ⟪T p, p⟫`, `β := re ⟪T q, q⟫`, `w := ⟪q, H p⟫`, and the real
+   diagonal entries `Hpp := re ⟪H p, p⟫`, `Hqq := re ⟪H q, q⟫`:
+   `(1) c·α + c·⟪H p,p⟫-term + s·⟪p, H q⟫ = μ·c` and
+   `(2) s·β + c·⟪q, H p⟫ + s·⟪H q,q⟫-term = μ·s` (scalar equations in 𝕜).
+4. *Key identity (the phase-alignment killer).* Compute `s·(1) − c·(2)` and
+   take `re`. Since `re ⟪p, H q⟫ = re (conj w) = re w`, the mixed terms
+   combine to `(s² − c²)·re w` — **`re(c²w − s²·conj w) = (c²−s²)·re w`
+   identically**, so no unimodular phase multiplication is ever needed:
+   `c·s·(α − β) = c·s·(Hqq − Hpp) + (c² − s²)·re w`. (μ cancels.)
+5. *Rotation bound.* For any real `γ σ` with `γ² + σ² = 1`, the vectors
+   `u := (γ:𝕜)•p + (σ:𝕜)•q` and `u' := (−σ:𝕜)•p + (γ:𝕜)•q` are unit, and
+   `re⟪H u, u⟫ − re⟪H u', u'⟫ = (γ²−σ²)(Hpp − Hqq) + 4γσ·re w`,
+   bounded by `2ε` in absolute value (`|re⟪H u, u⟫| ≤ ‖H u‖·‖u‖ ≤ ε`).
+6. *Half-angle choice.* Take `γ := √((1 − 2cs)/2)` and
+   `σ := (if s ≤ c then 1 else −1) · √((1 + 2cs)/2)`. Then `γ² + σ² = 1`
+   (needs `2cs ≤ 1`, i.e. AM–GM `2cs ≤ c²+s²`), `γ² − σ² = −2cs`, and
+   `2γσ = ±√(1 − 4c²s²) = ±|c² − s²| = c² − s²` (sign matches the `if`;
+   `1 − 4c²s² = (c²−s²)²` because `c²+s² = 1`). Substituting into step 5:
+   `|2·(cs(Hqq − Hpp) + (c²−s²)·re w)| ≤ 2ε`, i.e. by step 4
+   `cs·(α − β) ≤ ε`.
+7. *Conclusion.* `α ≥ b` (`hb` at `p`), `β ≤ a` (`ha` at `q`), `cs ≥ 0`:
+   `(b−a)·cs ≤ (α−β)·cs ≤ ε`. ∎
+
+Lean pitfalls that remain (why this is still 4/5): the `c⁻¹`/`s⁻¹` scalar-cast
+bookkeeping in steps 2–3 (`RCLike.ofReal` everywhere, conjugate-linearity in
+the *first* slot); extracting the two scalar equations from `hμ` cleanly
+(`inner (T x + H x) …` expansion against the `p,q` decomposition of `x`); the
+`Real.sqrt` algebra in step 6 (keep it in the two lemmas
+`γ² = (1−2cs)/2`, `σ² = (1+2cs)/2` and derive `2γσ` via
+`(2γσ)² = (c²−s²)²` + sign analysis, never expand `sqrt` products directly);
+and the sign split `s ≤ c` vs `c < s`. Provide the `Real.arccos` corollary
+(`Real.sin (2 * Real.arccos c) * (b − a) ≤ 2ε`) only as a thin optional
+wrapper — the product form is the API.
+
+**W6.2 — Per-eigenvector tan2θ bound under vanishing pinch. Difficulty 2/5
+(was 3/5 — v5: with W6.1's key identity factored out, no rotation trick is
+needed at all).** Encode the vanishing diagonal blocks subspace-wise:
+`hUU : ∀ u ∈ U, ∀ u' ∈ U, ⟪H u, u'⟫ = 0` and the same on `Uᗮ` (never form
+`P H P` as an operator). Then W6.1's step-4 identity collapses to
+`c·s·(α − β) = (c² − s²)·re w`, and `|re w| ≤ |⟪q, H p⟫| ≤ ‖H p‖ ≤ ε`
+directly — steps 5–6 (the rotation and half-angle) are not used. Product-form
+conclusion: `(b − a)·(‖Px‖·‖x − Px‖) ≤ |‖Px‖² − ‖x − Px‖²|·ε`, which is
+`tan 2θ ≤ 2ε/(b−a)` (both sides divided by `cos 2θ = c² − s²`; the θ-form
+corollary needs `c² ≠ s²`, i.e. `θ ≠ π/4`, exactly Davis's implicit
+condition — in the product form no side condition is needed). Reuses W6.1's
+steps 1–4 verbatim; factor them as standalone lemmas when implementing W6.1
+so this step is pure assembly.
+
+**W6.3 — (Stretch) subspace-level sin2Θ theorem. Difficulty 5/5. DEFER with W7
+unless a cheap route appears.**
+*(v5 warning, Fable: the v1 suggestion "sum the per-vector squares — same
+pattern as the existing ladder" does NOT go through.* W6.1's per-vector proof
+tests `H` against rotated vectors `u ∈ span{p, q}` — the bound it yields is
+`cs(b−a) ≤ max over that 2-plane of |re⟪Hu,u⟫|`, which is controlled by the
+**operator** norm `ε`, not by the column norm `‖H xⱼ‖`. Summing over an
+eigenbasis of `S` therefore gives `∑ⱼ sin²2θⱼ ≤ 4n·ε²/(b−a)²`, a dimension-
+carrying bound, not the part-III `‖sin 2Θ‖_F ≤ 2‖H‖_F/(b−a)`. The genuine
+subspace-level sin2Θ needs Davis–Kahan part-III technology (or at least a
+2×2-block operator argument at the subspace level), which is W7-adjacent.)*
+If attempted anyway, the honest reachable deliverables are: (i) the summed
+dimension-carrying corollary above (trivial once W6.1 lands — acceptable as a
+documented-weaker form), and (ii) the op-norm per-subspace `sin 2Θ` for the
+**largest** angle only, via W6.1 applied to a worst eigenvector. Mark both as
+explicitly weaker than part III in docstrings and the paper.
 
 ---
 
@@ -720,10 +856,30 @@ update including the permalink line):
    tractable core.
 7. **Batch G (deferred):** W7 — full G1. Separate project decision.
 
-## Difficulty ranking (all steps, hardest first)
+## Remaining work — v5 ranking (hardest first) and order for Opus
+
+Everything not listed here is ✅ done and verified (v4 sweep + v5 re-check).
+
+| Rank | Step | What | Difficulty | Assignee | Notes |
+|------|------|------|-----------|----------|-------|
+| 1 | W6.3 | Subspace-level sin2Θ | 5/5 | **defer** (with W7) | v5 warning: per-vector summation does *not* recover part III; only weaker forms reachable |
+| 2 | W7.1–7.4 | Unitarily invariant norms | 4–5/5 | **defer** (separate project) | unchanged |
+| 3 | W6.1 | Per-vector sin2θ, product form | 4/5 | **Fable** (in progress) | v5 phase-free route; new file `RotationSharp.lean` |
+| 4 | W5.2 | Op-norm sinΘ via Sylvester | 3/5 (was 3.5) | Opus | v5: decoupled from W0.2; 5-step recipe in the step text |
+| 5 | W0.2 | Principal-angle API | 3/5 (was 3.5) | Opus | build on existing `overlapOp`; needs W0.1(d) only for symmetry |
+| 6 | W0.1(d) | `singularValues_adjoint` (square case) | 2.5/5 (was 3) | Opus | v5 `polarUnitary`-conjugation route; do (d-i) eigenvalue-conjugation lemma first |
+| 7 | W6.2 | tan2θ under vanishing pinch | 2/5 (was 3) | Opus | pure assembly once W6.1's steps 1–4 are factored as lemmas |
+
+Suggested order for Opus: **W0.1(d) → W0.2** (closes the canonical-angle API),
+then **W5.2** (closes G1's op-norm half — after this the paper's gap list is
+down to W6/W7), then **W6.2** once W6.1 lands. After each: `lake build` green,
+axiom check on headlines, paper sync per Definition of done.
+
+## Difficulty ranking (all steps, hardest first) — historical (v3)
 
 *(v3: rows for W5.1/W5.2 rerated after the algebraic reroute; W2.4 rerated
-per Opus R1. Historical ranks kept so the deltas are visible.)*
+per Opus R1. Historical ranks kept so the deltas are visible. Superseded by
+the v5 remaining-work table above.)*
 
 | Rank | Step | What | Difficulty | Why |
 |------|------|------|-----------|-----|

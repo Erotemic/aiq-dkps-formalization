@@ -1,35 +1,35 @@
 {
-  "generated_at": "2026-07-08T19:06:51.165440+00:00",
+  "generated_at": "2026-07-08T20:12:15.500834+00:00",
   "schema": "llm-resource-tally/v3",
-  "ledger_rows": 57,
-  "commits_accounted": 40,
-  "turns": 4385,
+  "ledger_rows": 63,
+  "commits_accounted": 46,
+  "turns": 4540,
   "tokens": {
-    "input": 692204,
-    "cache_write": 40286379,
-    "cache_read": 1816720256,
-    "output": 8303574,
-    "billable_input": 1857698839
+    "input": 707887,
+    "cache_write": 40810485,
+    "cache_read": 1874761323,
+    "output": 8548859,
+    "billable_input": 1916279695
   },
   "output_tokens_by_model": {
     "<synthetic>": 0,
-    "claude-fable-5": 1733910,
-    "claude-opus-4-8": 6569664
+    "claude-fable-5": 1737002,
+    "claude-opus-4-8": 6811857
   },
   "output_tokens_by_activity": {
     "backfill": 6478724,
-    "unlabeled": 1594007,
+    "unlabeled": 1839292,
     "implementation": 230843
   },
   "output_tokens_by_agent": {
-    "claude-code": 8303574
+    "claude-code": 8548859
   },
   "server_tool_calls": {
     "web_search": 0,
     "web_fetch": 0
   },
   "time": {
-    "wall_clock_s": 992352.4
+    "wall_clock_s": 996206.6
   },
   "compaction_signals": {
     "events": 9,

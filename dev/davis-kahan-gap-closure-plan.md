@@ -289,7 +289,18 @@ the Parseval lemmas in DavisKahan.lean).
 Pitfall: keep everything real-part-explicit; `⟪T bₖ, S bₖ⟫` is not real
 termwise-symmetric until summed — prove the summed symmetrization.
 
-**W2.4 — YWS theorem, exact form. Difficulty 4/5 (rerated per Opus R1).**
+**W2.4 — YWS theorem, exact form. Difficulty 4/5 (rerated per Opus R1). ✅ DONE
+2026-07-07 (Opus).** `YuWangSamworth.lean`: `residualColumn` +
+`inner_eigenvectorBasis_residualColumn` (the R1 T-only cross-term identity),
+`residualColumn_eq` (perturbation-column form), lower bound
+`sq_gap_mul_sum_cross_le_sum_sq_norm_residualColumn` (population gap, Bessel),
+upper bound `sum_sq_norm_residualColumn_le` (Hoffman–Wielandt + basis
+independence), and the headline `sq_gap_mul_sum_cross_le_of_population_gap`
+(`Δ²·overlap ≤ 4‖S−T‖²_F`) with the `‖sinΘ‖_F` form
+`sqrt_sum_cross_le_of_population_gap` (`‖sinΘ‖_F ≤ 2‖S−T‖_F/Δ`). Verified via
+`lake env lean` + axiom-clean. **Simplification vs plan:** the `(a+b)²≤2a²+2b²`
+bound replaces the Minkowski step and preserves YWS's exact constant 2 (√ of 4).
+**Frobenius branch; the √d operator-norm branch and d=1 corollary remain.**
 *(Route rewritten per Opus R1 — the original text second-guessed the residual;
 this version is re-derived against `prose/Yu-Wang-Samworth-2014…` and is the
 committed design. Statement-first gate applies: land the `sorry` stubs below

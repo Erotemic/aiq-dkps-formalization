@@ -470,7 +470,14 @@ singular-subspace theorem remains.)
     `|σᵢ(Â)² − σᵢ(A)²| ≤ ε_gram` via `abs_eigenvalues_sub_le` applied to the
     Gram operators with W4.1.
 
-**W4.3 — YWS Theorem 3 (singular-subspace bound). Difficulty 3/5.**
+**W4.3 — YWS Theorem 3 (singular-subspace bound). Difficulty 3/5. ✅ DONE
+2026-07-07 (Opus).** `SingularSubspace.lean`:
+`sq_gap_mul_sum_cross_singularVectors_le` — the right singular vectors are the
+eigenvectors of the Gram operators `A⋆A, Â⋆Â`, so the YWS operator-norm branch
+(W2.4) applied to them, with the perturbation from W4.1, gives
+`Γ²·overlap ≤ 4·d·((a+â)ε)²`. A clean instantiation. Build green, axiom-clean.
+**G4 (singular-vector extension) closed** (operator branch; Frobenius branch and
+left-singular mirror are one-line variants).
 Apply W2.4 (or, for the hybrid-gap version, the W1.1 ladder) to
 `T := A†A`, `S := Â†Â`, gap `Γ = min(σ²_{r−1} − σ²_r, σ²_s − σ²_{s+1})`.
 The right-hand side unfolds to

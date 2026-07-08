@@ -13,6 +13,7 @@ To be re-authored per Mathlib's AI-contribution policy at PR time.
 
 import Mathlib.Analysis.InnerProductSpace.SingularValues
 import ForMathlib.Analysis.InnerProductSpace.CourantFischer
+import ForMathlib.Analysis.InnerProductSpace.YuWangSamworth
 
 /-! # Gram-operator perturbation
 
@@ -108,5 +109,28 @@ theorem abs_sq_singularValues_sub_le {A Â : E →ₗ[𝕜] F} {a â ε : ℝ}
   rw [Â.sq_singularValues_fin hn, A.sq_singularValues_fin hn]
   exact abs_eigenvalues_sub_le Â.isSymmetric_adjoint_comp_self A.isSymmetric_adjoint_comp_self hn
     (fun x => norm_gram_sub_gram_apply_le hâ hε hA hÂ hE x) k
+
+/-- **Yu–Wang–Samworth singular-vector extension (operator-norm branch).** The
+right singular vectors of `A, Â : E →ₗ[𝕜] F` are the eigenvectors of the Gram
+operators `A⋆A, Â⋆Â`, whose eigenvalues are the squared singular values.
+Applying the symmetric YWS bound (`sq_gap_mul_sum_cross_le_of_population_gap_opNorm`)
+to the Gram operators — with the perturbation controlled by
+`norm_gram_sub_gram_apply_le` — gives, for a squared-singular-value population gap
+`Γ` separating the block `s`, `Γ² · overlap ≤ 4 · d · ((a + â) ε)²`. -/
+theorem sq_gap_mul_sum_cross_singularVectors_le
+    {A Â : E →ₗ[𝕜] F} {Γ a â ε : ℝ} (hΓ : 0 ≤ Γ) (hâ : 0 ≤ â) (hε : 0 ≤ ε)
+    (hA : ∀ x, ‖A x‖ ≤ a * ‖x‖) (hÂ : ∀ x, ‖Â x‖ ≤ â * ‖x‖)
+    (hE : ∀ x, ‖(Â - A) x‖ ≤ ε * ‖x‖)
+    {n : ℕ} (hn : finrank 𝕜 E = n) (s : Finset (Fin n))
+    (hgap : ∀ j ∈ s, ∀ k ∉ s,
+      Γ ≤ |A.isSymmetric_adjoint_comp_self.eigenvalues hn j
+            - A.isSymmetric_adjoint_comp_self.eigenvalues hn k|) :
+    Γ ^ 2 * ∑ j ∈ s, ∑ k ∈ sᶜ,
+        ‖⟪A.isSymmetric_adjoint_comp_self.eigenvectorBasis hn k,
+            Â.isSymmetric_adjoint_comp_self.eigenvectorBasis hn j⟫_𝕜‖ ^ 2
+      ≤ 4 * s.card * ((a + â) * ε) ^ 2 :=
+  sq_gap_mul_sum_cross_le_of_population_gap_opNorm
+    A.isSymmetric_adjoint_comp_self Â.isSymmetric_adjoint_comp_self hn s hΓ hgap
+    (fun x => norm_gram_sub_gram_apply_le hâ hε hA hÂ hE x)
 
 end ForMathlib

@@ -75,4 +75,30 @@ noncomputable def familyIsometry {v : Fin d → E} (hv : Orthonormal 𝕜 v) :
     (x : EuclideanSpace 𝕜 (Fin d)) : familyIsometry hv x = ∑ i, x i • v i := by
   rw [familyIsometry, LinearMap.coe_isometryOfInner, familyMap_apply]
 
+variable [FiniteDimensional 𝕜 E]
+
+/-- **The overlap operator** of two orthonormal families `u, v`: the compression
+`(familyIsometry hu)⋆ ∘ (familyIsometry hv)` on `EuclideanSpace 𝕜 (Fin d)`, with
+matrix `⟪uᵢ, vⱼ⟫`.  Its singular values are the cosines of the principal angles
+between `span u` and `span v`. -/
+noncomputable def overlapOp {u v : Fin d → E} (hu : Orthonormal 𝕜 u) (hv : Orthonormal 𝕜 v) :
+    EuclideanSpace 𝕜 (Fin d) →ₗ[𝕜] EuclideanSpace 𝕜 (Fin d) :=
+  (familyIsometry hu).toLinearMap.adjoint ∘ₗ (familyIsometry hv).toLinearMap
+
+theorem overlapOp_apply {u v : Fin d → E} (hu : Orthonormal 𝕜 u) (hv : Orthonormal 𝕜 v)
+    (x : EuclideanSpace 𝕜 (Fin d)) :
+    overlapOp hu hv x = (familyIsometry hu).toLinearMap.adjoint (familyIsometry hv x) := rfl
+
+/-- **The overlap operator is a contraction.** `‖overlapOp hu hv x‖ ≤ ‖x‖`, since
+`familyIsometry hv` is an isometry and the adjoint of an isometry is a
+contraction. -/
+theorem overlapOp_contraction {u v : Fin d → E} (hu : Orthonormal 𝕜 u) (hv : Orthonormal 𝕜 v)
+    (x : EuclideanSpace 𝕜 (Fin d)) : ‖overlapOp hu hv x‖ ≤ ‖x‖ := by
+  rw [overlapOp_apply]
+  have hiso : ∀ y : EuclideanSpace 𝕜 (Fin d), ‖(familyIsometry hu).toLinearMap y‖ ≤ 1 * ‖y‖ :=
+    fun y => by rw [one_mul, LinearIsometry.coe_toLinearMap]; exact le_of_eq ((familyIsometry hu).norm_map y)
+  calc ‖(familyIsometry hu).toLinearMap.adjoint (familyIsometry hv x)‖
+      ≤ 1 * ‖familyIsometry hv x‖ := norm_adjoint_apply_le (by norm_num) hiso _
+    _ = ‖x‖ := by rw [one_mul, (familyIsometry hv).norm_map]
+
 end ForMathlib

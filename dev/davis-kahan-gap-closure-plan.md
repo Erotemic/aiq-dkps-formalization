@@ -121,7 +121,10 @@ This is the "full canonical-angle API" the paper names as missing, and it is
 the shared substrate for G1, G2, G3. Build it on Mathlib's
 `LinearMap.singularValues`.
 
-**W0.1 — Singular-value glue lemmas. Difficulty 3/5.**
+**W0.1 — Singular-value glue lemmas. Difficulty 3/5. ◑ PARTIAL 2026-07-07
+(Opus).** (a) DONE: `sum_sq_singularValues` (`∑ᵢ σᵢ(A)² = ∑ₖ ‖A bₖ‖²`) in
+`SingularSubspace.lean`. (b)/(c)/(d) [contraction bound, trace of abs,
+`singularValues_adjoint`] remain — needed for W0.2. Build green, axiom-clean.
 For `A : E →ₗ[𝕜] F` between finite-dim spaces, prove:
 (a) `∑ i, singularValues A i ^ 2 = ∑ₖ ‖A bₖ‖²` for any orthonormal basis `b`
     (Frobenius² = sum of squared singular values; route: diagonalize

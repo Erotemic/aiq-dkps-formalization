@@ -33,6 +33,8 @@ terms of `Â − A`.
 * `ForMathlib.abs_sq_singularValues_sub_le`: Weyl for squared singular values,
   `|σₖ(Â)² − σₖ(A)²| ≤ (a + â) ε` — the singular-value stability underlying the
   singular-subspace bound.
+* `ForMathlib.sum_sq_singularValues`: the squared Frobenius norm equals the sum
+  of squared singular values, `∑ᵢ σᵢ(A)² = ∑ₖ ‖A bₖ‖²`.
 
 ## References
 
@@ -94,6 +96,21 @@ theorem norm_gram_sub_gram_apply_le {A Â : E →ₗ[𝕜] F} {a â ε : ℝ}
         · exact hE x
         · exact hA x
     _ = (a + â) * ε * ‖x‖ := by ring
+
+/-- **Squared Frobenius norm = sum of squared singular values.** For any
+orthonormal basis `b` of `E`, `∑ᵢ σᵢ(A)² = ∑ₖ ‖A bₖ‖²`.  Via the dictionary
+`σᵢ² = λᵢ(A⋆A)`, basis independence of the trace, and
+`re⟪bₖ, A⋆A bₖ⟫ = ‖A bₖ‖²`. -/
+theorem sum_sq_singularValues (A : E →ₗ[𝕜] F) {n : ℕ} (hn : finrank 𝕜 E = n)
+    (b : OrthonormalBasis (Fin n) 𝕜 E) :
+    ∑ i : Fin n, A.singularValues (i : ℕ) ^ 2 = ∑ k, ‖A (b k)‖ ^ 2 := by
+  have h1 : ∑ i : Fin n, A.singularValues (i : ℕ) ^ 2
+      = ∑ i, A.isSymmetric_adjoint_comp_self.eigenvalues hn i :=
+    Finset.sum_congr rfl fun i _ => A.sq_singularValues_fin hn i
+  rw [h1, ← sum_re_inner_orthonormalBasis_self_eq_sum_eigenvalues
+    A.isSymmetric_adjoint_comp_self hn b]
+  exact Finset.sum_congr rfl fun k _ => by
+    rw [LinearMap.comp_apply, LinearMap.adjoint_inner_left, inner_self_eq_norm_sq]
 
 /-- **Weyl's inequality for squared singular values.** The `k`-th squared singular
 values of `A` and `Â` differ by at most the Gram perturbation bound:

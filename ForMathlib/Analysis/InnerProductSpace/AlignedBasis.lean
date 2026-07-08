@@ -75,6 +75,14 @@ noncomputable def familyIsometry {v : Fin d → E} (hv : Orthonormal 𝕜 v) :
     (x : EuclideanSpace 𝕜 (Fin d)) : familyIsometry hv x = ∑ i, x i • v i := by
   rw [familyIsometry, LinearMap.coe_isometryOfInner, familyMap_apply]
 
+@[simp] theorem familyIsometry_single {v : Fin d → E} (hv : Orthonormal 𝕜 v) (k : Fin d) :
+    familyIsometry hv (EuclideanSpace.single k 1) = v k := by
+  rw [familyIsometry_apply]
+  rw [Finset.sum_eq_single k]
+  · rw [PiLp.single_apply, if_pos rfl, one_smul]
+  · intro i _ hik; rw [PiLp.single_apply, if_neg hik, zero_smul]
+  · intro hk; exact absurd (Finset.mem_univ k) hk
+
 variable [FiniteDimensional 𝕜 E]
 
 /-- **The overlap operator** of two orthonormal families `u, v`: the compression
@@ -100,5 +108,48 @@ theorem overlapOp_contraction {u v : Fin d → E} (hu : Orthonormal 𝕜 u) (hv 
   calc ‖(familyIsometry hu).toLinearMap.adjoint (familyIsometry hv x)‖
       ≤ 1 * ‖familyIsometry hv x‖ := norm_adjoint_apply_le (by norm_num) hiso _
     _ = ‖x‖ := by rw [one_mul, (familyIsometry hv).norm_map]
+
+/-- **The overlap sum equals `∑ σ²`.** The sum of squared singular values of the
+overlap operator is the total squared overlap `∑ⱼ ∑ᵢ ‖⟪uᵢ, vⱼ⟫‖²`.  (By Parseval,
+`‖overlapOp eⱼ‖² = ‖(familyIsometry hu)⋆ vⱼ‖² = ∑ᵢ ‖⟪uᵢ, vⱼ⟫‖²`.) -/
+theorem sum_sq_singularValues_overlapOp {u v : Fin d → E} (hu : Orthonormal 𝕜 u)
+    (hv : Orthonormal 𝕜 v) :
+    ∑ k : Fin d, (overlapOp hu hv).singularValues (k : ℕ) ^ 2
+      = ∑ k, ∑ i, ‖⟪u i, v k⟫_𝕜‖ ^ 2 := by
+  rw [sum_sq_singularValues (overlapOp hu hv) finrank_euclideanSpace_fin
+    (EuclideanSpace.basisFun (Fin d) 𝕜)]
+  refine Finset.sum_congr rfl fun k _ => ?_
+  rw [overlapOp_apply]
+  simp only [EuclideanSpace.basisFun_apply, familyIsometry_single]
+  rw [← (EuclideanSpace.basisFun (Fin d) 𝕜).sum_sq_norm_inner_right]
+  refine Finset.sum_congr rfl fun i _ => ?_
+  rw [EuclideanSpace.basisFun_apply, LinearMap.adjoint_inner_right, LinearIsometry.coe_toLinearMap,
+    familyIsometry_single]
+
+/-- **The overlap sum is at most the sum of singular values (cosines).**
+`∑ⱼ ∑ᵢ ‖⟪uᵢ, vⱼ⟫‖² ≤ ∑ⱼ cos θⱼ`, i.e. `d − ‖sinΘ‖²_F ≤ ∑ cos θ`.  This is the
+analytic heart of the Yu–Wang–Samworth aligned-basis (orthogonal-Procrustes)
+bound: the overlap operator is a contraction, so `∑σ² ≤ ∑σ`, and its squared
+singular values sum to the overlap while its singular values sum to `∑ cos θ`. -/
+theorem sum_overlap_le_sum_singularValues {u v : Fin d → E} (hu : Orthonormal 𝕜 u)
+    (hv : Orthonormal 𝕜 v) :
+    ∑ k, ∑ i, ‖⟪u i, v k⟫_𝕜‖ ^ 2 ≤ ∑ k : Fin d, (overlapOp hu hv).singularValues (k : ℕ) := by
+  have h : finrank 𝕜 (EuclideanSpace 𝕜 (Fin d)) = d := finrank_euclideanSpace_fin
+  -- `∑σ² ≤ ∑σ`, over `Fin (finrank)`, from the contraction core lemma.
+  have hcore := sum_sq_norm_le_sum_re_inner_abs_of_contraction (overlapOp_contraction hu hv)
+    (stdOrthonormalBasis 𝕜 (EuclideanSpace 𝕜 (Fin d)))
+  rw [← sum_sq_singularValues (overlapOp hu hv) rfl (stdOrthonormalBasis 𝕜 _),
+    sum_re_inner_abs_self_eq_sum_singularValues (overlapOp hu hv)
+      (stdOrthonormalBasis 𝕜 _)] at hcore
+  -- Reindex `Fin (finrank) → Fin d`.
+  have reindex : ∀ g : ℕ → ℝ,
+      ∑ i : Fin (finrank 𝕜 (EuclideanSpace 𝕜 (Fin d))), g (i : ℕ) = ∑ i : Fin d, g (i : ℕ) :=
+    fun g => Fintype.sum_equiv (finCongr h) _ _ (fun i => by simp)
+  rw [reindex (fun m => (overlapOp hu hv).singularValues m ^ 2),
+    reindex fun m => (overlapOp hu hv).singularValues m] at hcore
+  calc ∑ k, ∑ i, ‖⟪u i, v k⟫_𝕜‖ ^ 2
+      = ∑ k : Fin d, (overlapOp hu hv).singularValues (k : ℕ) ^ 2 :=
+        (sum_sq_singularValues_overlapOp hu hv).symm
+    _ ≤ ∑ k : Fin d, (overlapOp hu hv).singularValues (k : ℕ) := hcore
 
 end ForMathlib

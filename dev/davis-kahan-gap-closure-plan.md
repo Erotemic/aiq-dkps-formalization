@@ -11,6 +11,17 @@ difficulty grade.
 - **v1 (2026-07-07, Fable):** initial plan.
 - **v2 (2026-07-07, Opus review):** added `## Opus review notes` R1–R8;
   rerated W2.4 to 4/5; added statement-first gate to Definition of done.
+- **v4 (2026-07-07, Opus — implementation sweep):** executed a large portion of
+  the plan. **Closed: G5** (W1.1, W1.2), **G4** (W4.1, W4.2, W4.3), and the full
+  **YWS/Hoffman–Wielandt core** (W2.1–W2.4, both branches). **G3 foundations
+  complete:** W3.1 (unitary polar decomposition), W0.1(a) Frobenius=∑σ², W0.1(b)
+  σ≤1, W0.1(c) tr|A|=∑σ, unitary-invariance of the Frobenius sum, and the W3.4
+  core inequality ∑σ²≤∑σ. Every item build-green (8712 jobs) and axiom-clean,
+  committed separately. **Remaining:** W3.4 final assembly (connective plumbing,
+  all ingredients ready), W0.1(d)+W0.2 (principal-angle API), W5.2 (op-norm
+  sin-Θ), W6 (sin2Θ/tan2Θ), W7 (UI norms — deferred by design). Env note: a
+  shared-machine sandbox FD ceiling blocks `lake` unless run with the sandbox
+  disabled; the Mathlib olean cache needed `lake exe cache get!` recovery once.
 - **v3 (2026-07-07, Fable):** every R-note folded into the step text it
   concerns (see per-note status markers in the review section). Major change:
   **W5.1 rerouted from the spectral-integral argument to a purely algebraic
@@ -416,7 +427,18 @@ flat `d×d` matrix `Mᵢⱼ = ⟪uᵢ, v̂ⱼ⟫` — prefer the flat matrix on
 (c) `∑ᵢ σᵢ(M) ≥ ∑ᵢ σᵢ(M)² = ∑ᵢⱼ ‖Mᵢⱼ‖² = d − overlap` (W0.1(a) +
     complementary Parseval).
 
-**W3.4 — Assemble the aligned-basis theorem. Difficulty 4/5.**
+**W3.4 — Assemble the aligned-basis theorem. Difficulty 4/5. ◑ CORE DONE
+2026-07-07 (Opus).** The mathematically-substantive core is proved:
+`sum_sq_norm_le_sum_re_inner_abs_of_contraction` in `SingularSubspace.lean`
+(`∑σ² ≤ ∑σ` for a contraction, i.e. Frobenius² ≤ trace of modulus — the heart of
+`∑‖wⱼ−uⱼ‖² = 2d − 2∑σ ≤ 2d − 2∑σ² = 2·sinΘ²`), combining W3.1 + W0.1(a,b,c).
+**Remaining = connective plumbing** (not deep math): build the `d×d` overlap
+operator via `Matrix.toLpLin` (note: `toEuclideanLin` is now deprecated; carries
+`WithLp` `ofLp`/`toLp` friction), prove it is a contraction (Bessel), take its
+`polarUnitary` (W3.1) as the Procrustes `O`, define `wⱼ = ∑ᵢ Oᵢⱼ vᵢ`, and wire the
+two trace identities `∑‖wⱼ−uⱼ‖² = 2d − 2 tr|M|` (from `O⋆M = |M|`) and
+`overlap = d − ∑σ²` (Parseval). All ingredients are proved and verified; this is
+the final assembly step.
 *(Corrected per Opus R5, load-bearing:)* `O` **must** be the genuine
 *kernel-completed unitary* from W3.1, **never** the bare `polarFactor M`
 partial isometry. When a principal angle hits `π/2`, `M` is singular; with the

@@ -1,40 +1,40 @@
 {
-  "generated_at": "2026-07-07T16:27:49.369039+00:00",
+  "generated_at": "2026-07-08T19:06:51.165440+00:00",
   "schema": "llm-resource-tally/v3",
-  "ledger_rows": 26,
-  "commits_accounted": 13,
-  "turns": 3812,
+  "ledger_rows": 57,
+  "commits_accounted": 40,
+  "turns": 4385,
   "tokens": {
-    "input": 649144,
-    "cache_write": 36697911,
-    "cache_read": 1596653604,
-    "output": 7206376,
-    "billable_input": 1634000659
+    "input": 692204,
+    "cache_write": 40286379,
+    "cache_read": 1816720256,
+    "output": 8303574,
+    "billable_input": 1857698839
   },
   "output_tokens_by_model": {
     "<synthetic>": 0,
-    "claude-fable-5": 1229753,
-    "claude-opus-4-8": 5976623
+    "claude-fable-5": 1733910,
+    "claude-opus-4-8": 6569664
   },
   "output_tokens_by_activity": {
     "backfill": 6478724,
-    "unlabeled": 727209,
-    "implementation": 443
+    "unlabeled": 1594007,
+    "implementation": 230843
   },
   "output_tokens_by_agent": {
-    "claude-code": 7206376
+    "claude-code": 8303574
   },
   "server_tool_calls": {
     "web_search": 0,
     "web_fetch": 0
   },
   "time": {
-    "wall_clock_s": 893810.4
+    "wall_clock_s": 992352.4
   },
   "compaction_signals": {
-    "events": 8,
-    "peak_context_tokens": 7484785,
-    "summary_chars": 124330
+    "events": 9,
+    "peak_context_tokens": 7979145,
+    "summary_chars": 141326
   },
   "modeled_post_hoc": "inference_seconds, energy_kwh, carbon_gco2e — derived from the measurements above by a separate pass; not stored here."
 }

@@ -63,7 +63,7 @@ check `propext, Classical.choice, Quot.sound` on headline declarations).
 | # | Gap | Workstream | Status (2026-07-07) |
 |---|-----|------------|---------------------|
 | G1 | Operator-norm `‖sinΘ‖_op ≤ ‖S−T‖_op/g` and general unitarily-invariant-norm sinΘ | W5, W7 | ◑ W5.1 done; W5.2 remains (v5 recipe, 3/5, Opus); W7 deferred |
-| G2 | tanΘ, sin2Θ, tan2Θ theorems | W6 | ◑ W6.1 ✅ done (Fable, `RotationSharp.lean`); W6.2 = Opus (2/5); W6.3 defer |
+| G2 | tanΘ, sin2Θ, tan2Θ theorems | W6 | ◑ W6.1 ✅ (Fable) + W6.2 ✅ (Opus) done in `RotationSharp.lean`; W6.3 defer |
 | G3 | YWS aligned-basis bound | W3 | ✅ **closed** (W3.1–W3.4) |
 | G4 | YWS singular-vector extension (rectangular `A, Â`) | W4 | ✅ **closed** (W4.1–W4.3) |
 | G5 | General-interval spectral subspaces (two-sided gap) | W1 | ✅ **closed** (W1.1, W1.2) |
@@ -791,12 +791,17 @@ and the sign split `s ≤ c` vs `c < s`. Provide the `Real.arccos` corollary
 (`Real.sin (2 * Real.arccos c) * (b − a) ≤ 2ε`) only as a thin optional
 wrapper — the product form is the API.
 
-**W6.2 — Per-eigenvector tan2θ bound under vanishing pinch. Difficulty 2/5
-(was 3/5 — v5: with W6.1's key identity factored out, no rotation trick is
-needed at all).** W6.1 is now DONE: work in `RotationSharp.lean`; the engine
-is the private `key_identity` there (make it take the vanishing hypotheses at
-the use site — its statement already has all five scalar atoms), and the
-`sin_two_theta_le_of_mem` proof shows the intended assembly pattern.
+**W6.2 — Per-eigenvector tan2θ bound under vanishing pinch. Difficulty 2/5.
+✅ DONE 2026-07-08 (Opus) — `RotationSharp.lean`, `tan_two_theta_le_of_mem`
+(orthogonal-decomposition form) + `tan_two_theta_le` (`starProjection` form),
+both axiom-clean, module build green.** Implemented exactly along the route
+below: the vanishing-pinch hypotheses are stated subspace-wise
+(`hHU : ∀ u ∈ U, ∀ u' ∈ U, ⟪u, H u'⟫ = 0` and the `Uᗮ` analogue), they kill the
+two diagonal `H`-terms of the private `key_identity`, and the single mixed term
+`re⟪y,Hz⟫` is bounded by `‖y‖‖z‖ε` directly (Cauchy–Schwarz, no rotation trick).
+Conclusion `(b−a)·(‖y‖·‖z‖) ≤ |‖y‖²−‖z‖²|·ε` (= `tan 2θ ≤ 2ε/(b−a)`, product
+form, no `θ ≠ π/4` side condition). The engine `key_identity`, `re_inner_map_symm`
+etc. were already factored by W6.1, so this was pure assembly as planned.
 Encode the vanishing diagonal blocks subspace-wise:
 `hUU : ∀ u ∈ U, ∀ u' ∈ U, ⟪H u, u'⟫ = 0` and the same on `Uᗮ` (never form
 `P H P` as an operator). Then W6.1's step-4 identity collapses to
@@ -891,12 +896,12 @@ Everything not listed here is ✅ done and verified (v4 sweep + v5 re-check).
 | 4 | W5.2 | Op-norm sinΘ via Sylvester | 3/5 (was 3.5) | Opus | v5: decoupled from W0.2; 5-step recipe in the step text; step-2 helper now exists (`map_mem_orthogonal_of_forall_map_mem`) |
 | 5 | W0.2 | Principal-angle API | 3/5 (was 3.5) | Opus | build on existing `overlapOp`; needs W0.1(d) only for symmetry |
 | 6 | W0.1(d) | `singularValues_adjoint` (square case) | 2.5/5 (was 3) | Opus | v5 `polarUnitary`-conjugation route; do (d-i) eigenvalue-conjugation lemma first |
-| 7 | W6.2 | tan2θ under vanishing pinch | 2/5 (was 3) | Opus | pure assembly on `RotationSharp.lean`'s `key_identity` |
+| — | W6.2 | tan2θ under vanishing pinch | 2/5 | **✅ DONE** (Opus, 2026-07-08) | `RotationSharp.lean`; pure assembly on `key_identity`, axiom-clean |
 
-Suggested order for Opus: **W0.1(d) → W0.2** (closes the canonical-angle API),
-then **W5.2** (closes G1's op-norm half — after this the paper's gap list is
-down to W6/W7), then **W6.2** once W6.1 lands. After each: `lake build` green,
-axiom check on headlines, paper sync per Definition of done.
+Suggested order for Opus: **W6.2** (done first, closes G2), then **W0.1(d) →
+W0.2** (closes the canonical-angle API), then **W5.2** (closes G1's op-norm
+half). After each: `lake build` green, axiom check on headlines, paper sync per
+Definition of done.
 
 ## Difficulty ranking (all steps, hardest first) — historical (v3)
 

@@ -62,11 +62,11 @@ formalized.  Beyond the ladder, the formalization now also contains the exact
 YWS theorem with its constant $2$ (via Hoffman--Wielandt and a von Neumann
 trace inequality), the YWS aligned-basis and singular-subspace extensions,
 general-interval spectral subspaces, Davis's sharper total-rotation estimate
-and per-eigenvector $\sin2\theta$ theorem, and the operator Sylvester bound
-that underlies the dimension-free operator-norm theorem.  A closing section
-records what remains --- the operator-norm $\sin\Theta$ assembly, the
-canonical principal-angle API, the $\tan2\theta$ variant, and unitarily
-invariant norms --- ranked by difficulty, each with a worked proof route.
+and per-eigenvector $\sin2\theta$ and $\tan2\theta$ theorems, and the operator
+Sylvester bound that underlies the dimension-free operator-norm theorem.  A
+closing section records what remains --- the operator-norm $\sin\Theta$
+assembly, the canonical principal-angle API, and unitarily invariant norms ---
+ranked by difficulty, each with a worked proof route.
 \end{abstract}
 
 \vspace{1.5em}
@@ -211,13 +211,13 @@ constant $2$, both the Frobenius and $\sqrt d\,$-operator-norm branches) is
 formalized via Hoffman--Wielandt, the aligned-basis (Procrustes) conclusion and
 the singular-subspace extension are formalized, Davis's sharper 1963
 total-rotation theory is formalized together with its polar-decomposition
-substrate, and Davis's per-eigenvector $\sin2\theta$ theorem is formalized in
-a phase-free product form.  What is still missing is the dimension-free
-operator-norm $\sin\Theta$ theorem (its analytic engine, an operator Sylvester
-bound, is already in place; only the compression assembly remains), a packaged
-canonical principal-angle API, the $\tan2\theta$ variant and the
-subspace-level $\sin2\Theta$ theorem, and general unitarily invariant norm
-versions. The purpose of this note is to explain
+substrate, and Davis's per-eigenvector $\sin2\theta$ and $\tan2\theta$ theorems
+are formalized in a phase-free product form.  What is still missing is the
+dimension-free operator-norm $\sin\Theta$ theorem (its analytic engine, an
+operator Sylvester bound, is already in place; only the compression assembly
+remains), a packaged canonical principal-angle API, the subspace-level
+$\sin2\Theta$ theorem, and general unitarily invariant norm versions. The
+purpose of this note is to explain
 exactly which part has been formalized, how it relates to the paper statements,
 and what still remains to be built --- the closing section ranks the remaining
 steps by difficulty and records a checked proof route for each.
@@ -498,6 +498,24 @@ statement is in orthogonal-decomposition form and assumes no orthogonal
 projection, completeness, or finite dimension; the projection and
 $\arccos$-angle forms are corollaries.
 
+\paragraph{The per-eigenvector $\tan2\theta$ theorem.}
+Under the same setup but with the \emph{vanishing-pinch} hypotheses --- $H$ has
+no diagonal blocks with respect to $U\oplus U^{\perp}$, i.e.\
+$\inner{u}{Hu'}=0$ for $u,u'\in U$ and $\inner{w}{Hw'}=0$ for $w,w'\in
+U^{\perp}$ --- the same key identity collapses, with the two diagonal
+$H$-terms gone, to
+$\norm{z}^2\mathrm{re}\inner{y}{Ty}-\norm{y}^2\mathrm{re}\inner{z}{Tz}
+=(\norm{y}^2-\norm{z}^2)\,\mathrm{re}\inner{y}{Hz}$, and bounding the single
+mixed term directly (no rotation, no half-angle) gives
+\[
+  (b-a)\,\norm{Px}\,\norm{x-Px}\;\le\;\bigl|\norm{Px}^2-\norm{x-Px}^2\bigr|\,\eps,
+  \qquad\text{i.e.}\qquad
+  \tan2\theta\;\le\;\frac{2\eps}{b-a},
+\]
+with \emph{no smallness assumption} on the perturbation (the diagonal-block
+hypothesis replaces it).  The product form carries no $\theta\ne\pi/4$ side
+condition.
+
 \paragraph{The Sylvester (Lyapunov) solution bound.}
 The analytic engine for the dimension-free operator-norm $\sin\Theta$ theorem
 is in place: if $A,B$ are bounded symmetric with quadratic forms
@@ -512,7 +530,7 @@ assumptions.  Only the compression assembly on top of it remains
 
 \section{What remains, ranked by difficulty}\label{sec:remains}
 
-Three items remain, plus two deliberately deferred ones.  They are listed
+Two items remain, plus two deliberately deferred ones.  They are listed
 hardest first; each comes with the proof route that has been checked on paper,
 so that the remaining work is implementation rather than route discovery.
 Lean-level detail (exact hypotheses, file placement, pitfalls) is maintained
@@ -556,15 +574,6 @@ in \texttt{dev/davis-kahan-gap-closure-plan.md} (v5) in the repository.
   --- already formalized --- plus ``unitary conjugation preserves sorted
   eigenvalues,'' a Courant--Fischer consequence.
 
-\item \emph{Per-eigenvector $\tan2\theta$ theorem (difficulty 2/5).}  Add the
-  vanishing-pinch hypotheses (the diagonal blocks of $H$ vanish on $U$ and
-  $U^{\perp}$) to the formalized $\sin2\theta$ setting; the formalized key
-  identity collapses to
-  $cs(\alpha-\beta)=(c^2-s^2)\,\mathrm{re}\inner{q}{Hp}$ with
-  $|\mathrm{re}\inner{q}{Hp}|\le\norm{H}_{\op}$ directly --- no rotation trick
-  --- giving $(b-a)\,cs\le|c^2-s^2|\,\norm{H}_{\op}$, i.e.\
-  $\tan2\theta\le2\norm{H}_{\op}/(b-a)$.  Pure assembly on the already-factored
-  identity lemma.
 \end{enumerate}
 
 \section{Dictionary to the Lean source}\label{sec:dictionary}
@@ -667,6 +676,9 @@ $U^{\perp}$-invariance helper
   & \texttt{sin\_two\_theta\_le\_of\_mem}, \texttt{sin\_two\_theta\_le},
     \texttt{sin\_two\_arccos\_le},
     \texttt{map\_mem\_orthogonal\_of\_forall\_map\_mem} (\texttt{RotationSharp.lean}) \\
+Per-eigenvector $\tan2\theta$ (vanishing pinch): decomposition / projection form
+  & \texttt{tan\_two\_theta\_le\_of\_mem}, \texttt{tan\_two\_theta\_le}
+    (\texttt{RotationSharp.lean}) \\
 Sylvester bound, coercive / separated form
   & \texttt{opNorm\_le\_div\_of\_comp\_add\_comp\_eq},
     \texttt{opNorm\_le\_div\_of\_comp\_sub\_comp\_eq} (\texttt{SylvesterBound.lean}) \\

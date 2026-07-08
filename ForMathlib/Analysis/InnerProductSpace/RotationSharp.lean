@@ -12,6 +12,14 @@ is realized by test vectors with *polynomial* coefficients
 (`1 − 2cs = (c − s)²`, `1 + 2cs = (c + s)²`), so no square roots, inverses, or
 normalizations appear anywhere.  No finite-dimensionality is assumed: the
 subspace only needs an orthogonal projection.
+
+The `tan 2θ` theorem (plan step W6.2) was added by Claude Opus 4.8
+(claude-opus-4-8[1m]): under the vanishing-pinch hypotheses (`H` has no
+diagonal blocks with respect to `U ⊕ Uᗮ`) the same `key_identity` collapses to
+`c·s·(re⟪y,Ty⟫ − re⟪z,Tz⟫) = (c² − s²)·re⟪y,Hz⟫`, and bounding the single
+mixed term directly (no rotation, no half-angle) gives
+`(b − a)·(‖Px‖·‖x − Px‖) ≤ |‖Px‖² − ‖x − Px‖²|·ε`, i.e. `tan 2θ ≤ 2ε/(b − a)`,
+with no smallness assumption on the perturbation.
 To be re-authored per Mathlib's AI-contribution policy at PR time.
 -/
 
@@ -55,6 +63,9 @@ recovers the left-hand side of the identity and yields
   `(b - a) * (‖P x‖ * ‖x - P x‖) ≤ ε`.
 * `ForMathlib.sin_two_arccos_le`: the literature-facing form
   `(b - a) * sin (2 * arccos ‖P x‖) ≤ 2 * ε`.
+* `ForMathlib.tan_two_theta_le` / `…_of_mem`: Davis's `tan 2θ` theorem under
+  the vanishing-pinch hypotheses, in product form
+  `(b - a) * (‖P x‖ * ‖x - P x‖) ≤ |‖P x‖ ^ 2 - ‖x - P x‖ ^ 2| * ε`.
 * `ForMathlib.map_mem_orthogonal_of_forall_map_mem`: the orthogonal complement
   of an invariant subspace of a symmetric operator is invariant.
 
@@ -307,5 +318,99 @@ theorem sin_two_arccos_le (hT : T.IsSymmetric) (hH : H.IsSymmetric)
     exact Real.sqrt_sq (norm_nonneg z)
   rw [hsqrt]
   nlinarith [hmain]
+
+/-- **Davis's tan 2θ theorem, orthogonal-decomposition form.**  Same setup as
+`sin_two_theta_le_of_mem`, but with the *vanishing-pinch* hypotheses: `H` has
+no diagonal blocks with respect to the splitting `U ⊕ Uᗮ`, i.e.
+`⟪u, H u'⟫ = 0` for `u, u' ∈ U` and `⟪w, H w'⟫ = 0` for `w, w' ∈ Uᗮ`.  Then
+
+`(b - a) * (‖y‖ * ‖z‖) ≤ |‖y‖ ^ 2 - ‖z‖ ^ 2| * ε`.
+
+Since `2 * ‖y‖ * ‖z‖ = sin 2θ` and `‖y‖ ^ 2 - ‖z‖ ^ 2 = cos 2θ` for a unit
+eigenvector, this is Davis's `tan 2θ ≤ 2ε / (b - a)`, with **no smallness
+assumption** on the perturbation (the diagonal-block hypothesis replaces it).
+Unlike the angle form, the product form carries no `θ ≠ π/4` side condition.
+The proof reuses the `key_identity` engine of the sin 2θ theorem: the two
+vanishing-block hypotheses kill the two diagonal `H`-terms, so the identity
+collapses to `‖z‖² re⟪y,Ty⟫ - ‖y‖² re⟪z,Tz⟫ = (‖y‖² - ‖z‖²) re⟪y,Hz⟫`, and the
+single mixed term is bounded directly with no rotation trick. -/
+theorem tan_two_theta_le_of_mem (hT : T.IsSymmetric) (hH : H.IsSymmetric)
+    {U : Submodule 𝕜 E} (hUinv : ∀ u ∈ U, T u ∈ U) {a b ε : ℝ}
+    (hb : ∀ u ∈ U, b * ‖u‖ ^ 2 ≤ RCLike.re ⟪T u, u⟫_𝕜)
+    (ha : ∀ w ∈ Uᗮ, RCLike.re ⟪T w, w⟫_𝕜 ≤ a * ‖w‖ ^ 2)
+    (hε : ∀ v, ‖H v‖ ≤ ε * ‖v‖)
+    (hHU : ∀ u ∈ U, ∀ u' ∈ U, ⟪u, H u'⟫_𝕜 = 0)
+    (hHUperp : ∀ w ∈ Uᗮ, ∀ w' ∈ Uᗮ, ⟪w, H w'⟫_𝕜 = 0)
+    {y z : E} (hyU : y ∈ U) (hzU : z ∈ Uᗮ) (hx : ‖y + z‖ = 1) {μ : ℝ}
+    (hμ : T (y + z) + H (y + z) = (μ : 𝕜) • (y + z)) :
+    (b - a) * (‖y‖ * ‖z‖) ≤ |‖y‖ ^ 2 - ‖z‖ ^ 2| * ε := by
+  have hε0 : 0 ≤ ε := by
+    have h := hε (y + z)
+    rw [hx, mul_one] at h
+    exact (norm_nonneg _).trans h
+  have key := key_identity hT hH hUinv hyU hzU hμ
+  have hyH : RCLike.re ⟪y, H y⟫_𝕜 = 0 := by rw [hHU y hyU y hyU]; simp
+  have hzH : RCLike.re ⟪z, H z⟫_𝕜 = 0 := by rw [hHUperp z hzU z hzU]; simp
+  have hby : b * ‖y‖ ^ 2 ≤ RCLike.re ⟪y, T y⟫_𝕜 := by
+    have h := hb y hyU
+    rwa [← inner_conj_symm, RCLike.conj_re] at h
+  have haz : RCLike.re ⟪z, T z⟫_𝕜 ≤ a * ‖z‖ ^ 2 := by
+    have h := ha z hzU
+    rwa [← inner_conj_symm, RCLike.conj_re] at h
+  have hmix : |RCLike.re ⟪y, H z⟫_𝕜| ≤ ‖y‖ * ‖z‖ * ε :=
+    calc |RCLike.re ⟪y, H z⟫_𝕜| ≤ ‖⟪y, H z⟫_𝕜‖ := RCLike.abs_re_le_norm _
+      _ ≤ ‖y‖ * ‖H z‖ := norm_inner_le_norm _ _
+      _ ≤ ‖y‖ * (ε * ‖z‖) := by gcongr; exact hε z
+      _ = ‖y‖ * ‖z‖ * ε := by ring
+  -- The vanishing diagonal blocks collapse the key identity.
+  have hcollapse : ‖z‖ ^ 2 * RCLike.re ⟪y, T y⟫_𝕜 - ‖y‖ ^ 2 * RCLike.re ⟪z, T z⟫_𝕜
+      = (‖y‖ ^ 2 - ‖z‖ ^ 2) * RCLike.re ⟪y, H z⟫_𝕜 := by
+    rw [hyH, hzH] at key
+    linear_combination key
+  -- The two quadratic-form bounds give the lower bound on the collapsed LHS.
+  have hlow : ‖y‖ ^ 2 * ‖z‖ ^ 2 * (b - a)
+      ≤ ‖z‖ ^ 2 * RCLike.re ⟪y, T y⟫_𝕜 - ‖y‖ ^ 2 * RCLike.re ⟪z, T z⟫_𝕜 := by
+    nlinarith [mul_le_mul_of_nonneg_left hby (sq_nonneg ‖z‖),
+      mul_le_mul_of_nonneg_left haz (sq_nonneg ‖y‖)]
+  -- Chain: `‖y‖²‖z‖²(b-a) ≤ (Y-Z)·W ≤ |Y-Z|·‖y‖‖z‖·ε`.
+  have hchain : ‖y‖ ^ 2 * ‖z‖ ^ 2 * (b - a)
+      ≤ |‖y‖ ^ 2 - ‖z‖ ^ 2| * (‖y‖ * ‖z‖ * ε) :=
+    calc ‖y‖ ^ 2 * ‖z‖ ^ 2 * (b - a)
+        ≤ ‖z‖ ^ 2 * RCLike.re ⟪y, T y⟫_𝕜 - ‖y‖ ^ 2 * RCLike.re ⟪z, T z⟫_𝕜 := hlow
+      _ = (‖y‖ ^ 2 - ‖z‖ ^ 2) * RCLike.re ⟪y, H z⟫_𝕜 := hcollapse
+      _ ≤ |(‖y‖ ^ 2 - ‖z‖ ^ 2) * RCLike.re ⟪y, H z⟫_𝕜| := le_abs_self _
+      _ = |‖y‖ ^ 2 - ‖z‖ ^ 2| * |RCLike.re ⟪y, H z⟫_𝕜| := abs_mul _ _
+      _ ≤ |‖y‖ ^ 2 - ‖z‖ ^ 2| * (‖y‖ * ‖z‖ * ε) := by gcongr
+  -- Divide by `‖y‖‖z‖`; degenerate case handled by nonnegativity.
+  rcases (mul_nonneg (norm_nonneg y) (norm_nonneg z)).eq_or_lt with hn | hn
+  · rw [← hn, mul_zero]
+    exact mul_nonneg (abs_nonneg _) hε0
+  · have hh : (‖y‖ * ‖z‖) * ((b - a) * (‖y‖ * ‖z‖))
+        ≤ (‖y‖ * ‖z‖) * (|‖y‖ ^ 2 - ‖z‖ ^ 2| * ε) := by
+      linear_combination hchain
+    exact le_of_mul_le_mul_left hh hn
+
+/-- **Davis's tan 2θ theorem, per-eigenvector product form.**  Under the
+hypotheses of `tan_two_theta_le_of_mem`, for a unit eigenvector `x` of `T + H`
+and `P = U.starProjection`,
+
+`(b - a) * (‖P x‖ * ‖x - P x‖) ≤ |‖P x‖ ^ 2 - ‖x - P x‖ ^ 2| * ε`,
+
+i.e. `tan 2θ ≤ 2ε / (b - a)` for the angle `θ` between `x` and `U`. -/
+theorem tan_two_theta_le (hT : T.IsSymmetric) (hH : H.IsSymmetric)
+    {U : Submodule 𝕜 E} [U.HasOrthogonalProjection]
+    (hUinv : ∀ u ∈ U, T u ∈ U) {a b ε : ℝ}
+    (hb : ∀ u ∈ U, b * ‖u‖ ^ 2 ≤ RCLike.re ⟪T u, u⟫_𝕜)
+    (ha : ∀ w ∈ Uᗮ, RCLike.re ⟪T w, w⟫_𝕜 ≤ a * ‖w‖ ^ 2)
+    (hε : ∀ v, ‖H v‖ ≤ ε * ‖v‖)
+    (hHU : ∀ u ∈ U, ∀ u' ∈ U, ⟪u, H u'⟫_𝕜 = 0)
+    (hHUperp : ∀ w ∈ Uᗮ, ∀ w' ∈ Uᗮ, ⟪w, H w'⟫_𝕜 = 0)
+    {x : E} (hx : ‖x‖ = 1) {μ : ℝ} (hμ : T x + H x = (μ : 𝕜) • x) :
+    (b - a) * (‖U.starProjection x‖ * ‖x - U.starProjection x‖)
+      ≤ |‖U.starProjection x‖ ^ 2 - ‖x - U.starProjection x‖ ^ 2| * ε := by
+  have hxsum : U.starProjection x + (x - U.starProjection x) = x := by abel
+  exact tan_two_theta_le_of_mem hT hH hUinv hb ha hε hHU hHUperp
+    (U.starProjection_apply_mem x) (U.sub_starProjection_mem_orthogonal x)
+    (by rw [hxsum]; exact hx) (by rw [hxsum]; exact hμ)
 
 end ForMathlib

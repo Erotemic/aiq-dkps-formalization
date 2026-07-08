@@ -8,6 +8,12 @@ Formalized by Claude Opus 4.8 (claude-opus-4-8[1m]), plan step W4 of
 Groundwork for the Yu–Wang–Samworth singular-vector extension: perturbing the
 Gram operator `A⋆A` by `Â⋆Â − A⋆A`, controlled by `Â − A`.  Includes the operator
 adjoint norm bound `‖A⋆‖ = ‖A‖` in elementwise form.
+
+Plan step W0.1(d) added by Claude Opus 4.8 (claude-opus-4-8[1m]): the
+singular-value symmetry `σ(A⋆) = σ(A)` for a square operator, proved through the
+eigenvalue invariance of a symmetric operator under unitary conjugation
+(`eigenvalues_conj_unitary`, a Courant–Fischer consequence) applied to the polar
+identity `A A⋆ = U (A⋆A) U⁻¹` with `U = polarUnitary A`.
 To be re-authored per Mathlib's AI-contribution policy at PR time.
 -/
 
@@ -36,6 +42,10 @@ terms of `Â − A`.
   singular-subspace bound.
 * `ForMathlib.sum_sq_singularValues`: the squared Frobenius norm equals the sum
   of squared singular values, `∑ᵢ σᵢ(A)² = ∑ₖ ‖A bₖ‖²`.
+* `ForMathlib.eigenvalues_conj_unitary`: the sorted eigenvalues of a symmetric
+  operator are invariant under unitary conjugation `S ↦ U S U⁻¹`.
+* `ForMathlib.singularValues_adjoint`: the singular values of a square operator
+  and its adjoint coincide, `σ(A⋆) = σ(A)`.
 
 ## References
 
@@ -226,5 +236,126 @@ theorem sq_gap_mul_sum_cross_singularVectors_le
   sq_gap_mul_sum_cross_le_of_population_gap_opNorm
     A.isSymmetric_adjoint_comp_self Â.isSymmetric_adjoint_comp_self hn s hΓ hgap
     (fun x => norm_gram_sub_gram_apply_le hâ hε hA hÂ hE x)
+
+/-! ### Singular values of the adjoint (square case)
+
+`σ(A⋆) = σ(A)` for a square operator `A : E →ₗ[𝕜] E`.  The Gram operators
+`A⋆A` and `A A⋆` are unitarily conjugate (`A A⋆ = U (A⋆A) U⁻¹` with
+`U = polarUnitary A`), so they have equal sorted eigenvalues, hence `A` and
+`A⋆` have equal singular values.  This is the symmetry `cosPrincipalAngles`
+needs (plan step W0.1(d)). -/
+
+section Adjoint
+
+variable {n : ℕ}
+
+omit [FiniteDimensional 𝕜 E] in
+/-- The conjugate `U S U⁻¹` of a symmetric operator by a unitary is symmetric. -/
+theorem isSymmetric_conj_unitary {S : E →ₗ[𝕜] E} (hS : S.IsSymmetric) (U : E ≃ₗᵢ[𝕜] E) :
+    (U.toLinearMap ∘ₗ S ∘ₗ U.symm.toLinearMap).IsSymmetric := by
+  intro x y
+  simp only [LinearMap.comp_apply, LinearIsometryEquiv.coe_toLinearEquiv, LinearEquiv.coe_coe]
+  calc ⟪U (S (U.symm x)), y⟫_𝕜
+      = ⟪U (S (U.symm x)), U (U.symm y)⟫_𝕜 := by rw [LinearIsometryEquiv.apply_symm_apply]
+    _ = ⟪S (U.symm x), U.symm y⟫_𝕜 := U.inner_map_map _ _
+    _ = ⟪U.symm x, S (U.symm y)⟫_𝕜 := hS _ _
+    _ = ⟪U (U.symm x), U (S (U.symm y))⟫_𝕜 := (U.inner_map_map _ _).symm
+    _ = ⟪x, U (S (U.symm y))⟫_𝕜 := by rw [LinearIsometryEquiv.apply_symm_apply]
+
+/-- Sorted eigenvalues are congruent along an operator equality (the eigenvalue
+enumeration depends only on the operator, not on the symmetry proof). -/
+theorem eigenvalues_congr {S₁ S₂ : E →ₗ[𝕜] E} (h : S₁ = S₂)
+    (hS₁ : S₁.IsSymmetric) (hS₂ : S₂.IsSymmetric) (hn : finrank 𝕜 E = n) :
+    hS₁.eigenvalues hn = hS₂.eigenvalues hn := by
+  subst h; rfl
+
+/-- One direction of unitary-conjugation eigenvalue invariance:
+`λₖ(S) ≤ λₖ(U S U⁻¹)`.  Courant–Fischer — a witness `(k+1)`-subspace for `S`
+maps under `U` to one for the conjugate, on which the same Rayleigh values
+recur. -/
+private theorem eigenvalues_conj_unitary_le {S : E →ₗ[𝕜] E} (hS : S.IsSymmetric)
+    (hn : finrank 𝕜 E = n) (U : E ≃ₗᵢ[𝕜] E) (k : Fin n) :
+    hS.eigenvalues hn k ≤ (isSymmetric_conj_unitary hS U).eigenvalues hn k := by
+  obtain ⟨V, hVdim, hVlow⟩ := forall_unit_vector_eigenvalue_le_re_inner hS hn k
+  have hmapfin : finrank 𝕜 (V.map U.toLinearMap) = (k : ℕ) + 1 := by
+    rw [show (U.toLinearMap : E →ₗ[𝕜] E) = (U.toLinearEquiv : E →ₗ[𝕜] E) from rfl,
+      LinearEquiv.finrank_map_eq, hVdim]
+  obtain ⟨y, hyV', hny, hup⟩ := exists_unit_vector_re_inner_le_eigenvalue
+    (isSymmetric_conj_unitary hS U) hn k (V.map U.toLinearMap) hmapfin
+  obtain ⟨x, hxV, hUxy⟩ := Submodule.mem_map.mp hyV'
+  simp only [LinearIsometryEquiv.coe_toLinearEquiv, LinearEquiv.coe_coe] at hUxy
+  have hnx : ‖x‖ = 1 := by rw [← hny, ← hUxy, U.norm_map]
+  have hyx : U.symm y = x := by rw [← hUxy, U.symm_apply_apply]
+  have hray : RCLike.re ⟪(U.toLinearMap ∘ₗ S ∘ₗ U.symm.toLinearMap) y, y⟫_𝕜
+      = RCLike.re ⟪S x, x⟫_𝕜 := by
+    simp only [LinearMap.comp_apply, LinearIsometryEquiv.coe_toLinearEquiv, LinearEquiv.coe_coe]
+    rw [hyx, ← hUxy, U.inner_map_map]
+  calc hS.eigenvalues hn k
+      ≤ RCLike.re ⟪S x, x⟫_𝕜 := hVlow x hxV hnx
+    _ = RCLike.re ⟪(U.toLinearMap ∘ₗ S ∘ₗ U.symm.toLinearMap) y, y⟫_𝕜 := hray.symm
+    _ ≤ (isSymmetric_conj_unitary hS U).eigenvalues hn k := hup
+
+/-- **Unitary conjugation preserves sorted eigenvalues.** For a symmetric
+operator `S` and a unitary `U`, `S` and `U S U⁻¹` have the same sorted
+eigenvalues.  (Courant–Fischer: the Rayleigh minimax is invariant under the
+subspace bijection `V ↦ U V`.) -/
+theorem eigenvalues_conj_unitary {S : E →ₗ[𝕜] E} (hS : S.IsSymmetric)
+    (hn : finrank 𝕜 E = n) (U : E ≃ₗᵢ[𝕜] E) :
+    (isSymmetric_conj_unitary hS U).eigenvalues hn = hS.eigenvalues hn := by
+  funext k
+  refine le_antisymm ?_ (eigenvalues_conj_unitary_le hS hn U k)
+  -- Reverse direction: `S` is the conjugate of `U S U⁻¹` by `U⁻¹`.
+  have hback : U.symm.toLinearMap ∘ₗ (U.toLinearMap ∘ₗ S ∘ₗ U.symm.toLinearMap)
+      ∘ₗ U.symm.symm.toLinearMap = S := by
+    ext v
+    simp only [LinearMap.comp_apply, LinearIsometryEquiv.coe_toLinearEquiv, LinearEquiv.coe_coe,
+      LinearIsometryEquiv.symm_symm, LinearIsometryEquiv.symm_apply_apply]
+  have hcong := eigenvalues_congr hback
+    (isSymmetric_conj_unitary (isSymmetric_conj_unitary hS U) U.symm) hS hn
+  have := eigenvalues_conj_unitary_le (isSymmetric_conj_unitary hS U) hn U.symm k
+  rwa [hcong] at this
+
+/-- The Gram operators `A A⋆` and `A⋆A` are unitarily conjugate:
+`A A⋆ = U (A⋆A) U⁻¹` with `U = polarUnitary A`.  From `A = U |A|`,
+`A⋆ = |A| U⁻¹`, so `A A⋆ = U |A|² U⁻¹ = U (A⋆A) U⁻¹`. -/
+theorem comp_adjoint_eq_conj_adjoint_comp (A : E →ₗ[𝕜] E) :
+    A ∘ₗ A.adjoint = (polarUnitary A).toLinearMap ∘ₗ (A.adjoint ∘ₗ A)
+      ∘ₗ (polarUnitary A).symm.toLinearMap := by
+  set U := polarUnitary A with hU
+  have hpolar : A = U.toLinearMap ∘ₗ abs A := polar_decomposition_unitary A
+  have hadj : A.adjoint = abs A ∘ₗ U.symm.toLinearMap := by
+    conv_lhs => rw [hpolar]
+    rw [LinearMap.adjoint_comp, (isPositive_abs A).adjoint_eq, U.adjoint_toLinearMap_eq_symm]
+  calc A ∘ₗ A.adjoint
+      = (U.toLinearMap ∘ₗ abs A) ∘ₗ (abs A ∘ₗ U.symm.toLinearMap) := by rw [← hpolar, ← hadj]
+    _ = U.toLinearMap ∘ₗ (abs A ∘ₗ abs A) ∘ₗ U.symm.toLinearMap := by
+        ext v; simp only [LinearMap.comp_apply]
+    _ = U.toLinearMap ∘ₗ (A.adjoint ∘ₗ A) ∘ₗ U.symm.toLinearMap := by rw [abs_mul_self A]
+
+/-- The Gram operators of `A` and `A⋆` have equal sorted eigenvalues. -/
+theorem eigenvalues_gram_adjoint (A : E →ₗ[𝕜] E) (hn : finrank 𝕜 E = n) :
+    A.adjoint.isSymmetric_adjoint_comp_self.eigenvalues hn
+      = A.isSymmetric_adjoint_comp_self.eigenvalues hn := by
+  have hAA : A.adjoint.adjoint ∘ₗ A.adjoint = (polarUnitary A).toLinearMap
+      ∘ₗ (A.adjoint ∘ₗ A) ∘ₗ (polarUnitary A).symm.toLinearMap := by
+    rw [LinearMap.adjoint_adjoint]; exact comp_adjoint_eq_conj_adjoint_comp A
+  have hcong := eigenvalues_congr hAA A.adjoint.isSymmetric_adjoint_comp_self
+    (isSymmetric_conj_unitary A.isSymmetric_adjoint_comp_self (polarUnitary A)) hn
+  rw [hcong, eigenvalues_conj_unitary A.isSymmetric_adjoint_comp_self hn (polarUnitary A)]
+
+/-- **Singular values of the adjoint (square case).** For `A : E →ₗ[𝕜] E`,
+`σ(A⋆) = σ(A)`: both `A⋆A` and `A A⋆` have the same nonzero spectrum.  Absent
+from the pinned Mathlib; the symmetry underlying `cosPrincipalAngles`. -/
+theorem singularValues_adjoint (A : E →ₗ[𝕜] E) :
+    A.adjoint.singularValues = A.singularValues := by
+  obtain ⟨n, hn⟩ : ∃ n, finrank 𝕜 E = n := ⟨_, rfl⟩
+  have heig := eigenvalues_gram_adjoint A hn
+  ext i
+  rcases lt_or_ge i n with hi | hi
+  · rw [A.adjoint.singularValues_of_lt hn hi, A.singularValues_of_lt hn hi, heig]
+  · rw [A.adjoint.singularValues_of_finrank_le (by rw [hn]; exact hi),
+      A.singularValues_of_finrank_le (by rw [hn]; exact hi)]
+
+end Adjoint
 
 end ForMathlib

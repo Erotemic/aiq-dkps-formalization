@@ -177,7 +177,14 @@ For `A : E →ₗ[𝕜] F` between finite-dim spaces, prove:
     `abs A` is diagonal in the eigenbasis of `A†A` with entries
     `√λᵢ = σᵢ` by `sqrt_apply_eigenvectorBasis` + `sqrt_unique`);
 (d) **`singularValues_adjoint : (A.adjoint).singularValues = A.singularValues`
-    — confirmed ABSENT from the pinned Mathlib (Opus R4), must be built here.**
+    — ✅ DONE 2026-07-08 (Opus), `SingularSubspace.lean` (square case),
+    axiom-clean.** Delivered `isSymmetric_conj_unitary`, `eigenvalues_congr`,
+    `eigenvalues_conj_unitary` (the reusable Courant–Fischer conjugation-invariance
+    lemma — independently Mathlib-attractive), `comp_adjoint_eq_conj_adjoint_comp`
+    (`A A⋆ = U (A⋆A) U⁻¹`), `eigenvalues_gram_adjoint`, and the headline
+    `singularValues_adjoint`. Followed the v5 route exactly; the reverse
+    eigenvalue direction reused the forward `_le` helper via
+    `eigenvalues_congr` on `U⁻¹ (U S U⁻¹) U = S`.
     **v5 reroute (Fable) — do the SQUARE case only (`A : E →ₗ[𝕜] E`), which is
     all W0.2 consumes** (both overlap-map spaces are `EuclideanSpace 𝕜 (Fin d)`).
     Two lemmas:
@@ -895,7 +902,7 @@ Everything not listed here is ✅ done and verified (v4 sweep + v5 re-check).
 | 3 | W6.1 | Per-vector sin2θ, product form | 4/5 | **✅ DONE** (Fable, 2026-07-08) | `RotationSharp.lean`; polynomial-coefficient rotation, no `sqrt`/inverses; axiom-clean |
 | 4 | W5.2 | Op-norm sinΘ via Sylvester | 3/5 (was 3.5) | Opus | v5: decoupled from W0.2; 5-step recipe in the step text; step-2 helper now exists (`map_mem_orthogonal_of_forall_map_mem`) |
 | 5 | W0.2 | Principal-angle API | 3/5 (was 3.5) | Opus | build on existing `overlapOp`; needs W0.1(d) only for symmetry |
-| 6 | W0.1(d) | `singularValues_adjoint` (square case) | 2.5/5 (was 3) | Opus | v5 `polarUnitary`-conjugation route; do (d-i) eigenvalue-conjugation lemma first |
+| — | W0.1(d) | `singularValues_adjoint` (square case) | 2.5/5 | **✅ DONE** (Opus, 2026-07-08) | `SingularSubspace.lean`; `eigenvalues_conj_unitary` + polar identity, axiom-clean |
 | — | W6.2 | tan2θ under vanishing pinch | 2/5 | **✅ DONE** (Opus, 2026-07-08) | `RotationSharp.lean`; pure assembly on `key_identity`, axiom-clean |
 
 Suggested order for Opus: **W6.2** (done first, closes G2), then **W0.1(d) →

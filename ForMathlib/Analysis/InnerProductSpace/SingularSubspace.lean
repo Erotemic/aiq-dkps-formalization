@@ -138,6 +138,18 @@ theorem sum_sq_singularValues (A : E →ₗ[𝕜] F) {n : ℕ} (hn : finrank �
   exact Finset.sum_congr rfl fun k _ => by
     rw [LinearMap.comp_apply, LinearMap.adjoint_inner_left, inner_self_eq_norm_sq]
 
+/-- **Unitary invariance of the Frobenius sum.** Pre-composing with a unitary `U`
+does not change `∑ₖ ‖A (b k)‖²`: `∑ₖ ‖A (U bₖ)‖² = ∑ₖ ‖A bₖ‖²`.  Both equal the
+sum of squared singular values (`sum_sq_singularValues`), since `k ↦ U bₖ` is
+another orthonormal basis. -/
+theorem sum_sq_norm_apply_unitary_comp (A : E →ₗ[𝕜] F) (U : E ≃ₗᵢ[𝕜] E)
+    {n : ℕ} (hn : finrank 𝕜 E = n) (b : OrthonormalBasis (Fin n) 𝕜 E) :
+    ∑ k, ‖A (U (b k))‖ ^ 2 = ∑ k, ‖A (b k)‖ ^ 2 := by
+  have h1 := sum_sq_singularValues A hn (b.map U)
+  have h2 := sum_sq_singularValues A hn b
+  simp only [OrthonormalBasis.map_apply] at h1
+  rw [← h2, ← h1]
+
 /-- **Weyl's inequality for squared singular values.** The `k`-th squared singular
 values of `A` and `Â` differ by at most the Gram perturbation bound:
 `|σₖ(Â)² − σₖ(A)²| ≤ (a + â) ε`.  Via the dictionary `σₖ² = λₖ(·⋆·)`

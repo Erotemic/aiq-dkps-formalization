@@ -6,6 +6,7 @@ Mathlib destination path.  See `ForMathlib/README.md` for the contribution
 workflow and `planning/mathlib-candidates.md` for the ranked candidate list.
 -/
 
+import ForMathlib.Analysis.InnerProductSpace.AlignedBasis
 import ForMathlib.Analysis.InnerProductSpace.CourantFischer
 import ForMathlib.Analysis.InnerProductSpace.DavisKahan
 import ForMathlib.Analysis.InnerProductSpace.EigenvalueChange

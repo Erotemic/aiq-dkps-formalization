@@ -121,10 +121,15 @@ This is the "full canonical-angle API" the paper names as missing, and it is
 the shared substrate for G1, G2, G3. Build it on Mathlib's
 `LinearMap.singularValues`.
 
-**W0.1 — Singular-value glue lemmas. Difficulty 3/5. ◑ PARTIAL 2026-07-07
-(Opus).** (a) DONE: `sum_sq_singularValues` (`∑ᵢ σᵢ(A)² = ∑ₖ ‖A bₖ‖²`) in
-`SingularSubspace.lean`. (b)/(c)/(d) [contraction bound, trace of abs,
-`singularValues_adjoint`] remain — needed for W0.2. Build green, axiom-clean.
+**W0.1 — Singular-value glue lemmas. Difficulty 3/5. ◑ MOSTLY DONE 2026-07-07
+(Opus).** In `SingularSubspace.lean`: (a) `sum_sq_singularValues`
+(`∑ᵢ σᵢ(A)² = ∑ₖ ‖A bₖ‖²`); (b) `singularValues_le_one_of_contraction`
+(`‖Ax‖≤‖x‖ ⇒ σᵢ ≤ 1`); (c) `sum_re_inner_abs_self_eq_sum_singularValues`
+(`∑ₖ re⟪|A|bₖ, bₖ⟫ = ∑ᵢ σᵢ(A)` — trace of the modulus). Also
+`sum_sq_norm_apply_unitary_comp` (unitary invariance of the Frobenius sum, W3.2
+groundwork). (d) `singularValues_adjoint` [`σ(A⋆)=σ(A)`] remains — the hard
+piece (relates eigenvalues of `AA⋆` and `A⋆A` across different-dim spaces),
+needed only for W0.2's symmetry. All build green, axiom-clean.
 For `A : E →ₗ[𝕜] F` between finite-dim spaces, prove:
 (a) `∑ i, singularValues A i ^ 2 = ∑ₖ ‖A bₖ‖²` for any orthonormal basis `b`
     (Frobenius² = sum of squared singular values; route: diagonalize

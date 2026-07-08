@@ -14,6 +14,7 @@ To be re-authored per Mathlib's AI-contribution policy at PR time.
 import Mathlib.Analysis.InnerProductSpace.SingularValues
 import ForMathlib.Analysis.InnerProductSpace.CourantFischer
 import ForMathlib.Analysis.InnerProductSpace.YuWangSamworth
+import ForMathlib.Analysis.InnerProductSpace.PolarDecomposition
 
 /-! # Gram-operator perturbation
 
@@ -96,6 +97,31 @@ theorem norm_gram_sub_gram_apply_le {A Â : E →ₗ[𝕜] F} {a â ε : ℝ}
         · exact hE x
         · exact hA x
     _ = (a + â) * ε * ‖x‖ := by ring
+
+/-- **Trace of the modulus = sum of singular values.** For an endomorphism
+`A : E →ₗ[𝕜] E`, `∑ₖ re⟪|A| bₖ, bₖ⟫ = ∑ᵢ σᵢ(A)` in any orthonormal basis `b`.
+The modulus `|A| = √(A⋆A)` is diagonal in the `A⋆A`-eigenbasis with entries
+`√λᵢ(A⋆A) = σᵢ(A)`, and the trace is basis-independent. -/
+theorem sum_re_inner_abs_self_eq_sum_singularValues (A : E →ₗ[𝕜] E)
+    (b : OrthonormalBasis (Fin (finrank 𝕜 E)) 𝕜 E) :
+    ∑ k, RCLike.re ⟪abs A (b k), b k⟫_𝕜
+      = ∑ i : Fin (finrank 𝕜 E), A.singularValues (i : ℕ) := by
+  have hP := LinearMap.isPositive_adjoint_comp_self A
+  have hsym : (abs A).IsSymmetric := (isPositive_abs A).isSymmetric
+  -- Basis independence: the trace of `|A|` is the same in any basis.
+  have key : ∀ b' : OrthonormalBasis (Fin (finrank 𝕜 E)) 𝕜 E,
+      ∑ k, RCLike.re ⟪abs A (b' k), b' k⟫_𝕜
+        = ∑ i : Fin (finrank 𝕜 E), hsym.eigenvalues rfl i :=
+    fun b' => sum_re_inner_orthonormalBasis_self_eq_sum_eigenvalues hsym rfl b'
+  rw [key b, ← key (hP.isSymmetric.eigenvectorBasis rfl)]
+  refine Finset.sum_congr rfl fun k _ => ?_
+  set w := hP.isSymmetric.eigenvectorBasis rfl with hw
+  rw [show abs A (w k)
+        = (Real.sqrt (hP.isSymmetric.eigenvalues rfl k) : 𝕜) • w k from
+      hP.sqrt_apply_eigenvectorBasis k,
+    inner_smul_left, RCLike.conj_ofReal, RCLike.re_ofReal_mul, inner_self_eq_norm_sq,
+    w.orthonormal.norm_eq_one k, one_pow, mul_one]
+  exact (A.singularValues_fin rfl k).symm
 
 /-- **Contraction ⇒ singular values ≤ 1.** If `A` is a contraction
 (`‖A x‖ ≤ ‖x‖`), then every singular value satisfies `σᵢ(A) ≤ 1`.  Each eigenvalue

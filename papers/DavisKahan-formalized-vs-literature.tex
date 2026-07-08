@@ -61,12 +61,12 @@ variant; recovering their population-only gap is a further Weyl step, also
 formalized.  Beyond the ladder, the formalization now also contains the exact
 YWS theorem with its constant $2$ (via Hoffman--Wielandt and a von Neumann
 trace inequality), the YWS aligned-basis and singular-subspace extensions,
-general-interval spectral subspaces, Davis's sharper total-rotation estimate,
-and the operator Sylvester bound that underlies the dimension-free
-operator-norm theorem.  A closing section records what remains --- the
-operator-norm $\sin\Theta$ assembly, the canonical principal-angle API, the
-$\sin2\Theta$/$\tan2\Theta$ family, and unitarily invariant norms --- ranked by
-difficulty, each with a worked proof route.
+general-interval spectral subspaces, Davis's sharper total-rotation estimate
+and per-eigenvector $\sin2\theta$ theorem, and the operator Sylvester bound
+that underlies the dimension-free operator-norm theorem.  A closing section
+records what remains --- the operator-norm $\sin\Theta$ assembly, the
+canonical principal-angle API, the $\tan2\theta$ variant, and unitarily
+invariant norms --- ranked by difficulty, each with a worked proof route.
 \end{abstract}
 
 \vspace{1.5em}
@@ -209,13 +209,15 @@ the surrounding theory as well: the ladder now runs over arbitrary index blocks
 and spectral intervals, the exact Yu--Wang--Samworth theorem (population gap,
 constant $2$, both the Frobenius and $\sqrt d\,$-operator-norm branches) is
 formalized via Hoffman--Wielandt, the aligned-basis (Procrustes) conclusion and
-the singular-subspace extension are formalized, and Davis's sharper 1963
+the singular-subspace extension are formalized, Davis's sharper 1963
 total-rotation theory is formalized together with its polar-decomposition
-substrate.  What is still missing is the dimension-free operator-norm
-$\sin\Theta$ theorem (its analytic engine, an operator Sylvester bound, is
-already in place; only the compression assembly remains), a packaged canonical
-principal-angle API, the $\sin2\Theta$ and $\tan2\Theta$ theorems, and general
-unitarily invariant norm versions. The purpose of this note is to explain
+substrate, and Davis's per-eigenvector $\sin2\theta$ theorem is formalized in
+a phase-free product form.  What is still missing is the dimension-free
+operator-norm $\sin\Theta$ theorem (its analytic engine, an operator Sylvester
+bound, is already in place; only the compression assembly remains), a packaged
+canonical principal-angle API, the $\tan2\theta$ variant and the
+subspace-level $\sin2\Theta$ theorem, and general unitarily invariant norm
+versions. The purpose of this note is to explain
 exactly which part has been formalized, how it relates to the paper statements,
 and what still remains to be built --- the closing section ranks the remaining
 steps by difficulty and records a checked proof route for each.
@@ -474,6 +476,28 @@ in \texttt{PositiveSqrt.lean}, \texttt{PartialIsometry.lean},
 \texttt{PolarDecomposition.lean}, \texttt{IntertwiningUnitary.lean}; the
 rotation theorems themselves are in \texttt{RotationBound.lean}.
 
+\paragraph{The per-eigenvector $\sin2\theta$ theorem.}
+Davis's sharp two-subspace estimate, in product form: if the quadratic form of
+the symmetric $T$ is $\ge b\norm{\cdot}^2$ on a $T$-invariant subspace $U$ and
+$\le a\norm{\cdot}^2$ on $U^{\perp}$, $x$ is a unit eigenvector of $T+H$ with
+\emph{no assumption on the location of its eigenvalue}, $\norm{H}_{\op}\le\eps$,
+and $P=P_U$, then
+\[
+  (b-a)\,\norm{Px}\,\norm{x-Px}\;\le\;\eps,
+  \qquad\text{i.e.}\qquad
+  \sin2\theta\;\le\;\frac{2\eps}{b-a}.
+\]
+The formalized proof is phase-free and radical-free: pairing the eigenvector
+equation with $y=Px$ and $z=x-Px$ and taking real parts eliminates both the
+eigenvalue and the complex phase
+($\mathrm{re}(c^2w-s^2\bar w)=(c^2-s^2)\,\mathrm{re}\,w$ identically, with
+$c=\norm{y}$, $s=\norm{z}$), and the classical half-angle rotation is realized
+by the two test vectors $s(c-s)\,y+c(c+s)\,z$ and $-s(c+s)\,y+c(c-s)\,z$ with
+polynomial coefficients, using $1\mp2cs=(c\mp s)^2$.  The primary Lean
+statement is in orthogonal-decomposition form and assumes no orthogonal
+projection, completeness, or finite dimension; the projection and
+$\arccos$-angle forms are corollaries.
+
 \paragraph{The Sylvester (Lyapunov) solution bound.}
 The analytic engine for the dimension-free operator-norm $\sin\Theta$ theorem
 is in place: if $A,B$ are bounded symmetric with quadratic forms
@@ -488,7 +512,7 @@ assumptions.  Only the compression assembly on top of it remains
 
 \section{What remains, ranked by difficulty}\label{sec:remains}
 
-Four items remain, plus two deliberately deferred ones.  They are listed
+Three items remain, plus two deliberately deferred ones.  They are listed
 hardest first; each comes with the proof route that has been checked on paper,
 so that the remaining work is implementation rather than route discovery.
 Lean-level detail (exact hypotheses, file placement, pitfalls) is maintained
@@ -496,8 +520,8 @@ in \texttt{dev/davis-kahan-gap-closure-plan.md} (v5) in the repository.
 
 \begin{enumerate}
 \item \emph{Subspace-level $\sin2\Theta$/$\tan2\Theta$ (difficulty 5/5 ---
-  deferred).}  A warning for future attempts: summing the per-eigenvector
-  $\sin2\theta$ bound of item~\ref{it:sin2theta} over an eigenbasis does
+  deferred).}  A warning for future attempts: summing the (now formalized)
+  per-eigenvector $\sin2\theta$ bound over an eigenbasis does
   \emph{not} recover the part~III subspace theorem --- the per-vector proof
   tests $H$ against rotated vectors inside the two-plane
   $\spann\{Px,(1-P)x\}$, so its right-hand side is the operator norm of $H$,
@@ -509,32 +533,6 @@ in \texttt{dev/davis-kahan-gap-closure-plan.md} (v5) in the repository.
   functions, Ky Fan norms, Fan dominance, and the part~III $\sin\Theta$
   theorem for every unitarily invariant norm.  A Mathlib-sized library on its
   own; nothing downstream in this repository consumes it.
-
-\item \emph{Per-eigenvector $\sin2\theta$ theorem (difficulty 4/5 --- in
-  progress, assigned).}\label{it:sin2theta}  Davis's sharp two-subspace
-  estimate: if the quadratic form of $T$ is $\ge b$ on an invariant subspace
-  $U$ and $\le a$ on $U^{\perp}$, $x$ is a unit eigenvector of $T+H$ (its
-  eigenvalue \emph{unconstrained}), and $P=P_U$, then in product form
-  \[
-    (b-a)\,\norm{Px}\,\norm{x-Px}\;\le\;\norm{H}_{\op},
-    \qquad\text{i.e.}\quad \sin2\theta\le\frac{2\norm{H}_{\op}}{b-a}.
-  \]
-  The checked route needs \emph{no complex phase alignment}, the classical
-  sore point: writing $c=\norm{Px}$, $s=\norm{x-Px}$, $p=Px/c$, $q=(x-Px)/s$,
-  the two eigen-equations paired with $p$ and $q$ subtract to the real
-  identity
-  \[
-    cs\,(\alpha-\beta)
-    =cs\,\bigl(\mathrm{re}\inner{Hq}{q}-\mathrm{re}\inner{Hp}{p}\bigr)
-     +(c^2-s^2)\,\mathrm{re}\inner{q}{Hp},
-  \]
-  ($\alpha=\mathrm{re}\inner{Tp}{p}\ge b$,
-  $\beta=\mathrm{re}\inner{Tq}{q}\le a$) because
-  $\mathrm{re}(c^2w-s^2\bar w)=(c^2-s^2)\,\mathrm{re}\,w$ identically.  The
-  right-hand side is then bounded by $\norm{H}_{\op}$ by testing $H$ against
-  the two rotated unit vectors $\gamma p+\sigma q$ and $-\sigma p+\gamma q$
-  with the \emph{real} half-angle choice $\gamma^2=(1-2cs)/2$,
-  $\sigma^2=(1+2cs)/2$, $2\gamma\sigma=c^2-s^2$.
 
 \item \emph{Operator-norm $\sin\Theta$ assembly (difficulty 3/5).}\label{it:opnorm}
   The headline $\norm{\widehat Q\,P}_{\op}\le\norm{S-T}_{\op}/\gap$ (that
@@ -558,14 +556,15 @@ in \texttt{dev/davis-kahan-gap-closure-plan.md} (v5) in the repository.
   --- already formalized --- plus ``unitary conjugation preserves sorted
   eigenvalues,'' a Courant--Fischer consequence.
 
-\item \emph{Per-eigenvector $\tan2\theta$ theorem (difficulty 2/5, after
-  item~\ref{it:sin2theta}).}  Add the vanishing-pinch hypotheses (the diagonal
-  blocks of $H$ vanish on $U$ and $U^{\perp}$); the identity of
-  item~\ref{it:sin2theta} collapses to
+\item \emph{Per-eigenvector $\tan2\theta$ theorem (difficulty 2/5).}  Add the
+  vanishing-pinch hypotheses (the diagonal blocks of $H$ vanish on $U$ and
+  $U^{\perp}$) to the formalized $\sin2\theta$ setting; the formalized key
+  identity collapses to
   $cs(\alpha-\beta)=(c^2-s^2)\,\mathrm{re}\inner{q}{Hp}$ with
   $|\mathrm{re}\inner{q}{Hp}|\le\norm{H}_{\op}$ directly --- no rotation trick
   --- giving $(b-a)\,cs\le|c^2-s^2|\,\norm{H}_{\op}$, i.e.\
-  $\tan2\theta\le2\norm{H}_{\op}/(b-a)$.
+  $\tan2\theta\le2\norm{H}_{\op}/(b-a)$.  Pure assembly on the already-factored
+  identity lemma.
 \end{enumerate}
 
 \section{Dictionary to the Lean source}\label{sec:dictionary}
@@ -663,6 +662,11 @@ Kernel-completed unitary polar decomposition
   & \texttt{polarUnitary}, \texttt{polar\_decomposition\_unitary} (\texttt{PolarDecomposition.lean}) \\
 Davis Thm 3.2 + off-diagonal corollary
   & \texttt{RotationBound.lean} (see the file header for the statement map) \\
+Per-eigenvector $\sin2\theta$: decomposition / projection / angle form,
+$U^{\perp}$-invariance helper
+  & \texttt{sin\_two\_theta\_le\_of\_mem}, \texttt{sin\_two\_theta\_le},
+    \texttt{sin\_two\_arccos\_le},
+    \texttt{map\_mem\_orthogonal\_of\_forall\_map\_mem} (\texttt{RotationSharp.lean}) \\
 Sylvester bound, coercive / separated form
   & \texttt{opNorm\_le\_div\_of\_comp\_add\_comp\_eq},
     \texttt{opNorm\_le\_div\_of\_comp\_sub\_comp\_eq} (\texttt{SylvesterBound.lean}) \\

@@ -63,7 +63,7 @@ check `propext, Classical.choice, Quot.sound` on headline declarations).
 | # | Gap | Workstream | Status (2026-07-07) |
 |---|-----|------------|---------------------|
 | G1 | Operator-norm `‖sinΘ‖_op ≤ ‖S−T‖_op/g` and general unitarily-invariant-norm sinΘ | W5, W7 | ◑ W5.1 done; W5.2 remains (v5 recipe, 3/5, Opus); W7 deferred |
-| G2 | tanΘ, sin2Θ, tan2Θ theorems | W6 | ◑ v5 phase-free route committed; W6.1 = Fable, W6.2 = Opus (2/5), W6.3 defer |
+| G2 | tanΘ, sin2Θ, tan2Θ theorems | W6 | ◑ W6.1 ✅ done (Fable, `RotationSharp.lean`); W6.2 = Opus (2/5); W6.3 defer |
 | G3 | YWS aligned-basis bound | W3 | ✅ **closed** (W3.1–W3.4) |
 | G4 | YWS singular-vector extension (rectangular `A, Â`) | W4 | ✅ **closed** (W4.1–W4.3) |
 | G5 | General-interval spectral subspaces (two-sided gap) | W1 | ✅ **closed** (W1.1, W1.2) |
@@ -709,7 +709,26 @@ New file `ForMathlib/Analysis/InnerProductSpace/RotationSharp.lean`.
 Davis's 2×2-compression results (digest: `prose/Davis-1963-core-arguments.tex`
 §"The sharp two-subspace estimate").
 
-**W6.1 — Per-eigenvector sin2θ bound. Difficulty 4/5. ASSIGNED: Fable.**
+**W6.1 — Per-eigenvector sin2θ bound. Difficulty 4/5. ✅ DONE 2026-07-08
+(Fable) — `RotationSharp.lean` (new file, registered, library build green
+8714 jobs, all four public declarations axiom-clean).**
+Implemented exactly along the v5 route below, with one further simplification
+found during implementation: **the half-angle square roots disappear
+entirely** — since `1 − 2cs = (c − s)²` and `1 + 2cs = (c + s)²`, the two
+rotation test vectors can be taken with *polynomial* coefficients
+`s(c−s)•y + c(c+s)•z` and `−s(c+s)•y + c(c−s)•z` (unnormalized `y = Px`,
+`z = x − Px`; each has squared norm `2c²s²`), so the proof has **no
+`Real.sqrt`, no inverses, no normalization of `p, q`, and no case split on
+`s ≤ c`** — pure `linear_combination`/`linarith` algebra. Bonus generality:
+the primary statement `sin_two_theta_le_of_mem` is in orthogonal-decomposition
+form (`y ∈ U`, `z ∈ Uᗮ`, `‖y+z‖ = 1`) and needs **no orthogonal projection,
+no completeness, no finite dimension**; `sin_two_theta_le`
+(`Submodule.starProjection` product form, `[U.HasOrthogonalProjection]`) and
+`sin_two_arccos_le` (literature-facing `(b−a)·sin 2θ ≤ 2ε`) are thin
+corollaries. The shared engine `key_identity` (μ-free real identity) and the
+expansion lemmas `re_inner_smul_add_smul_map` / `norm_smul_add_smul_sq` are
+factored exactly as W6.2 needs; the invariance helper
+`map_mem_orthogonal_of_forall_map_mem` is public (also wanted by W5.2 step 2).
 *(v5 full reroute — the route below eliminates the ℂ phase alignment the v1
 text warned about, and needs no location assumption on the perturbed
 eigenvalue. Verified on paper end-to-end, Fable 2026-07-08.)*
@@ -774,7 +793,11 @@ wrapper — the product form is the API.
 
 **W6.2 — Per-eigenvector tan2θ bound under vanishing pinch. Difficulty 2/5
 (was 3/5 — v5: with W6.1's key identity factored out, no rotation trick is
-needed at all).** Encode the vanishing diagonal blocks subspace-wise:
+needed at all).** W6.1 is now DONE: work in `RotationSharp.lean`; the engine
+is the private `key_identity` there (make it take the vanishing hypotheses at
+the use site — its statement already has all five scalar atoms), and the
+`sin_two_theta_le_of_mem` proof shows the intended assembly pattern.
+Encode the vanishing diagonal blocks subspace-wise:
 `hUU : ∀ u ∈ U, ∀ u' ∈ U, ⟪H u, u'⟫ = 0` and the same on `Uᗮ` (never form
 `P H P` as an operator). Then W6.1's step-4 identity collapses to
 `c·s·(α − β) = (c² − s²)·re w`, and `|re w| ≤ |⟪q, H p⟫| ≤ ‖H p‖ ≤ ε`
@@ -864,11 +887,11 @@ Everything not listed here is ✅ done and verified (v4 sweep + v5 re-check).
 |------|------|------|-----------|----------|-------|
 | 1 | W6.3 | Subspace-level sin2Θ | 5/5 | **defer** (with W7) | v5 warning: per-vector summation does *not* recover part III; only weaker forms reachable |
 | 2 | W7.1–7.4 | Unitarily invariant norms | 4–5/5 | **defer** (separate project) | unchanged |
-| 3 | W6.1 | Per-vector sin2θ, product form | 4/5 | **Fable** (in progress) | v5 phase-free route; new file `RotationSharp.lean` |
-| 4 | W5.2 | Op-norm sinΘ via Sylvester | 3/5 (was 3.5) | Opus | v5: decoupled from W0.2; 5-step recipe in the step text |
+| 3 | W6.1 | Per-vector sin2θ, product form | 4/5 | **✅ DONE** (Fable, 2026-07-08) | `RotationSharp.lean`; polynomial-coefficient rotation, no `sqrt`/inverses; axiom-clean |
+| 4 | W5.2 | Op-norm sinΘ via Sylvester | 3/5 (was 3.5) | Opus | v5: decoupled from W0.2; 5-step recipe in the step text; step-2 helper now exists (`map_mem_orthogonal_of_forall_map_mem`) |
 | 5 | W0.2 | Principal-angle API | 3/5 (was 3.5) | Opus | build on existing `overlapOp`; needs W0.1(d) only for symmetry |
 | 6 | W0.1(d) | `singularValues_adjoint` (square case) | 2.5/5 (was 3) | Opus | v5 `polarUnitary`-conjugation route; do (d-i) eigenvalue-conjugation lemma first |
-| 7 | W6.2 | tan2θ under vanishing pinch | 2/5 (was 3) | Opus | pure assembly once W6.1's steps 1–4 are factored as lemmas |
+| 7 | W6.2 | tan2θ under vanishing pinch | 2/5 (was 3) | Opus | pure assembly on `RotationSharp.lean`'s `key_identity` |
 
 Suggested order for Opus: **W0.1(d) → W0.2** (closes the canonical-angle API),
 then **W5.2** (closes G1's op-norm half — after this the paper's gap list is

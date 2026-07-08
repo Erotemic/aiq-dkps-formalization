@@ -251,7 +251,13 @@ via `Antitone.monovary` + `Monovary.sum_comp_perm_smul_le_sum_smul`. Registered,
 build green, axiom-clean. (Note: needs `import Mathlib.Data.Real.Basic` — the
 abstract Rearrangement file does not pull in ℝ's order instances.)
 
-**W2.2 — Trace inequality `tr(TS) ≤ ∑ λᵢ(T)·λᵢ(S)`. Difficulty 3/5.**
+**W2.2 — Trace inequality `tr(TS) ≤ ∑ λᵢ(T)·λᵢ(S)`. Difficulty 3/5. ✅ DONE
+2026-07-07 (Opus).** `HoffmanWielandt.lean`:
+`sum_mul_sum_mul_le_sum_mul_of_antitone` (abstract Birkhoff bilinear bound:
+`∑ₖ aₖ ∑ⱼ Mₖⱼ bⱼ ≤ ∑ᵢ aᵢbᵢ` for antitone `a,b`, doubly-stochastic `M`, via
+`doublyStochastic_eq_convexHull_permMatrix` + `permMatrix_mulVec` + W2.1 at each
+vertex) and `sum_eigenvalues_mul_re_inner_self_le` (von Neumann trace
+inequality, discharged from the bilinear bound with `M = schurWeight`). Axiom-clean.
 Statement (basis-free trace avoided): `∑ₖ re ⟪T (vₖ), S? …⟫` — cleanest form:
 `∑ k, hT.eigenvalues hn k * re ⟪uₖ, S uₖ⟫ ≤ ∑ i, λᵢ(T) * λᵢ(S)` where
 `uₖ = hT.eigenvectorBasis`. Route: `re⟪uₖ, S uₖ⟫ = ∑ⱼ wⱼₖ λⱼ(S)` with
@@ -264,7 +270,13 @@ The convex-combination argument: a linear functional on a convex hull is
 maximized at a vertex — use `Finset.inner_le` style or just expand the convex
 combination directly.
 
-**W2.3 — Hoffman–Wielandt. Difficulty 3/5.**
+**W2.3 — Hoffman–Wielandt. Difficulty 3/5. ✅ DONE 2026-07-07 (Opus).**
+`HoffmanWielandt.lean`: `sum_sq_eigenvalues_sub_le_sum_sq_norm_apply` —
+`∑ᵢ(λᵢ(T)−λᵢ(S))² ≤ ∑ₖ‖(S−T)uₖ‖²`. Route exactly as planned: per-column
+`norm_sub_sq` expansion, the helper `sum_sq_norm_apply_eq_sum_sq_eigenvalues`
+(basis-independence `∑ₖ‖S eₖ‖² = ∑ᵢλᵢ(S)²`, double-Parseval swap), and W2.2 for
+the cross term; `linarith` closes. Axiom-clean. **W2 (Hoffman–Wielandt) complete
+— unblocks W2.4/W4.**
 `∑ i, (hT.eigenvalues hn i − hS.eigenvalues hn i)² ≤ ∑ₖ ‖(S−T)(bₖ)‖²`
 (any orthonormal basis `b`; instantiate at `hT.eigenvectorBasis`).
 Route: expand `‖S−T‖²_F = ∑λᵢ(T)² + ∑λᵢ(S)² − 2·"tr(TS)"` where the trace

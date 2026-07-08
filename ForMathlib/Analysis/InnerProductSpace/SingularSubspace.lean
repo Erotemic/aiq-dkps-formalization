@@ -97,6 +97,32 @@ theorem norm_gram_sub_gram_apply_le {A Â : E →ₗ[𝕜] F} {a â ε : ℝ}
         · exact hA x
     _ = (a + â) * ε * ‖x‖ := by ring
 
+/-- **Contraction ⇒ singular values ≤ 1.** If `A` is a contraction
+(`‖A x‖ ≤ ‖x‖`), then every singular value satisfies `σᵢ(A) ≤ 1`.  Each eigenvalue
+`λᵢ(A⋆A) = re⟪A wᵢ, A wᵢ⟫ = ‖A wᵢ‖² ≤ 1` (`wᵢ` the unit eigenvector), and
+`σᵢ = √λᵢ`. -/
+theorem singularValues_le_one_of_contraction {A : E →ₗ[𝕜] F}
+    (h : ∀ x, ‖A x‖ ≤ ‖x‖) {n : ℕ} (hn : finrank 𝕜 E = n) (i : Fin n) :
+    A.singularValues (i : ℕ) ≤ 1 := by
+  have hSsym := A.isSymmetric_adjoint_comp_self
+  have hunit : ‖hSsym.eigenvectorBasis hn i‖ = 1 :=
+    (hSsym.eigenvectorBasis hn).orthonormal.norm_eq_one i
+  have hquad : RCLike.re ⟪(A.adjoint ∘ₗ A) (hSsym.eigenvectorBasis hn i),
+      hSsym.eigenvectorBasis hn i⟫_𝕜 = ‖A (hSsym.eigenvectorBasis hn i)‖ ^ 2 := by
+    rw [LinearMap.comp_apply, LinearMap.adjoint_inner_left, inner_self_eq_norm_sq]
+  have heig : RCLike.re ⟪(A.adjoint ∘ₗ A) (hSsym.eigenvectorBasis hn i),
+      hSsym.eigenvectorBasis hn i⟫_𝕜 = hSsym.eigenvalues hn i := by
+    rw [hSsym.apply_eigenvectorBasis hn i, inner_smul_left, RCLike.conj_ofReal,
+      RCLike.re_ofReal_mul, inner_self_eq_norm_sq, hunit, one_pow, mul_one]
+  have heval : hSsym.eigenvalues hn i ≤ 1 := by
+    rw [← heig, hquad]
+    have := h (hSsym.eigenvectorBasis hn i)
+    rw [hunit] at this
+    nlinarith [norm_nonneg (A (hSsym.eigenvectorBasis hn i))]
+  rw [A.singularValues_fin hn]
+  calc √(hSsym.eigenvalues hn i) ≤ √1 := Real.sqrt_le_sqrt heval
+    _ = 1 := Real.sqrt_one
+
 /-- **Squared Frobenius norm = sum of squared singular values.** For any
 orthonormal basis `b` of `E`, `∑ᵢ σᵢ(A)² = ∑ₖ ‖A bₖ‖²`.  Via the dictionary
 `σᵢ² = λᵢ(A⋆A)`, basis independence of the trace, and

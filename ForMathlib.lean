@@ -18,6 +18,7 @@ import ForMathlib.Analysis.InnerProductSpace.PolarDecomposition
 import ForMathlib.Analysis.InnerProductSpace.PositiveSqrt
 import ForMathlib.Analysis.InnerProductSpace.RotationBound
 import ForMathlib.Analysis.InnerProductSpace.SchurHorn
+import ForMathlib.Analysis.InnerProductSpace.SingularSubspace
 import ForMathlib.Analysis.InnerProductSpace.Spectrum
 import ForMathlib.Analysis.InnerProductSpace.SylvesterBound
 import ForMathlib.Analysis.InnerProductSpace.YuWangSamworth

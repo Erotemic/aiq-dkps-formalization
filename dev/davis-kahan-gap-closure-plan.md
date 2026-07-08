@@ -443,7 +443,12 @@ New file `ForMathlib/Analysis/InnerProductSpace/SingularSubspace.lean`.
 Setting: `A Â : E →ₗ[𝕜] F`, right-singular subspaces = spectral subspaces of
 `A.adjoint ∘ₗ A` (self-adjoint, positive).
 
-**W4.1 — Gram perturbation bound. Difficulty 2/5.**
+**W4.1 — Gram perturbation bound. Difficulty 2/5. ✅ DONE 2026-07-07 (Opus).**
+`SingularSubspace.lean` (new file): `norm_adjoint_apply_le` (`‖A⋆‖ ≤ ‖A‖`
+elementwise, via `‖A⋆y‖² = re⟪y, A(A⋆y)⟫`) and `norm_gram_sub_gram_apply_le`
+(`‖(Â⋆Â − A⋆A)x‖ ≤ (a+â)ε‖x‖` from `Â⋆Â − A⋆A = Â⋆(Â−A) + (Â−A)⋆A`). Build green,
+axiom-clean. (W4.2/W4.3 — singular-value Weyl dictionary + main theorem —
+remain.)
 `∀ x, ‖(Â†Â − A†A) x‖ ≤ (‖A‖ + ‖Â‖)·‖Â−A‖·‖x‖`, in the elementwise-ε form
 used by the DK gap bridges. Route:
 `Â†Â − A†A = Â†(Â−A) + (Â†−A†)A`, triangle inequality + `‖A†‖ = ‖A‖`

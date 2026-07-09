@@ -177,6 +177,106 @@ gates, `lake build` green after every step, `#print axioms` =
   (`sum_norm_sub_starProjection_sq_eq_two_mul_sinThetaSq`) plus the
   `blockFamily` API.
 
+## Opus review of plan v8 (2026-07-09)
+
+I (Opus, the executing agent) name-checked every concrete asset the new Phase
+OP and the G-staging cite, in a **healthy shell** (fd count 25, no `Bad file
+descriptor` — negative greps are trustworthy this session).  Verdict up front:
+**OP1 and OP2 are executable exactly as written; OP3's proof route is built on
+a mischaracterized lemma and needs a reroute (which I supply below); G2.1 and
+the G3 `d=1` descope are executable, the two statement gates are correctly
+reserved for Fable.**  Difficulty re-rankings collected at the end.
+
+### OP1 — Spectral corollaries of G1. ✅ Clear and executable. **2/5 confirmed.**
+All four discharge lemmas exist with the cited names — `map_mem_specSubspace`,
+`le_re_inner_map_self_of_mem_specSubspace`,
+`re_inner_map_self_le_of_mem_specSubspace`, `orthogonal_specSubspace`
+(CourantFischer.lean) — and the discharge pattern is verbatim
+`sin_two_theta_le_of_eigenvalues`'s.  I can execute this now.  One nit for the
+implementer, not a blocker: `orthogonal_specSubspace` yields the predicate
+`fun i => ¬ (i ∈ s)`; feed `ha`/`hs'` through it without trying to rewrite the
+predicate to `(· ∉ s)` (they are defeq but `rw` will complain).
+
+### OP2 — Frobenius `UnitarilyInvariantNorm` instance. ✅ Clear and executable. **2.5/5 → 2/5.**
+Every load-bearing asset confirmed: `stdOrthonormalBasis` indexes over
+`Fin (finrank 𝕜 E)` (PiL2.lean:1077, so `hn := rfl` on that side is right);
+`sum_sq_norm_apply_unitary_comp` (SingularSubspace.lean:194) is exactly the
+right-factor invariance; `sum_sq_singularValues` gives `frobenius_apply`
+basis-independence.  Two corrections to the route text, both cosmetic:
+- The projection-expansion lemma the docstring calls
+  `Orthonormal.starProjection_span_image_apply` is the correct in-repo name
+  (used at PrincipalAngles.lean:318); an implementer should copy that call
+  site, not re-derive it.
+- I could not locate a ready-made coordinatewise-monotonicity lemma for
+  `EuclideanSpace` norms in the pin, so **inline it** as the plan's fallback
+  says — it is the 5-line `Real.sqrt_le_sqrt ∘ Finset.sum_le_sum ∘
+  pow_le_pow_left₀` chain; the file already has `norm_sq_euclidean`
+  (PrincipalAngles.lean) as a template for the `EuclideanSpace.norm_eq`
+  bookkeeping.
+Executable now; I'd rate it 2/5 given how much invariance is pre-stocked.
+
+### OP3 — sin 2Θ dictionary certification. ⚠️ **BLOCKING as routed; reroute supplied. Re-rate 3/5 → 3.5/5 (with the reroute) / higher as originally written.**
+The endgame (steps d–e: `M⋆M = gram (diagOp bE w)` ⟹
+`singularValues_eq_of_gram_eq` ⟹ `apply_eq_gauge`) is sound and I can do it.
+**The problem is steps (b)–(c).**  They assert
+`inner_u_aligned_eq : ⟪u i, ṽ j⟫ = δᵢⱼ c i` — a *diagonal* cross-Gram.  The
+actual `inner_u_aligned_eq` (AlignedBasis.lean:154) says no such thing: it is
+the Procrustes **trace** alignment, giving only the *diagonal* term
+`⟪u j, ṽ j⟫ = ⟪eⱼ, |overlapOp| (O⋆ eⱼ)⟫` (and that is not even manifestly
+`c j`), with **no off-diagonal vanishing**.  Since
+`cosPrincipalAngles := (overlapOp hu hv).singularValues`
+(PrincipalAngles.lean:62), a genuinely diagonal cross-Gram needs the
+*principal-vector* bases (the SVD bases of `overlapOp`), which the file does
+not currently produce as families — building them is itself an E2-grade brick.
+So steps (b)–(c) cannot be discharged by citation, and OP3 as written is not
+executable.
+
+**Reroute (verified on paper; avoids families entirely — recommended).**  Work
+directly with the operators `P := U.sP`, `P̂ := V.sP`, `Q := Uᗮ.sP = 1 − P`,
+`M := Q P̂ P` (the G1 LHS).  Then
+`M⋆M = P P̂ Q P̂ P = P P̂ (1−P) P̂ P = C − C²`, where `C := P P̂ P`
+(self-adjoint, `0 ≤ C ≤ 1`, using `P̂² = P̂`, `P² = P`, `Q² = Q`).  For
+`x ∈ U`, `⟪C x, x⟫ = ⟪P̂ x, x⟫ = ‖P̂ x‖² = cos²θ`; `C` kills `Uᗮ`.  Hence the
+eigenvalues of `M⋆M = C − C²` are `cos²θᵢ(1 − cos²θᵢ)`, so
+`σᵢ(M) = cos θᵢ · sin θᵢ = ½ sin 2θᵢ` — the target, with **no aligned family,
+no extended basis, no diagonal cross-Gram**.  Residual bricks: (1) the pure
+operator identity `M⋆M = C − C²` (LinearMap algebra); (2) identifying the
+eigenvalues of `C = P P̂ P` with `cosPrincipalAngles²` — the one nontrivial
+step, E2-grade, and the natural place the SVD/`overlapOp`-gram bridge is still
+needed (`‖P̂ x‖² = cos²θ` on `U` connects `C|_U` to `overlapOp⋆ overlapOp`).
+This reroute is cleaner than the original and I can execute (1); (2) I can do
+if the `overlapOp`-gram↔`C` bridge is stated for me, else it is the ~3.5/5
+core and should stay with Fable or be spelled out.  **Recommendation:** adopt
+the reroute; keep OP3 Opus-assigned for (1) and the diagOp endgame, but either
+supply the `C`-spectrum lemma or hand step (2) to Fable.
+
+### G2.1 — block-transfer lemma. ✅ Executable. **3/5 confirmed.**
+The vanishing-pinch hypotheses are exactly `tan_two_theta_le_of_mem`'s `hHU` /
+`hHUperp` (RotationSharp.lean:337, confirmed).  `P S P = P T P` etc. follow
+from `S = T + H` and those two identities.  Gate-independent, as the plan says;
+I can start it now.
+
+### G2.0, G3.0, G2.2, G3 (ii)/(iii) — correctly reserved for Fable.
+I agree these are not mine: G2.0/G3.0 are statement-risk gates against sources
+I should not adjudicate, and the G3 graph-operator/similar-to-symmetric
+Sylvester bricks are 4–5/5.  The **G3 `d=1` descope is genuinely Opus-tractable
+(2.5/5)** via the per-vector `key_identity` machinery — a good warm-up that
+de-risks the statement shape, and I'll take it if directed.
+
+### Difficulty re-rankings (Opus, v8)
+| Item | Fable's grade | Opus's grade | Note |
+|------|--------------|-------------|------|
+| OP1 | 2/5 | **2/5** | confirmed |
+| OP2 | 2.5/5 | **2/5** | invariance pre-stocked; easier than billed |
+| OP3 | 3/5 | **3.5/5** (rerouted) | as-written route blocked; see reroute + spectrum brick |
+| G2.1 | 3/5 | **3/5** | confirmed, gate-independent |
+| G3 d=1 | 2.5/5 | **2.5/5** | confirmed, Opus-tractable |
+
+**Can Opus start before the Fable parts?**  Yes — OP1, OP2, and G2.1 have no
+unmet dependency and I can begin immediately; OP3 needs the reroute decision
+(and ideally the `C`-spectrum brick) first; the G3 `d=1` descope is available
+anytime.  Nothing I'm assigned waits on G2.0/G3.0/G2.2/G3-main.
+
 ## Opus review of plan v3 (2026-07-09)
 
 I (Opus, the executing agent) read the whole plan and name-checked its concrete
@@ -1048,7 +1148,15 @@ Paper sync: the dictionary table gains the row "‖·‖_F is a
 `UnitarilyInvariantNorm`; part-III sinΘ and sin2Θ instantiate to Frobenius".
 
 **OP3 — sin 2Θ dictionary certification: `σᵢ(Q P̂ P) = cos θᵢ · sin θᵢ`.
-Difficulty 3/5.  Opus (route is Fable-verified; light statement gate).**
+Difficulty 3/5 → 3.5/5.  Opus (light statement gate).**
+> ⚠️ **Opus review (v8):** the aligned-family route in steps (b)–(c) below is
+> **blocked** — `inner_u_aligned_eq` is the Procrustes *trace* alignment, not
+> the diagonal cross-Gram `⟪uᵢ,ṽⱼ⟫ = δᵢⱼcᵢ` the route assumes.  **Use the
+> operator reroute in "Opus review of plan v8" instead:** `M⋆M = C − C²` with
+> `C := P P̂ P` (eigenvalues `cos²θ` on `U`), so `σ(M) = cos θ sin θ` with no
+> families/extended basis.  Steps (d)–(e) below are still the endgame; steps
+> (a)–(c) are superseded.  One residual brick — the spectrum of `C = P P̂ P`
+> vs `cosPrincipalAngles²` — may stay with Fable.
 This certifies that the G1 LHS *is* `½ sin 2Θ`: the E2-analogue at the
 full singular-value (hence every-UI-norm) level rather than op-norm.  In
 `PrincipalAngles.lean` (it consumes the aligned-basis machinery and
@@ -1189,7 +1297,7 @@ old completion/HLP rows moved to the annex).
 | 12 | F3.f | `star` invariance | 1/5 | ✅ DONE (Fable, `7481732`) |
 | — | annex α | Weak-majorization completion (optional) | 2.5/5 | either, after F4 |
 | — | annex β | Hardy–Littlewood–Pólya (optional) | 4/5 | Fable, after F4 |
-| — | OP3 | sin 2Θ dictionary certification `σᵢ(QP̂P) = cᵢsᵢ` (routed v8) | 3.5/5→3/5 | Opus, start anytime |
+| — | OP3 | sin 2Θ dictionary certification `σᵢ(QP̂P) = cᵢsᵢ` (rerouted v8: `M⋆M=C−C²`) | 3.5/5 | Opus + Fable brick (C-spectrum) |
 | — | OP2 | Frobenius `UnitarilyInvariantNorm` instance (routed v8) | 2.5/5 | Opus, start anytime |
 | — | OP1 | Spectral (eigenvalue-hypothesis) corollaries of G1 (routed v8) | 2/5 | Opus, start anytime |
 

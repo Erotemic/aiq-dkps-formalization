@@ -80,19 +80,28 @@ theorem starProjection_comp_toContinuousLinearMap_comm {T : E →ₗ[𝕜] E}
 
 variable {T S : E →ₗ[𝕜] E}
 
-/-- **The operator-norm Davis–Kahan sin-Θ theorem.**  Let `T, S` be symmetric,
-`U` a `T`-invariant subspace with quadratic form `≥ (c+g)‖·‖²`, and `V` an
-`S`-invariant subspace with form `≤ c‖·‖²`.  If `‖(S − T) x‖ ≤ ε ‖x‖` and
-`g > 0`, then `‖V.starProjection ∘L U.starProjection‖ ≤ ε / g`.  The left side
-is `‖sinΘ‖_op`, so this is the dimension-free `‖sinΘ‖_op ≤ ‖S − T‖_op / g`. -/
-theorem norm_starProjection_comp_starProjection_le (hT : T.IsSymmetric) (hS : S.IsSymmetric)
+/-- **The norm-free Davis–Kahan setup.**  From the two invariant subspaces and
+their quadratic-form separation, builds the coercive `A` and the bounded `B`
+whose separated Sylvester equation the cross-projection
+`P ∘L Q = U.starProjection ∘L V.starProjection` solves, with residual
+`Y = P ∘L (T − S) ∘L Q`.  This is the entire construction of the operator-norm
+`sin Θ` theorem *before any norm is taken*, extracted so that both the
+operator-norm bound and the unitarily-invariant-norm bound (`SinThetaUINorm`)
+can finish it with their respective Sylvester estimates. -/
+theorem exists_isSymmetric_comp_sub_comp_eq (hT : T.IsSymmetric) (hS : S.IsSymmetric)
     {U V : Submodule 𝕜 E} [U.HasOrthogonalProjection] [V.HasOrthogonalProjection]
     (hUinv : ∀ x ∈ U, T x ∈ U) (hVinv : ∀ x ∈ V, S x ∈ V)
-    {c g ε : ℝ} (hg : 0 < g)
+    {c g : ℝ}
     (hU : ∀ x ∈ U, (c + g) * ‖x‖ ^ 2 ≤ RCLike.re ⟪T x, x⟫_𝕜)
-    (hV : ∀ x ∈ V, RCLike.re ⟪S x, x⟫_𝕜 ≤ c * ‖x‖ ^ 2)
-    (hε0 : 0 ≤ ε) (hε : ∀ x, ‖(S - T) x‖ ≤ ε * ‖x‖) :
-    ‖V.starProjection ∘L U.starProjection‖ ≤ ε / g := by
+    (hV : ∀ x ∈ V, RCLike.re ⟪S x, x⟫_𝕜 ≤ c * ‖x‖ ^ 2) :
+    ∃ A B : E →L[𝕜] E, A.IsSymmetric ∧ B.IsSymmetric ∧
+      (∀ x, (c + g) * ‖x‖ ^ 2 ≤ RCLike.re ⟪A x, x⟫_𝕜) ∧
+      (∀ x, RCLike.re ⟪B x, x⟫_𝕜 ≤ c * ‖x‖ ^ 2) ∧
+      A ∘L (U.starProjection ∘L V.starProjection)
+          - (U.starProjection ∘L V.starProjection) ∘L B
+        = U.starProjection
+            ∘L (LinearMap.toContinuousLinearMap T - LinearMap.toContinuousLinearMap S)
+            ∘L V.starProjection := by
   set P := U.starProjection with hP
   set Q := V.starProjection with hQ
   set Tc := LinearMap.toContinuousLinearMap T with hTc
@@ -143,7 +152,7 @@ theorem norm_starProjection_comp_starProjection_le (hT : T.IsSymmetric) (hS : S.
     have hAxeq : A x = T (P x) + ((c + g : ℝ) : 𝕜) • (x - P x) := by
       simp only [hA, hTc, add_apply, ContinuousLinearMap.comp_apply,
         LinearMap.coe_toContinuousLinearMap', smul_apply,
-        sub_apply, ContinuousLinearMap.one_apply]
+        sub_apply, one_apply_eq_self]
     have hre : RCLike.re ⟪A x, x⟫_𝕜
         = RCLike.re ⟪T (P x), x⟫_𝕜 + (c + g) * RCLike.re ⟪x - P x, x⟫_𝕜 := by
       rw [hAxeq, inner_add_left, inner_smul_left, RCLike.conj_ofReal, map_add,
@@ -178,7 +187,7 @@ theorem norm_starProjection_comp_starProjection_le (hT : T.IsSymmetric) (hS : S.
     have hBxeq : B x = S (Q x) + ((c : ℝ) : 𝕜) • (x - Q x) := by
       simp only [hB, hSc, add_apply, ContinuousLinearMap.comp_apply,
         LinearMap.coe_toContinuousLinearMap', smul_apply,
-        sub_apply, ContinuousLinearMap.one_apply]
+        sub_apply, one_apply_eq_self]
     have hre : RCLike.re ⟪B x, x⟫_𝕜
         = RCLike.re ⟪S (Q x), x⟫_𝕜 + c * RCLike.re ⟪x - Q x, x⟫_𝕜 := by
       rw [hBxeq, inner_add_left, inner_smul_left, RCLike.conj_ofReal, map_add,
@@ -219,17 +228,42 @@ theorem norm_starProjection_comp_starProjection_le (hT : T.IsSymmetric) (hS : S.
     have hAX : (A ∘L X) x = T (P (Q x)) := by
       simp only [ContinuousLinearMap.comp_apply, hX, hA, hTc, add_apply,
         smul_apply, sub_apply,
-        ContinuousLinearMap.one_apply, LinearMap.coe_toContinuousLinearMap', hPP, sub_self,
+        one_apply_eq_self, LinearMap.coe_toContinuousLinearMap', hPP, sub_self,
         smul_zero, add_zero]
     have hXB : (X ∘L B) x = P (S (Q x)) := by
       simp only [ContinuousLinearMap.comp_apply, hX, hB, hSc, add_apply,
         smul_apply, sub_apply,
-        ContinuousLinearMap.one_apply, LinearMap.coe_toContinuousLinearMap', map_add, map_smul,
+        one_apply_eq_self, LinearMap.coe_toContinuousLinearMap', map_add, map_smul,
         hQSQ, hQrest, map_zero, smul_zero, add_zero]
     have hYx : Y x = P (T (Q x)) - P (S (Q x)) := by
       simp only [hY, ContinuousLinearMap.comp_apply, sub_apply, hTc, hSc,
         LinearMap.coe_toContinuousLinearMap', map_sub]
     rw [sub_apply, hAX, hXB, hYx, hTP]
+  exact ⟨A, B, hAsym, hBsym, hAc, hBc, hsylv⟩
+
+/-- **The operator-norm Davis–Kahan sin-Θ theorem.**  Let `T, S` be symmetric,
+`U` a `T`-invariant subspace with quadratic form `≥ (c+g)‖·‖²`, and `V` an
+`S`-invariant subspace with form `≤ c‖·‖²`.  If `‖(S − T) x‖ ≤ ε ‖x‖` and
+`g > 0`, then `‖V.starProjection ∘L U.starProjection‖ ≤ ε / g`.  The left side
+is `‖sinΘ‖_op`, so this is the dimension-free `‖sinΘ‖_op ≤ ‖S − T‖_op / g`. -/
+theorem norm_starProjection_comp_starProjection_le (hT : T.IsSymmetric) (hS : S.IsSymmetric)
+    {U V : Submodule 𝕜 E} [U.HasOrthogonalProjection] [V.HasOrthogonalProjection]
+    (hUinv : ∀ x ∈ U, T x ∈ U) (hVinv : ∀ x ∈ V, S x ∈ V)
+    {c g ε : ℝ} (hg : 0 < g)
+    (hU : ∀ x ∈ U, (c + g) * ‖x‖ ^ 2 ≤ RCLike.re ⟪T x, x⟫_𝕜)
+    (hV : ∀ x ∈ V, RCLike.re ⟪S x, x⟫_𝕜 ≤ c * ‖x‖ ^ 2)
+    (hε0 : 0 ≤ ε) (hε : ∀ x, ‖(S - T) x‖ ≤ ε * ‖x‖) :
+    ‖V.starProjection ∘L U.starProjection‖ ≤ ε / g := by
+  obtain ⟨A, B, hAsym, hBsym, hAc, hBc, hsylv⟩ :=
+    exists_isSymmetric_comp_sub_comp_eq hT hS hUinv hVinv hU hV
+  set P := U.starProjection with hP
+  set Q := V.starProjection with hQ
+  set Tc := LinearMap.toContinuousLinearMap T with hTc
+  set Sc := LinearMap.toContinuousLinearMap S with hSc
+  set X : E →L[𝕜] E := P ∘L Q with hX
+  set Y : E →L[𝕜] E := P ∘L (Tc - Sc) ∘L Q with hY
+  have hPsa : IsSelfAdjoint P := isSelfAdjoint_starProjection U
+  have hQsa : IsSelfAdjoint Q := isSelfAdjoint_starProjection V
   -- `‖Y‖ ≤ ε`.
   have hYnorm : ‖Y‖ ≤ ε := by
     refine Y.opNorm_le_bound hε0 fun x => ?_

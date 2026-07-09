@@ -1,0 +1,130 @@
+/-
+Staged for Mathlib: additions to `Mathlib/Analysis/InnerProductSpace/` (new file
+`SinThetaUINorm.lean`).
+
+Formalized by Claude Opus 4.8 (claude-opus-4-8[1m]), plan step F4 of
+`dev/davis-kahan-expert-completion-plan.md`.
+
+The part-III Davis–Kahan sin-Θ theorem in **every unitarily invariant norm**:
+`N (Q̂ ∘ P) ≤ N (S − T) / g`, where `P, Q̂` project onto the separated invariant
+subspaces.  This is the Davis–Kahan (1970) statement at full generality; the
+Frobenius (`sum_norm_sub_starProjection_span_sq_le_hilbertSchmidt`) and
+operator-norm (`norm_starProjection_comp_starProjection_le`) theorems are the
+Hilbert–Schmidt and spectral instances.
+
+The norm-free construction of `A, B, X, Y` is shared verbatim with the
+operator-norm theorem (`exists_isSymmetric_comp_sub_comp_eq`); only the final
+estimate differs — here it is the abstract Sylvester bound
+`ContinuousLinearMap.le_div_of_comp_sub_comp_eq`, fed the operator seminorm
+induced by `N`, whose operator-ideal property is `UnitarilyInvariantNorm`'s
+`apply_comp_le`.
+To be re-authored per Mathlib's AI-contribution policy at PR time.
+-/
+
+import ForMathlib.Analysis.InnerProductSpace.UnitarilyInvariantNorm
+import ForMathlib.Analysis.InnerProductSpace.SinThetaOpNorm
+
+/-! # The unitarily-invariant-norm Davis–Kahan sin-Θ theorem
+
+For symmetric `T, S` on a finite-dimensional inner product space, a
+`T`-invariant subspace `U` whose form sits above `c + g`, and an `S`-invariant
+subspace `V` whose form sits below `c`, every unitarily invariant norm `N`
+bounds the cross-projection:
+`N (V.starProjection ∘ U.starProjection) ≤ N (S − T) / g`.
+
+## Main results
+
+* `ForMathlib.UnitarilyInvariantNorm.apply_starProjection_comp_starProjection_le`:
+  the part-III `sin Θ` bound, every unitarily invariant norm.
+
+## References
+
+* C. Davis and W. M. Kahan, *The rotation of eigenvectors by a
+  perturbation. III*, SIAM J. Numer. Anal. 7 (1970), 1–46.
+* R. Bhatia, *Matrix Analysis*, Chapter VII (the Davis–Kahan theorems).
+-/
+
+namespace ForMathlib
+
+open scoped InnerProductSpace
+open Module (finrank)
+
+variable {𝕜 E : Type*} [RCLike 𝕜] [NormedAddCommGroup E] [InnerProductSpace 𝕜 E]
+  [FiniteDimensional 𝕜 E] [CompleteSpace E] {T S : E →ₗ[𝕜] E}
+
+namespace UnitarilyInvariantNorm
+
+/-- **The part-III Davis–Kahan sin-Θ theorem, every unitarily invariant norm.**
+Let `T, S` be symmetric, `U` a `T`-invariant subspace with quadratic form
+`≥ (c + g) ‖·‖²`, and `V` an `S`-invariant subspace with form `≤ c ‖·‖²`.  Then
+for every unitarily invariant norm `N` and every `g > 0`,
+`N (V.starProjection ∘ U.starProjection) ≤ N (S − T) / g`.  The left side is
+`N (sin Θ)`, so this is the part-III `‖sin Θ‖ ≤ ‖S − T‖ / g` in every unitarily
+invariant norm; Frobenius and operator norm are the instances. -/
+theorem apply_starProjection_comp_starProjection_le (N : UnitarilyInvariantNorm 𝕜 E)
+    (hT : T.IsSymmetric) (hS : S.IsSymmetric)
+    {U V : Submodule 𝕜 E} [U.HasOrthogonalProjection] [V.HasOrthogonalProjection]
+    (hUinv : ∀ x ∈ U, T x ∈ U) (hVinv : ∀ x ∈ V, S x ∈ V)
+    {c g : ℝ} (hg : 0 < g)
+    (hU : ∀ x ∈ U, (c + g) * ‖x‖ ^ 2 ≤ RCLike.re ⟪T x, x⟫_𝕜)
+    (hV : ∀ x ∈ V, RCLike.re ⟪S x, x⟫_𝕜 ≤ c * ‖x‖ ^ 2) :
+    N ((V.starProjection ∘L U.starProjection : E →L[𝕜] E) : E →ₗ[𝕜] E)
+      ≤ N (S - T) / g := by
+  obtain ⟨A, B, hAsym, hBsym, hAc, hBc, hsylv⟩ :=
+    exists_isSymmetric_comp_sub_comp_eq hT hS hUinv hVinv hU hV
+  set P := U.starProjection with hP
+  set Q := V.starProjection with hQ
+  set X : E →L[𝕜] E := P ∘L Q with hX
+  set Y : E →L[𝕜] E :=
+    P ∘L (LinearMap.toContinuousLinearMap T - LinearMap.toContinuousLinearMap S) ∘L Q with hY
+  -- The operator seminorm on `E →L[𝕜] E` induced by `N`.
+  set N' : (E →L[𝕜] E) → ℝ := fun f => N (f : E →ₗ[𝕜] E) with hN'
+  have hadd : ∀ f h : E →L[𝕜] E, N' (f + h) ≤ N' f + N' h := fun f h => by
+    simp only [hN', ContinuousLinearMap.toLinearMap_add]; exact N.add_le _ _
+  have hsmul : ∀ (a : 𝕜) (f : E →L[𝕜] E), N' (a • f) = ‖a‖ * N' f := fun a f => by
+    simp only [hN', ContinuousLinearMap.toLinearMap_smul]; exact N.smul_eq _ _
+  have hidealL : ∀ C f : E →L[𝕜] E, N' (C ∘L f) ≤ ‖C‖ * N' f := fun C f => by
+    simp only [hN']
+    exact N.apply_comp_le (norm_nonneg C) fun y => C.le_opNorm y
+  have hidealR : ∀ f C : E →L[𝕜] E, N' (f ∘L C) ≤ N' f * ‖C‖ := fun f C => by
+    simp only [hN']
+    exact N.apply_comp_le' (norm_nonneg C) fun y => C.le_opNorm y
+  -- The abstract Sylvester bound gives `N' X ≤ N' Y / g`.
+  have hbound : N' X ≤ N' Y / g :=
+    ContinuousLinearMap.le_div_of_comp_sub_comp_eq hadd hsmul hidealL hidealR
+      hAsym hBsym hg hAc hBc hsylv
+  -- `N' Y ≤ N (S − T)` by the ideal property (both projections are contractions).
+  have hYcoe : (Y : E →ₗ[𝕜] E) = (P : E →ₗ[𝕜] E) ∘ₗ ((T - S) ∘ₗ (Q : E →ₗ[𝕜] E)) := by
+    ext x
+    simp [hY, map_sub]
+  have hYbound : N' Y ≤ N (S - T) := by
+    show N (Y : E →ₗ[𝕜] E) ≤ N (S - T)
+    rw [hYcoe]
+    calc N ((P : E →ₗ[𝕜] E) ∘ₗ ((T - S) ∘ₗ (Q : E →ₗ[𝕜] E)))
+        ≤ 1 * N ((T - S) ∘ₗ (Q : E →ₗ[𝕜] E)) :=
+          N.apply_comp_le zero_le_one fun y => by
+            rw [one_mul]; exact U.norm_starProjection_apply_le y
+      _ = N ((T - S) ∘ₗ (Q : E →ₗ[𝕜] E)) := one_mul _
+      _ ≤ N (T - S) * 1 :=
+          N.apply_comp_le' zero_le_one fun y => by
+            rw [one_mul]; exact V.norm_starProjection_apply_le y
+      _ = N (T - S) := mul_one _
+      _ = N (S - T) := by rw [show (T - S : E →ₗ[𝕜] E) = -(S - T) by abel, N.apply_neg]
+  -- `N (Q ∘ P) = N' X` by star-invariance of `N`.
+  have hstar : N ((Q ∘L P : E →L[𝕜] E) : E →ₗ[𝕜] E) = N' X := by
+    have hPsym : (P : E →ₗ[𝕜] E).IsSymmetric := U.starProjection_isSymmetric
+    have hQsym : (Q : E →ₗ[𝕜] E).IsSymmetric := V.starProjection_isSymmetric
+    have hadj : ((Q ∘L P : E →L[𝕜] E) : E →ₗ[𝕜] E).adjoint = (X : E →ₗ[𝕜] E) := by
+      have hcoe : ((Q ∘L P : E →L[𝕜] E) : E →ₗ[𝕜] E) = (Q : E →ₗ[𝕜] E) ∘ₗ (P : E →ₗ[𝕜] E) := by
+        ext x; simp
+      rw [hcoe, LinearMap.adjoint_comp, hPsym.adjoint_eq, hQsym.adjoint_eq]
+      ext x; simp [hX]
+    rw [← N.apply_adjoint ((Q ∘L P : E →L[𝕜] E) : E →ₗ[𝕜] E), hadj]
+  calc N ((V.starProjection ∘L U.starProjection : E →L[𝕜] E) : E →ₗ[𝕜] E)
+      = N' X := hstar
+    _ ≤ N' Y / g := hbound
+    _ ≤ N (S - T) / g := by gcongr
+
+end UnitarilyInvariantNorm
+
+end ForMathlib

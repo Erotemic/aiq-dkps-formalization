@@ -766,6 +766,33 @@ theorem apply_adjoint (A : E →ₗ[𝕜] E) : N A.adjoint = N A := by
     N.apply_eq_gauge rfl (stdOrthonormalBasis 𝕜 E) A]
   simp only [singularValues_adjoint]
 
+/-! ### The operator-ideal property -/
+
+/-- **The ideal property (left factor).**  If `‖C y‖ ≤ c ‖y‖` for `0 ≤ c`, then
+`N (C ∘ₗ X) ≤ c * N X` for every unitarily invariant norm.  From Fan dominance
+applied to the singular-value domination `σᵢ(C ∘ X) ≤ c σᵢ(X)`. -/
+theorem apply_comp_le {C X : E →ₗ[𝕜] E} {c : ℝ} (hc : 0 ≤ c)
+    (hC : ∀ y, ‖C y‖ ≤ c * ‖y‖) : N (C ∘ₗ X) ≤ c * N X :=
+  calc N (C ∘ₗ X)
+      ≤ N (((c : 𝕜)) • X) :=
+        N.apply_le_of_kyFanSum_le fun k =>
+          kyFanSum_le_of_singularValues_le (fun i => by
+            rw [singularValues_real_smul X hc i]
+            exact singularValues_comp_le hc hC X i) k
+    _ = c * N X := by rw [N.smul_eq, RCLike.norm_ofReal, abs_of_nonneg hc]
+
+/-- **The ideal property (right factor).**  If `‖C y‖ ≤ c ‖y‖` for `0 ≤ c`, then
+`N (X ∘ₗ C) ≤ N X * c`. -/
+theorem apply_comp_le' {X C : E →ₗ[𝕜] E} {c : ℝ} (hc : 0 ≤ c)
+    (hC : ∀ y, ‖C y‖ ≤ c * ‖y‖) : N (X ∘ₗ C) ≤ N X * c :=
+  calc N (X ∘ₗ C)
+      ≤ N (((c : 𝕜)) • X) :=
+        N.apply_le_of_kyFanSum_le fun k =>
+          kyFanSum_le_of_singularValues_le (fun i => by
+            rw [singularValues_real_smul X hc i]
+            exact singularValues_comp_le' hc hC i) k
+    _ = N X * c := by rw [N.smul_eq, RCLike.norm_ofReal, abs_of_nonneg hc, mul_comm]
+
 end UnitarilyInvariantNorm
 
 end ForMathlib

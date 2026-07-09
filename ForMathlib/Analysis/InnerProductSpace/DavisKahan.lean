@@ -507,7 +507,18 @@ Instead of a sorted leading cutoff, select the `T`-block by an interval:
 `g`-enlarged interval `(a − g, b + g)`, the two-block engine applies with gap
 `g`, giving the sharp Frobenius sin-Θ bound between the interval subspace of `T`
 and the chosen trailing subspace of `S`.  A two-sided Weyl bridge derives the
-separation from a population interval gap of `T` alone. -/
+separation from a population interval gap of `T` alone.
+
+**General two-set spectral separation.**  For symmetric operators in finite
+dimension, the arbitrary-`Finset` block hypothesis
+`∀ i ∈ s, ∀ j ∈ t, g ≤ |λᵢ(T) − λⱼ(S)|` of the `_block` lemmas above *is* the
+fully general separation `dist(σ(T)|_s, σ(S)|_t) ≥ g` between two spectral
+sets — no interval, half-line, or sortedness structure is assumed.  So the
+Frobenius sin-Θ theory here already covers general (even interleaved) two-set
+separation.  The *operator-norm* analogue for interleaved spectra is a
+genuinely different theorem carrying the optimal constant `π/2`
+(Bhatia–Davis–McIntosh) and is deliberately out of scope; see
+`dev/davis-kahan-expert-completion-plan.md`, Phase H. -/
 
 /-- If `x` lies in `[a, b]` and `y` avoids the `g`-enlarged interval
 `(a − g, b + g)`, then `x` and `y` are at least `g` apart.  The real-analysis

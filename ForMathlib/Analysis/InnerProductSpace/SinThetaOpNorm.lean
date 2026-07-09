@@ -16,6 +16,8 @@ To be re-authored per Mathlib's AI-contribution policy at PR time.
 
 import ForMathlib.Analysis.InnerProductSpace.SylvesterBound
 import ForMathlib.Analysis.InnerProductSpace.RotationSharp
+import ForMathlib.Analysis.InnerProductSpace.CourantFischer
+import ForMathlib.Analysis.InnerProductSpace.PrincipalAngles
 import Mathlib.Analysis.InnerProductSpace.Adjoint
 
 /-! # The operator-norm Davis–Kahan sin-Θ theorem
@@ -257,5 +259,106 @@ theorem norm_starProjection_comp_starProjection_le (hT : T.IsSymmetric) (hS : S.
   have hnorm_eq : ‖Q ∘L P‖ = ‖X‖ := by rw [hX, ← hstar]; exact (norm_star _).symm
   rw [hnorm_eq]
   exact hXbound
+
+/-! ### Spectral corollaries (eigenvalue hypotheses)
+
+The literature-facing forms: the invariant subspaces are spans of eigenvector
+blocks and the quadratic-form hypotheses are sorted-eigenvalue hypotheses
+(plan step E3 of `dev/davis-kahan-expert-completion-plan.md`). -/
+
+section Spectral
+
+variable {n : ℕ}
+
+/-- **Operator-norm Davis–Kahan sin-Θ theorem, spectral form.**  If the
+`T`-eigenvalues selected by `s` sit above `c + g` and the `S`-eigenvalues
+outside `s'` sit below `c`, then the leading `T`-eigenblock span and the
+trailing `S`-eigenblock span satisfy the dimension-free bound
+`‖Q̂ ∘L P‖ ≤ ε / g`. -/
+theorem norm_starProjection_comp_starProjection_le_of_eigenvalues
+    (hT : T.IsSymmetric) (hS : S.IsSymmetric) (hn : finrank 𝕜 E = n)
+    {s s' : Finset (Fin n)} {c g ε : ℝ} (hg : 0 < g)
+    (hs : ∀ i ∈ s, c + g ≤ hT.eigenvalues hn i)
+    (hs' : ∀ j ∉ s', hS.eigenvalues hn j ≤ c)
+    (hε0 : 0 ≤ ε) (hε : ∀ x, ‖(S - T) x‖ ≤ ε * ‖x‖) :
+    ‖(specSubspace (hS.eigenvectorBasis hn) (· ∉ s')).starProjection ∘L
+        (specSubspace (hT.eigenvectorBasis hn) (· ∈ s)).starProjection‖ ≤ ε / g :=
+  norm_starProjection_comp_starProjection_le hT hS
+    (fun _ hx => map_mem_specSubspace hT hn _ hx)
+    (fun _ hx => map_mem_specSubspace hS hn _ hx) hg
+    (fun _ hx => le_re_inner_map_self_of_mem_specSubspace hT hn (fun i hi => hs i hi) hx)
+    (fun _ hx => re_inner_map_self_le_of_mem_specSubspace hS hn (fun j hj => hs' j hj) hx)
+    hε0 hε
+
+omit [CompleteSpace E] in
+/-- **Davis's sin 2θ theorem, spectral form.**  `U` is the span of the
+`T`-eigenvectors selected by `s`; the selected eigenvalues sit above `b` and
+the complementary ones below `a`.  For a unit eigenvector `x` of `T + S`
+(eigenvalue location unconstrained) and `P` the projection onto `U`,
+`(b − a) ‖P x‖ ‖x − P x‖ ≤ ε`. -/
+theorem sin_two_theta_le_of_eigenvalues
+    (hT : T.IsSymmetric) (hS : S.IsSymmetric) (hn : finrank 𝕜 E = n)
+    {s : Finset (Fin n)} {a b ε : ℝ}
+    (hb : ∀ i ∈ s, b ≤ hT.eigenvalues hn i)
+    (ha : ∀ i ∉ s, hT.eigenvalues hn i ≤ a)
+    (hε : ∀ v, ‖S v‖ ≤ ε * ‖v‖)
+    {x : E} (hx : ‖x‖ = 1) {μ : ℝ} (hμ : T x + S x = (μ : 𝕜) • x) :
+    (b - a) * (‖(specSubspace (hT.eigenvectorBasis hn) (· ∈ s)).starProjection x‖
+      * ‖x - (specSubspace (hT.eigenvectorBasis hn) (· ∈ s)).starProjection x‖) ≤ ε := by
+  refine sin_two_theta_le hT hS (fun u hu => map_mem_specSubspace hT hn _ hu)
+    (fun u hu => le_re_inner_map_self_of_mem_specSubspace hT hn (fun i hi => hb i hi) hu)
+    (fun w hw => ?_) hε hx hμ
+  rw [orthogonal_specSubspace] at hw
+  exact re_inner_map_self_le_of_mem_specSubspace hT hn (fun i hi => ha i hi) hw
+
+omit [CompleteSpace E] in
+/-- **Davis's tan 2θ theorem, spectral form.**  As `sin_two_theta_le_of_eigenvalues`,
+with the vanishing-pinch hypotheses on the perturbation `S` (no diagonal blocks
+with respect to the eigenblock splitting), and the sharper conclusion
+`(b − a) ‖P x‖ ‖x − P x‖ ≤ |‖P x‖² − ‖x − P x‖²| ε`. -/
+theorem tan_two_theta_le_of_eigenvalues
+    (hT : T.IsSymmetric) (hS : S.IsSymmetric) (hn : finrank 𝕜 E = n)
+    {s : Finset (Fin n)} {a b ε : ℝ}
+    (hb : ∀ i ∈ s, b ≤ hT.eigenvalues hn i)
+    (ha : ∀ i ∉ s, hT.eigenvalues hn i ≤ a)
+    (hε : ∀ v, ‖S v‖ ≤ ε * ‖v‖)
+    (hSU : ∀ u ∈ specSubspace (hT.eigenvectorBasis hn) (· ∈ s),
+      ∀ u' ∈ specSubspace (hT.eigenvectorBasis hn) (· ∈ s), ⟪u, S u'⟫_𝕜 = 0)
+    (hSUperp : ∀ w ∈ specSubspace (hT.eigenvectorBasis hn) (· ∉ s),
+      ∀ w' ∈ specSubspace (hT.eigenvectorBasis hn) (· ∉ s), ⟪w, S w'⟫_𝕜 = 0)
+    {x : E} (hx : ‖x‖ = 1) {μ : ℝ} (hμ : T x + S x = (μ : 𝕜) • x) :
+    (b - a) * (‖(specSubspace (hT.eigenvectorBasis hn) (· ∈ s)).starProjection x‖
+        * ‖x - (specSubspace (hT.eigenvectorBasis hn) (· ∈ s)).starProjection x‖)
+      ≤ |‖(specSubspace (hT.eigenvectorBasis hn) (· ∈ s)).starProjection x‖ ^ 2
+          - ‖x - (specSubspace (hT.eigenvectorBasis hn) (· ∈ s)).starProjection x‖ ^ 2| * ε := by
+  refine tan_two_theta_le hT hS (fun u hu => map_mem_specSubspace hT hn _ hu)
+    (fun u hu => le_re_inner_map_self_of_mem_specSubspace hT hn (fun i hi => hb i hi) hu)
+    (fun w hw => ?_) hε hSU (fun w hw w' hw' => ?_) hx hμ
+  · rw [orthogonal_specSubspace] at hw
+    exact re_inner_map_self_le_of_mem_specSubspace hT hn (fun i hi => ha i hi) hw
+  · rw [orthogonal_specSubspace] at hw hw'
+    exact hSUperp w hw w' hw'
+
+/-- **Operator-norm sin-Θ bound on the largest principal angle.**  Chaining the
+identification `‖Q̂ ∘L P‖ = sin θ_max` with the operator-norm Davis–Kahan
+theorem: for `U = span u` (`T`-invariant, form `≥ c + g`) and `W` with
+`Wᗮ = span w`-complement... precisely, with `V := (span w)ᗮ` an `S`-invariant
+subspace of form `≤ c`, the largest principal angle between `span u` and
+`span w` satisfies `sin θ_max ≤ ε / g`. -/
+theorem sqrt_one_sub_sq_cosPrincipalAngles_le
+    {d : ℕ} {u w : Fin d → E} (hu : Orthonormal 𝕜 u) (hw : Orthonormal 𝕜 w) (hd : 0 < d)
+    (hT : T.IsSymmetric) (hS : S.IsSymmetric)
+    (hUinv : ∀ x ∈ Submodule.span 𝕜 (Set.range u), T x ∈ Submodule.span 𝕜 (Set.range u))
+    (hVinv : ∀ x ∈ (Submodule.span 𝕜 (Set.range w))ᗮ,
+      S x ∈ (Submodule.span 𝕜 (Set.range w))ᗮ)
+    {c g ε : ℝ} (hg : 0 < g)
+    (hU : ∀ x ∈ Submodule.span 𝕜 (Set.range u), (c + g) * ‖x‖ ^ 2 ≤ RCLike.re ⟪T x, x⟫_𝕜)
+    (hV : ∀ x ∈ (Submodule.span 𝕜 (Set.range w))ᗮ, RCLike.re ⟪S x, x⟫_𝕜 ≤ c * ‖x‖ ^ 2)
+    (hε0 : 0 ≤ ε) (hε : ∀ x, ‖(S - T) x‖ ≤ ε * ‖x‖) :
+    Real.sqrt (1 - cosPrincipalAngles hw hu (d - 1) ^ 2) ≤ ε / g := by
+  rw [← norm_orthogonal_starProjection_comp_starProjection hu hw hd]
+  exact norm_starProjection_comp_starProjection_le hT hS hUinv hVinv hg hU hV hε0 hε
+
+end Spectral
 
 end ForMathlib

@@ -73,12 +73,12 @@ this subspace has vanishing `b`-coordinates outside `p`. -/
 /-- The subspace spanned by the orthonormal basis vectors `b i` for indices `i`
 satisfying `p i`.  Internal scaffolding for the Courant–Fischer proofs (a general
 orthonormal-subfamily span, not Courant–Fischer-specific), hence `private`. -/
-private noncomputable def specSubspace (b : OrthonormalBasis (Fin n) 𝕜 E) (p : Fin n → Prop) :
+noncomputable def specSubspace (b : OrthonormalBasis (Fin n) 𝕜 E) (p : Fin n → Prop) :
     Submodule 𝕜 E :=
   Submodule.span 𝕜 (Set.range (fun i : {i : Fin n // p i} => b i))
 
 /-- A spectral subspace has dimension equal to the number of selected indices. -/
-private theorem finrank_specSubspace (b : OrthonormalBasis (Fin n) 𝕜 E) (p : Fin n → Prop)
+theorem finrank_specSubspace (b : OrthonormalBasis (Fin n) 𝕜 E) (p : Fin n → Prop)
     [DecidablePred p] :
     finrank 𝕜 (specSubspace b p) = (Finset.univ.filter p).card := by
   rw [specSubspace,
@@ -139,7 +139,7 @@ theorem re_inner_map_self_eq_sum_eigenvalues_mul_sq
 eigenvalues.  If `x ∈ specSubspace b p` (so its coordinates vanish off `p`) and every
 selected eigenvalue satisfies `λᵢ ≤ c`, then `re ⟪T x, x⟫ ≤ c ‖x‖²`: the diagonalized form
 `∑ λᵢ ‖repr x i‖²` only sees eigenvalues `≤ c`, and the weights sum to `‖x‖²`. -/
-private theorem re_inner_map_self_le_of_mem_specSubspace
+theorem re_inner_map_self_le_of_mem_specSubspace
     (hT : T.IsSymmetric) (hn : finrank 𝕜 E = n) {p : Fin n → Prop} {c : ℝ}
     (hc : ∀ i, p i → hT.eigenvalues hn i ≤ c)
     {x : E} (hx : x ∈ specSubspace (hT.eigenvectorBasis hn) p) :
@@ -155,7 +155,7 @@ private theorem re_inner_map_self_le_of_mem_specSubspace
 
 /-- Dual of `re_inner_map_self_le_of_mem_specSubspace`: if `x ∈ specSubspace b p` and every
 selected eigenvalue satisfies `c ≤ λᵢ`, then `c ‖x‖² ≤ re ⟪T x, x⟫`. -/
-private theorem le_re_inner_map_self_of_mem_specSubspace
+theorem le_re_inner_map_self_of_mem_specSubspace
     (hT : T.IsSymmetric) (hn : finrank 𝕜 E = n) {p : Fin n → Prop} {c : ℝ}
     (hc : ∀ i, p i → c ≤ hT.eigenvalues hn i)
     {x : E} (hx : x ∈ specSubspace (hT.eigenvectorBasis hn) p) :
@@ -329,5 +329,53 @@ theorem abs_eigenvalues_sub_le_opNorm (hT : T.IsSymmetric) (hS : S.IsSymmetric)
   refine abs_eigenvalues_sub_le hT hS hn (fun x => ?_) k
   have hx := (LinearMap.toContinuousLinearMap (T - S)).le_opNorm x
   rwa [LinearMap.coe_toContinuousLinearMap'] at hx
+
+/-! ### Spectral subspaces: invariance and orthogonal complement
+
+Public API for consumers of `specSubspace` (the operator-norm sin-Θ and
+sin 2θ/tan 2θ spectral corollaries; plan step E3 of
+`dev/davis-kahan-expert-completion-plan.md`). -/
+
+/-- A spectral subspace of a symmetric operator (the span of a selected
+subfamily of its eigenvectors) is invariant. -/
+theorem map_mem_specSubspace (hT : T.IsSymmetric) (hn : finrank 𝕜 E = n)
+    (p : Fin n → Prop) {x : E}
+    (hx : x ∈ specSubspace (hT.eigenvectorBasis hn) p) :
+    T x ∈ specSubspace (hT.eigenvectorBasis hn) p := by
+  induction hx using Submodule.span_induction with
+  | mem y hy =>
+    obtain ⟨j, rfl⟩ := hy
+    rw [hT.apply_eigenvectorBasis hn j]
+    exact Submodule.smul_mem _ _ (Submodule.subset_span ⟨j, rfl⟩)
+  | zero => rw [map_zero]; exact Submodule.zero_mem _
+  | add a b _ _ ha hb => rw [map_add]; exact Submodule.add_mem _ ha hb
+  | smul c a _ ha => rw [map_smul]; exact Submodule.smul_mem _ _ ha
+
+/-- The orthogonal complement of a spectral subspace is the complementary
+spectral subspace: `(span {bᵢ : p i})ᗮ = span {bᵢ : ¬ p i}`. -/
+theorem orthogonal_specSubspace (b : OrthonormalBasis (Fin n) 𝕜 E) (p : Fin n → Prop)
+    [DecidablePred p] :
+    (specSubspace b p)ᗮ = specSubspace b (fun i => ¬ p i) := by
+  have hEn : finrank 𝕜 E = n := by
+    rw [Module.finrank_eq_card_basis b.toBasis, Fintype.card_fin]
+  refine (Submodule.eq_of_le_of_finrank_le ?_ ?_).symm
+  · -- the complementary span is orthogonal to the selected span.
+    apply Submodule.span_le.mpr
+    rintro y ⟨j, rfl⟩
+    rw [SetLike.mem_coe, Submodule.mem_orthogonal]
+    intro u hu
+    show ⟪u, b ↑j⟫_𝕜 = 0
+    rw [← inner_conj_symm, ← b.repr_apply_apply,
+      repr_eq_zero_of_mem_specSubspace b p hu j.2, map_zero]
+  · -- dimensions match: `n − #p` on both sides.
+    have h1 : finrank 𝕜 (specSubspace b p)
+        + finrank 𝕜 ((specSubspace b p)ᗮ : Submodule 𝕜 E) = n := by
+      rw [Submodule.finrank_add_finrank_orthogonal, hEn]
+    have h2 := finrank_specSubspace b p
+    have h3 := finrank_specSubspace b (fun i => ¬ p i)
+    have h4 := Finset.card_filter_add_card_filter_not (s := (Finset.univ : Finset (Fin n))) p
+    have h5 : (Finset.univ : Finset (Fin n)).card = n := by
+      rw [Finset.card_univ, Fintype.card_fin]
+    omega
 
 end ForMathlib

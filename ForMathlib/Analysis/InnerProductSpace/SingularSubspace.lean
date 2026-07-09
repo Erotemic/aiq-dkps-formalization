@@ -237,6 +237,99 @@ theorem sq_gap_mul_sum_cross_singularVectors_le
     A.isSymmetric_adjoint_comp_self Â.isSymmetric_adjoint_comp_self hn s hΓ hgap
     (fun x => norm_gram_sub_gram_apply_le hâ hε hA hÂ hE x)
 
+/-! ### Extreme singular values: variational characterization
+
+The largest singular value is the operator norm and the smallest is the
+minimum gain, both attained (plan step E1 of
+`dev/davis-kahan-expert-completion-plan.md`).  These are the quantitative
+inputs for the operator-norm principal-angle identification. -/
+
+section Extreme
+
+variable {n : ℕ}
+
+/-- `‖A x‖² = re ⟪(A⋆A) x, x⟫`, the seed of every variational bound here. -/
+private theorem sq_norm_apply_eq_re_inner_gram (A : E →ₗ[𝕜] F) (x : E) :
+    ‖A x‖ ^ 2 = RCLike.re ⟪(A.adjoint ∘ₗ A) x, x⟫_𝕜 := by
+  rw [LinearMap.comp_apply, LinearMap.adjoint_inner_left, inner_self_eq_norm_sq]
+
+/-- **The smallest singular value is a lower bound for the gain:**
+`σ_{n-1}(A) * ‖x‖ ≤ ‖A x‖`. -/
+theorem singularValues_last_mul_norm_le (A : E →ₗ[𝕜] F) (hn : finrank 𝕜 E = n)
+    (hn0 : 0 < n) (x : E) : A.singularValues (n - 1) * ‖x‖ ≤ ‖A x‖ := by
+  have hlast : n - 1 < n := by omega
+  set k : Fin n := ⟨n - 1, hlast⟩
+  have hsym := A.isSymmetric_adjoint_comp_self
+  have hsq : (A.singularValues (n - 1) * ‖x‖) ^ 2 ≤ ‖A x‖ ^ 2 := by
+    rw [sq_norm_apply_eq_re_inner_gram,
+      re_inner_map_self_eq_sum_eigenvalues_mul_sq hsym hn x, mul_pow,
+      A.sq_singularValues_of_lt hn hlast]
+    have hpars : ∑ i : Fin n, ‖(hsym.eigenvectorBasis hn).repr x i‖ ^ 2 = ‖x‖ ^ 2 := by
+      simp_rw [(hsym.eigenvectorBasis hn).repr_apply_apply]
+      exact (hsym.eigenvectorBasis hn).sum_sq_norm_inner_right x
+    calc hsym.eigenvalues hn k * ‖x‖ ^ 2
+        = ∑ i : Fin n, hsym.eigenvalues hn k * ‖(hsym.eigenvectorBasis hn).repr x i‖ ^ 2 := by
+          rw [← Finset.mul_sum, hpars]
+      _ ≤ ∑ i : Fin n, hsym.eigenvalues hn i * ‖(hsym.eigenvectorBasis hn).repr x i‖ ^ 2 :=
+          Finset.sum_le_sum fun i _ =>
+            mul_le_mul_of_nonneg_right
+              (hsym.eigenvalues_antitone hn (Fin.le_def.mpr (by omega : (i : ℕ) ≤ n - 1)))
+              (sq_nonneg _)
+  exact le_of_sq_le_sq hsq (norm_nonneg _)
+
+/-- **The smallest singular value is attained.** -/
+theorem exists_norm_apply_eq_singularValues_last (A : E →ₗ[𝕜] F) (hn : finrank 𝕜 E = n)
+    (hn0 : 0 < n) : ∃ x, ‖x‖ = 1 ∧ ‖A x‖ = A.singularValues (n - 1) := by
+  have hlast : n - 1 < n := by omega
+  set k : Fin n := ⟨n - 1, hlast⟩
+  have hsym := A.isSymmetric_adjoint_comp_self
+  refine ⟨hsym.eigenvectorBasis hn k, (hsym.eigenvectorBasis hn).orthonormal.norm_eq_one k, ?_⟩
+  have hsq : ‖A (hsym.eigenvectorBasis hn k)‖ ^ 2 = A.singularValues (n - 1) ^ 2 := by
+    rw [sq_norm_apply_eq_re_inner_gram, hsym.apply_eigenvectorBasis hn k, inner_smul_left,
+      RCLike.conj_ofReal, RCLike.re_ofReal_mul, inner_self_eq_norm_sq,
+      (hsym.eigenvectorBasis hn).orthonormal.norm_eq_one k, one_pow, mul_one,
+      A.sq_singularValues_of_lt hn hlast]
+  have := congrArg Real.sqrt hsq
+  rwa [Real.sqrt_sq (norm_nonneg _), Real.sqrt_sq (A.singularValues_nonneg _)] at this
+
+/-- **The largest singular value bounds the gain:** `‖A x‖ ≤ σ₀(A) * ‖x‖`
+(the elementwise form of `σ₀ = ‖A‖`). -/
+theorem norm_apply_le_singularValues_zero_mul (A : E →ₗ[𝕜] F) (hn : finrank 𝕜 E = n)
+    (hn0 : 0 < n) (x : E) : ‖A x‖ ≤ A.singularValues 0 * ‖x‖ := by
+  have hsym := A.isSymmetric_adjoint_comp_self
+  have hsq : ‖A x‖ ^ 2 ≤ (A.singularValues 0 * ‖x‖) ^ 2 := by
+    rw [sq_norm_apply_eq_re_inner_gram,
+      re_inner_map_self_eq_sum_eigenvalues_mul_sq hsym hn x, mul_pow,
+      A.sq_singularValues_of_lt hn hn0]
+    have hpars : ∑ i : Fin n, ‖(hsym.eigenvectorBasis hn).repr x i‖ ^ 2 = ‖x‖ ^ 2 := by
+      simp_rw [(hsym.eigenvectorBasis hn).repr_apply_apply]
+      exact (hsym.eigenvectorBasis hn).sum_sq_norm_inner_right x
+    calc ∑ i : Fin n, hsym.eigenvalues hn i * ‖(hsym.eigenvectorBasis hn).repr x i‖ ^ 2
+        ≤ ∑ i : Fin n, hsym.eigenvalues hn ⟨0, hn0⟩
+            * ‖(hsym.eigenvectorBasis hn).repr x i‖ ^ 2 :=
+          Finset.sum_le_sum fun i _ =>
+            mul_le_mul_of_nonneg_right
+              (hsym.eigenvalues_antitone hn (Fin.le_def.mpr (Nat.zero_le _)))
+              (sq_nonneg _)
+      _ = hsym.eigenvalues hn ⟨0, hn0⟩ * ‖x‖ ^ 2 := by rw [← Finset.mul_sum, hpars]
+  exact le_of_sq_le_sq hsq (mul_nonneg (A.singularValues_nonneg 0) (norm_nonneg x))
+
+/-- **The largest singular value is attained.** -/
+theorem exists_norm_apply_eq_singularValues_zero (A : E →ₗ[𝕜] F) (hn : finrank 𝕜 E = n)
+    (hn0 : 0 < n) : ∃ x, ‖x‖ = 1 ∧ ‖A x‖ = A.singularValues 0 := by
+  have hsym := A.isSymmetric_adjoint_comp_self
+  refine ⟨hsym.eigenvectorBasis hn ⟨0, hn0⟩,
+    (hsym.eigenvectorBasis hn).orthonormal.norm_eq_one _, ?_⟩
+  have hsq : ‖A (hsym.eigenvectorBasis hn ⟨0, hn0⟩)‖ ^ 2 = A.singularValues 0 ^ 2 := by
+    rw [sq_norm_apply_eq_re_inner_gram, hsym.apply_eigenvectorBasis hn _, inner_smul_left,
+      RCLike.conj_ofReal, RCLike.re_ofReal_mul, inner_self_eq_norm_sq,
+      (hsym.eigenvectorBasis hn).orthonormal.norm_eq_one _, one_pow, mul_one,
+      A.sq_singularValues_of_lt hn hn0]
+  have := congrArg Real.sqrt hsq
+  rwa [Real.sqrt_sq (norm_nonneg _), Real.sqrt_sq (A.singularValues_nonneg _)] at this
+
+end Extreme
+
 /-! ### Singular values of the adjoint (square case)
 
 `σ(A⋆) = σ(A)` for a square operator `A : E →ₗ[𝕜] E`.  The Gram operators

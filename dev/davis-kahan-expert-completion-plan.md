@@ -18,6 +18,20 @@ gates, `lake build` green after every step, `#print axioms` =
 
 - **v1 (2026-07-09, Fable):** initial plan, incorporating a review of Opus's
   2026-07-09 expert-gap diagnosis.
+- **v2 (2026-07-09, Fable — Phase E executed):** E1–E5 all ✅ DONE, library
+  build green, all 12 new headlines axiom-clean.  Deviations from the v1
+  routes, folded into the steps: (i) E2's coordinate pull-back uses the
+  *adjoint of the coordinate isometry* (`Submodule.mem_span_range_iff_exists_fun`
+  is hidden by the pinned Mathlib's module system) — cleaner anyway; (ii) all
+  E3 spectral corollaries live in `SinThetaOpNorm.lean` (single import site);
+  new public lemmas `map_mem_specSubspace` and `orthogonal_specSubspace` in
+  `CourantFischer.lean`; (iii) **E4(e) re-scoped:** the `sqSinAngle` bridge is
+  *dropped from E4* — `sqSinAngle` measures the direct-rotation angles of the
+  intertwining unitary, whose identification with principal angles is
+  G1-adjacent material; it is folded into G1's scope.  E4 delivers (c)
+  (`sinThetaSq_blockFamily_eq_sum_cross`) and (d)
+  (`sum_norm_sub_starProjection_sq_eq_two_mul_sinThetaSq`) plus the
+  `blockFamily` API.
 
 ## Review of the Opus diagnosis (2026-07-09)
 

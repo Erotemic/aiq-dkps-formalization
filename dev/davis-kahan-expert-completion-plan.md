@@ -18,6 +18,31 @@ gates, `lake build` green after every step, `#print axioms` =
 
 - **v1 (2026-07-09, Fable):** initial plan, incorporating a review of Opus's
   2026-07-09 expert-gap diagnosis.
+- **v9 (2026-07-09, Fable — Opus v8-review triaged; OP3 rebuilt on the
+  verified reroute):** all four of Opus's findings **accepted**.  (i) The
+  OP3 blocking finding is correct and the v8 steps (a)–(c) are **retracted**:
+  I mischaracterized `inner_u_aligned_eq` as a diagonal cross-Gram; it is the
+  Procrustes trace alignment (`O|M|O⁻¹`-shaped cross-Gram, not diagonal).
+  Same failure class as the v3 false negatives but inverted — a *positive*
+  claim made from memory of a lemma name without re-reading its statement;
+  process rule extended accordingly: **route steps must quote the cited
+  lemma's conclusion, not paraphrase it from its name.**  (ii) Opus's reroute
+  `M⋆M = C − C²`, `C := P P̂ P` is verified on paper and adopted; sharpened by
+  the observation `C = gram (P̂ ∘ₗ P)`, which dissolves the flagged
+  "C-spectrum brick" into a single singular-value transport lemma.  OP3 is
+  now three steps: **OP3.0** coisometry padding lemma
+  (`σ(X ∘ₗ ι_u⋆) = σ(X)` as finsupps, 3.5/5, **Fable** — ONB gluing +
+  `eigenvalues_eq_of_eigenbasis`; the padded eigenvalue vector stays antitone
+  because gram eigenvalues are nonneg, so no sorting bookkeeping),
+  **OP3.A** `σ(P̂∘P) = cosPrincipalAngles` (2.5/5, Opus, after OP3.0 —
+  upgrades E2's certification to all singular values), **OP3.B** the sin 2Θ
+  headline via gram-matching against `diagOp` on `C`'s eigenbasis (2.5/5,
+  Opus, after OP3.A).  (iii) OP2's two corrections folded (inline the
+  5-line Euclidean monotonicity step; copy the
+  `Orthonormal.starProjection_span_image_apply` call site) and the 2/5
+  re-rate accepted.  (iv) OP1 confirmed as-is; the defeq-predicate nit is
+  now in its body.  Startable-now set for Opus: **OP1, OP2, G2.1, G3-d=1**;
+  OP3.A/B unblock once Fable lands OP3.0 (queued as the next Fable item).
 - **v8 (2026-07-09, Fable — full remaining-work roadmap; Opus tasks promoted
   to routed step bodies):** the two Opus follow-ups filed in v7 as one-liners
   are now a full **Phase OP** (between Phase G and Phase H) with
@@ -1077,8 +1102,9 @@ with only `hb`/`ha` to discharge.  Trivial once (a) compiles.
 
 Pitfalls: the `HasOrthogonalProjection` instances are found automatically
 (finite dimension); the predicate produced by `orthogonal_specSubspace` is
-`fun i => ¬ (i ∈ s)` — defeq to `(· ∉ s)`, no rewriting needed beyond the E3
-precedent.  Keep the statement's coercion shape identical to the G1 headline
+`fun i => ¬ (i ∈ s)` — defeq to `(· ∉ s)`; rely on the defeq (as the E3
+precedent does) and do not try to `rw` across it (Opus v8-review nit,
+accepted).  Keep the statement's coercion shape identical to the G1 headline
 (`(… : E →L[𝕜] E) : E →ₗ[𝕜] E`) or `exact` will fail on coercion mismatch.
 
 **OP2 — The Frobenius `UnitarilyInvariantNorm` instance.
@@ -1110,9 +1136,10 @@ Field routes:
   `0 ≤ v ≤ w`, `√(∑ v i²) ≤ √(∑ w i²)` by `Real.sqrt_le_sqrt`,
   `Finset.sum_le_sum`, `pow_le_pow_left₀` — applied to
   `‖(A+B)(b i)‖ ≤ ‖A (b i)‖ + ‖B (b i)‖`; (ii) `norm_add_le x y` in
-  `EuclideanSpace ℝ (Fin m)`.  (Check first whether the pin already has a
-  coordinatewise-monotonicity lemma for `EuclideanSpace` norms — grep from a
-  healthy shell — else inline it; it is 5 lines.)
+  `EuclideanSpace ℝ (Fin m)`.  (Opus v8 review confirmed the pin has no
+  ready-made coordinatewise-monotonicity lemma — inline it, ~5 lines;
+  `norm_sq_euclidean` in PrincipalAngles.lean is the template for the
+  `EuclideanSpace.norm_eq` bookkeeping.)
 - `invariant'`: already fully stocked.  Left factor: `U` is a linear
   isometry equiv, so `‖U (A (V (b i)))‖ = ‖A (V (b i))‖` by
   `LinearIsometryEquiv.norm_map` under the sum.  Right factor: this is
@@ -1148,85 +1175,120 @@ Paper sync: the dictionary table gains the row "‖·‖_F is a
 `UnitarilyInvariantNorm`; part-III sinΘ and sin2Θ instantiate to Frobenius".
 
 **OP3 — sin 2Θ dictionary certification: `σᵢ(Q P̂ P) = cos θᵢ · sin θᵢ`.
-Difficulty 3/5 → 3.5/5.  Opus (light statement gate).**
-> ⚠️ **Opus review (v8):** the aligned-family route in steps (b)–(c) below is
-> **blocked** — `inner_u_aligned_eq` is the Procrustes *trace* alignment, not
-> the diagonal cross-Gram `⟪uᵢ,ṽⱼ⟫ = δᵢⱼcᵢ` the route assumes.  **Use the
-> operator reroute in "Opus review of plan v8" instead:** `M⋆M = C − C²` with
-> `C := P P̂ P` (eigenvalues `cos²θ` on `U`), so `σ(M) = cos θ sin θ` with no
-> families/extended basis.  Steps (d)–(e) below are still the endgame; steps
-> (a)–(c) are superseded.  One residual brick — the spectrum of `C = P P̂ P`
-> vs `cosPrincipalAngles²` — may stay with Fable.
-This certifies that the G1 LHS *is* `½ sin 2Θ`: the E2-analogue at the
-full singular-value (hence every-UI-norm) level rather than op-norm.  In
-`PrincipalAngles.lean` (it consumes the aligned-basis machinery and
-`cosPrincipalAngles`; import `UnitarilyInvariantNorm.lean` for `diagOp` —
-check for an import cycle first; if one appears, the new lemmas go in
-`SinTwoThetaUINorm.lean` instead, which already sees both).
+RESTRUCTURED in v9 after the Opus review; total 3.5/5, split three ways.**
+The v8 aligned-family route (steps (a)–(c) of the old body) is **retracted**:
+Opus's review is correct that `inner_u_aligned_eq` is the Procrustes *trace*
+alignment (cross-Gram `O|M|O⁻¹`, symmetric PSD but not diagonal), not the
+diagonal cross-Gram `⟪uᵢ, ṽⱼ⟫ = δᵢⱼ cᵢ` the route assumed — a diagonal
+cross-Gram needs the SVD (principal-vector) bases, which `AlignedBasis.lean`
+does not produce.  Opus's operator reroute is **verified** (Fable, on paper):
+`M⋆M = C − C²` for `C := P ∘ₗ P̂ ∘ₗ P` — expand `Q = 1 − P`, use
+`P̂² = P̂`, `P² = P`, and `(P P̂ P)² = P P̂ P P̂ P`.  It is adopted below,
+sharpened by one observation that removes the last soft spot (the
+"`C`-spectrum vs `cosPrincipalAngles²`" brick Opus flagged): `C` is itself a
+gram — `C = (P̂ ∘ₗ P)⋆ ∘ₗ (P̂ ∘ₗ P)` — so the whole certification reduces to
+**one** singular-value transport lemma (OP3.0) plus LinearMap algebra.
+Location: `PrincipalAngles.lean` if importing `UnitarilyInvariantNorm.lean`
+creates no cycle; else `SinTwoThetaUINorm.lean` (sees both).  Setting
+throughout: `u v : Fin d → E` orthonormal, `U := span (range u)`,
+`V := span (range v)`, `P, P̂, Q := U.sP, V.sP, Uᗮ.sP` at the LinearMap
+level, `ι_u := (familyIsometry hu).toLinearMap` (and `ι_v` likewise).
 
-Setting: orthonormal families `u v : Fin d → E`, `U := span (range u)`,
-`V := span (range v)`, `P := U.starProjection`, `P̂ := V.starProjection`,
-`Q := Uᗮ.starProjection`, `M := Q ∘L P̂ ∘L P` (the G1 LHS with these `U, V`),
-`c i := cosPrincipalAngles hv hu i` (mind the argument order/`comm` lemma).
-Target headline (state with `√(1 − c i ^2)` for the sine, per the E2
-precedent `sqrt_one_sub_sq_cosPrincipalAngles_le` — no `arccos`):
+**OP3.0 — coisometry padding lemma.  3.5/5.  FABLE (next Fable
+implementation slot; per Opus's recommendation).**
 
 ```lean
-theorem apply_orthogonal_starProjection_comp_le … :
-    N ((M : E →L[𝕜] E) : E →ₗ[𝕜] E)
-      = N (diagOp bE fun i => if h : (i : ℕ) < d then
-          c ⟨i, h⟩ * Real.sqrt (1 - c ⟨i, h⟩ ^ 2) else 0)
+theorem singularValues_comp_adjoint_familyIsometry
+    {u : Fin d → E} (hu : Orthonormal 𝕜 u)
+    (X : EuclideanSpace 𝕜 (Fin d) →ₗ[𝕜] EuclideanSpace 𝕜 (Fin d)) :
+    (X ∘ₗ (familyIsometry hu).toLinearMap.adjoint).singularValues
+      = X.singularValues
 ```
 
-for every `N : UnitarilyInvariantNorm 𝕜 E`, where `bE` is an orthonormal
-basis of `E` extending `u` (see (a)).  Corollary: `2 • M` version (the
-literal `sin 2Θ` operator, `2 c s = sin 2θ`), chained with G1 into
-`N (sin2Θ-diagonal) ≤ 2 N (S − T) / (b − a)`.
+(equality of finsupps — the zero-padding from `dim E > d` is absorbed by the
+`ℕ →₀ ℝ` codomain).  Fable's route, recorded for provenance:
+`gram (X ∘ₗ ι_u⋆) = ι_u ∘ₗ gram X ∘ₗ ι_u⋆` (from `ι_u⋆ ∘ₗ ι_u = 1`, i.e.
+`familyMap_inner_map_map`); take `f` := eigenbasis of `gram X`
+(`isSymmetric_adjoint_comp_self.eigenvectorBasis rfl`) with eigenvalues `μ`
+(antitone, nonneg — they are squared singular values); glue the orthonormal
+family `w i := ι_u (f i)` for `i < d` with an orthonormal basis of
+`(span (range u))ᗮ` for `i ≥ d` into an `OrthonormalBasis (Fin n) 𝕜 E`
+(orthonormality: four cases, `ι_u` isometric and its range ⊆ `U ⊥ Uᗮ`;
+spanning: independence + cardinality); check the eigen-equations
+(`ι_u⋆ (ι_u (f j)) = f j`; `ι_u⋆` kills `Uᗮ`); the padded eigenvalue vector
+`(μ₀, …, μ_{d−1}, 0, …, 0)` is antitone because `μ` is antitone and nonneg;
+finish with `eigenvalues_eq_of_eigenbasis` (CourantFischer.lean:397) and
+unfold `singularValues` on both sides via the `singularValues_of_lt` /
+`singularValues_of_finrank_le` pattern of `singularValues_eq_of_gram_eq`'s
+proof.  The ONB gluing is the fiddly part and the reason this stays Fable.
 
-Paper-verified route (gram diagonalization — no sorting, no multiplicity
-bookkeeping, that is why this dropped from 3.5/5 to 3/5):
-(a) *Extended basis.* Extend `u` to an orthonormal basis `bE` of `E`
-    (grep the pin from a healthy shell for
-    `exists_orthonormalBasis_extension`-shaped lemmas; fallback: an
-    orthonormal basis of `Uᗮ` plus `u` glued along
-    `Fin d ⊕ Fin (n − d) ≃ Fin n` — the E-phase `blockFamily` idiom in
-    reverse).  Only the properties `bE i = u i` for `i < d` and
-    `bE j ∈ Uᗮ` for `j ≥ d` are consumed.
-(b) *Aligned family.* Replace `v` by the aligned orthonormal family `ṽ` of
-    `AlignedBasis.lean` (`inner_u_aligned_eq`: `⟪u i, ṽ j⟫ = δᵢⱼ c i`);
-    pre-check that its span is all of `V` (`familyIsometry_mem_span` +
-    dimension count; if the file only gives `⊆`, add the equality lemma —
-    5 lines).  `P̂` expands over `ṽ` by
-    `Orthonormal.starProjection_span_image_apply`.
-(c) *Action formulas.* `M (u i) = c i • (ṽ i − c i • u i)` and `M x = 0`
-    for `x ∈ Uᗮ`.  From the alignment: `P̂ (u i) = c i • ṽ i`,
-    `P (ṽ i) = c i • u i`, and `ṽ i − c i • u i ∈ Uᗮ`
-    (inner against every `u j` vanishes: `δᵢⱼ c i − c i δᵢⱼ`).
-(d) *Gram is diagonal in `bE`.* `M.adjoint ∘ₗ M` fixes each `u i` up to the
-    scalar `c i ^ 2 * (1 − c i ^ 2)` and kills `Uᗮ`: from (c),
-    `Q (M (u i)) = M (u i)`, `P̂ (ṽ i − c i • u i) = (1 − c i ^2) • ṽ i`,
-    `P ((1 − c i ^2) • ṽ i) = (1 − c i ^2) c i • u i`.  Meanwhile
-    `gram (diagOp bE w) = diagOp bE (w ^ 2)` by `adjoint_diagOp` +
-    `diagOp_comp`.  Conclude `M.adjoint ∘ₗ M = gram (diagOp bE w)` for
-    `w i := if … then c i √(1 − c i²) else 0` by `LinearMap.ext` on `bE`
-    (`OrthonormalBasis` spans; `sq_sqrt` needs `0 ≤ 1 − c i ^2`, i.e.
-    `cosPrincipalAngles_le_one`).
-(e) *Conclude.* `singularValues_eq_of_gram_eq` (KyFan.lean:58) gives
-    `σ(M) = σ(diagOp bE w)`; then `apply_eq_gauge` twice (same `bE`) turns
-    equal singular values into equal `N`-values — the headline.  The
-    op-norm instance at `N := opNorm 𝕜 E` recovers (and strengthens) the
-    E2 certification; cross-reference
-    `norm_orthogonal_starProjection_comp_starProjection` in the docstring.
+**OP3.A — the cos Θ singular-value dictionary.  2.5/5.  Opus, after OP3.0.**
+Independently valuable: it upgrades E2's op-norm/largest-angle certification
+to *all* singular values, hence to every UI norm.
 
-Light gate: commit the stub of the headline plus a two-sentence docstring
-cross-check ("the CS-decomposition lower-left block is `S C`, singular
-values `sin θᵢ cos θᵢ`" — Bhatia VII.1, DK III §8) before proving; no
-pause needed after the stub since the route is verified.  Pitfalls: `M` is
-`E →L[𝕜] E` but `adjoint`/`gram` live on `E →ₗ[𝕜] E` — do (c)/(d) entirely
-at the LinearMap level (coerce once, at the start); `starProjection` of a
-span expands only through the `Orthonormal.…span_image_apply` route seen in
-`norm_orthogonal_starProjection_comp_starProjection`'s proof — do not
-unfold `starProjection` itself.
+```lean
+theorem singularValues_starProjection_comp_starProjection
+    {u v : Fin d → E} (hu : Orthonormal 𝕜 u) (hv : Orthonormal 𝕜 v) :
+    (((Submodule.span 𝕜 (Set.range v)).starProjection ∘L
+        (Submodule.span 𝕜 (Set.range u)).starProjection
+        : E →L[𝕜] E) : E →ₗ[𝕜] E).singularValues
+      = cosPrincipalAngles hv hu
+```
+
+Route: (i) factorization `P̂ ∘ₗ P = ι_v ∘ₗ overlapOp hv hu ∘ₗ ι_u⋆` —
+pointwise on `x`: expand both projections through
+`Orthonormal.starProjection_span_image_apply` (copy the coercion pattern
+from `norm_orthogonal_starProjection_comp_starProjection`'s proof at
+PrincipalAngles.lean:318 — `Finset.coe_univ`/`Set.image_univ` glue), and
+note `overlapOp hv hu = ι_v⋆ ∘ₗ ι_u` is definitional (`overlapOp_apply` is
+`rfl`).  (ii) strip the left isometry factor:
+`gram (ι_v ∘ₗ Y) = gram Y` (again `familyMap_inner_map_map`), so
+`singularValues_eq_of_gram_eq` — mind that it allows different *codomains*
+(`E` vs `EuclideanSpace`), which is exactly what is needed here.
+(iii) apply OP3.0 to `X := overlapOp hv hu`.  (iv)
+`(overlapOp hv hu).singularValues = cosPrincipalAngles hv hu` is the
+definition (PrincipalAngles.lean:62).  Use `cosPrincipalAngles_comm` if the
+statement is wanted in `hu hv` order.
+
+**OP3.B — the sin 2Θ headline.  2.5/5.  Opus, after OP3.A.**
+For `M := (Q ∘L P̂ ∘L P : E →L[𝕜] E) : E →ₗ[𝕜] E` (the G1 LHS) and every
+`N : UnitarilyInvariantNorm 𝕜 E`:
+`N M = N (diagOp bC (fun i => c i * Real.sqrt (1 − c i ^ 2)))` with
+`c i := cosPrincipalAngles hv hu i` — state with `√(1 − c²)` per the E2
+precedent, no `arccos`; corollary: the `2 • M` version (`2cs = sin 2θ`)
+chained with G1 into `N (sin2Θ-diagonal) ≤ 2 N (S − T) / (b − a)`.
+Sub-steps, all LinearMap algebra plus citations:
+(1) `M⋆M = C − C²` and `C = gram (P̂ ∘ₗ P)` — `adjoint_comp`,
+    `starProjection_isSymmetric.adjoint_eq`, projection idempotence, and
+    `Q = 1 − P` (grep the pin for the `starProjection_orthogonal`-family
+    lemma name; fallback: prove `Q x + P x = x` from
+    `starProjection_add_starProjection_orthogonal`-shaped assets).
+(2) `λᵢ(C) = c i ^ 2`: by (1) `C = gram (P̂ ∘ₗ P)`, whose eigenvalues are
+    the squared singular values (`sq_singularValues_fin`, as used inside
+    `sum_sq_singularValues`), and `σ(P̂ ∘ₗ P) = c` is OP3.A.  Sorted-order
+    bookkeeping is automatic: both sides are the house descending
+    convention; no permutation appears.
+(3) Let `bC := C`'s eigenbasis (`hC.eigenvectorBasis rfl`, `hC` from (1) —
+    a gram is symmetric via `isSymmetric_adjoint_comp_self`).  Then
+    `C = diagOp bC (λ(C))` (ext on the basis, `diagOp_apply_basis`), so
+    `M⋆M = C − C² = diagOp bC (fun i => λ i − λ i ^ 2)` (`diagOp_comp` for
+    the square, `diagOp_add`-family for the difference).
+(4) `gram (diagOp bC w) = diagOp bC (w ^ 2)` (`adjoint_diagOp` +
+    `diagOp_comp`) with `w i := c i * √(1 − c i ^ 2)`: the needed identity
+    `w i ^ 2 = λ i − λ i ^ 2` is `sq_sqrt` plus `0 ≤ c i ≤ 1`
+    (`cosPrincipalAngles_nonneg`, `cosPrincipalAngles_le_one`) and (2).
+(5) `singularValues_eq_of_gram_eq` on `M` vs `diagOp bC w`, then
+    `apply_eq_gauge` twice (same basis `bC`) — equal singular values give
+    equal `N`.  Cross-reference
+    `norm_orthogonal_starProjection_comp_starProjection` in the docstring
+    (the op-norm instance of OP3.A recovers it).
+
+Light gate (unchanged): commit the OP3.A/OP3.B stubs with a two-sentence
+CS-decomposition cross-check ("the lower-left block of `P̂` in the `U ⊕ Uᗮ`
+frame is `S C`" — Bhatia VII.1, DK III §8) before proving.  Pitfall carried
+over: do everything at the LinearMap level after one coercion at the start;
+never unfold `starProjection` itself, only expand through the
+`Orthonormal.starProjection_span_image_apply` route.
 
 ---
 
@@ -1257,19 +1319,19 @@ F3.a → F3.b → F3.c → F3.d ─→ F3.e → F3.f   [Batch 3: Fan dominance �
 F0.e/F3.e → F4.a → F4.b → F4.c       [Batch 4: part-III sinΘ ✅ DONE (b8de103)]
 F4 ─→ G1 ✅ (c17998d)                    [Batch 5: sin2Θ ✅ DONE]
 
-── remaining (v8) ──────────────────────────────────────────────
-OP1, OP2, OP3 (parallel, Opus, no unmet deps — can start NOW)
+── remaining (v9) ──────────────────────────────────────────────
+OP1, OP2 (parallel, Opus, no unmet deps — can start NOW)
 G2.1 block-transfer (Opus, anytime — gate-independent)
+OP3.0 (Fable, next slot) ─→ OP3.A (Opus) ─→ OP3.B (Opus)
 G2.0 gate (Fable) ─→ G2.2 (Fable)
 G3.0 gate (Fable) ─→ G3.(ii),(iii) (Fable);  G3 d=1 descope (Opus, anytime)
 (F3-annex: optional, anytime)
 ```
 
-The only cross-phase edges worth noting: OP2 before OP1 lets OP1's docstring
-cite the Frobenius instantiation, and OP3's headline chains with G1 into the
-certified `sin 2Θ` bound — but neither is a hard dependency.  All five
-remaining Opus items (OP1, OP2, OP3, G2.1, G3-d=1) are independently
-startable now; nothing Opus-assigned waits on any Fable item.
+Cross-phase edges worth noting: OP2 before OP1 lets OP1's docstring cite the
+Frobenius instantiation, and OP3.B chains with G1 into the certified
+`sin 2Θ` bound — neither is a hard dependency.  Startable-now Opus items:
+**OP1, OP2, G2.1, G3-d=1**; OP3.A/B unblock when Fable lands OP3.0.
 
 Each batch ends: `lake build` green, axiom check, golf pass, paper sync
 (move items out of §"What remains", extend the dictionary tables, update the
@@ -1297,8 +1359,10 @@ old completion/HLP rows moved to the annex).
 | 12 | F3.f | `star` invariance | 1/5 | ✅ DONE (Fable, `7481732`) |
 | — | annex α | Weak-majorization completion (optional) | 2.5/5 | either, after F4 |
 | — | annex β | Hardy–Littlewood–Pólya (optional) | 4/5 | Fable, after F4 |
-| — | OP3 | sin 2Θ dictionary certification `σᵢ(QP̂P) = cᵢsᵢ` (rerouted v8: `M⋆M=C−C²`) | 3.5/5 | Opus + Fable brick (C-spectrum) |
-| — | OP2 | Frobenius `UnitarilyInvariantNorm` instance (routed v8) | 2.5/5 | Opus, start anytime |
+| — | OP3.0 | Coisometry padding lemma `σ(X ∘ₗ ι_u⋆) = σ(X)` (v9) | 3.5/5 | **Fable**, next Fable slot |
+| — | OP3.A | cos Θ dictionary `σ(P̂∘P) = cosPrincipalAngles` (v9) | 2.5/5 | Opus, after OP3.0 |
+| — | OP3.B | sin 2Θ headline `N(QP̂P) = N(diagOp c√(1−c²))` (v9) | 2.5/5 | Opus, after OP3.A |
+| — | OP2 | Frobenius `UnitarilyInvariantNorm` instance (routed v8) | 2.5/5→2/5 | Opus, start anytime |
 | — | OP1 | Spectral (eigenvalue-hypothesis) corollaries of G1 (routed v8) | 2/5 | Opus, start anytime |
 
 Completed (for the record): E1 2/5, E2 3.5/5, E3 2.5/5, E4 2.5/5, E5 1/5

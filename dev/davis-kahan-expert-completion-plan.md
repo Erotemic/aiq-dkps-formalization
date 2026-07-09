@@ -18,6 +18,26 @@ gates, `lake build` green after every step, `#print axioms` =
 
 - **v1 (2026-07-09, Fable):** initial plan, incorporating a review of Opus's
   2026-07-09 expert-gap diagnosis.
+- **v6 (2026-07-09, Opus — F4 ✅ DONE):** the part-III sinΘ theorem now holds in
+  every unitarily invariant norm.  F4.a `apply_comp_le`/`apply_comp_le'`
+  (ideal property, `UnitarilyInvariantNorm.lean`); F4.b
+  `le_div_of_comp_add_comp_eq`/`le_div_of_comp_sub_comp_eq` (abstract Sylvester
+  bound for any operator seminorm with the ideal property, `SylvesterBound.lean`
+  — the absorption identity is applied at the *operator* level, so `N` acts
+  directly with no pointwise estimate; DRY-refactored the op-norm helper via new
+  `norm_opNorm_smul_one_sub_le`); F4.c: extracted the norm-free setup as
+  `exists_isSymmetric_comp_sub_comp_eq` (`SinThetaOpNorm.lean`, op-norm theorem
+  refactored to consume it — no regression) and the headline
+  `apply_starProjection_comp_starProjection_le` in new `SinThetaUINorm.lean`,
+  via the induced CLM seminorm `fun f => N ↑f` fed to F4.b (its ideal property is
+  F4.a + `ContinuousLinearMap.le_opNorm`), plus `N Y ≤ N (S−T)` and
+  star-invariance.  Also `opNorm 𝕜 E : UnitarilyInvariantNorm 𝕜 E` (the
+  structure is inhabited — invariance is `opNorm_comp_linearIsometryEquiv`).
+  Commits `b8de103` (F4.a/b/c) and `9d73132` (instance); all headlines
+  axiom-clean, full library green.  Route deviations: `pow`/`le_or_lt`-style
+  renames as in v5; the induced-norm bridge needed
+  `ContinuousLinearMap.toLinearMap_add`/`_smul` (the `coe_add`/`coe_smul`
+  aliases are deprecated).  **Next: Phase G (Fable) — subspace sin2Θ/tan2Θ/tanΘ.**
 - **v5 (2026-07-09, Fable — F3 ✅ DONE):** the full v4-reroute F3 landed as
   `UnitarilyInvariantNorm.lean` (commit `7481732`), all headlines axiom-clean,
   full library build green, zero warnings in the new file: `diagOp` + algebra
@@ -703,7 +723,7 @@ route is also open.  Since Mathlib has no majorization API at all, (α)+(β)
 are a strong upstream candidate — file under `comparator/` if attempted.
 Do not start before F4/G.
 
-**F4 — UI-norm Sylvester bound and the part-III sinΘ theorem.**
+**F4 — UI-norm Sylvester bound and the part-III sinΘ theorem.  ✅ DONE (commits `b8de103`, `9d73132`; see the v6 revision-log entry).**
 (a) *Ideal property. Difficulty 2/5.*  `N (C ∘ₗ X) ≤ c * N X` when
 `∀ x, ‖C x‖ ≤ c‖x‖` (and mirrored) — Fan dominance (F3.e) applied to the
 singular-value domination F0(e) (`kyFanSum_le_of_singularValues_le` exists,
@@ -833,7 +853,7 @@ E3, E4, E5 (parallel)  │  [Batch 1: dictionary ✅ DONE (v2)]
 F0 ─→ F1.a → F1.b → F1.c ─→ F2      [Batch 2: Ky Fan ✅ DONE (199390a)]
 F3.a → F3.b → F3.c → F3.d ─→ F3.e → F3.f   [Batch 3: Fan dominance ✅ DONE
                                             (7481732)]
-F0.e/F3.e → F4.a → F4.b → F4.c       [Batch 4: part-III sinΘ — the headline]
+F0.e/F3.e → F4.a → F4.b → F4.c       [Batch 4: part-III sinΘ ✅ DONE (b8de103)]
 F4 ─→ G1 → G2;  G3 independent of G1/G2 but after F4   [Batches 5–6: Fable]
 (F3-annex: optional, anytime after F4)
 ```
@@ -855,11 +875,11 @@ old completion/HLP rows moved to the annex).
 | 3 | G2 | Subspace tan2Θ | 4.5/5 | **Fable** (after G1) |
 | 4 | F3.d | T-transform descent on the gauge (v4 crux) | 4/5 | ✅ DONE (Fable, `7481732`) |
 | 5 | F3.a | `diagOp` + operator SVD factorization | 3.5/5 | ✅ DONE (Fable, `7481732`) |
-| 6 | F4.c | Part-III sinΘ, every UI norm (+ CLM↔LinearMap bridge) | 3/5 | Opus |
+| 6 | F4.c | Part-III sinΘ, every UI norm (+ CLM↔LinearMap bridge) | 3/5 | ✅ DONE (Opus, `b8de103`) |
 | 7 | F3.b | UI-norm structure + gauge + invariance package | 2.5/5 | ✅ DONE (Fable, `7481732`) |
 | 8 | F3.c | Gauge update bound + coordinatewise monotonicity | 2.5/5 | ✅ DONE (Fable, `7481732`) |
-| 9 | F4.b | Abstract-norm Sylvester bound | 2.5/5 | Opus |
-| 10 | F4.a | Ideal property | 2/5 | Opus |
+| 9 | F4.b | Abstract-norm Sylvester bound | 2.5/5 | ✅ DONE (Opus, `b8de103`) |
+| 10 | F4.a | Ideal property | 2/5 | ✅ DONE (Opus, `b8de103`) |
 | 11 | F3.e | Fan dominance assembly | 2/5 | ✅ DONE (Fable, `7481732`) |
 | 12 | F3.f | `star` invariance | 1/5 | ✅ DONE (Fable, `7481732`) |
 | — | annex α | Weak-majorization completion (optional) | 2.5/5 | either, after F4 |

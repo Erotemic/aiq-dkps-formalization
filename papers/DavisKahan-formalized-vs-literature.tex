@@ -71,7 +71,7 @@ invariant norms, both deliberately deferred.
 
 \vspace{1.5em}
 % NOTE: Update permalink if underlying proof changes, so this always is up to date wrt to the referenced lean file.
-\noindent Companion note to \href{https://github.com/AIQ-Kitware/aiq-dkps-formalization/blob/748173279fb9d562253d1357ee7b1d88b5a88e90/ForMathlib/Analysis/InnerProductSpace/DavisKahan.lean}{ForMathlib/Analysis/InnerProductSpace/DavisKahan.lean} and its sibling files under \href{https://github.com/AIQ-Kitware/aiq-dkps-formalization/tree/748173279fb9d562253d1357ee7b1d88b5a88e90/ForMathlib/Analysis/InnerProductSpace}{ForMathlib/Analysis/InnerProductSpace/}, part of a larger formalization effort at \href{https://github.com/AIQ-Kitware/aiq-dkps-formalization}{github.com/AIQ-Kitware/aiq-dkps-formalization}.
+\noindent Companion note to \href{https://github.com/AIQ-Kitware/aiq-dkps-formalization/blob/9d731323fc79d1f4a838d754a6e5bd4a9b2efcbd/ForMathlib/Analysis/InnerProductSpace/DavisKahan.lean}{ForMathlib/Analysis/InnerProductSpace/DavisKahan.lean} and its sibling files under \href{https://github.com/AIQ-Kitware/aiq-dkps-formalization/tree/9d731323fc79d1f4a838d754a6e5bd4a9b2efcbd/ForMathlib/Analysis/InnerProductSpace}{ForMathlib/Analysis/InnerProductSpace/}, part of a larger formalization effort at \href{https://github.com/AIQ-Kitware/aiq-dkps-formalization}{github.com/AIQ-Kitware/aiq-dkps-formalization}.
 
 
 
@@ -601,7 +601,27 @@ Hardy--Littlewood--P\'olya via Birkhoff) is bypassed: a T-transform descent is
 run \emph{directly on the gauge}, each step averaging $y$ with a transposition
 of itself at the cost of one triangle inequality, one homogeneity, and one
 swap invariance.  Star invariance $N(A^{*})=N(A)$ comes free from the gauge
-representation.  What this unlocks is recorded in \S\ref{sec:remains}.
+representation.
+
+\paragraph{The part-III $\sin\Theta$ theorem, every unitarily invariant norm.}
+With the Fan-dominance library in hand, the Davis--Kahan~(1970) part-III
+$\sin\Theta$ theorem is now formalized at full generality:
+\[
+  N\bigl(\widehat Q\,P\bigr)\;\le\;N(S-T)\,/\,g
+  \qquad\text{for every unitarily invariant norm } N,
+\]
+under exactly the operator-norm theorem's hypotheses ($P,\widehat Q$ the
+projections onto the separated invariant subspaces).  The engine is an
+\emph{abstract} Sylvester bound: the same integral-free absorption identity
+$(\norm{A}+\norm{B})X = Y + (\norm{A}\cdot1-A)X + X(\norm{B}\cdot1-B)$, but
+now applied under any operator seminorm $N$ carrying the ideal property
+$N(CX)\le\norm{C}\,N(X)$ --- and every unitarily invariant norm does, by Fan
+dominance applied to $\sigma_i(CX)\le\norm{C}\,\sigma_i(X)$.  Because the
+identity is an equation of \emph{operators}, $N$ applies to it directly, with
+no pointwise estimate.  The norm-free construction of $A,B,X,Y$ is shared
+verbatim with the operator-norm proof; only the final estimate differs.  The
+operator norm is exhibited as an instance (\texttt{opNorm}), so the theorem is
+not vacuous, and the Frobenius and operator-norm ladders are its instances.
 
 \section{What remains, ranked by difficulty}\label{sec:remains}
 
@@ -625,14 +645,6 @@ everything above is \texttt{dev/davis-kahan-gap-closure-plan.md} (v6, closed).
   dimension-carrying bound.  The genuine subspace theorem is part-III
   technology and belongs with the unitarily-invariant-norm project below.
 
-\item \emph{The part~III $\sin\Theta$ theorem in every unitarily invariant
-  norm (difficulty 3/5 --- unblocked).}  The Ky Fan / Fan-dominance library
-  this item was blocked on is now formalized (see \S\ref{sec:extensions});
-  what remains is mechanical: the abstract-norm Sylvester bound (the
-  absorption identity of the operator-norm proof, with the ideal property
-  replacing the pointwise estimates) and the reassembly of the operator-norm
-  $\sin\Theta$ construction against it.  Per-step routes are in the
-  expert-completion plan, steps F4.a--c.
 \end{enumerate}
 
 \section{Dictionary to the Lean source}\label{sec:dictionary}
@@ -794,6 +806,18 @@ T-transform descent on the gauge; \textbf{Fan dominance}; $N(A^{*})=N(A)$
   & \texttt{gauge\_le\_gauge\_of\_prefix\_sums\_le},
     \texttt{apply\_le\_of\_kyFanSum\_le}, \texttt{apply\_adjoint}
     (\texttt{UnitarilyInvariantNorm.lean}) \\
+Operator-ideal property $N(CX)\le\norm{C}N(X)$ (both factors)
+  & \texttt{apply\_comp\_le}, \texttt{apply\_comp\_le'}
+    (\texttt{UnitarilyInvariantNorm.lean}) \\
+Abstract Sylvester bound (coercive / separated), any ideal seminorm
+  & \texttt{le\_div\_of\_comp\_add\_comp\_eq},
+    \texttt{le\_div\_of\_comp\_sub\_comp\_eq} (\texttt{SylvesterBound.lean}) \\
+Norm-free Davis--Kahan setup (shared with the op-norm proof)
+  & \texttt{exists\_isSymmetric\_comp\_sub\_comp\_eq}
+    (\texttt{SinThetaOpNorm.lean}) \\
+Part-III $\sin\Theta$, every UI norm; operator-norm instance
+  & \texttt{apply\_starProjection\_comp\_starProjection\_le},
+    \texttt{opNorm} (\texttt{SinThetaUINorm.lean}) \\
 \bottomrule
 \end{tabular}
 \end{center}

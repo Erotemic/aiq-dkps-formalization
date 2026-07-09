@@ -71,6 +71,12 @@ check `propext, Classical.choice, Quot.sound` on headline declarations).
   `eigenvalues_congr`. **Everything the DKPS pipeline consumes is now
   formalized; only W6.3 (subspace sin2Θ) and W7 (UI norms) remain, both
   deferred by design.**
+- **v7 (2026-07-09, Fable):** this plan is complete and **closed**.  The
+  successor — covering the deferred W6.3/W7 material and everything else an
+  expert would require (the DK III quartet at the subspace level, unitarily
+  invariant norms via Fan dominance, the certified principal-angle
+  dictionary) — is `dev/davis-kahan-expert-completion-plan.md` (v1), which
+  also records a review of the Opus expert-gap diagnosis.
 
 ## The five gaps (from the paper)
 

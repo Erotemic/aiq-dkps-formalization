@@ -71,7 +71,7 @@ invariant norms, both deliberately deferred.
 
 \vspace{1.5em}
 % NOTE: Update permalink if underlying proof changes, so this always is up to date wrt to the referenced lean file.
-\noindent Companion note to \href{https://github.com/AIQ-Kitware/aiq-dkps-formalization/blob/b270e16975e77e13e9ae289f38572eb8d0ff3910/ForMathlib/Analysis/InnerProductSpace/DavisKahan.lean}{ForMathlib/Analysis/InnerProductSpace/DavisKahan.lean} and its sibling files under \href{https://github.com/AIQ-Kitware/aiq-dkps-formalization/tree/b270e16975e77e13e9ae289f38572eb8d0ff3910/ForMathlib/Analysis/InnerProductSpace}{ForMathlib/Analysis/InnerProductSpace/}, part of a larger formalization effort at \href{https://github.com/AIQ-Kitware/aiq-dkps-formalization}{github.com/AIQ-Kitware/aiq-dkps-formalization}.
+\noindent Companion note to \href{https://github.com/AIQ-Kitware/aiq-dkps-formalization/blob/748173279fb9d562253d1357ee7b1d88b5a88e90/ForMathlib/Analysis/InnerProductSpace/DavisKahan.lean}{ForMathlib/Analysis/InnerProductSpace/DavisKahan.lean} and its sibling files under \href{https://github.com/AIQ-Kitware/aiq-dkps-formalization/tree/748173279fb9d562253d1357ee7b1d88b5a88e90/ForMathlib/Analysis/InnerProductSpace}{ForMathlib/Analysis/InnerProductSpace/}, part of a larger formalization effort at \href{https://github.com/AIQ-Kitware/aiq-dkps-formalization}{github.com/AIQ-Kitware/aiq-dkps-formalization}.
 
 
 
@@ -384,7 +384,7 @@ bridge; see \S\ref{sec:extensions}.
 \section{Extensions formalized since the first version}\label{sec:extensions}
 
 The first version of this note stopped at the ladder of
-Theorem~\ref{thm:ladder}.  Five of the gaps it recorded have since been closed;
+Theorem~\ref{thm:ladder}.  Most of the gaps it recorded have since been closed;
 this section states each result in ordinary language.  Lean names for
 everything here appear in the second dictionary table of
 \S\ref{sec:dictionary}.
@@ -561,11 +561,52 @@ the projections.  No dimension factor appears, and (unlike the Frobenius
 ladder) no eigenbasis or Courant--Fischer machinery is used --- the two
 quadratic-form hypotheses are taken abstractly.
 
+\paragraph{The certified principal-angle dictionary.}
+The extreme singular values are now variationally characterized and attained
+($\sigma_{\min}\norm{x}\le\norm{Ax}\le\sigma_0\norm{x}$, with unit witnesses
+for both), and on top of this sits the operator-norm identification
+\[
+  \norm{P_{W^{\perp}}\,P_U}_{\op}\;=\;\sqrt{1-\cos^2\theta_{\max}}
+  \;=\;\sin\theta_{\max},
+\]
+certifying that the dimension-free operator-norm theorem above literally
+bounds the largest principal-angle sine.  Every abstract invariant-subspace
+theorem (operator-norm $\sin\Theta$, per-vector $\sin2\theta$/$\tan2\theta$)
+also received its literature-facing corollary with sorted-eigenvalue
+hypotheses, and the Frobenius encodings in this repository --- the cross-block
+overlap sum, $\norm{\sinT}_{\F}^2=d-\norm{\cos\Theta}_{\F}^2$, and the
+projector distance $\norm{\widehat P-P}_{\F}^2$ --- are proved pairwise equal
+on eigenbasis blocks.
+
+\paragraph{Ky Fan sums, unitarily invariant norms, and Fan dominance.}
+The core of the deferred ``unitarily invariant norm'' project is now built.
+The singular-value calculus was completed (unitary invariance on both sides,
+nonnegative real scaling, and the bounded-factor domination
+$\sigma_i(CA)\le c\,\sigma_i(A)$, via a new Loewner-monotonicity lemma for
+sorted eigenvalues and the sorted-eigenvalue uniqueness principle).  On it
+stand the Ky Fan trace inequality
+$\sum_i\mathrm{re}\inner{Sw_i}{w_i}\le\sum_{i<k}\lambda_i(S)$, the Ky Fan
+variational principle
+$\sum_{i<k}\sigma_i(A)=\max\,\mathrm{re}\sum_i\inner{u_i}{Av_i}$ (both
+directions), and weak majorization
+$\sigma(A+B)\prec_w\sigma(A)+\sigma(B)$ --- the triangle inequality for every
+Ky Fan norm at once.  A \texttt{UnitarilyInvariantNorm} structure (seminorm
+axioms plus two-sided unitary invariance) then receives the full symmetric
+gauge apparatus: an operator SVD $A=U\,\mathrm{diag}(\sigma(A))\,V$ relative
+to \emph{any} fixed orthonormal basis, the gauge representation
+$N(A)=\Phi_N(\sigma(A))$, and the \textbf{Fan dominance principle} --- Ky Fan
+domination for all $k$ implies $N(A)\le N(B)$ for every unitarily invariant
+norm.  The classical route (weak-majorization completion, then
+Hardy--Littlewood--P\'olya via Birkhoff) is bypassed: a T-transform descent is
+run \emph{directly on the gauge}, each step averaging $y$ with a transposition
+of itself at the cost of one triangle inequality, one homogeneity, and one
+swap invariance.  Star invariance $N(A^{*})=N(A)$ comes free from the gauge
+representation.  What this unlocks is recorded in \S\ref{sec:remains}.
+
 \section{What remains, ranked by difficulty}\label{sec:remains}
 
-Both remaining items are deliberately deferred; each downstream consumer in
-this repository is already served by the Frobenius and operator-norm results
-above.  A full roadmap for closing them --- the Davis--Kahan~III quartet
+Each downstream consumer in this repository is already served by the
+Frobenius and operator-norm results above.  A full roadmap for closing them --- the Davis--Kahan~III quartet
 ($\sin\Theta$, $\sin2\Theta$, $\tan\Theta$, $\tan2\Theta$) at the subspace
 level in every unitarily invariant norm, via a Ky Fan / Fan-dominance
 mini-library, together with the certified principal-angle dictionary --- is
@@ -584,10 +625,14 @@ everything above is \texttt{dev/davis-kahan-gap-closure-plan.md} (v6, closed).
   dimension-carrying bound.  The genuine subspace theorem is part-III
   technology and belongs with the unitarily-invariant-norm project below.
 
-\item \emph{Unitarily invariant norms (deferred by design).}  Symmetric gauge
-  functions, Ky Fan norms, Fan dominance, and the part~III $\sin\Theta$
-  theorem for every unitarily invariant norm.  A Mathlib-sized library on its
-  own; nothing downstream in this repository consumes it.
+\item \emph{The part~III $\sin\Theta$ theorem in every unitarily invariant
+  norm (difficulty 3/5 --- unblocked).}  The Ky Fan / Fan-dominance library
+  this item was blocked on is now formalized (see \S\ref{sec:extensions});
+  what remains is mechanical: the abstract-norm Sylvester bound (the
+  absorption identity of the operator-norm proof, with the ideal property
+  replacing the pointwise estimates) and the reassembly of the operator-norm
+  $\sin\Theta$ construction against it.  Per-step routes are in the
+  expert-completion plan, steps F4.a--c.
 \end{enumerate}
 
 \section{Dictionary to the Lean source}\label{sec:dictionary}
@@ -707,6 +752,48 @@ Principal-angle cosines / $\sin\Theta$ / symmetry / overlap bridge
   & \texttt{cosPrincipalAngles}, \texttt{sinThetaSq},
     \texttt{cosPrincipalAngles\_comm}, \texttt{sinThetaSq\_eq\_sub\_overlap}
     (\texttt{PrincipalAngles.lean}) \\
+Extreme singular values: bounds and attainment
+  & \texttt{singularValues\_last\_mul\_norm\_le},
+    \texttt{norm\_apply\_le\_singularValues\_zero\_mul},
+    \texttt{exists\_norm\_apply\_eq\_singularValues\_last}\,/\,\texttt{\dots\_zero}
+    (\texttt{SingularSubspace.lean}) \\
+Identification $\norm{P_{W^{\perp}}P_U}_{\op}=\sin\theta_{\max}$
+  & \texttt{norm\_orthogonal\_starProjection\_comp\_starProjection}
+    (\texttt{PrincipalAngles.lean}) \\
+Spectral (sorted-eigenvalue) corollaries; $\sin\theta_{\max}\le\eps/\gap$
+  & \texttt{norm\_starProjection\_comp\_starProjection\_le\_of\_eigenvalues},
+    \texttt{sin\_two\_theta\_le\_of\_eigenvalues},
+    \texttt{tan\_two\_theta\_le\_of\_eigenvalues},
+    \texttt{sqrt\_one\_sub\_sq\_cosPrincipalAngles\_le}
+    (\texttt{SinThetaOpNorm.lean}) \\
+Frobenius-encoding coherence (block families)
+  & \texttt{sinThetaSq\_blockFamily\_eq\_sum\_cross},
+    \texttt{sum\_norm\_sub\_starProjection\_sq\_eq\_two\_mul\_sinThetaSq}
+    (\texttt{PrincipalAngles.lean}) \\
+Loewner monotonicity / sorted-eigenvalue uniqueness
+  & \texttt{eigenvalues\_le\_eigenvalues\_of\_re\_inner\_le},
+    \texttt{eigenvalues\_eq\_of\_eigenbasis} (\texttt{CourantFischer.lean}) \\
+Singular values under unitaries / scaling / bounded factors
+  & \texttt{singularValues\_unitary\_comp}\,/\,\texttt{\_comp\_unitary},
+    \texttt{singularValues\_real\_smul},
+    \texttt{singularValues\_comp\_le}\,/\,\texttt{'} (\texttt{KyFan.lean}) \\
+Ky Fan trace inequality / variational principle
+  & \texttt{sum\_re\_inner\_le\_sum\_eigenvalues\_top},
+    \texttt{re\_sum\_inner\_map\_le\_sum\_singularValues},
+    \texttt{exists\_orthonormal\_re\_sum\_inner\_map\_eq} (\texttt{KyFan.lean}) \\
+Ky Fan sums; weak majorization $\sigma(A+B)\prec_w\sigma(A)+\sigma(B)$
+  & \texttt{kyFanSum}, \texttt{kyFanSum\_add\_le} (\texttt{KyFan.lean}) \\
+Diagonal operators; operator SVD $A=U\,\mathrm{diag}(\sigma(A))\,V$
+  & \texttt{diagOp}, \texttt{singularValues\_diagOp},
+    \texttt{exists\_unitary\_diagOp\_factorization}
+    (\texttt{UnitarilyInvariantNorm.lean}) \\
+UI-norm structure; gauge representation $N=\Phi_N\circ\sigma$
+  & \texttt{UnitarilyInvariantNorm}, \texttt{apply\_eq\_gauge}
+    (\texttt{UnitarilyInvariantNorm.lean}) \\
+T-transform descent on the gauge; \textbf{Fan dominance}; $N(A^{*})=N(A)$
+  & \texttt{gauge\_le\_gauge\_of\_prefix\_sums\_le},
+    \texttt{apply\_le\_of\_kyFanSum\_le}, \texttt{apply\_adjoint}
+    (\texttt{UnitarilyInvariantNorm.lean}) \\
 \bottomrule
 \end{tabular}
 \end{center}

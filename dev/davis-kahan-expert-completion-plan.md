@@ -18,6 +18,28 @@ gates, `lake build` green after every step, `#print axioms` =
 
 - **v1 (2026-07-09, Fable):** initial plan, incorporating a review of Opus's
   2026-07-09 expert-gap diagnosis.
+- **v5 (2026-07-09, Fable — F3 ✅ DONE):** the full v4-reroute F3 landed as
+  `UnitarilyInvariantNorm.lean` (commit `7481732`), all headlines axiom-clean,
+  full library build green, zero warnings in the new file: `diagOp` + algebra
+  + `singularValues_diagOp`; operator SVD
+  `exists_unitary_diagOp_factorization`; the `UnitarilyInvariantNorm`
+  structure (standalone + `CoeFun`, per the v4.1 note) with
+  nonneg/zero/neg/one-sided invariances derived; gauge on all vectors with
+  `gauge_add_le` / `gauge_real_smul` / `gauge_perm` / `gauge_neg_single`;
+  `gauge_update_le` + `gauge_mono`; the T-transform descent
+  `gauge_le_gauge_of_prefix_sums_le` (disagreement-count induction, exactly
+  the v4 route — `card ≤ d` plain induction replaced strong induction);
+  Fan dominance `apply_le_of_kyFanSum_le`; star invariance `apply_adjoint`.
+  `sum_filter_lt_eq_sum_fin` un-privatized in KyFan.lean as planned.
+  Deviations from the v4 routes (minor, all Lean-level): `pow_le_pow_left` is
+  `pow_le_pow_left₀` in this pin; `le_or_lt` is `le_or_gt`; `push_neg` is
+  `push Not`; binder-position `Finset.univ.filter fun …` needs
+  parentheses before the `,`; the c₁/c₂ convex-combination arithmetic under
+  `set` must avoid `linear_combination` through division definitions (use
+  `← add_mul` + the sum-to-one identity instead).  Paper synced (Phase E +
+  F0–F2 + F3 paragraphs, dictionary rows, §remains item 2 re-scoped to F4,
+  permalink → `7481732`).  **Next: F4 (Opus)** — a/b/c routes below are
+  ready; then Phase G (Fable).
 - **v4 (2026-07-09, Fable — Opus plan-review triaged; F3 body rewritten to the
   reroute):** disposition of the "Opus review of plan v3" below.  **Retracted**
   its two false negatives — Opus's greps ran in an FD-exhausted environment
@@ -415,7 +437,8 @@ New files under `ForMathlib/Analysis/InnerProductSpace/`:
 F1(c) variational principle landed as the pair
 `re_sum_inner_map_le_sum_singularValues` /
 `exists_orthonormal_re_sum_inner_map_eq` — cite those names, not "F1(c)").
-**F3 is the active step** (body below is the v4 reroute).  F4 remains.
+**F3 ✅ DONE** (`UnitarilyInvariantNorm.lean`, commit `7481732`, v5 log entry;
+body below kept for provenance).  **F4 is the active step (Opus).**
 
 **F0 — Singular-value API strengthening. Difficulty 2.5/5.**  In
 `SingularSubspace.lean` (or the new `KyFan.lean`):
@@ -508,9 +531,11 @@ Difficulty 2/5 (given F1).**  In `KyFan.lean`:
 - monotone in `k`, and `kyFanSum n A = ∑ all σ` (trace norm),
   `kyFanSum 1 A = σ₀ = ‖A‖` (E1(c,d)).
 
-**F3 — Unitarily invariant norms and Fan dominance.  [v4 body = the v3
-reroute; HLP and weak-majorization completion are NOT on this path — they
-live in the optional annex at the end of Phase F.]**
+**F3 — Unitarily invariant norms and Fan dominance.  ✅ DONE (commit
+`7481732`; see the v5 revision-log entry for the landed names and the
+Lean-level deviations).  [v4 body = the v3 reroute; HLP and weak-majorization
+completion are NOT on this path — they live in the optional annex at the end
+of Phase F.]**
 In new `UnitarilyInvariantNorm.lean`.  All asset names below re-verified
 against the pin in a healthy shell (2026-07-09, Fable).
 (a) *`diagOp` and operator SVD factorization. Difficulty 3.5/5.*  Fix
@@ -806,8 +831,8 @@ E1 ─→ E2 ──────────────┐
 E3, E4, E5 (parallel)  │  [Batch 1: dictionary ✅ DONE (v2)]
                        ▼
 F0 ─→ F1.a → F1.b → F1.c ─→ F2      [Batch 2: Ky Fan ✅ DONE (199390a)]
-F3.a → F3.b → F3.c → F3.d ─→ F3.e → F3.f   [Batch 3: Fan dominance — v4
-                                            reroute; F3.d is the crux]
+F3.a → F3.b → F3.c → F3.d ─→ F3.e → F3.f   [Batch 3: Fan dominance ✅ DONE
+                                            (7481732)]
 F0.e/F3.e → F4.a → F4.b → F4.c       [Batch 4: part-III sinΘ — the headline]
 F4 ─→ G1 → G2;  G3 independent of G1/G2 but after F4   [Batches 5–6: Fable]
 (F3-annex: optional, anytime after F4)
@@ -828,15 +853,15 @@ old completion/HLP rows moved to the annex).
 | 1 | G3 | Subspace tanΘ (graph operator, similar-to-symmetric Sylvester) | 5/5 | **Fable**; statement-risk |
 | 2 | G1 | Subspace sin2Θ (commutator route) | 5/5 | **Fable** |
 | 3 | G2 | Subspace tan2Θ | 4.5/5 | **Fable** (after G1) |
-| 4 | F3.d | T-transform descent on the gauge (v4 crux) | 4/5 | **Fable** (next session; v4.1 notes ready) |
-| 5 | F3.a | `diagOp` + operator SVD factorization | 3.5/5 | **Fable** (next session) |
+| 4 | F3.d | T-transform descent on the gauge (v4 crux) | 4/5 | ✅ DONE (Fable, `7481732`) |
+| 5 | F3.a | `diagOp` + operator SVD factorization | 3.5/5 | ✅ DONE (Fable, `7481732`) |
 | 6 | F4.c | Part-III sinΘ, every UI norm (+ CLM↔LinearMap bridge) | 3/5 | Opus |
-| 7 | F3.b | UI-norm structure + gauge + invariance package | 2.5/5 | **Fable** (next session) |
-| 8 | F3.c | Gauge update bound + coordinatewise monotonicity | 2.5/5 | **Fable** (next session) |
+| 7 | F3.b | UI-norm structure + gauge + invariance package | 2.5/5 | ✅ DONE (Fable, `7481732`) |
+| 8 | F3.c | Gauge update bound + coordinatewise monotonicity | 2.5/5 | ✅ DONE (Fable, `7481732`) |
 | 9 | F4.b | Abstract-norm Sylvester bound | 2.5/5 | Opus |
 | 10 | F4.a | Ideal property | 2/5 | Opus |
-| 11 | F3.e | Fan dominance assembly | 2/5 | **Fable** (next session) |
-| 12 | F3.f | `star` invariance | 1/5 | **Fable** (next session) |
+| 11 | F3.e | Fan dominance assembly | 2/5 | ✅ DONE (Fable, `7481732`) |
+| 12 | F3.f | `star` invariance | 1/5 | ✅ DONE (Fable, `7481732`) |
 | — | annex α | Weak-majorization completion (optional) | 2.5/5 | either, after F4 |
 | — | annex β | Hardy–Littlewood–Pólya (optional) | 4/5 | Fable, after F4 |
 

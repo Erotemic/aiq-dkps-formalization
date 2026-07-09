@@ -316,8 +316,10 @@ theorem sum_re_inner_le_sum_eigenvalues_top {S : E →ₗ[𝕜] E} (hS : S.IsSym
 
 /-! ### The Ky Fan variational principle (F1.c) -/
 
-/-- Index plumbing: a top-`k` filtered sum over `Fin n` is a sum over `Fin k`. -/
-private theorem sum_filter_lt_eq_sum_fin {n k : ℕ} (hk : k ≤ n) (f : ℕ → ℝ) :
+/-- Index plumbing: a top-`k` filtered sum over `Fin n` is a sum over `Fin k`.
+(Not `private`: `UnitarilyInvariantNorm.lean` consumes it to convert `kyFanSum`
+domination into the prefix-sum hypothesis of the T-transform descent.) -/
+theorem sum_filter_lt_eq_sum_fin {n k : ℕ} (hk : k ≤ n) (f : ℕ → ℝ) :
     ∑ j ∈ Finset.univ.filter (fun j : Fin n => (j : ℕ) < k), f (j : ℕ)
       = ∑ i : Fin k, f (i : ℕ) := by
   rw [show (∑ j ∈ Finset.univ.filter (fun j : Fin n => (j : ℕ) < k), f (j : ℕ))

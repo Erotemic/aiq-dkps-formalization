@@ -18,6 +18,39 @@ gates, `lake build` green after every step, `#print axioms` =
 
 - **v1 (2026-07-09, Fable):** initial plan, incorporating a review of Opus's
   2026-07-09 expert-gap diagnosis.
+- **v3 (2026-07-09, Fable — F0–F2 executed; F3 rerouted, HLP eliminated):**
+  **F0–F2 ✅ DONE** (`KyFan.lean`, commit `199390a`, all headlines
+  axiom-clean): the full F0 singular-value API (gram-determined, unitary
+  invariance both sides, real scaling, bounded-factor domination via new
+  CourantFischer Loewner monotonicity + sorted-eigenvalue uniqueness
+  `eigenvalues_eq_of_eigenbasis`), the knapsack lemma, the Ky Fan trace
+  inequality, the variational principle (both directions), `kyFanSum`, and
+  weak majorization `kyFanSum_add_le`.  **F3 reroute (major, verified on
+  paper):** Fan dominance does *not* need F3.d (weak-majorization completion)
+  or F3.e (Hardy–Littlewood–Pólya) — run the T-transform descent *directly on
+  the gauge*: induct on the disagreement count of (sorted nonneg `z`,
+  arbitrary nonneg `y`) under prefix-sum domination only (no total-equality);
+  at each step the transformed `y' = c₁•y + c₂•(y∘swap j l)` costs one
+  two-term triangle inequality + one swap-permutation invariance
+  (`N(D_{y∘π}) = N(D_y)` via `OrthonormalBasis.equiv` conjugation), and the
+  case "no index with `z_l > y_l`" gives `z ≤ y` pointwise, closed by
+  coordinatewise gauge monotonicity (single-coordinate reflection step via
+  `Submodule.reflection ((𝕜 ∙ b j)ᗮ)` + `Finset.induction` merge).  The key
+  step inequalities: `j :=` least disagreement has `z_j < y_j` (prefix at
+  `j+1`); `l :=` least index with `y_l < z_l`; `δ := min (y_j − z_j)
+  (z_l − y_l)`; `y_j > y_l` from `z` sorted; prefix domination for `y'` needs
+  `P_m(z) ≤ P_m(y) − δ` only for `j < m ≤ l`, which follows termwise.  So
+  F3 = (a) `diagOp` + operator SVD, (b) the `UnitarilyInvariantNorm`
+  structure + gauge representation `N A = N (diagOp b (σ A))`, (c)
+  coordinatewise monotonicity, (e''') the descent above, (f) Fan dominance +
+  `N(A⋆) = N(A)` + the ideal property (via (c) + `singularValues_comp_le`,
+  no Fan dominance even needed for it).  F3.d/F3.e are **removed from the
+  critical path**; HLP in weights form stays only as an optional
+  Mathlib-attractive extra.  F4.b note: state the abstract Sylvester bound at
+  the *LinearMap* level (elementwise bounds, finite dim) since
+  `UnitarilyInvariantNorm` lives on `E →ₗ[𝕜] E`; F4.c ports the W5.2
+  full-space construction to LinearMaps (mechanical; the CLM lemma
+  `norm_le_of_abs_re_inner_map_self_le` bridges via `toContinuousLinearMap`).
 - **v2 (2026-07-09, Fable — Phase E executed):** E1–E5 all ✅ DONE, library
   build green, all 12 new headlines axiom-clean.  Deviations from the v1
   routes, folded into the steps: (i) E2's coordinate pull-back uses the

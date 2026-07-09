@@ -629,6 +629,43 @@ self-contained "UI norms via Fan dominance" Mathlib contribution).
 `singularValues_adjoint` (SingularSubspace.lean, square case) + (b)'s
 representation.  F4.c consumes this; it is a lemma, not an axiom.
 
+**F3 implementation notes (v4.1, Fable — session ended before the Lean work;
+all signatures below verified against the pin, ready to execute):**
+- `sqrt_apply_eigenvectorBasis` (PositiveSqrt.lean:59) is **hard-coded to
+  `hn := rfl`** (`Fin (finrank 𝕜 E)` indices) — start the F3.a SVD proof
+  with `subst hn`, then every `rfl`-pinned lemma applies.
+- Basis exchange: `OrthonormalBasis.equiv b w (Equiv.refl _)` with simp
+  lemmas `equiv_apply_basis : b.equiv b' e (b i) = b' (e i)`, `equiv_symm`
+  (PiL2.lean:840–856); permutation unitary for `gauge_perm` is
+  `b.equiv b π`.
+- Reflection: `Submodule.reflection_orthogonalComplement_singleton_eq_neg
+  (v) : reflection (𝕜 ∙ v)ᗮ v = -v` and
+  `reflection_mem_subspace_eq_self` for the fixed vectors; membership via
+  `Submodule.mem_orthogonal_singleton_iff_inner_right` + orthonormality.
+- Adjoint of a symmetric map: `LinearMap.IsSymmetric.adjoint_eq`
+  (Adjoint.lean:598).
+- Descent bookkeeping: `Finset.sum_update_of_mem` (additive of
+  `prod_update_of_mem`, BigOperators/Group/Finset/Piecewise.lean:246;
+  yields the `s \ {i}` form — `Finset.erase_eq` to convert),
+  `Function.update_self` / `Function.update_of_ne` (note the argument order:
+  `update_of_ne (h : a ≠ a')`), `Equiv.swap_apply_left/right/of_ne_of_ne`,
+  least index via `Finset.min'` + `min'_le` / `min'_mem`, strong induction
+  via `Nat.strong_induction_on` on the disagreement card.
+- Fan dominance plumbing: un-`private` `sum_filter_lt_eq_sum_fin` in
+  KyFan.lean (external consumer — same criterion as E3(a)); default basis
+  `stdOrthonormalBasis 𝕜 E : OrthonormalBasis (Fin (finrank 𝕜 E)) 𝕜 E`
+  (PiL2.lean:1077).
+- Structure: standalone + `CoeFun` (skip `extends Seminorm` for staging;
+  reconsider at PR time).
+- `diagOp` via the `InnerProductSpace.rankOne 𝕜 (b i) (b i)` idiom
+  (IntertwiningUnitary.lean's `spectralProjection`); Gram identity
+  `diagOp b x ∘ₗ diagOp b y = diagOp b (x * y)` by `b.toBasis.ext`, then
+  `singularValues_diagOp` for antitone nonneg `x` via
+  `eigenvalues_eq_of_eigenbasis` + `Real.sqrt_sq`.
+- Descent-step arithmetic to keep abstract: `hδ₁ : δ ≤ y j − z j`,
+  `hδ₂ : δ ≤ z l − y l`, `hδlt : δ < y j − y l` (from `y l < z j`),
+  `c₂ * (y j − y l) = δ` via `div_mul_cancel₀`.
+
 **F3-annex (OPTIONAL, off the critical path, Mathlib-attractive):** the
 classical majorization bricks the reroute made unnecessary: (α)
 weak-majorization completion (`x ≺_w y ⇒ ∃ z, x ≤ z ∧ z ≺ y`, Bhatia
@@ -791,15 +828,15 @@ old completion/HLP rows moved to the annex).
 | 1 | G3 | Subspace tanΘ (graph operator, similar-to-symmetric Sylvester) | 5/5 | **Fable**; statement-risk |
 | 2 | G1 | Subspace sin2Θ (commutator route) | 5/5 | **Fable** |
 | 3 | G2 | Subspace tan2Θ | 4.5/5 | **Fable** (after G1) |
-| 4 | F3.d | T-transform descent on the gauge (v4 crux) | 4/5 | **Fable** (in progress, this session) |
-| 5 | F3.a | `diagOp` + operator SVD factorization | 3.5/5 | **Fable** (this session) |
+| 4 | F3.d | T-transform descent on the gauge (v4 crux) | 4/5 | **Fable** (next session; v4.1 notes ready) |
+| 5 | F3.a | `diagOp` + operator SVD factorization | 3.5/5 | **Fable** (next session) |
 | 6 | F4.c | Part-III sinΘ, every UI norm (+ CLM↔LinearMap bridge) | 3/5 | Opus |
-| 7 | F3.b | UI-norm structure + gauge + invariance package | 2.5/5 | **Fable** (this session) |
-| 8 | F3.c | Gauge update bound + coordinatewise monotonicity | 2.5/5 | **Fable** (this session) |
+| 7 | F3.b | UI-norm structure + gauge + invariance package | 2.5/5 | **Fable** (next session) |
+| 8 | F3.c | Gauge update bound + coordinatewise monotonicity | 2.5/5 | **Fable** (next session) |
 | 9 | F4.b | Abstract-norm Sylvester bound | 2.5/5 | Opus |
 | 10 | F4.a | Ideal property | 2/5 | Opus |
-| 11 | F3.e | Fan dominance assembly | 2/5 | **Fable** (this session) |
-| 12 | F3.f | `star` invariance | 1/5 | **Fable** (this session) |
+| 11 | F3.e | Fan dominance assembly | 2/5 | **Fable** (next session) |
+| 12 | F3.f | `star` invariance | 1/5 | **Fable** (next session) |
 | — | annex α | Weak-majorization completion (optional) | 2.5/5 | either, after F4 |
 | — | annex β | Hardy–Littlewood–Pólya (optional) | 4/5 | Fable, after F4 |
 

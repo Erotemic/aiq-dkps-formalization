@@ -88,6 +88,19 @@ variable {𝕜 E : Type*} [RCLike 𝕜] [NormedAddCommGroup E] [InnerProductSpac
 
 namespace UnitarilyInvariantNorm
 
+omit [FiniteDimensional 𝕜 E] [CompleteSpace E] in
+private theorem coe_apply (f : E ≃ₗᵢ[𝕜] E) (v : E) : f.toLinearMap v = f v := rfl
+
+omit [FiniteDimensional 𝕜 E] [CompleteSpace E] in
+private theorem coe_equiv_apply (f : E ≃ₗᵢ[𝕜] E) (v : E) :
+    (f.toLinearEquiv : E →ₗ[𝕜] E) v = f v := rfl
+
+omit [FiniteDimensional 𝕜 E] [CompleteSpace E] in
+/-- The scalar `((2 : ℝ) : 𝕜)`-multiple agrees with the `ℕ`-double appearing in
+`Submodule.reflection_apply`.  Auxiliary. -/
+private theorem ofReal_two_smul (y : E) : ((2 : ℝ) : 𝕜) • y = 2 • y := by
+  rw [show ((2 : ℝ) : 𝕜) = ((2 : ℕ) : 𝕜) by norm_cast, Nat.cast_smul_eq_nsmul]
+
 /-- **The mirror-defect sin 2Θ bound.**  Let `T` be symmetric with an invariant
 subspace `U` across whose splitting the quadratic form of `T` jumps from `≤ a`
 (on `Uᗮ`) to `≥ b` (on `U`), and let `W` be *any* subspace, with reflection
@@ -107,7 +120,83 @@ theorem sin_two_theta_reflection_le (N : UnitarilyInvariantNorm 𝕜 E)
         : E →L[𝕜] E) : E →ₗ[𝕜] E)
       ≤ N (W.reflection.toLinearMap ∘ₗ T ∘ₗ W.reflection.toLinearMap - T)
         / (b - a) := by
-  sorry
+  have hg : (0 : ℝ) < b - a := by linarith
+  -- The reflected operator `T' = J T J` and the reflected subspace `J (Uᗮ)`.
+  set T' : E →ₗ[𝕜] E :=
+    W.reflection.toLinearMap ∘ₗ T ∘ₗ W.reflection.toLinearMap with hT'def
+  have hT'sym : T'.IsSymmetric := by
+    have h := isSymmetric_conj_unitary hT (W.reflection (𝕜 := 𝕜))
+    rwa [Submodule.reflection_symm] at h
+  have hUperp_inv : ∀ x ∈ Uᗮ, T x ∈ Uᗮ := fun x hx =>
+    map_mem_orthogonal_of_forall_map_mem hT hUinv hx
+  set V' : Submodule 𝕜 E :=
+    Uᗮ.map ((W.reflection (𝕜 := 𝕜)).toLinearEquiv : E →ₗ[𝕜] E) with hV'def
+  -- `V'` is `T'`-invariant.
+  have hV'inv : ∀ x ∈ V', T' x ∈ V' := by
+    rintro x ⟨w, hw, rfl⟩
+    refine Submodule.mem_map.mpr ⟨T w, hUperp_inv w hw, ?_⟩
+    simp only [LinearEquiv.coe_coe, LinearIsometryEquiv.coe_toLinearEquiv,
+      hT'def, LinearMap.comp_apply, Submodule.reflection_reflection]
+  -- The form of `T'` on `V'` sits below `a`.
+  have hV'form : ∀ x ∈ V', RCLike.re ⟪T' x, x⟫_𝕜 ≤ a * ‖x‖ ^ 2 := by
+    rintro x ⟨w, hw, rfl⟩
+    simp only [LinearEquiv.coe_coe, LinearIsometryEquiv.coe_toLinearEquiv]
+    have happly : T' (W.reflection w) = W.reflection (T w) := by
+      simp only [hT'def, LinearMap.comp_apply, LinearEquiv.coe_coe,
+        LinearIsometryEquiv.coe_toLinearEquiv, Submodule.reflection_reflection]
+    rw [happly, (W.reflection (𝕜 := 𝕜)).inner_map_map,
+      (W.reflection (𝕜 := 𝕜)).norm_map]
+    exact hUa w hw
+  -- The form of `T` on `U` sits above `a + (b − a) = b`.
+  have hUform : ∀ x ∈ U, (a + (b - a)) * ‖x‖ ^ 2 ≤ RCLike.re ⟪T x, x⟫_𝕜 := by
+    intro x hx
+    have hb' : a + (b - a) = b := by ring
+    rw [hb']
+    exact hUb x hx
+  -- The sin Θ theorem for the pair `(T, T')` across `T`'s own gap.
+  have hmain := N.apply_starProjection_comp_starProjection_le hT hT'sym
+    hUinv hV'inv hg hUform hV'form
+  -- Identify the cross-projection: `P_{V'} ∘ P_U = J ∘ (P_{Uᗮ} ∘ J ∘ P_U)`.
+  have hVsP : ∀ x, V'.starProjection x
+      = W.reflection (Uᗮ.starProjection (W.reflection x)) := by
+    intro x
+    show (Uᗮ.map ((W.reflection (𝕜 := 𝕜)).toLinearEquiv : E →ₗ[𝕜] E)).starProjection x
+      = W.reflection (Uᗮ.starProjection (W.reflection x))
+    rw [Submodule.starProjection_map_apply, Submodule.reflection_symm]
+  have hconj : ((V'.starProjection ∘L U.starProjection : E →L[𝕜] E) : E →ₗ[𝕜] E)
+      = W.reflection.toLinearMap
+          ∘ₗ ((Uᗮ.starProjection : E →L[𝕜] E) : E →ₗ[𝕜] E)
+          ∘ₗ W.reflection.toLinearMap
+          ∘ₗ ((U.starProjection : E →L[𝕜] E) : E →ₗ[𝕜] E) := by
+    ext x
+    simp only [ContinuousLinearMap.coe_coe, ContinuousLinearMap.comp_apply,
+      LinearMap.comp_apply, coe_apply]
+    exact hVsP _
+  -- Kill the outer reflection and halve the inner one: `Q ∘ J ∘ P = 2 Q P̂ P`.
+  have hkey : ((Uᗮ.starProjection : E →L[𝕜] E) : E →ₗ[𝕜] E)
+        ∘ₗ W.reflection.toLinearMap
+        ∘ₗ ((U.starProjection : E →L[𝕜] E) : E →ₗ[𝕜] E)
+      = ((2 : ℝ) : 𝕜) • ((Uᗮ.starProjection ∘L W.starProjection
+          ∘L U.starProjection : E →L[𝕜] E) : E →ₗ[𝕜] E) := by
+    ext x
+    have hz : Uᗮ.starProjection (U.starProjection x) = 0 := by
+      refine Submodule.eq_starProjection_of_mem_orthogonal
+        (Submodule.zero_mem Uᗮ) ?_
+      simp only [sub_zero]
+      exact U.le_orthogonal_orthogonal (U.starProjection_apply_mem x)
+    simp only [LinearMap.comp_apply, LinearMap.smul_apply,
+      ContinuousLinearMap.coe_coe, ContinuousLinearMap.comp_apply, coe_apply,
+      Submodule.reflection_apply, map_sub, map_nsmul, hz, sub_zero,
+      ofReal_two_smul]
+  calc 2 * N ((Uᗮ.starProjection ∘L W.starProjection ∘L U.starProjection
+          : E →L[𝕜] E) : E →ₗ[𝕜] E)
+      = N (((2 : ℝ) : 𝕜) • ((Uᗮ.starProjection ∘L W.starProjection
+          ∘L U.starProjection : E →L[𝕜] E) : E →ₗ[𝕜] E)) := by
+        rw [N.smul_eq, RCLike.norm_ofReal]
+        norm_num
+    _ = N (((V'.starProjection ∘L U.starProjection : E →L[𝕜] E) : E →ₗ[𝕜] E))
+        := by rw [hconj, N.invariant_left, hkey]
+    _ ≤ N (T' - T) / (b - a) := hmain
 
 /-- **The subspace Davis–Kahan sin 2Θ theorem, every unitarily invariant
 norm.**  Let `T, S` be symmetric, `U` a `T`-invariant subspace with the
@@ -130,7 +219,50 @@ theorem sin_two_theta_starProjection_le (N : UnitarilyInvariantNorm 𝕜 E)
     N ((Uᗮ.starProjection ∘L V.starProjection ∘L U.starProjection
         : E →L[𝕜] E) : E →ₗ[𝕜] E)
       ≤ N (S - T) / (b - a) := by
-  sorry
+  have hg : (0 : ℝ) < b - a := by linarith
+  -- The mirror-defect bound with the perturbed subspace as the mirror.
+  have h1 := N.sin_two_theta_reflection_le (W := V) hT hUinv hab hUb hUa
+  -- The reflection through the `S`-invariant `V` commutes with `S`.
+  have hcomm : ∀ x, V.reflection (S x) = S (V.reflection x) := by
+    intro x
+    have hc := starProjection_comp_toContinuousLinearMap_comm hS hVinv x
+    rw [Submodule.reflection_apply, Submodule.reflection_apply, map_sub,
+      map_nsmul, hc]
+  have hJSJ : V.reflection.toLinearMap ∘ₗ S ∘ₗ V.reflection.toLinearMap = S := by
+    ext x
+    simp only [LinearMap.comp_apply, LinearEquiv.coe_coe,
+      LinearIsometryEquiv.coe_toLinearEquiv]
+    rw [← hcomm, Submodule.reflection_reflection]
+  -- The mirror defect of `T` is twice the perturbation:
+  -- `J T J − T = J (T − S) J + (S − T)`.
+  have hident : V.reflection.toLinearMap ∘ₗ T ∘ₗ V.reflection.toLinearMap - T
+      = V.reflection.toLinearMap ∘ₗ (T - S) ∘ₗ V.reflection.toLinearMap
+        + (S - T) := by
+    have hexp : V.reflection.toLinearMap ∘ₗ (T - S) ∘ₗ V.reflection.toLinearMap
+        = V.reflection.toLinearMap ∘ₗ T ∘ₗ V.reflection.toLinearMap
+          - V.reflection.toLinearMap ∘ₗ S ∘ₗ V.reflection.toLinearMap := by
+      ext x
+      simp [map_sub]
+    rw [hexp, hJSJ]
+    abel
+  have hbound : N (V.reflection.toLinearMap ∘ₗ T ∘ₗ V.reflection.toLinearMap - T)
+      ≤ 2 * N (S - T) := by
+    rw [hident]
+    calc N (V.reflection.toLinearMap ∘ₗ (T - S) ∘ₗ V.reflection.toLinearMap
+          + (S - T))
+        ≤ N (V.reflection.toLinearMap ∘ₗ (T - S) ∘ₗ V.reflection.toLinearMap)
+          + N (S - T) := N.add_le _ _
+      _ = N (T - S) + N (S - T) := by
+          rw [N.invariant' V.reflection V.reflection (T - S)]
+      _ = 2 * N (S - T) := by
+          rw [show T - S = -(S - T) by abel, N.apply_neg]
+          ring
+  have h2 : N (V.reflection.toLinearMap ∘ₗ T ∘ₗ V.reflection.toLinearMap - T)
+        / (b - a)
+      ≤ 2 * N (S - T) / (b - a) := by gcongr
+  have h3 := h1.trans h2
+  have h4 : 2 * N (S - T) / (b - a) = 2 * (N (S - T) / (b - a)) := by ring
+  linarith
 
 end UnitarilyInvariantNorm
 

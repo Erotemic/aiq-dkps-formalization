@@ -24,6 +24,7 @@ import ForMathlib.Analysis.InnerProductSpace.RotationSharp
 import ForMathlib.Analysis.InnerProductSpace.SchurHorn
 import ForMathlib.Analysis.InnerProductSpace.SinThetaOpNorm
 import ForMathlib.Analysis.InnerProductSpace.SinThetaUINorm
+import ForMathlib.Analysis.InnerProductSpace.SinTwoThetaUINorm
 import ForMathlib.Analysis.InnerProductSpace.SingularSubspace
 import ForMathlib.Analysis.InnerProductSpace.Spectrum
 import ForMathlib.Analysis.InnerProductSpace.SylvesterBound

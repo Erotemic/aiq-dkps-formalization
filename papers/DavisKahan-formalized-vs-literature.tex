@@ -71,7 +71,7 @@ invariant norms, both deliberately deferred.
 
 \vspace{1.5em}
 % NOTE: Update permalink if underlying proof changes, so this always is up to date wrt to the referenced lean file.
-\noindent Companion note to \href{https://github.com/AIQ-Kitware/aiq-dkps-formalization/blob/9d731323fc79d1f4a838d754a6e5bd4a9b2efcbd/ForMathlib/Analysis/InnerProductSpace/DavisKahan.lean}{ForMathlib/Analysis/InnerProductSpace/DavisKahan.lean} and its sibling files under \href{https://github.com/AIQ-Kitware/aiq-dkps-formalization/tree/9d731323fc79d1f4a838d754a6e5bd4a9b2efcbd/ForMathlib/Analysis/InnerProductSpace}{ForMathlib/Analysis/InnerProductSpace/}, part of a larger formalization effort at \href{https://github.com/AIQ-Kitware/aiq-dkps-formalization}{github.com/AIQ-Kitware/aiq-dkps-formalization}.
+\noindent Companion note to \href{https://github.com/AIQ-Kitware/aiq-dkps-formalization/blob/c17998d1279f9751610227b13bac6b3c6f263e96/ForMathlib/Analysis/InnerProductSpace/DavisKahan.lean}{ForMathlib/Analysis/InnerProductSpace/DavisKahan.lean} and its sibling files under \href{https://github.com/AIQ-Kitware/aiq-dkps-formalization/tree/c17998d1279f9751610227b13bac6b3c6f263e96/ForMathlib/Analysis/InnerProductSpace}{ForMathlib/Analysis/InnerProductSpace/}, part of a larger formalization effort at \href{https://github.com/AIQ-Kitware/aiq-dkps-formalization}{github.com/AIQ-Kitware/aiq-dkps-formalization}.
 
 
 
@@ -623,6 +623,28 @@ verbatim with the operator-norm proof; only the final estimate differs.  The
 operator norm is exhibited as an instance (\texttt{opNorm}), so the theorem is
 not vacuous, and the Frobenius and operator-norm ladders are its instances.
 
+\paragraph{The subspace $\sin2\Theta$ theorem, every unitarily invariant norm.}
+The first of the three remaining part-III theorems is now formalized: if the
+form of $T$ sits above $b$ on a $T$-invariant subspace $U$ and below $a$ on
+$U^{\perp}$ (the gap constrains $T$ \emph{alone}), and $V$ is any
+$S$-invariant subspace, then for every unitarily invariant norm
+\[
+  N\bigl(Q\,\widehat P\,P\bigr)\;\le\;N(S-T)\,/\,(b-a),
+  \qquad P=P_U,\; Q=1-P,\; \widehat P=P_V .
+\]
+Since $2\,Q\widehat P P$ has singular values $\sin2\theta_i$, this is
+$\norm{\sin2\Theta}\le 2\norm{S-T}/(b-a)$ --- with \emph{no smallness
+assumption} on the perturbation and \emph{no spectral-location constraint} on
+$V$, strictly more general than the classical statement.  The proof is the
+mirror reduction of Davis--Kahan's own \S8: reflect $T$ through the perturbed
+subspace ($J=2\widehat P-1$, $T'=JTJ$) and apply the $\sin\Theta$ theorem
+above to the pair $(T,T')$, which is separated by $T$'s own gap; the resulting
+cross-projection is $J$-conjugate to $Q J P=2\,Q\widehat P P$, and
+$N(T'-T)\le 2N(S-T)$ because $J$ commutes with $S$.  A sharper
+\emph{mirror-defect} form is recorded separately:
+$2N(Q\,P_W\,P)\le N(JTJ-T)/(b-a)$ for an \emph{arbitrary} mirror subspace
+$W$ --- no second operator at all.
+
 \section{What remains, ranked by difficulty}\label{sec:remains}
 
 Each downstream consumer in this repository is already served by the
@@ -635,15 +657,17 @@ maintained, with per-step proof routes and difficulty grades, in
 everything above is \texttt{dev/davis-kahan-gap-closure-plan.md} (v6, closed).
 
 \begin{enumerate}
-\item \emph{Subspace-level $\sin2\Theta$/$\tan2\Theta$ (difficulty 5/5 ---
-  deferred).}  A warning for future attempts: summing the (now formalized)
-  per-eigenvector $\sin2\theta$ bound over an eigenbasis does
-  \emph{not} recover the part~III subspace theorem --- the per-vector proof
-  tests $H$ against rotated vectors inside the two-plane
-  $\spann\{Px,(1-P)x\}$, so its right-hand side is the operator norm of $H$,
-  not the column norm $\norm{Hx_j}$; the naive sum yields only a
-  dimension-carrying bound.  The genuine subspace theorem is part-III
-  technology and belongs with the unitarily-invariant-norm project below.
+\item \emph{Subspace-level $\tan2\Theta$ (vanishing pinch) and $\tan\Theta$
+  (difficulty 4.5--5/5 --- the last two part-III theorems).}  The subspace
+  $\sin2\Theta$ theorem is now formalized (see \S\ref{sec:extensions});
+  the mirror reduction that proves it yields \emph{sine-type absolute}
+  bounds, while $\tan2\Theta$ under the vanishing-pinch hypothesis is a
+  \emph{relative} bound (angles past $\pi/4$ are allowed), so it needs
+  different technology --- likely the per-vector key identity summed with the
+  diagonal blocks hypothesized away.  $\tan\Theta$ (one exact spectral
+  subspace against an arbitrary test subspace, residual on the right-hand
+  side) carries the highest statement risk; per-step routes and descopes are
+  in the expert-completion plan, steps G2--G3.
 
 \end{enumerate}
 
@@ -818,6 +842,10 @@ Norm-free Davis--Kahan setup (shared with the op-norm proof)
 Part-III $\sin\Theta$, every UI norm; operator-norm instance
   & \texttt{apply\_starProjection\_comp\_starProjection\_le},
     \texttt{opNorm} (\texttt{SinThetaUINorm.lean}) \\
+Subspace $\sin2\Theta$, every UI norm; mirror-defect form
+  & \texttt{sin\_two\_theta\_starProjection\_le},
+    \texttt{sin\_two\_theta\_reflection\_le}
+    (\texttt{SinTwoThetaUINorm.lean}) \\
 \bottomrule
 \end{tabular}
 \end{center}

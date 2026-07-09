@@ -18,6 +18,40 @@ gates, `lake build` green after every step, `#print axioms` =
 
 - **v1 (2026-07-09, Fable):** initial plan, incorporating a review of Opus's
   2026-07-09 expert-gap diagnosis.
+- **v7 (2026-07-09, Fable — Opus's F4 reviewed: correct; G1 ✅ DONE by a NEW
+  route):** F4 review verdict: all four deliverables correct and idiomatic;
+  the `Subsingleton`/`Nontrivial` case split in F4.b is the right fix for a
+  genuine seminorm trap (`N X = 0 ↛ X = 0`, so the op-norm proof's case split
+  does not transfer) — good catch.  **G1 landed** (`SinTwoThetaUINorm.lean`,
+  gate `e38956e`, proof `c17998d`, both headlines axiom-clean) via **route
+  (iii), the mirror reduction** — neither of the plan's two candidates:
+  reflect `T` through the *perturbed* subspace (`J := V.reflection`,
+  `T' := J T J`) and apply F4.c to the pair `(T, T')`; `J(Uᗮ)` is
+  `T'`-invariant with the transported form bound, so the pair is separated by
+  `T`'s own gap; the cross-projection is `J`-conjugate to `Q J P = 2 Q P̂ P`,
+  and `N (T' − T) ≤ 2 N (S − T)` since `J` commutes with `S`.  This is DK
+  III's own §8 argument and it collapses G1 from 5/5 to ~3/5-given-F4: no
+  commutator dictionary, no odd-part cancellation, ~180 lines.  Landed:
+  `sin_two_theta_reflection_le` (mirror-defect form, no second operator) and
+  `sin_two_theta_starProjection_le` (headline; hypotheses: two-sided form
+  separation on `T` alone, `V` merely `S`-invariant — strictly more general
+  than the classical statement).  Lean notes: the reflection coercion normal
+  form is `LinearEquiv.coe_coe` + `LinearIsometryEquiv.coe_toLinearEquiv`;
+  `Submodule.starProjection_map_apply` needs a `show` to the `.map` form
+  (dependent instance blocks `rw`); `reflection_apply`'s `2 •` is ℕ-smul
+  (`Nat.cast_smul_eq_nsmul` bridges to `((2:ℝ):𝕜) •`).  **New Opus-tractable
+  follow-ups filed:** (i) E3-style spectral corollaries of G1
+  (`specSubspace` + sorted-eigenvalue hypotheses, mirroring
+  `norm_starProjection_comp_starProjection_le_of_eigenvalues`) — 2/5;
+  (ii) the Frobenius `UnitarilyInvariantNorm` instance (define via
+  `√(∑ ‖A (b i)‖²)`; invariance from the gram machinery) — 2.5/5, makes the
+  F4/G1 headlines instantiate to the paper's Frobenius vocabulary.
+  **G2 note (route candidates revised):** the mirror route yields *sine-type
+  absolute* bounds; the vanishing-pinch tan2Θ is a *relative* bound (angles
+  past π/4 allowed), so it likely needs the per-vector `key_identity`
+  machinery summed with the diagonal blocks hypothesized away (old route
+  (ii)), or a mirror variant with the pinch killing the even part — fresh
+  statement-first gate mandatory.  G3 unchanged.
 - **v6 (2026-07-09, Opus — F4 ✅ DONE):** the part-III sinΘ theorem now holds in
   every unitarily invariant norm.  F4.a `apply_comp_le`/`apply_comp_le'`
   (ideal property, `UnitarilyInvariantNorm.lean`); F4.b
@@ -775,7 +809,7 @@ route below should be trusted over the sources.  All three are
 **Fable-grade**; Opus should attempt only after the F-phase, and only with
 the descope options.
 
-**G1 — Subspace sin2Θ. Difficulty 5/5.**  Target statement (Frobenius first;
+**G1 — Subspace sin2Θ.  ✅ DONE (`c17998d`, route (iii) — mirror reduction; see the v7 revision-log entry).  Original difficulty 5/5; actual, given F4: ~3/5.**  Target statement (Frobenius first;
 UI-norm upgrade after F4): both `P` (spectral for `T`, block `[b, ∞)` vs
 `(−∞, a]`) and `P̂` (the analogously-chosen spectral projection of
 `S = T + H`), conclusion `‖sin 2Θ‖_F ≤ 2‖H‖_F / (b − a)`-shape.
@@ -854,7 +888,7 @@ F0 ─→ F1.a → F1.b → F1.c ─→ F2      [Batch 2: Ky Fan ✅ DONE (19939
 F3.a → F3.b → F3.c → F3.d ─→ F3.e → F3.f   [Batch 3: Fan dominance ✅ DONE
                                             (7481732)]
 F0.e/F3.e → F4.a → F4.b → F4.c       [Batch 4: part-III sinΘ ✅ DONE (b8de103)]
-F4 ─→ G1 → G2;  G3 independent of G1/G2 but after F4   [Batches 5–6: Fable]
+F4 ─→ G1 ✅ (c17998d) → G2;  G3 independent, after F4   [Batches 5–6: Fable]
 (F3-annex: optional, anytime after F4)
 ```
 
@@ -871,7 +905,7 @@ old completion/HLP rows moved to the annex).
 | Rank | Step | What | Difficulty | Assignee |
 |------|------|------|-----------|----------|
 | 1 | G3 | Subspace tanΘ (graph operator, similar-to-symmetric Sylvester) | 5/5 | **Fable**; statement-risk |
-| 2 | G1 | Subspace sin2Θ (commutator route) | 5/5 | **Fable** |
+| 2 | G1 | Subspace sin2Θ (mirror reduction to F4.c) | 5/5→3/5 | ✅ DONE (Fable, `c17998d`) |
 | 3 | G2 | Subspace tan2Θ | 4.5/5 | **Fable** (after G1) |
 | 4 | F3.d | T-transform descent on the gauge (v4 crux) | 4/5 | ✅ DONE (Fable, `7481732`) |
 | 5 | F3.a | `diagOp` + operator SVD factorization | 3.5/5 | ✅ DONE (Fable, `7481732`) |
@@ -884,6 +918,8 @@ old completion/HLP rows moved to the annex).
 | 12 | F3.f | `star` invariance | 1/5 | ✅ DONE (Fable, `7481732`) |
 | — | annex α | Weak-majorization completion (optional) | 2.5/5 | either, after F4 |
 | — | annex β | Hardy–Littlewood–Pólya (optional) | 4/5 | Fable, after F4 |
+| — | G1-cor | Spectral (eigenvalue-hypothesis) corollaries of G1 | 2/5 | Opus |
+| — | frob | Frobenius `UnitarilyInvariantNorm` instance | 2.5/5 | Opus |
 
 Completed (for the record): E1 2/5, E2 3.5/5, E3 2.5/5, E4 2.5/5, E5 1/5
 (v2); F0 2.5/5, F1.a 2/5, F1.b 3/5, F1.c 3.5/5, F2 2/5 (`199390a`).

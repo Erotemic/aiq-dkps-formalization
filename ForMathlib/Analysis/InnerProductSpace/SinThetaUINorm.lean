@@ -54,6 +54,23 @@ variable {𝕜 E : Type*} [RCLike 𝕜] [NormedAddCommGroup E] [InnerProductSpac
 
 namespace UnitarilyInvariantNorm
 
+/-- **The operator norm is a unitarily invariant norm.**  The witnessing
+instance: two-sided unitary invariance is precisely
+`opNorm_comp_linearIsometryEquiv` / `opNorm_linearIsometryEquiv_comp`.  Its
+existence shows the `UnitarilyInvariantNorm` structure is inhabited, so the
+part-III theorem below is not vacuous. -/
+noncomputable def opNorm (𝕜 E : Type*) [RCLike 𝕜] [NormedAddCommGroup E]
+    [InnerProductSpace 𝕜 E] [FiniteDimensional 𝕜 E] : UnitarilyInvariantNorm 𝕜 E where
+  toFun A := ‖LinearMap.toContinuousLinearMap A‖
+  add_le' A B := by rw [map_add]; exact norm_add_le _ _
+  smul' a A := by rw [map_smul]; exact norm_smul a _
+  invariant' U V A := by
+    have hcomp : LinearMap.toContinuousLinearMap (U.toLinearMap ∘ₗ A ∘ₗ V.toLinearMap)
+        = (U : E →L[𝕜] E) ∘L LinearMap.toContinuousLinearMap A ∘L (V : E →L[𝕜] E) := by
+      ext x; simp
+    rw [hcomp]
+    simp
+
 /-- **The part-III Davis–Kahan sin-Θ theorem, every unitarily invariant norm.**
 Let `T, S` be symmetric, `U` a `T`-invariant subspace with quadratic form
 `≥ (c + g) ‖·‖²`, and `V` an `S`-invariant subspace with form `≤ c ‖·‖²`.  Then

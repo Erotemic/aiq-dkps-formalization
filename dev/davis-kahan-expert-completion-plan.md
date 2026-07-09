@@ -18,6 +18,22 @@ gates, `lake build` green after every step, `#print axioms` =
 
 - **v1 (2026-07-09, Fable):** initial plan, incorporating a review of Opus's
   2026-07-09 expert-gap diagnosis.
+- **v8 (2026-07-09, Fable — full remaining-work roadmap; Opus tasks promoted
+  to routed step bodies):** the two Opus follow-ups filed in v7 as one-liners
+  are now a full **Phase OP** (between Phase G and Phase H) with
+  F4-grade step bodies: **OP1** G1 spectral corollaries (2/5), **OP2** the
+  Frobenius `UnitarilyInvariantNorm` instance (2.5/5 — invariance is already
+  stocked by `sum_sq_norm_apply_unitary_comp`, so cheaper than v7 estimated),
+  and **OP3** the sin 2Θ dictionary certification
+  `σᵢ(Q P̂ P) = cos θᵢ sin θᵢ` (3/5 — was the 3.5/5 "Fable-leaning
+  dictionary" item; the gram-diagonalization route below is Fable-verified on
+  paper, so it is now Opus-executable with a statement review).  **Ordering:
+  OP1/OP2/OP3 are mutually independent and depend only on landed material
+  (E-phase, F3, F4, G1); none of them waits on G2/G3, so Opus can execute
+  Phase OP first, in any order, while G2/G3 remain with Fable.**  G2 and G3
+  bodies restructured into gated stages (G2.0/G3.0 statement gates are
+  Fable-checkpoints; post-gate sub-bricks graded and assigned).  Execution
+  graph and difficulty table updated accordingly.
 - **v7 (2026-07-09, Fable — Opus's F4 reviewed: correct; G1 ✅ DONE by a NEW
   route):** F4 review verdict: all four deliverables correct and idiomatic;
   the `Subsingleton`/`Nontrivial` case split in F4.b is the right fix for a
@@ -832,11 +848,46 @@ Descopes if blocked: (α) the already-recorded dimension-carrying summed
 corollary of W6.1 (trivial, explicitly-weaker docstring); (β) `‖sin 2Θ‖_op`
 for the largest angle via W6.1 at a worst eigenvector.
 
-**G2 — Subspace tan2Θ (vanishing pinch). Difficulty 4.5/5 (after G1).**
-Same skeleton as G1 with the vanishing-diagonal-block hypotheses (state them
-subspace-wise as in `tan_two_theta_le_of_mem`); the G1 machinery with the
-diagonal blocks hypothesized away rather than cancelled.  Do not start before
-G1's route is settled.
+**G2 — Subspace tan2Θ (vanishing pinch). Difficulty 4.5/5.  Staged (v8);
+G2.0 is a Fable checkpoint.**  The v7 route note stands: the G1 mirror gives
+*absolute* (sine-type) bounds only; tan2Θ is *relative* — the per-vector form
+already landed (`tan_two_theta_le`, spectral form
+`tan_two_theta_le_of_eigenvalues`) reads
+`(b−a) · cos θ(x) sin θ(x) ≤ |cos 2θ(x)| · ε` per unit `S`-eigenvector `x`,
+and the `|cos 2θ|` weight does not pass through a UI norm naively.
+
+- **G2.0 (statement gate — Fable, or Opus with a MANDATORY stop after the
+  stub commit).**  Write the headline stub + cross-check paragraph from DK
+  III §8 (tan 2Θ) with Stewart–Sun V.3 and Bhatia VII as secondaries, and
+  `ForMathlib/prose/Davis-1963-core-arguments.tex` for the per-vector
+  skeleton.  The one decision that must come from the sources: how the
+  statement handles `2θᵢ ≥ π/2` (tan's pole).  Candidate shapes to weigh,
+  in decreasing faithfulness-risk:
+  (α) `‖tan 2Θ‖ ≤ 2‖H‖/δ` with the acute-angle convention (requires
+  defining a tan2Θ diagonal operator and knowing `Θ < π/4` — determine
+  whether the pinch hypotheses force it or the source assumes it);
+  (β) the multiplied-out, pole-free per-angle form
+  `(b−a) · 2 cᵢ sᵢ ≤ 2 ε · |cᵢ² − sᵢ²|` for each sorted principal angle
+  (op-norm RHS), matching the landed per-vector shape — safest to state,
+  still literature-recognizable;
+  (γ) UI-norm form of (β) via majorization — only if the source actually
+  states one (do not invent a UI-norm tan2Θ).
+  If the sources are not reachable in-session, STOP and report.
+- **G2.1 (post-gate; Opus-tractable, ~3/5).**  Block-transfer lemma: under
+  the vanishing-pinch hypotheses (state subspace-wise, exactly as in
+  `tan_two_theta_le_of_mem`), the diagonal blocks of `S` and `T` agree:
+  `P S P = P T P` and `(1−P) S (1−P) = (1−P) T (1−P)` as operator
+  identities, plus their form-level corollaries.  Independent of the gate's
+  outcome; needed by every candidate.
+- **G2.2 (post-gate; Fable).**  The aggregation: per-vector `key_identity`
+  machinery (RotationSharp.lean) summed over an `S`-eigenbasis against the
+  OP3 dictionary, or the shape the gate settles on.  Route to be written
+  after G2.0 — do not pre-commit.
+
+Descopes if blocked: (a) op-norm/largest-angle tan2Θ via the per-vector
+theorem at a worst eigenvector (E2-style chaining, Opus 3/5, mirrors
+`sqrt_one_sub_sq_cosPrincipalAngles_le`); (b) Frobenius-only via
+eigenbasis summation.
 
 **G3 — Subspace tanΘ. Difficulty 5/5 — the single hardest remaining item;
 highest statement-risk.**  DK III Thm 6.3 / Stewart–Sun V.3.6 shape: **one
@@ -860,6 +911,214 @@ first: `A' (XK) − (XK) M = Y K` restores symmetric coefficients), or
 (β) follow DK III's own §6 argument line-by-line from the prose digest.
 Descopes: `d = 1` (single vector — easy, from the per-vector machinery);
 Frobenius-only.
+
+*Staging protocol (v8):* G3.0 (= sub-brick (i), the statement gate) is
+**Fable-only** — this is the highest statement-risk item in the plan and the
+tan operator's very well-formedness is source-dependent.  After the gate:
+(ii) and (iii) stay Fable (the `(P_U ι_Z)⁻¹` API and the
+similar-to-symmetric Sylvester variant are both 4/5 on their own); the
+`d = 1` descope is Opus-tractable now (2.5/5, per-vector machinery +
+`sqrt_one_sub_sq_cosPrincipalAngles_le`-style chaining) and is a sensible
+independent warm-up that de-risks the statement shape.
+
+---
+
+## Phase OP — Opus-ready follow-ups (v8; independent of G2/G3)
+
+Three steps, **mutually independent**, each depending only on landed
+material.  None waits on G2/G3: Opus can execute this phase first, in any
+order, in parallel with Fable's Phase-G work.  House rules apply per step
+(provenance header, `lake build` green, `#print axioms` on every new
+headline, register any new file in `ForMathlib.lean`, paper sync, difficulty
+re-rate here if reality disagrees).  No statement-first gate is needed for
+OP1/OP2 (statements are determined by landed headlines); OP3 has a light
+gate (commit the stub, then proceed — the route below is paper-verified).
+
+**OP1 — Spectral (eigenvalue-hypothesis) corollaries of G1.
+Difficulty 2/5.  Opus.**  In `SinTwoThetaUINorm.lean`, a `section Spectral`
+at the end of the file, exactly mirroring the E3 pattern of
+`SinThetaOpNorm.lean` (`norm_starProjection_comp_starProjection_le_of_eigenvalues`).
+Two deliverables.
+
+(a) Spectral form of the headline `sin_two_theta_starProjection_le`:
+
+```lean
+theorem sin_two_theta_starProjection_le_of_eigenvalues
+    (N : UnitarilyInvariantNorm 𝕜 E) (hT : T.IsSymmetric) (hS : S.IsSymmetric)
+    (hn : finrank 𝕜 E = n) {s s' : Finset (Fin n)} {a b : ℝ} (hab : a < b)
+    (hb : ∀ i ∈ s, b ≤ hT.eigenvalues hn i)
+    (ha : ∀ i ∉ s, hT.eigenvalues hn i ≤ a) :
+    N (((specSubspace (hT.eigenvectorBasis hn) (· ∈ s))ᗮ.starProjection ∘L
+        (specSubspace (hS.eigenvectorBasis hn) (· ∈ s')).starProjection ∘L
+        (specSubspace (hT.eigenvectorBasis hn) (· ∈ s)).starProjection
+        : E →L[𝕜] E) : E →ₗ[𝕜] E)
+      ≤ N (S - T) / (b - a)
+```
+
+Route: apply `sin_two_theta_starProjection_le` with
+`U := specSubspace (hT.eigenvectorBasis hn) (· ∈ s)`,
+`V := specSubspace (hS.eigenvectorBasis hn) (· ∈ s')`.  Discharge:
+`hUinv`/`hVinv` by `map_mem_specSubspace` (CourantFischer.lean);
+`hUb` by `le_re_inner_map_self_of_mem_specSubspace` fed `hb`;
+`hUa`: given `x ∈ Uᗮ`, `rw [orthogonal_specSubspace] at hx` turns membership
+into `specSubspace … (· ∉ s)`, then
+`re_inner_map_self_le_of_mem_specSubspace` fed `ha`.  This is verbatim the
+discharge pattern of `sin_two_theta_le_of_eigenvalues`
+(SinThetaOpNorm.lean, `section Spectral`) — copy its `refine … fun w hw => ?_`
+shape.  Note the G1 headline takes `hab : a < b` and a bare `N (S − T)` RHS
+(no `ε`-form — UI norms consume the operator directly, unlike E3's op-norm
+`hε` phrasing).
+
+(b) Spectral form of `sin_two_theta_reflection_le` (mirror-defect version —
+no second operator `S` at all): same `U`, arbitrary `W : Submodule 𝕜 E`,
+conclusion
+`2 * N ↑(…ᗮ.sP ∘L W.sP ∘L ….sP) ≤ N (W.reflection ∘ₗ T ∘ₗ W.reflection − T) / (b − a)`
+with only `hb`/`ha` to discharge.  Trivial once (a) compiles.
+
+Pitfalls: the `HasOrthogonalProjection` instances are found automatically
+(finite dimension); the predicate produced by `orthogonal_specSubspace` is
+`fun i => ¬ (i ∈ s)` — defeq to `(· ∉ s)`, no rewriting needed beyond the E3
+precedent.  Keep the statement's coercion shape identical to the G1 headline
+(`(… : E →L[𝕜] E) : E →ₗ[𝕜] E`) or `exact` will fail on coercion mismatch.
+
+**OP2 — The Frobenius `UnitarilyInvariantNorm` instance.
+Difficulty 2.5/5.  Opus.**  In `UnitarilyInvariantNorm.lean` (new final
+section `section Frobenius`) or a small new file — prefer the former (single
+import site, mirrors `opNorm`'s placement in SinThetaUINorm.lean only
+because F4 needed it there; Frobenius needs nothing from F4).  Define via
+the **basis sum, not singular values** (this makes `add_le'`/`smul'` easy
+and avoids the complex-scalar trap in `smul'` — `singularValues_real_smul`
+only covers `0 ≤ r : ℝ`, but `smul'` quantifies over all `a : 𝕜`):
+
+```lean
+noncomputable def frobenius (𝕜 E : Type*) [RCLike 𝕜] [NormedAddCommGroup E]
+    [InnerProductSpace 𝕜 E] [FiniteDimensional 𝕜 E] :
+    UnitarilyInvariantNorm 𝕜 E where
+  toFun A := Real.sqrt (∑ i, ‖A (stdOrthonormalBasis 𝕜 E i)‖ ^ 2)
+  ...
+```
+
+Field routes:
+- `smul'`: pointwise `norm_smul`, then
+  `mul_pow`, `← Finset.mul_sum`, `Real.sqrt_mul (sq_nonneg ‖a‖)`,
+  `Real.sqrt_sq (norm_nonneg a)`.
+- `add_le'` (Minkowski): package the coordinate-norm vectors as
+  `x y : EuclideanSpace ℝ (Fin m)` (`x i := ‖A (b i)‖` etc.) so that the
+  goal is `‖z‖ ≤ ‖x‖ + ‖y‖`-shaped under `EuclideanSpace.norm_eq`
+  (mind `‖x i‖ = |x i|`: bridge with `Real.norm_eq_abs`, `sq_abs`).
+  Two steps: (i) a small monotonicity fact — for coordinatewise
+  `0 ≤ v ≤ w`, `√(∑ v i²) ≤ √(∑ w i²)` by `Real.sqrt_le_sqrt`,
+  `Finset.sum_le_sum`, `pow_le_pow_left₀` — applied to
+  `‖(A+B)(b i)‖ ≤ ‖A (b i)‖ + ‖B (b i)‖`; (ii) `norm_add_le x y` in
+  `EuclideanSpace ℝ (Fin m)`.  (Check first whether the pin already has a
+  coordinatewise-monotonicity lemma for `EuclideanSpace` norms — grep from a
+  healthy shell — else inline it; it is 5 lines.)
+- `invariant'`: already fully stocked.  Left factor: `U` is a linear
+  isometry equiv, so `‖U (A (V (b i)))‖ = ‖A (V (b i))‖` by
+  `LinearIsometryEquiv.norm_map` under the sum.  Right factor: this is
+  **exactly** `sum_sq_norm_apply_unitary_comp A V rfl (stdOrthonormalBasis 𝕜 E)`
+  (SingularSubspace.lean:194).  Two rewrites total.
+
+Deliverables beyond the instance:
+(a) basis-independence bridge, stated for any orthonormal basis:
+
+```lean
+theorem frobenius_apply (A : E →ₗ[𝕜] E) (hn : finrank 𝕜 E = n)
+    (b : OrthonormalBasis (Fin n) 𝕜 E) :
+    frobenius 𝕜 E A = Real.sqrt (∑ k, ‖A (b k)‖ ^ 2)
+```
+
+via `sum_sq_singularValues A hn b` and `sum_sq_singularValues A rfl
+(stdOrthonormalBasis 𝕜 E)` — the two sums share the singular-value middle
+term.  (Mind the index bookkeeping: the `stdOrthonormalBasis` sum runs over
+`Fin (finrank 𝕜 E)`; instantiate `sum_sq_singularValues` at `n := finrank 𝕜 E`,
+`hn := rfl` for that side.)  Also state the squared form
+(`(frobenius 𝕜 E A)^2 = ∑ …` via `Real.sq_sqrt` on a nonneg sum) — that is
+the vocabulary the paper's `…_hilbertSchmidt` theorems use
+(`DavisKahan.lean` measures `‖S−T‖²_F` as an eigenbasis column sum, which is
+`frobenius_apply` at `b := hS.eigenvectorBasis hn`).
+(b) Two named instantiation corollaries, in the files of their parents:
+the Frobenius part-III sinΘ (`apply_starProjection_comp_starProjection_le`
+at `N := frobenius 𝕜 E`, SinThetaUINorm.lean) and the Frobenius subspace
+sin2Θ (`sin_two_theta_starProjection_le` at `N := frobenius 𝕜 E`,
+SinTwoThetaUINorm.lean), each with the LHS/RHS unfolded through
+`frobenius_apply` so the statements read `√(∑ ‖…(b k)‖²) ≤ √(∑ ‖(S−T)(b k)‖²) / gap`
+— the literature-facing Frobenius vocabulary.  One-liners given (a).
+Paper sync: the dictionary table gains the row "‖·‖_F is a
+`UnitarilyInvariantNorm`; part-III sinΘ and sin2Θ instantiate to Frobenius".
+
+**OP3 — sin 2Θ dictionary certification: `σᵢ(Q P̂ P) = cos θᵢ · sin θᵢ`.
+Difficulty 3/5.  Opus (route is Fable-verified; light statement gate).**
+This certifies that the G1 LHS *is* `½ sin 2Θ`: the E2-analogue at the
+full singular-value (hence every-UI-norm) level rather than op-norm.  In
+`PrincipalAngles.lean` (it consumes the aligned-basis machinery and
+`cosPrincipalAngles`; import `UnitarilyInvariantNorm.lean` for `diagOp` —
+check for an import cycle first; if one appears, the new lemmas go in
+`SinTwoThetaUINorm.lean` instead, which already sees both).
+
+Setting: orthonormal families `u v : Fin d → E`, `U := span (range u)`,
+`V := span (range v)`, `P := U.starProjection`, `P̂ := V.starProjection`,
+`Q := Uᗮ.starProjection`, `M := Q ∘L P̂ ∘L P` (the G1 LHS with these `U, V`),
+`c i := cosPrincipalAngles hv hu i` (mind the argument order/`comm` lemma).
+Target headline (state with `√(1 − c i ^2)` for the sine, per the E2
+precedent `sqrt_one_sub_sq_cosPrincipalAngles_le` — no `arccos`):
+
+```lean
+theorem apply_orthogonal_starProjection_comp_le … :
+    N ((M : E →L[𝕜] E) : E →ₗ[𝕜] E)
+      = N (diagOp bE fun i => if h : (i : ℕ) < d then
+          c ⟨i, h⟩ * Real.sqrt (1 - c ⟨i, h⟩ ^ 2) else 0)
+```
+
+for every `N : UnitarilyInvariantNorm 𝕜 E`, where `bE` is an orthonormal
+basis of `E` extending `u` (see (a)).  Corollary: `2 • M` version (the
+literal `sin 2Θ` operator, `2 c s = sin 2θ`), chained with G1 into
+`N (sin2Θ-diagonal) ≤ 2 N (S − T) / (b − a)`.
+
+Paper-verified route (gram diagonalization — no sorting, no multiplicity
+bookkeeping, that is why this dropped from 3.5/5 to 3/5):
+(a) *Extended basis.* Extend `u` to an orthonormal basis `bE` of `E`
+    (grep the pin from a healthy shell for
+    `exists_orthonormalBasis_extension`-shaped lemmas; fallback: an
+    orthonormal basis of `Uᗮ` plus `u` glued along
+    `Fin d ⊕ Fin (n − d) ≃ Fin n` — the E-phase `blockFamily` idiom in
+    reverse).  Only the properties `bE i = u i` for `i < d` and
+    `bE j ∈ Uᗮ` for `j ≥ d` are consumed.
+(b) *Aligned family.* Replace `v` by the aligned orthonormal family `ṽ` of
+    `AlignedBasis.lean` (`inner_u_aligned_eq`: `⟪u i, ṽ j⟫ = δᵢⱼ c i`);
+    pre-check that its span is all of `V` (`familyIsometry_mem_span` +
+    dimension count; if the file only gives `⊆`, add the equality lemma —
+    5 lines).  `P̂` expands over `ṽ` by
+    `Orthonormal.starProjection_span_image_apply`.
+(c) *Action formulas.* `M (u i) = c i • (ṽ i − c i • u i)` and `M x = 0`
+    for `x ∈ Uᗮ`.  From the alignment: `P̂ (u i) = c i • ṽ i`,
+    `P (ṽ i) = c i • u i`, and `ṽ i − c i • u i ∈ Uᗮ`
+    (inner against every `u j` vanishes: `δᵢⱼ c i − c i δᵢⱼ`).
+(d) *Gram is diagonal in `bE`.* `M.adjoint ∘ₗ M` fixes each `u i` up to the
+    scalar `c i ^ 2 * (1 − c i ^ 2)` and kills `Uᗮ`: from (c),
+    `Q (M (u i)) = M (u i)`, `P̂ (ṽ i − c i • u i) = (1 − c i ^2) • ṽ i`,
+    `P ((1 − c i ^2) • ṽ i) = (1 − c i ^2) c i • u i`.  Meanwhile
+    `gram (diagOp bE w) = diagOp bE (w ^ 2)` by `adjoint_diagOp` +
+    `diagOp_comp`.  Conclude `M.adjoint ∘ₗ M = gram (diagOp bE w)` for
+    `w i := if … then c i √(1 − c i²) else 0` by `LinearMap.ext` on `bE`
+    (`OrthonormalBasis` spans; `sq_sqrt` needs `0 ≤ 1 − c i ^2`, i.e.
+    `cosPrincipalAngles_le_one`).
+(e) *Conclude.* `singularValues_eq_of_gram_eq` (KyFan.lean:58) gives
+    `σ(M) = σ(diagOp bE w)`; then `apply_eq_gauge` twice (same `bE`) turns
+    equal singular values into equal `N`-values — the headline.  The
+    op-norm instance at `N := opNorm 𝕜 E` recovers (and strengthens) the
+    E2 certification; cross-reference
+    `norm_orthogonal_starProjection_comp_starProjection` in the docstring.
+
+Light gate: commit the stub of the headline plus a two-sentence docstring
+cross-check ("the CS-decomposition lower-left block is `S C`, singular
+values `sin θᵢ cos θᵢ`" — Bhatia VII.1, DK III §8) before proving; no
+pause needed after the stub since the route is verified.  Pitfalls: `M` is
+`E →L[𝕜] E` but `adjoint`/`gram` live on `E →ₗ[𝕜] E` — do (c)/(d) entirely
+at the LinearMap level (coerce once, at the start); `starProjection` of a
+span expands only through the `Orthonormal.…span_image_apply` route seen in
+`norm_orthogonal_starProjection_comp_starProjection`'s proof — do not
+unfold `starProjection` itself.
 
 ---
 
@@ -888,9 +1147,21 @@ F0 ─→ F1.a → F1.b → F1.c ─→ F2      [Batch 2: Ky Fan ✅ DONE (19939
 F3.a → F3.b → F3.c → F3.d ─→ F3.e → F3.f   [Batch 3: Fan dominance ✅ DONE
                                             (7481732)]
 F0.e/F3.e → F4.a → F4.b → F4.c       [Batch 4: part-III sinΘ ✅ DONE (b8de103)]
-F4 ─→ G1 ✅ (c17998d) → G2;  G3 independent, after F4   [Batches 5–6: Fable]
-(F3-annex: optional, anytime after F4)
+F4 ─→ G1 ✅ (c17998d)                    [Batch 5: sin2Θ ✅ DONE]
+
+── remaining (v8) ──────────────────────────────────────────────
+OP1, OP2, OP3 (parallel, Opus, no unmet deps — can start NOW)
+G2.1 block-transfer (Opus, anytime — gate-independent)
+G2.0 gate (Fable) ─→ G2.2 (Fable)
+G3.0 gate (Fable) ─→ G3.(ii),(iii) (Fable);  G3 d=1 descope (Opus, anytime)
+(F3-annex: optional, anytime)
 ```
+
+The only cross-phase edges worth noting: OP2 before OP1 lets OP1's docstring
+cite the Frobenius instantiation, and OP3's headline chains with G1 into the
+certified `sin 2Θ` bound — but neither is a hard dependency.  All five
+remaining Opus items (OP1, OP2, OP3, G2.1, G3-d=1) are independently
+startable now; nothing Opus-assigned waits on any Fable item.
 
 Each batch ends: `lake build` green, axiom check, golf pass, paper sync
 (move items out of §"What remains", extend the dictionary tables, update the
@@ -904,9 +1175,9 @@ old completion/HLP rows moved to the annex).
 
 | Rank | Step | What | Difficulty | Assignee |
 |------|------|------|-----------|----------|
-| 1 | G3 | Subspace tanΘ (graph operator, similar-to-symmetric Sylvester) | 5/5 | **Fable**; statement-risk |
+| 1 | G3 | Subspace tanΘ (graph operator, similar-to-symmetric Sylvester) | 5/5 | **Fable**; statement-risk; d=1 descope → Opus 2.5/5 |
 | 2 | G1 | Subspace sin2Θ (mirror reduction to F4.c) | 5/5→3/5 | ✅ DONE (Fable, `c17998d`) |
-| 3 | G2 | Subspace tan2Θ | 4.5/5 | **Fable** (after G1) |
+| 3 | G2 | Subspace tan2Θ (staged: G2.0 gate + G2.2 Fable; G2.1 Opus 3/5) | 4.5/5 | **Fable** + Opus sub-brick |
 | 4 | F3.d | T-transform descent on the gauge (v4 crux) | 4/5 | ✅ DONE (Fable, `7481732`) |
 | 5 | F3.a | `diagOp` + operator SVD factorization | 3.5/5 | ✅ DONE (Fable, `7481732`) |
 | 6 | F4.c | Part-III sinΘ, every UI norm (+ CLM↔LinearMap bridge) | 3/5 | ✅ DONE (Opus, `b8de103`) |
@@ -918,8 +1189,9 @@ old completion/HLP rows moved to the annex).
 | 12 | F3.f | `star` invariance | 1/5 | ✅ DONE (Fable, `7481732`) |
 | — | annex α | Weak-majorization completion (optional) | 2.5/5 | either, after F4 |
 | — | annex β | Hardy–Littlewood–Pólya (optional) | 4/5 | Fable, after F4 |
-| — | G1-cor | Spectral (eigenvalue-hypothesis) corollaries of G1 | 2/5 | Opus |
-| — | frob | Frobenius `UnitarilyInvariantNorm` instance | 2.5/5 | Opus |
+| — | OP3 | sin 2Θ dictionary certification `σᵢ(QP̂P) = cᵢsᵢ` (routed v8) | 3.5/5→3/5 | Opus, start anytime |
+| — | OP2 | Frobenius `UnitarilyInvariantNorm` instance (routed v8) | 2.5/5 | Opus, start anytime |
+| — | OP1 | Spectral (eigenvalue-hypothesis) corollaries of G1 (routed v8) | 2/5 | Opus, start anytime |
 
 Completed (for the record): E1 2/5, E2 3.5/5, E3 2.5/5, E4 2.5/5, E5 1/5
 (v2); F0 2.5/5, F1.a 2/5, F1.b 3/5, F1.c 3.5/5, F2 2/5 (`199390a`).
@@ -929,6 +1201,10 @@ Completed (for the record): E1 2/5, E2 3.5/5, E3 2.5/5, E4 2.5/5, E5 1/5
 - Phases E–F complete ⇒ the paper's §"What remains" reduces to the three
   Phase-G theorems and the Phase-H notes; part-III sinΘ (every UI norm,
   Frobenius and op-norm as instances) is the new headline.
+- Phase OP complete ⇒ every landed subspace theorem speaks the literature's
+  language: eigenvalue-hypothesis forms for sin2Θ, the Frobenius norm as a
+  first-class `UnitarilyInvariantNorm` instance, and the G1 LHS certified as
+  `½ sin 2Θ` in every UI norm.
 - Phase G complete ⇒ the DK III quartet is formalized at the subspace level;
   the paper's gap list reduces to Phase H (documented as out of scope).
 - Every batch: statement-first gates honored where mandated; new files carry

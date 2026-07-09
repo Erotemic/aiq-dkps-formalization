@@ -13,6 +13,7 @@ import ForMathlib.Analysis.InnerProductSpace.EigenvalueChange
 import ForMathlib.Analysis.InnerProductSpace.GramMatrix
 import ForMathlib.Analysis.InnerProductSpace.HoffmanWielandt
 import ForMathlib.Analysis.InnerProductSpace.IntertwiningUnitary
+import ForMathlib.Analysis.InnerProductSpace.KyFan
 import ForMathlib.Analysis.InnerProductSpace.NearIsometry
 import ForMathlib.Analysis.InnerProductSpace.PartialIsometry
 import ForMathlib.Analysis.InnerProductSpace.PolarDecomposition

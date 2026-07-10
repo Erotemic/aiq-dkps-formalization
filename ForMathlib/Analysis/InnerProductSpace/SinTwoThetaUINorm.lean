@@ -264,6 +264,84 @@ theorem sin_two_theta_starProjection_le (N : UnitarilyInvariantNorm 𝕜 E)
   have h4 : 2 * N (S - T) / (b - a) = 2 * (N (S - T) / (b - a)) := by ring
   linarith
 
+/-- **The Frobenius subspace sin 2Θ theorem.**  The every-UI-norm sin 2Θ bound
+instantiated at the Frobenius norm:
+`‖Uᗮ.sP ∘ V.sP ∘ U.sP‖_F ≤ ‖S − T‖_F / (b − a)`.  With
+`sin_two_theta_starProjection_le`'s dictionary the left side is `‖½ sin 2Θ‖_F`;
+unfold either side with `frobenius_apply` for the column-norm-sum reading. -/
+theorem frobenius_sin_two_theta_starProjection_le
+    (hT : T.IsSymmetric) (hS : S.IsSymmetric) {U V : Submodule 𝕜 E}
+    [U.HasOrthogonalProjection] [V.HasOrthogonalProjection]
+    (hUinv : ∀ x ∈ U, T x ∈ U) (hVinv : ∀ x ∈ V, S x ∈ V)
+    {a b : ℝ} (hab : a < b)
+    (hUb : ∀ x ∈ U, b * ‖x‖ ^ 2 ≤ RCLike.re ⟪T x, x⟫_𝕜)
+    (hUa : ∀ x ∈ Uᗮ, RCLike.re ⟪T x, x⟫_𝕜 ≤ a * ‖x‖ ^ 2) :
+    frobenius 𝕜 E ((Uᗮ.starProjection ∘L V.starProjection ∘L U.starProjection
+        : E →L[𝕜] E) : E →ₗ[𝕜] E)
+      ≤ frobenius 𝕜 E (S - T) / (b - a) :=
+  (frobenius 𝕜 E).sin_two_theta_starProjection_le hT hS hUinv hVinv hab hUb hUa
+
+/-! ### Spectral (eigenvalue-hypothesis) forms
+
+The subspace headline `sin_two_theta_starProjection_le` and its mirror-defect
+companion, specialized to spectral subspaces: `U` is the span of the
+`T`-eigenvectors selected by `s`, whose eigenvalues sit above `b` while the
+complementary ones sit below `a`; `V` is the analogous `S`-eigenblock selected
+by `s'`.  This is the every-UI-norm sin 2Θ theorem in the eigenvalue-hypothesis
+form the literature states, mirroring
+`SinThetaOpNorm.norm_starProjection_comp_starProjection_le_of_eigenvalues`
+(plan step OP1). -/
+
+section Spectral
+
+variable {n : ℕ}
+
+/-- **Subspace sin 2Θ, every unitarily invariant norm, spectral form.**  With
+`U` the `T`-eigenblock selected by `s` (selected eigenvalues `≥ b`, complementary
+`≤ a`) and `V` the `S`-eigenblock selected by `s'`,
+`N (Uᗮ.sP ∘ V.sP ∘ U.sP) ≤ N (S − T) / (b − a)` for every unitarily invariant
+norm `N`.  The left side is `N (½ sin 2Θ)` (see the module docstring). -/
+theorem sin_two_theta_starProjection_le_of_eigenvalues (N : UnitarilyInvariantNorm 𝕜 E)
+    (hT : T.IsSymmetric) (hS : S.IsSymmetric) (hn : finrank 𝕜 E = n)
+    {s s' : Finset (Fin n)} {a b : ℝ} (hab : a < b)
+    (hb : ∀ i ∈ s, b ≤ hT.eigenvalues hn i)
+    (ha : ∀ i ∉ s, hT.eigenvalues hn i ≤ a) :
+    N (((specSubspace (hT.eigenvectorBasis hn) (· ∈ s))ᗮ.starProjection ∘L
+        (specSubspace (hS.eigenvectorBasis hn) (· ∈ s')).starProjection ∘L
+        (specSubspace (hT.eigenvectorBasis hn) (· ∈ s)).starProjection
+        : E →L[𝕜] E) : E →ₗ[𝕜] E)
+      ≤ N (S - T) / (b - a) :=
+  N.sin_two_theta_starProjection_le hT hS
+    (fun _ hx => map_mem_specSubspace hT hn _ hx)
+    (fun _ hx => map_mem_specSubspace hS hn _ hx) hab
+    (fun _ hx => le_re_inner_map_self_of_mem_specSubspace hT hn (fun i hi => hb i hi) hx)
+    (fun w hw => by
+      rw [orthogonal_specSubspace] at hw
+      exact re_inner_map_self_le_of_mem_specSubspace hT hn (fun i hi => ha i hi) hw)
+
+/-- **Mirror-defect sin 2Θ, spectral form.**  As
+`sin_two_theta_starProjection_le_of_eigenvalues` but with an arbitrary subspace
+`W` in the middle and the sharper mirror-defect right side (no second operator):
+`2 N (Uᗮ.sP ∘ W.sP ∘ U.sP) ≤ N (J T J − T) / (b − a)`, `J = W.reflection`. -/
+theorem sin_two_theta_reflection_le_of_eigenvalues (N : UnitarilyInvariantNorm 𝕜 E)
+    (hT : T.IsSymmetric) (hn : finrank 𝕜 E = n) (W : Submodule 𝕜 E)
+    [W.HasOrthogonalProjection] {s : Finset (Fin n)} {a b : ℝ} (hab : a < b)
+    (hb : ∀ i ∈ s, b ≤ hT.eigenvalues hn i)
+    (ha : ∀ i ∉ s, hT.eigenvalues hn i ≤ a) :
+    2 * N (((specSubspace (hT.eigenvectorBasis hn) (· ∈ s))ᗮ.starProjection ∘L
+        W.starProjection ∘L
+        (specSubspace (hT.eigenvectorBasis hn) (· ∈ s)).starProjection
+        : E →L[𝕜] E) : E →ₗ[𝕜] E)
+      ≤ N (W.reflection.toLinearMap ∘ₗ T ∘ₗ W.reflection.toLinearMap - T) / (b - a) :=
+  N.sin_two_theta_reflection_le hT
+    (fun _ hx => map_mem_specSubspace hT hn _ hx) hab
+    (fun _ hx => le_re_inner_map_self_of_mem_specSubspace hT hn (fun i hi => hb i hi) hx)
+    (fun w hw => by
+      rw [orthogonal_specSubspace] at hw
+      exact re_inner_map_self_le_of_mem_specSubspace hT hn (fun i hi => ha i hi) hw)
+
+end Spectral
+
 end UnitarilyInvariantNorm
 
 end ForMathlib

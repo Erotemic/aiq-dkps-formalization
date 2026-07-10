@@ -142,6 +142,21 @@ theorem apply_starProjection_comp_starProjection_le (N : UnitarilyInvariantNorm 
     _ ≤ N' Y / g := hbound
     _ ≤ N (S - T) / g := by gcongr
 
+/-- **The Frobenius part-III Davis–Kahan sin-Θ theorem.**  The every-UI-norm
+sin-Θ bound instantiated at the Frobenius norm:
+`‖V.sP ∘ U.sP‖_F ≤ ‖S − T‖_F / g`.  Unfold either side with
+`frobenius_apply` to read it as a column-norm sum `√(∑ ‖·‖²)`. -/
+theorem frobenius_starProjection_comp_starProjection_le
+    (hT : T.IsSymmetric) (hS : S.IsSymmetric)
+    {U V : Submodule 𝕜 E} [U.HasOrthogonalProjection] [V.HasOrthogonalProjection]
+    (hUinv : ∀ x ∈ U, T x ∈ U) (hVinv : ∀ x ∈ V, S x ∈ V)
+    {c g : ℝ} (hg : 0 < g)
+    (hU : ∀ x ∈ U, (c + g) * ‖x‖ ^ 2 ≤ RCLike.re ⟪T x, x⟫_𝕜)
+    (hV : ∀ x ∈ V, RCLike.re ⟪S x, x⟫_𝕜 ≤ c * ‖x‖ ^ 2) :
+    frobenius 𝕜 E ((V.starProjection ∘L U.starProjection : E →L[𝕜] E) : E →ₗ[𝕜] E)
+      ≤ frobenius 𝕜 E (S - T) / g :=
+  (frobenius 𝕜 E).apply_starProjection_comp_starProjection_le hT hS hUinv hVinv hg hU hV
+
 end UnitarilyInvariantNorm
 
 end ForMathlib

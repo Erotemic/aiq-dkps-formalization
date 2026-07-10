@@ -793,6 +793,92 @@ theorem apply_comp_le' {X C : E →ₗ[𝕜] E} {c : ℝ} (hc : 0 ≤ c)
             exact singularValues_comp_le' hc hC i) k
     _ = N X * c := by rw [N.smul_eq, RCLike.norm_ofReal, abs_of_nonneg hc, mul_comm]
 
+/-! ### The Frobenius (Hilbert–Schmidt) unitarily invariant norm
+
+`‖A‖_F = √(∑ᵢ ‖A bᵢ‖²)` over any orthonormal basis is a unitarily invariant
+norm: subadditivity is the Minkowski inequality on `EuclideanSpace`, absolute
+homogeneity is pointwise, and two-sided unitary invariance is
+`sum_sq_norm_apply_unitary_comp` on the right and `LinearIsometryEquiv.norm_map`
+on the left.  This is the norm the paper's `…_hilbertSchmidt` bounds use, and it
+instantiates the every-UI-norm Davis–Kahan theorems to the Frobenius vocabulary
+(plan step OP2). -/
+
+/-- `√(∑ (fᵢ + gᵢ)²) ≤ √(∑ fᵢ²) + √(∑ gᵢ²)` for nonnegative real vectors: the
+Minkowski inequality, obtained from `EuclideanSpace`'s triangle inequality by
+transporting `f, g` across `WithLp.equiv`. -/
+private theorem sqrt_sum_add_sq_le {m : ℕ} (f g : Fin m → ℝ) :
+    Real.sqrt (∑ i, (f i + g i) ^ 2)
+      ≤ Real.sqrt (∑ i, f i ^ 2) + Real.sqrt (∑ i, g i ^ 2) := by
+  let x : EuclideanSpace ℝ (Fin m) := (WithLp.equiv 2 (Fin m → ℝ)).symm f
+  let y : EuclideanSpace ℝ (Fin m) := (WithLp.equiv 2 (Fin m → ℝ)).symm g
+  have hnx : ‖x‖ = Real.sqrt (∑ i, f i ^ 2) := by
+    rw [EuclideanSpace.norm_eq]
+    exact congrArg _ (Finset.sum_congr rfl fun i _ => by
+      rw [show x i = f i from rfl, Real.norm_eq_abs, sq_abs])
+  have hny : ‖y‖ = Real.sqrt (∑ i, g i ^ 2) := by
+    rw [EuclideanSpace.norm_eq]
+    exact congrArg _ (Finset.sum_congr rfl fun i _ => by
+      rw [show y i = g i from rfl, Real.norm_eq_abs, sq_abs])
+  have hnxy : ‖x + y‖ = Real.sqrt (∑ i, (f i + g i) ^ 2) := by
+    rw [EuclideanSpace.norm_eq]
+    exact congrArg _ (Finset.sum_congr rfl fun i _ => by
+      rw [PiLp.add_apply, show x i = f i from rfl, show y i = g i from rfl,
+        Real.norm_eq_abs, sq_abs])
+  rw [← hnx, ← hny, ← hnxy]
+  exact norm_add_le x y
+
+/-- **The Frobenius (Hilbert–Schmidt) norm as a unitarily invariant norm.**
+`A ↦ √(∑ᵢ ‖A bᵢ‖²)` over the standard orthonormal basis. -/
+noncomputable def frobenius (𝕜 E : Type*) [RCLike 𝕜] [NormedAddCommGroup E]
+    [InnerProductSpace 𝕜 E] [FiniteDimensional 𝕜 E] : UnitarilyInvariantNorm 𝕜 E where
+  toFun A := Real.sqrt (∑ i, ‖A (stdOrthonormalBasis 𝕜 E i)‖ ^ 2)
+  add_le' A B := by
+    have hmono : Real.sqrt (∑ i, ‖(A + B) (stdOrthonormalBasis 𝕜 E i)‖ ^ 2)
+        ≤ Real.sqrt (∑ i, (‖A (stdOrthonormalBasis 𝕜 E i)‖
+            + ‖B (stdOrthonormalBasis 𝕜 E i)‖) ^ 2) := by
+      refine Real.sqrt_le_sqrt (Finset.sum_le_sum fun i _ => ?_)
+      refine pow_le_pow_left₀ (norm_nonneg _) ?_ 2
+      rw [LinearMap.add_apply]; exact norm_add_le _ _
+    exact hmono.trans (sqrt_sum_add_sq_le _ _)
+  smul' a A := by
+    have h : ∀ i, ‖(a • A) (stdOrthonormalBasis 𝕜 E i)‖ ^ 2
+        = ‖a‖ ^ 2 * ‖A (stdOrthonormalBasis 𝕜 E i)‖ ^ 2 := fun i => by
+      rw [LinearMap.smul_apply, norm_smul, mul_pow]
+    rw [show (∑ i, ‖(a • A) (stdOrthonormalBasis 𝕜 E i)‖ ^ 2)
+        = ‖a‖ ^ 2 * ∑ i, ‖A (stdOrthonormalBasis 𝕜 E i)‖ ^ 2 by
+        rw [Finset.mul_sum]; exact Finset.sum_congr rfl fun i _ => h i,
+      Real.sqrt_mul (sq_nonneg _), Real.sqrt_sq (norm_nonneg a)]
+  invariant' U V A := by
+    have key : ∀ i, ‖(U.toLinearMap ∘ₗ A ∘ₗ V.toLinearMap) (stdOrthonormalBasis 𝕜 E i)‖ ^ 2
+        = ‖A (V (stdOrthonormalBasis 𝕜 E i))‖ ^ 2 := fun i => by
+      rw [show (U.toLinearMap ∘ₗ A ∘ₗ V.toLinearMap) (stdOrthonormalBasis 𝕜 E i)
+          = U (A (V (stdOrthonormalBasis 𝕜 E i))) from rfl, U.norm_map]
+    rw [show (∑ i, ‖(U.toLinearMap ∘ₗ A ∘ₗ V.toLinearMap) (stdOrthonormalBasis 𝕜 E i)‖ ^ 2)
+        = ∑ i, ‖A (V (stdOrthonormalBasis 𝕜 E i))‖ ^ 2 from
+        Finset.sum_congr rfl fun i _ => key i,
+      sum_sq_norm_apply_unitary_comp A V rfl (stdOrthonormalBasis 𝕜 E)]
+
+variable (𝕜 E) in
+/-- **Basis independence of the Frobenius norm.**  `‖A‖_F = √(∑ₖ ‖A bₖ‖²)` for
+*any* orthonormal basis `b`, not just the standard one — both sides equal
+`√(∑ σₖ²)` by `sum_sq_singularValues`. -/
+theorem frobenius_apply (A : E →ₗ[𝕜] E) (hn : finrank 𝕜 E = n)
+    (b : OrthonormalBasis (Fin n) 𝕜 E) :
+    frobenius 𝕜 E A = Real.sqrt (∑ k, ‖A (b k)‖ ^ 2) := by
+  subst hn
+  show Real.sqrt (∑ i, ‖A (stdOrthonormalBasis 𝕜 E i)‖ ^ 2) = _
+  rw [← sum_sq_singularValues A rfl (stdOrthonormalBasis 𝕜 E),
+    ← sum_sq_singularValues A rfl b]
+
+variable (𝕜 E) in
+/-- The squared Frobenius norm as a column-norm sum — the `‖A‖²_F` vocabulary of
+the paper's Hilbert–Schmidt bounds. -/
+theorem frobenius_sq (A : E →ₗ[𝕜] E) (hn : finrank 𝕜 E = n)
+    (b : OrthonormalBasis (Fin n) 𝕜 E) :
+    frobenius 𝕜 E A ^ 2 = ∑ k, ‖A (b k)‖ ^ 2 := by
+  rw [frobenius_apply 𝕜 E A hn b,
+    Real.sq_sqrt (Finset.sum_nonneg fun i _ => sq_nonneg _)]
+
 end UnitarilyInvariantNorm
 
 end ForMathlib

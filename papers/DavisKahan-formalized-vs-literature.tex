@@ -645,6 +645,26 @@ $N(T'-T)\le 2N(S-T)$ because $J$ commutes with $S$.  A sharper
 $2N(Q\,P_W\,P)\le N(JTJ-T)/(b-a)$ for an \emph{arbitrary} mirror subspace
 $W$ --- no second operator at all.
 
+\paragraph{Frobenius norm as a first-class instance; spectral and
+block corollaries.}  Three further pieces bring the every-UI-norm theorems
+into the literature's vocabulary.  (i)~The Frobenius norm
+$\norm{A}_{\F}=\sqrt{\sum_i\norm{A b_i}^2}$ is now packaged as a
+\texttt{UnitarilyInvariantNorm} instance (\texttt{frobenius}), basis-independent
+(\texttt{frobenius\_apply}); subadditivity is Minkowski on Euclidean space and
+two-sided invariance reuses the Gram machinery, so the part-III $\sin\Theta$
+and subspace $\sin2\Theta$ bounds instantiate to explicit Frobenius statements
+(\texttt{frobenius\_starProjection\_comp\_starProjection\_le},
+\texttt{frobenius\_sin\_two\_theta\_starProjection\_le}).  (ii)~The
+$\sin2\Theta$ bound is restated in the eigenvalue-hypothesis form the
+literature uses --- $U,V$ the eigenblocks selected by index sets, the gap read
+off sorted eigenvalues (\texttt{sin\_two\_theta\_starProjection\_le\_of\_eigenvalues}),
+mirroring the $\sin\Theta$ spectral corollary.  (iii)~The vanishing-pinch
+hypothesis of the (still-pending) $\tan2\Theta$ theorem is recorded as an
+operator identity: a perturbation with no $U$-diagonal block compresses to
+zero, $P\,H\,P=0$, hence operators agreeing on the $U$-block have equal
+compressions, $P S P=P T P$
+(\texttt{starProjection\_comp\_comp\_starProjection\_\{eq\_zero,congr\}}).
+
 \section{What remains, ranked by difficulty}\label{sec:remains}
 
 Each downstream consumer in this repository is already served by the
@@ -664,7 +684,9 @@ everything above is \texttt{dev/davis-kahan-gap-closure-plan.md} (v6, closed).
   bounds, while $\tan2\Theta$ under the vanishing-pinch hypothesis is a
   \emph{relative} bound (angles past $\pi/4$ are allowed), so it needs
   different technology --- likely the per-vector key identity summed with the
-  diagonal blocks hypothesized away.  $\tan\Theta$ (one exact spectral
+  diagonal blocks hypothesized away (the block-transfer identities for that
+  hypothesis are already in place, see \S\ref{sec:extensions}).  $\tan\Theta$
+  (one exact spectral
   subspace against an arbitrary test subspace, residual on the right-hand
   side) carries the highest statement risk; per-step routes and descopes are
   in the expert-completion plan, steps G2--G3.

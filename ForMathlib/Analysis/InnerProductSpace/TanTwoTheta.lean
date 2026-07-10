@@ -136,6 +136,80 @@ section Headline
 
 variable [FiniteDimensional 𝕜 E] [CompleteSpace E] {T S : E →ₗ[𝕜] E}
 
+/-- **Spectral repulsion (plan step G2.2a).**  If the diagonal form of a
+symmetric `S` is `≥ b` on a subspace `U` and `≤ a` on `Uᗮ` (`a < b`), then no
+eigenvalue of `S` lies in the open gap `(a, b)`: every real eigenvalue `μ`
+satisfies `μ ≤ a ∨ b ≤ μ`.  This is the mechanism behind the off-diagonal
+(vanishing-pinch) hypothesis of the tan 2Θ theorem: such a perturbation keeps
+`S = T + H`'s spectrum out of the gap (GKMV Thm 2.4(ii)), because the pinch
+makes `S`'s diagonal blocks equal `T`'s, `⟪u, S u⟫ = ⟪u, T u⟫`.  Proof: split
+the eigenvector `x = P x + (1−P) x =: p + m`; the eigen-equation gives
+`μ‖p‖² = s₁ + r` and `μ‖m‖² = r + s₂` with `s₁ = re⟪Sp,p⟫ ≥ b‖p‖²`,
+`s₂ = re⟪Sm,m⟫ ≤ a‖m‖²`, `r = re⟪Sp,m⟫`; eliminating `r` gives
+`(μ−a)‖m‖² ≤ r ≤ (μ−b)‖p‖²`, incompatible with `a < μ < b` and `‖p‖,‖m‖ > 0`
+(the degenerate `p = 0` / `m = 0` cases put `x` in `Uᗮ` / `U` directly). -/
+theorem eigenvalue_notMem_gap_of_diagonal_form (hS : S.IsSymmetric)
+    {U : Submodule 𝕜 E} [U.HasOrthogonalProjection] {a b : ℝ}
+    (hUb : ∀ u ∈ U, b * ‖u‖ ^ 2 ≤ RCLike.re ⟪S u, u⟫_𝕜)
+    (hUa : ∀ w ∈ Uᗮ, RCLike.re ⟪S w, w⟫_𝕜 ≤ a * ‖w‖ ^ 2)
+    {x : E} (hx : x ≠ 0) {μ : ℝ} (hμ : S x = (μ : 𝕜) • x) :
+    μ ≤ a ∨ b ≤ μ := by
+  set p := U.starProjection x with hpdef
+  set m := x - U.starProjection x with hmdef
+  have hpU : p ∈ U := U.starProjection_apply_mem x
+  have hmU : m ∈ Uᗮ := U.sub_starProjection_mem_orthogonal x
+  have hsplit : x = p + m := by rw [hpdef, hmdef]; abel
+  have hmp : ⟪m, p⟫_𝕜 = 0 := Submodule.inner_left_of_mem_orthogonal hpU hmU
+  have hpm : ⟪p, m⟫_𝕜 = 0 := Submodule.inner_right_of_mem_orthogonal hpU hmU
+  -- `⟪S x, y⟫ = μ ⟪x, y⟫` and the form-symmetry `re⟪S y, z⟫ = re⟪S z, y⟫`.
+  have hSxy : ∀ y, ⟪S x, y⟫_𝕜 = (μ : 𝕜) * ⟪x, y⟫_𝕜 := fun y => by
+    rw [hμ, inner_smul_left, RCLike.conj_ofReal]
+  have hform : ∀ y z, RCLike.re ⟪S y, z⟫_𝕜 = RCLike.re ⟪S z, y⟫_𝕜 := fun y z => by
+    rw [hS y z, ← RCLike.conj_re ⟪y, S z⟫_𝕜, inner_conj_symm]
+  -- `re⟪S x, x'⟫ = μ ‖x'‖²`-style values and the block decompositions.
+  have hval : ∀ y, RCLike.re ⟪S x, y⟫_𝕜 = μ * RCLike.re ⟪x, y⟫_𝕜 := fun y => by
+    rw [hSxy y, RCLike.re_ofReal_mul]
+  -- Degenerate cases.
+  rcases eq_or_ne p 0 with hp0 | hp0n
+  · left
+    have hxU : x ∈ Uᗮ := by rw [hsplit, hp0, zero_add]; exact hmU
+    have hle := hUa x hxU
+    rw [hval x, inner_self_eq_norm_sq] at hle
+    have hxpos : (0 : ℝ) < ‖x‖ ^ 2 := pow_pos (norm_pos_iff.mpr hx) 2
+    nlinarith [hle, hxpos]
+  rcases eq_or_ne m 0 with hm0 | hm0n
+  · right
+    have hxU : x ∈ U := by rw [hsplit, hm0, add_zero]; exact hpU
+    have hle := hUb x hxU
+    rw [hval x, inner_self_eq_norm_sq] at hle
+    have hxpos : (0 : ℝ) < ‖x‖ ^ 2 := pow_pos (norm_pos_iff.mpr hx) 2
+    nlinarith [hle, hxpos]
+  -- Both blocks nonzero.
+  have hp2 : (0 : ℝ) < ‖p‖ ^ 2 := pow_pos (norm_pos_iff.mpr hp0n) 2
+  have hq2 : (0 : ℝ) < ‖m‖ ^ 2 := pow_pos (norm_pos_iff.mpr hm0n) 2
+  have hval_p : RCLike.re ⟪S x, p⟫_𝕜 = μ * ‖p‖ ^ 2 := by
+    rw [hval p, hsplit, inner_add_left, map_add, inner_self_eq_norm_sq, hmp, map_zero, add_zero]
+  have hval_m : RCLike.re ⟪S x, m⟫_𝕜 = μ * ‖m‖ ^ 2 := by
+    rw [hval m, hsplit, inner_add_left, map_add, hpm, map_zero, zero_add, inner_self_eq_norm_sq]
+  have decomp_p : RCLike.re ⟪S x, p⟫_𝕜
+      = RCLike.re ⟪S p, p⟫_𝕜 + RCLike.re ⟪S p, m⟫_𝕜 := by
+    rw [hsplit, map_add, inner_add_left, map_add, hform m p]
+  have decomp_m : RCLike.re ⟪S x, m⟫_𝕜
+      = RCLike.re ⟪S p, m⟫_𝕜 + RCLike.re ⟪S m, m⟫_𝕜 := by
+    rw [hsplit, map_add, inner_add_left, map_add]
+  have heq_p : μ * ‖p‖ ^ 2 = RCLike.re ⟪S p, p⟫_𝕜 + RCLike.re ⟪S p, m⟫_𝕜 := by
+    rw [← decomp_p, hval_p]
+  have heq_m : μ * ‖m‖ ^ 2 = RCLike.re ⟪S p, m⟫_𝕜 + RCLike.re ⟪S m, m⟫_𝕜 := by
+    rw [← decomp_m, hval_m]
+  have hr_le : RCLike.re ⟪S p, m⟫_𝕜 ≤ (μ - b) * ‖p‖ ^ 2 := by
+    nlinarith [hUb p hpU, heq_p]
+  have hr_ge : (μ - a) * ‖m‖ ^ 2 ≤ RCLike.re ⟪S p, m⟫_𝕜 := by
+    nlinarith [hUa m hmU, heq_m]
+  by_contra hc
+  push_neg at hc
+  nlinarith [hr_le, hr_ge, mul_pos (show (0 : ℝ) < μ - a by linarith [hc.1]) hq2,
+    mul_pos (show (0 : ℝ) < b - μ by linarith [hc.2]) hp2]
+
 /-- **The subspace Davis–Kahan tan 2Θ theorem (gated statement, plan step
 G2.2; proof pending).**  `T, S` symmetric; `U` a `T`-invariant subspace with
 the form of `T` at least `b` on `U` and at most `a` on `Uᗮ`; `V` an

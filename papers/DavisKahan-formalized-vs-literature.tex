@@ -632,7 +632,14 @@ $S$-invariant subspace, then for every unitarily invariant norm
   N\bigl(Q\,\widehat P\,P\bigr)\;\le\;N(S-T)\,/\,(b-a),
   \qquad P=P_U,\; Q=1-P,\; \widehat P=P_V .
 \]
-Since $2\,Q\widehat P P$ has singular values $\sin2\theta_i$, this is
+The identification $2\,Q\widehat P P=\sin2\Theta$ is now \emph{certified} at
+the level of every unitarily invariant norm
+(\texttt{apply\_orthogonal\_starProjection\_comp\_starProjection\_comp}): the
+singular values of $Q\widehat P P$ are exactly $\cos\theta_i\sin\theta_i$, via
+the cos-$\Theta$ dictionary $\sigma(\widehat P P)=\cos\Theta$
+(\texttt{singularValues\_starProjection\_comp\_starProjection}) and the
+operator identity $(Q\widehat PP)^\star(Q\widehat PP)=C-C^2$ with
+$C=(\widehat PP)^\star(\widehat PP)$.  Thus the bound reads
 $\norm{\sin2\Theta}\le 2\norm{S-T}/(b-a)$ --- with \emph{no smallness
 assumption} on the perturbation and \emph{no spectral-location constraint} on
 $V$, strictly more general than the classical statement.  The proof is the
@@ -663,7 +670,12 @@ hypothesis of the (still-pending) $\tan2\Theta$ theorem is recorded as an
 operator identity: a perturbation with no $U$-diagonal block compresses to
 zero, $P\,H\,P=0$, hence operators agreeing on the $U$-block have equal
 compressions, $P S P=P T P$
-(\texttt{starProjection\_comp\_comp\_starProjection\_\{eq\_zero,congr\}}).
+(\texttt{starProjection\_comp\_comp\_starProjection\_\{eq\_zero,congr\}}); and
+the resulting \emph{spectral repulsion}
+(\texttt{eigenvalue\_notMem\_gap\_of\_diagonal\_form}): if the diagonal form of
+a symmetric $S$ is $\ge b$ on $U$ and $\le a$ on $U^\perp$, no eigenvalue of
+$S$ lies in the open gap $(a,b)$ --- the mechanism by which an off-diagonal
+perturbation keeps the perturbed spectrum out of the gap.
 
 \section{What remains, ranked by difficulty}\label{sec:remains}
 

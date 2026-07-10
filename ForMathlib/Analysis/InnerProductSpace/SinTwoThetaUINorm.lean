@@ -342,6 +342,137 @@ theorem sin_two_theta_reflection_le_of_eigenvalues (N : UnitarilyInvariantNorm �
 
 end Spectral
 
+/-! ### The sin 2Θ singular-value dictionary (plan step OP3.B)
+
+Certifies that the G1 left side `Q P̂ P` is `½ sin 2Θ`: its singular values are
+`cos θᵢ sin θᵢ`, so for every unitarily invariant norm
+`N (Q P̂ P) = N (diagOp (cos θᵢ sin θᵢ))`.  The proof is Opus's operator reroute
+(plan v9): `M⋆M = C − C²` with `C = gram (P̂ P)` self-adjoint, whose eigenvalues
+are `σ(P̂ P)² = cos²θᵢ` by the cos Θ dictionary
+`singularValues_starProjection_comp_starProjection` (OP3.A); matching against
+`diagOp` on `C`'s eigenbasis and reading off through `singularValues_eq_of_gram_eq`
+and `apply_eq_gauge`. -/
+
+section Dictionary
+
+variable {d : ℕ}
+
+/-- **The sin 2Θ dictionary.**  For orthonormal families `u, v` spanning `U, V`,
+`P = P_U`, `P̂ = P_V`, `Q = P_{Uᗮ}`, and every unitarily invariant norm `N`,
+`N (Q ∘ P̂ ∘ P) = N (diagOp bC (fun i ↦ cᵢ √(1 − cᵢ²)))` where
+`cᵢ = cosPrincipalAngles hv hu i` and `bC` is the eigenbasis of `gram (P̂ P)`.
+Since `2 cᵢ √(1 − cᵢ²) = sin 2θᵢ`, the left side is `N (½ sin 2Θ)` — the
+every-UI-norm analogue of the E2 op-norm identification
+`norm_orthogonal_starProjection_comp_starProjection`. -/
+theorem apply_orthogonal_starProjection_comp_starProjection_comp
+    (N : UnitarilyInvariantNorm 𝕜 E) {u v : Fin d → E}
+    (hu : Orthonormal 𝕜 u) (hv : Orthonormal 𝕜 v) :
+    N ((((Submodule.span 𝕜 (Set.range u))ᗮ.starProjection ∘L
+        (Submodule.span 𝕜 (Set.range v)).starProjection ∘L
+        (Submodule.span 𝕜 (Set.range u)).starProjection : E →L[𝕜] E)
+        : E →ₗ[𝕜] E))
+      = N (diagOp ((((Submodule.span 𝕜 (Set.range v)).starProjection ∘L
+            (Submodule.span 𝕜 (Set.range u)).starProjection : E →L[𝕜] E)
+            : E →ₗ[𝕜] E).isSymmetric_adjoint_comp_self.eigenvectorBasis rfl)
+          (fun i => cosPrincipalAngles hv hu i
+            * Real.sqrt (1 - cosPrincipalAngles hv hu i ^ 2))) := by
+  classical
+  set P : E →ₗ[𝕜] E := ((Submodule.span 𝕜 (Set.range u)).starProjection : E →ₗ[𝕜] E) with hPdef
+  set Ph : E →ₗ[𝕜] E := ((Submodule.span 𝕜 (Set.range v)).starProjection : E →ₗ[𝕜] E) with hPhdef
+  set Q : E →ₗ[𝕜] E := ((Submodule.span 𝕜 (Set.range u))ᗮ.starProjection : E →ₗ[𝕜] E) with hQdef
+  set PhP : E →ₗ[𝕜] E := (((Submodule.span 𝕜 (Set.range v)).starProjection ∘L
+    (Submodule.span 𝕜 (Set.range u)).starProjection : E →L[𝕜] E) : E →ₗ[𝕜] E) with hPhPdef
+  set M : E →ₗ[𝕜] E := (((Submodule.span 𝕜 (Set.range u))ᗮ.starProjection ∘L
+    (Submodule.span 𝕜 (Set.range v)).starProjection ∘L
+    (Submodule.span 𝕜 (Set.range u)).starProjection : E →L[𝕜] E) : E →ₗ[𝕜] E) with hMdef
+  set c : ℕ → ℝ := fun k => cosPrincipalAngles hv hu k with hcdef
+  set C : E →ₗ[𝕜] E := P ∘ₗ Ph ∘ₗ P with hCdef
+  -- Pointwise projection facts.
+  have hPP : ∀ z, P (P z) = P z := fun z =>
+    Submodule.starProjection_eq_self_iff.mpr ((Submodule.span 𝕜 (Set.range u)).starProjection_apply_mem z)
+  have hPhPh : ∀ z, Ph (Ph z) = Ph z := fun z =>
+    Submodule.starProjection_eq_self_iff.mpr ((Submodule.span 𝕜 (Set.range v)).starProjection_apply_mem z)
+  have hQz : ∀ z, Q z = z - P z := fun z => by
+    simp only [hQdef, hPdef, ContinuousLinearMap.coe_coe]
+    rw [Submodule.starProjection_orthogonal]
+    simp
+  have hQQ : ∀ z, Q (Q z) = Q z := fun z =>
+    Submodule.starProjection_eq_self_iff.mpr
+      ((Submodule.span 𝕜 (Set.range u))ᗮ.starProjection_apply_mem z)
+  have hPadj : LinearMap.adjoint P = P :=
+    (Submodule.span 𝕜 (Set.range u)).starProjection_isSymmetric.adjoint_eq
+  have hPhadj : LinearMap.adjoint Ph = Ph :=
+    (Submodule.span 𝕜 (Set.range v)).starProjection_isSymmetric.adjoint_eq
+  have hQadj : LinearMap.adjoint Q = Q :=
+    (Submodule.span 𝕜 (Set.range u))ᗮ.starProjection_isSymmetric.adjoint_eq
+  -- `M`, `PhP` as compositions.
+  have hMcoe : M = Q ∘ₗ Ph ∘ₗ P := by
+    refine LinearMap.ext fun x => ?_
+    simp only [hMdef, hQdef, hPhdef, hPdef, ContinuousLinearMap.coe_comp,
+      ContinuousLinearMap.coe_coe, Function.comp_apply, LinearMap.comp_apply]
+  have hPhPcoe : PhP = Ph ∘ₗ P := by
+    refine LinearMap.ext fun x => ?_
+    simp only [hPhPdef, hPhdef, hPdef, ContinuousLinearMap.coe_comp,
+      ContinuousLinearMap.coe_coe, Function.comp_apply, LinearMap.comp_apply]
+  -- `M⋆ = P ∘ Ph ∘ Q`, hence `M⋆M = C − C∘C`.
+  have hMadj : LinearMap.adjoint M = P ∘ₗ Ph ∘ₗ Q := by
+    rw [hMcoe, LinearMap.adjoint_comp, LinearMap.adjoint_comp, hPadj, hPhadj, hQadj,
+      LinearMap.comp_assoc]
+  have hMM : LinearMap.adjoint M ∘ₗ M = C - C ∘ₗ C := by
+    rw [hMadj, hMcoe]
+    refine LinearMap.ext fun x => ?_
+    simp only [LinearMap.comp_apply, LinearMap.sub_apply, hCdef]
+    rw [hQQ, hQz (Ph (P x))]
+    simp only [map_sub, hPhPh, hPP]
+  -- `C = gram (P̂ P)`.
+  have hCgram : C = LinearMap.adjoint PhP ∘ₗ PhP := by
+    rw [hPhPcoe, LinearMap.adjoint_comp, hPadj, hPhadj]
+    refine LinearMap.ext fun x => ?_
+    simp only [hCdef, LinearMap.comp_apply, hPhPh]
+  -- Eigenbasis of `gram (P̂ P)` and its eigenvalues `= c²`.
+  set bC := PhP.isSymmetric_adjoint_comp_self.eigenvectorBasis rfl with hbCdef
+  have hσ : PhP.singularValues = cosPrincipalAngles hv hu := by
+    rw [hPhPdef]; exact singularValues_starProjection_comp_starProjection hu hv
+  have hCeig : ∀ i, C (bC i) = ((c i ^ 2 : ℝ) : 𝕜) • bC i := fun i => by
+    rw [hCgram, PhP.isSymmetric_adjoint_comp_self.apply_eigenvectorBasis rfl i]
+    congr 2
+    have := PhP.sq_singularValues_fin rfl i
+    rw [hσ] at this
+    rw [← this, hcdef]
+  -- Bounds on `c`.
+  have hc0 : ∀ k : ℕ, 0 ≤ c k := fun k => cosPrincipalAngles_nonneg hv hu k
+  have hc1 : ∀ k : ℕ, c k ≤ 1 := fun k => by
+    simp only [hcdef]
+    rcases lt_or_ge k d with hk | hk
+    · rw [cosPrincipalAngles_eq]
+      exact singularValues_le_one_of_contraction (overlapOp_contraction hv hu)
+        finrank_euclideanSpace_fin ⟨k, hk⟩
+    · rw [cosPrincipalAngles_eq,
+        (overlapOp hv hu).singularValues_of_finrank_le (by rw [finrank_euclideanSpace_fin]; exact hk)]
+      exact zero_le_one
+  -- Gram of `M` equals gram of the diagonal operator.
+  set w : Fin (finrank 𝕜 E) → ℝ := fun i => c i * Real.sqrt (1 - c i ^ 2) with hwdef
+  have hgram : LinearMap.adjoint M ∘ₗ M = LinearMap.adjoint (diagOp bC w) ∘ₗ diagOp bC w := by
+    rw [hMM, adjoint_diagOp, diagOp_comp]
+    refine bC.toBasis.ext fun i => ?_
+    simp only [OrthonormalBasis.coe_toBasis]
+    have hle : (0 : ℝ) ≤ 1 - c i ^ 2 := by nlinarith [hc0 i, hc1 i]
+    have hwi : w i * w i = c i ^ 2 - c i ^ 2 * c i ^ 2 := by
+      simp only [hwdef]
+      rw [show c i * Real.sqrt (1 - c i ^ 2) * (c i * Real.sqrt (1 - c i ^ 2))
+          = c i ^ 2 * Real.sqrt (1 - c i ^ 2) ^ 2 by ring, Real.sq_sqrt hle]
+      ring
+    simp only [LinearMap.sub_apply, LinearMap.comp_apply, hCeig, map_smul, smul_smul]
+    rw [diagOp_apply_basis, Pi.mul_apply, hwi, ← sub_smul]
+    congr 1
+    push_cast
+    ring
+  -- Read off via the gauge.
+  rw [N.apply_eq_gauge rfl bC M, N.apply_eq_gauge rfl bC (diagOp bC w),
+    singularValues_eq_of_gram_eq hgram]
+
+end Dictionary
+
 end UnitarilyInvariantNorm
 
 end ForMathlib

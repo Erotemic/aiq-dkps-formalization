@@ -16,6 +16,7 @@ To be re-authored per Mathlib's AI-contribution policy at PR time.
 
 import ForMathlib.Analysis.InnerProductSpace.AlignedBasis
 import ForMathlib.Analysis.InnerProductSpace.DavisKahan
+import ForMathlib.Analysis.InnerProductSpace.KyFan
 
 /-! # Principal angles between subspaces
 
@@ -515,5 +516,76 @@ theorem norm_orthogonal_starProjection_comp_starProjection
             (Submodule.span 𝕜 (Set.range u)).starProjection‖ * ‖familyIsometry hu y₀‖ :=
           ContinuousLinearMap.le_opNorm _ _
       _ = _ := by rw [hx₀n, mul_one]
+
+/-! ### The cos Θ singular-value dictionary (plan step OP3.A)
+
+The singular values of `P_V ∘ P_U` are exactly the principal-angle cosines.
+This upgrades the operator-norm/largest-angle identification
+`norm_orthogonal_starProjection_comp_starProjection` to *all* singular values,
+hence to every unitarily invariant norm.  The proof factors
+`P_V ∘ P_U = ι_v ∘ overlapOp ∘ ι_u⋆` through the coordinate isometries, strips
+the left isometry via `singularValues_eq_of_gram_eq`, and strips the right
+`ι_u⋆` via the coisometry padding lemma `singularValues_comp_adjoint_familyIsometry`. -/
+
+/-- The `i`-th coordinate of `ι_u⋆ x` is `⟪uᵢ, x⟫`. -/
+theorem familyIsometry_adjoint_coord {u : Fin d → E} (hu : Orthonormal 𝕜 u)
+    (x : E) (i : Fin d) :
+    (familyIsometry hu).toLinearMap.adjoint x i = ⟪u i, x⟫_𝕜 := by
+  have h1 : (familyIsometry hu).toLinearMap.adjoint x i
+      = ⟪(EuclideanSpace.single i (1 : 𝕜)), (familyIsometry hu).toLinearMap.adjoint x⟫_𝕜 := by
+    rw [EuclideanSpace.inner_single_left, map_one, one_mul]
+  rw [h1, LinearMap.adjoint_inner_right, LinearIsometry.coe_toLinearMap, familyIsometry_single]
+
+/-- `P_{span u} = ι_u ∘ ι_u⋆`: the orthogonal projection onto `span u`
+expressed through the coordinate isometry. -/
+theorem starProjection_span_range_eq_comp {u : Fin d → E} (hu : Orthonormal 𝕜 u)
+    (x : E) :
+    (Submodule.span 𝕜 (Set.range u)).starProjection x
+      = familyIsometry hu ((familyIsometry hu).toLinearMap.adjoint x) := by
+  rw [familyIsometry_apply]
+  have hsp := Orthonormal.starProjection_span_image_apply hu Finset.univ x
+  rw [Finset.coe_univ, Set.image_univ] at hsp
+  rw [hsp]
+  exact Finset.sum_congr rfl fun i _ => by rw [familyIsometry_adjoint_coord]
+
+/-- **The cos Θ dictionary.**  The singular values of `P_V ∘ P_U` are the
+cosines of the principal angles between `span u` and `span v`:
+`σ(P_V ∘ P_U) = cosPrincipalAngles hv hu`. -/
+theorem singularValues_starProjection_comp_starProjection {u v : Fin d → E}
+    (hu : Orthonormal 𝕜 u) (hv : Orthonormal 𝕜 v) :
+    (((Submodule.span 𝕜 (Set.range v)).starProjection ∘L
+        (Submodule.span 𝕜 (Set.range u)).starProjection : E →L[𝕜] E)
+        : E →ₗ[𝕜] E).singularValues
+      = cosPrincipalAngles hv hu := by
+  set M : E →ₗ[𝕜] E := (((Submodule.span 𝕜 (Set.range v)).starProjection ∘L
+    (Submodule.span 𝕜 (Set.range u)).starProjection : E →L[𝕜] E) : E →ₗ[𝕜] E) with hMdef
+  set Y : E →ₗ[𝕜] EuclideanSpace 𝕜 (Fin d) :=
+    overlapOp hv hu ∘ₗ (familyIsometry hu).toLinearMap.adjoint with hYdef
+  -- `ι_v⋆ ∘ ι_v = 1`.
+  have hiso : (familyIsometry hv).toLinearMap.adjoint ∘ₗ (familyIsometry hv).toLinearMap
+      = LinearMap.id := by
+    refine LinearMap.ext fun y => ?_
+    simp only [LinearMap.comp_apply, LinearMap.id_apply]
+    exact ext_inner_right 𝕜 fun z => by
+      rw [LinearMap.adjoint_inner_left]; exact (familyIsometry hv).inner_map_map y z
+  -- `M = ι_v ∘ Y`.
+  have hM : M = (familyIsometry hv).toLinearMap ∘ₗ Y := by
+    refine LinearMap.ext fun x => ?_
+    simp only [hMdef, hYdef, ContinuousLinearMap.coe_comp, ContinuousLinearMap.coe_coe,
+      Function.comp_apply, LinearMap.comp_apply, LinearIsometry.coe_toLinearMap]
+    rw [starProjection_span_range_eq_comp hv, starProjection_span_range_eq_comp hu,
+      overlapOp_apply]
+  -- Strip the left isometry: `gram M = gram Y`.
+  have hgram : M.adjoint ∘ₗ M = Y.adjoint ∘ₗ Y := by
+    rw [hM, LinearMap.adjoint_comp]
+    rw [show (LinearMap.adjoint Y ∘ₗ LinearMap.adjoint (familyIsometry hv).toLinearMap)
+          ∘ₗ ((familyIsometry hv).toLinearMap ∘ₗ Y)
+        = LinearMap.adjoint Y ∘ₗ ((familyIsometry hv).toLinearMap.adjoint
+          ∘ₗ (familyIsometry hv).toLinearMap) ∘ₗ Y from by
+      simp only [LinearMap.comp_assoc], hiso, LinearMap.id_comp]
+  -- Strip the right isometry (OP3.0) and read off the definition.
+  rw [singularValues_eq_of_gram_eq hgram, hYdef,
+    singularValues_comp_adjoint_familyIsometry hu (overlapOp hv hu)]
+  rfl
 
 end ForMathlib

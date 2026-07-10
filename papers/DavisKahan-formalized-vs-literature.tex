@@ -62,11 +62,16 @@ formalized.  Beyond the ladder, the formalization now also contains the exact
 YWS theorem with its constant $2$ (via Hoffman--Wielandt and a von Neumann
 trace inequality), the YWS aligned-basis and singular-subspace extensions,
 general-interval spectral subspaces, Davis's sharper total-rotation estimate
-and per-eigenvector $\sin2\theta$ and $\tan2\theta$ theorems, and the operator
+and per-eigenvector $\sin2\theta$ and $\tan2\theta$ theorems, the operator
 Sylvester bound and the dimension-free operator-norm $\sin\Theta$ theorem it
-powers, and a canonical principal-angle API.  A closing section records what is
-left --- only the subspace-level $\sin2\Theta$ theorem and general unitarily
-invariant norms, both deliberately deferred.
+powers, a canonical principal-angle API with a certified dictionary, and ---
+completing the programme --- the full Davis--Kahan Part~III quartet at the
+subspace level: the $\sin\Theta$ and $\sin2\Theta$ theorems in every
+unitarily invariant norm (built on a Ky Fan / Fan-dominance mini-library, with
+the Frobenius norm as a first-class instance) and the $\tan\Theta$ and
+$\tan2\Theta$ theorems in their sharp classical operator-norm forms.  The
+closing section, which formerly ranked the missing theorems, now records that
+nothing of the Part~III programme remains.
 \end{abstract}
 
 \vspace{1.5em}
@@ -214,13 +219,14 @@ total-rotation theory is formalized together with its polar-decomposition
 substrate, and Davis's per-eigenvector $\sin2\theta$ and $\tan2\theta$ theorems
 are formalized in a phase-free product form, and a canonical principal-angle
 API is packaged, and the dimension-free operator-norm $\sin\Theta$ theorem is
-formalized on top of the operator Sylvester bound.  What is still missing is
-only the subspace-level $\sin2\Theta$ theorem and general unitarily invariant
-norm versions, both deliberately deferred. The purpose of this note is to
-explain
-exactly which part has been formalized, how it relates to the paper statements,
-and what still remains to be built --- the closing section ranks the remaining
-steps by difficulty and records a checked proof route for each.
+formalized on top of the operator Sylvester bound.  Since then the programme
+has been completed: the four Part~III theorems --- $\sin\Theta$,
+$\sin2\Theta$, $\tan\Theta$, $\tan2\Theta$ --- are all formalized at the
+subspace level (the first two in every unitarily invariant norm, the tangent
+theorems in their classical operator-norm forms), with the principal-angle
+dictionary certified.  The purpose of this note is to explain exactly which
+part has been formalized and how it relates to the paper statements; the
+closing section records what, if anything, remains.
 
 
 
@@ -666,7 +672,7 @@ $\sin2\Theta$ bound is restated in the eigenvalue-hypothesis form the
 literature uses --- $U,V$ the eigenblocks selected by index sets, the gap read
 off sorted eigenvalues (\texttt{sin\_two\_theta\_starProjection\_le\_of\_eigenvalues}),
 mirroring the $\sin\Theta$ spectral corollary.  (iii)~The vanishing-pinch
-hypothesis of the (still-pending) $\tan2\Theta$ theorem is recorded as an
+hypothesis of the $\tan2\Theta$ theorem is recorded as an
 operator identity: a perturbation with no $U$-diagonal block compresses to
 zero, $P\,H\,P=0$, hence operators agreeing on the $U$-block have equal
 compressions, $P S P=P T P$
@@ -676,6 +682,67 @@ the resulting \emph{spectral repulsion}
 a symmetric $S$ is $\ge b$ on $U$ and $\le a$ on $U^\perp$, no eigenvalue of
 $S$ lies in the open gap $(a,b)$ --- the mechanism by which an off-diagonal
 perturbation keeps the perturbed spectrum out of the gap.
+
+\paragraph{The subspace $\tan\Theta$ theorem.}  The Davis--Kahan
+$\tan\Theta$ theorem --- one symmetric operator $T$, one exactly invariant
+subspace $V$ whose complementary form lies in a strip $[\alpha,\beta]$, and an
+arbitrary test subspace $Z$ of the same dimension whose compression
+$M=P_ZT|_Z$ is coercive at distance $(\beta-\alpha)/2+\delta$ from the strip's
+midpoint --- is formalized in the per-vector, pole-free form
+\[
+  \delta\,\norm{x-P_Vx}\;\le\;\rho\,\norm{P_Vx}\qquad(x\in Z),
+\]
+equivalent to $\tan\angle(Z,V)\le\rho/\delta$ for the columnwise residual
+bound $\rho$ (\texttt{tan\_theta\_le}, \texttt{TanTheta.lean}); the statement
+was fixed against Kostrykin--Makarov--Motovilov (2005), Nakatsukasa (2012) and
+Motovilov's comment (arXiv:1204.4441), and the pole question is absorbed by
+the encoding ($P_Vx=0$ forces $x=0$, Motovilov's Lemma~3 becoming a
+\emph{conclusion}).  The formalized proof is an elementary, coordinate-free
+vectorization of Nakatsukasa's argument found while planning: at a maximizer
+$u_0$ of $u\mapsto\norm{P_Zu}$ on the unit sphere of $V^{\perp}$, the identity
+$(M-c)(P_Zu_0)=P_Z((T-c)u_0)-P_Z(T(u_0-P_Zu_0))$ combines the compression's
+coercivity, the strip bound $\norm{(T-c)u}\le e\norm{u}$ on the invariant
+$V^{\perp}$ (\texttt{norm\_map\_sub\_midpoint\_smul\_le}) and the adjoint
+residual bound (\texttt{norm\_starProjection\_map\_le\_of\_mem\_orthogonal})
+into the single line $(e+\delta)a\le ea+\rho b$; a two-line Cauchy--Schwarz
+duality ($\norm{u}^2=\operatorname{re}\inner{x}{P_Zu}$ at $u=x-P_Vx$) then transports
+the complementary-side tangent bound to the test side, replacing the
+classical $\angle(Z,V)=\angle(Z^{\perp},V^{\perp})$ symmetry.  No CS
+decomposition, no graph operators, no $\cos\Theta$ inverse; the dimension
+hypothesis is carried for faithfulness but not consumed, matching
+Nakatsukasa's generalized form.
+
+\paragraph{The subspace $\tan2\Theta$ theorem.}  The quartet is closed by the
+subspace $\tan2\Theta$ theorem (\texttt{tan\_two\_theta\_norm\_sub\_le},
+\texttt{TanTwoTheta.lean}): if the perturbation $H=S-T$ is off-diagonal for
+$U\oplus U^{\perp}$ (vanishing pinch) with $\norm{H}\le\eps$, and the forms of
+$T$ and $S$ are $\ge b$ on $U,V$ and $\le a$ on the complements (the $S$-side
+bounds being exactly what spectral repulsion grants the spectral choice of
+$V$), then, with $t=\norm{\widehat P-P}=\sin\theta_{\max}$,
+\[
+  t^2<\tfrac12
+  \qquad\text{and}\qquad
+  (b-a)\cdot 2t\sqrt{1-t^2}\;\le\;2\eps\,(1-2t^2),
+\]
+i.e.\ $\tan2\theta_{\max}\le2\eps/(b-a)$ with the angle strictly below
+$\pi/4$ --- the sharp classical statement (Davis--Kahan~III \S8;
+Grubi\v{s}i\'c--Kostrykin--Makarov--Veseli\'c, arXiv:1006.3190).  The
+formalized proof distills GKMV's sectorial-operator argument to
+finite-dimensional elementary form: with $J,\widehat J$ the reflections
+through $U,V$, the identity
+$(J\widehat J)\cdot(\widehat J(S-c))=J(S-c)$ splits into a symmetric part
+$J(T-c)$ that the vanishing pinch makes coercive with the half-gap
+$d=(b-a)/2$, and a skew part $JH$ of norm at most $\eps$; on the
+$J\widehat J$-invariant plane spanned by a maximal eigenvector $x$ of
+$(\widehat P-P)^2$ and $y=J\widehat Jx$, testing both forms on the pairs
+$(x,x)$, $(w_2,w_2)$ and the tilted pair $(sx-w_2,\,sx+w_2)$ (with
+$w_2=y-\gamma x$, $\gamma=\inner{x}{y}$, $s=\norm{w_2}$) cancels every
+cross-Gram term and yields the sharp bound
+$d^2(1-\mu_0^2)\le\eps^2\mu_0^2$ for the $\cos2\Theta$-eigenvalue
+$\mu_0=1-2\nu$, uniformly over $\mathbb R$ and $\mathbb C$ --- no polar decomposition, no
+spectral theorem for unitaries, and equality on the $2\times2$ model.  A
+Rayleigh bound ties $t^2$ to $\mu_0$ and monotonicity of
+$\tau\mapsto4\tau(1-\tau)$ on $[0,\tfrac12]$ finishes.
 
 \section{What remains, ranked by difficulty}\label{sec:remains}
 
@@ -688,21 +755,23 @@ maintained, with per-step proof routes and difficulty grades, in
 \texttt{dev/davis-kahan-expert-completion-plan.md}; the executed plan for
 everything above is \texttt{dev/davis-kahan-gap-closure-plan.md} (v6, closed).
 
-\begin{enumerate}
-\item \emph{Subspace-level $\tan2\Theta$ (vanishing pinch) and $\tan\Theta$
-  (difficulty 4.5--5/5 --- the last two part-III theorems).}  The subspace
-  $\sin2\Theta$ theorem is now formalized (see \S\ref{sec:extensions});
-  the mirror reduction that proves it yields \emph{sine-type absolute}
-  bounds, while $\tan2\Theta$ under the vanishing-pinch hypothesis is a
-  \emph{relative} bound (angles past $\pi/4$ are allowed), so it needs
-  different technology --- likely the per-vector key identity summed with the
-  diagonal blocks hypothesized away (the block-transfer identities for that
-  hypothesis are already in place, see \S\ref{sec:extensions}).  $\tan\Theta$
-  (one exact spectral
-  subspace against an arbitrary test subspace, residual on the right-hand
-  side) carries the highest statement risk; per-step routes and descopes are
-  in the expert-completion plan, steps G2--G3.
+Nothing of the Davis--Kahan Part~III programme remains: the quartet
+($\sin\Theta$, $\sin2\Theta$, $\tan\Theta$, $\tan2\Theta$) is formalized at
+the subspace level --- the sine theorems in every unitarily invariant norm,
+the tangent theorems in their sharp classical operator-norm forms (the
+sources checked assert no UI-norm tangent statements, and none is claimed)
+--- with the principal-angle dictionary certified and the Frobenius,
+operator-norm, and eigenvalue-hypothesis instantiations in place.  What is
+left is strictly optional:
 
+\begin{enumerate}
+\item \emph{Mathlib-attractive annex bricks (off any critical path).}
+  Weak-majorization completion and Hardy--Littlewood--P\'olya in weights form
+  (the Fan-dominance proof deliberately bypasses both), and upstreaming
+  candidates tracked in \texttt{comparator/}.
+\item \emph{Beyond Part~III (out of scope by design).}  Infinite-dimensional
+  /spectral-measure versions, and the Bhatia--Davis--McIntosh $\pi/2$-constant
+  $\sin\Theta$ theorem under general two-sided separation.
 \end{enumerate}
 
 \section{Dictionary to the Lean source}\label{sec:dictionary}
@@ -880,6 +949,21 @@ Subspace $\sin2\Theta$, every UI norm; mirror-defect form
   & \texttt{sin\_two\_theta\_starProjection\_le},
     \texttt{sin\_two\_theta\_reflection\_le}
     (\texttt{SinTwoThetaUINorm.lean}) \\
+$\sin2\Theta$ dictionary certification; $\cos\Theta$ dictionary
+  & \texttt{apply\_orthogonal\_starProjection\_comp\_starProjection\_comp}
+    (\texttt{SinTwoThetaUINorm.lean}),
+    \texttt{singularValues\_starProjection\_comp\_starProjection}
+    (\texttt{PrincipalAngles.lean}) \\
+Vanishing-pinch block identities; spectral repulsion
+  & \texttt{starProjection\_comp\_comp\_starProjection\_\{eq\_zero,congr\}},
+    \texttt{eigenvalue\_notMem\_gap\_of\_diagonal\_form}
+    (\texttt{TanTwoTheta.lean}) \\
+Subspace $\tan2\Theta$ (sharp, pole-free encoding)
+  & \texttt{tan\_two\_theta\_norm\_sub\_le} (\texttt{TanTwoTheta.lean}) \\
+Subspace $\tan\Theta$ (per-vector, pole-free); strip bound; adjoint residual
+  & \texttt{tan\_theta\_le}, \texttt{norm\_map\_sub\_midpoint\_smul\_le},
+    \texttt{norm\_starProjection\_map\_le\_of\_mem\_orthogonal}
+    (\texttt{TanTheta.lean}) \\
 \bottomrule
 \end{tabular}
 \end{center}

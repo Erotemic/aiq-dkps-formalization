@@ -18,6 +18,54 @@ gates, `lake build` green after every step, `#print axioms` =
 
 - **v1 (2026-07-09, Fable):** initial plan, incorporating a review of Opus's
   2026-07-09 expert-gap diagnosis.
+- **v14 (2026-07-10, Fable — G3 ✅ DONE, G2.2b ✅ DONE; THE PLAN IS
+  COMPLETE):** the two remaining headline proofs landed, both axiom-clean,
+  full library green (8722 jobs); the Davis–Kahan Part III quartet (sinΘ,
+  sin2Θ, tanΘ, tan2Θ) is formalized at the subspace level in full.
+  **G3** (`5ee2781`, `TanTheta.lean`): `tan_theta_le` proved by an elementary
+  coordinate-free vectorization of Nakatsukasa's argument (LAA 436 (2012)),
+  found while planning against the sources: (i) on `Vᗮ`, take a maximizer
+  `u₀` of `‖P_Z u‖` on the unit sphere (`a := ‖P_Z u₀‖`,
+  `b := ‖u₀ − P_Z u₀‖`); the identity
+  `(M−c)(P_Z u₀) = P_Z((T−c)u₀) − P_Z(T(u₀ − P_Z u₀))` plus coercivity, the
+  strip bound, and the adjoint residual bound give `(e+δ)a ≤ ea + ρb`, i.e.
+  `δa ≤ ρb` — the tangent bound on the complementary side; (ii) a two-line
+  Cauchy–Schwarz duality (`‖u‖² = re⟪x, P_Z u⟫` at `u := x − P_V x`, `x ∈ Z`)
+  transports it to the test side, replacing the classical
+  `∠(Z,V) = ∠(Zᗮ,Vᗮ)` angle symmetry.  No CS decomposition, no graph
+  operators, no `cos Θ` inverse — route candidates (ii)/(iii) below were not
+  needed; `hdim` is not consumed by the proof (consistent with Nakatsukasa's
+  generalized Thm 2, and the hypotheses force `dim Z ≤ dim V` anyway); new
+  public helpers `norm_map_sub_midpoint_smul_le` (strip bound on an invariant
+  subspace via a `P(T−c)P` sandwich + `norm_le_of_abs_re_inner_map_self_le`)
+  and `norm_starProjection_map_le_of_mem_orthogonal` (the columnwise residual
+  bound transfers to the adjoint block).  **G2.2b** (`5e423ec`,
+  `TanTwoTheta.lean`): `tan_two_theta_norm_sub_le` proved by distilling
+  GKMV's sectorial argument (arXiv:1006.3190, Thm 3.1) to finite-dimensional
+  elementary form — neither of the plan's two route candidates (KMM
+  Riccati/graph; DK III §8 line-by-line): with `J, Ĵ` the reflections through
+  `U, V`, the identity `(JĴ)·(Ĵ(S−c)) = J(S−c)` splits into the `d`-coercive
+  symmetric part `J(T−c)` (the pinch makes `J` anticommute with `H`, so the
+  cross terms are purely skew) and the skew part `JH` of norm `≤ ε`; on the
+  `JĴ`-invariant plane spanned by a top eigenvector `x` of `(P−P̂)²` and
+  `y = JĴx`, testing the two forms at `(x,x)`, `(w₂,w₂)` and the tilted pair
+  `(sx−w₂, sx+w₂)` (`w₂ := y − γx`, `γ := ⟪x,y⟫`, `s := ‖w₂‖`) cancels every
+  cross-Gram term and yields `μ₀(s²r₁+r₂) ≥ 2ds²` and
+  `(s²r₁+r₂)²(s²+ν′²) ≤ 4ε²s⁴`, whence the sharp `d²(1−μ₀²) ≤ ε²μ₀²` for the
+  `cos 2Θ`-eigenvalue `μ₀ = 1−2ν` — 𝕜-uniform (`‖·‖² = re² + im²` replaces
+  any `RCLike.I` case split; over ℝ the imaginary component is just absent),
+  no polar decomposition, no spectral theorem for unitaries, sharp on the
+  2×2 model; `t² = ‖P−P̂‖²` is tied to `μ₀` by a Rayleigh bound on `X∘X` and
+  the monotonicity of `τ ↦ 4τ(1−τ)` on `[0,½]`.  Lean notes: (i)
+  `map_sub`/`map_add` rewrites are hazardous while raw
+  `reflection`-applications are in scope (they match `f (a−b)` with
+  `f := ↑(reflection)`) — fold every scalar entry into `set`-fvars first;
+  (ii) `Submodule.starProjection_apply_eq_zero_iff` takes `K` explicitly, so
+  `.mpr` dot-notation fails — parenthesize the application; (iii) the heavy
+  `nlinarith` calls need `nlinarith only [...]` (the context sweep times
+  out) and the eigen-analysis declaration a `set_option maxHeartbeats`
+  bump.  Paper synced (tan 2Θ and tan Θ moved to "formalized", §remains
+  emptied for Part III, permalink bumped).
 - **v13 (2026-07-10, Opus — OP3.A, OP3.B, G2.2a ✅ DONE; sin 2Θ dictionary
   certified):** the three startable Opus items landed, all axiom-clean, full
   library green (8722 jobs).  **OP3.A** (`PrincipalAngles.lean`)
@@ -1102,7 +1150,9 @@ Descopes if blocked: (α) the already-recorded dimension-carrying summed
 corollary of W6.1 (trivial, explicitly-weaker docstring); (β) `‖sin 2Θ‖_op`
 for the largest angle via W6.1 at a worst eigenvector.
 
-**G2 — Subspace tan2Θ (vanishing pinch). Difficulty 4.5/5.  Staged (v8);
+**G2 — Subspace tan2Θ (vanishing pinch). Difficulty 4.5/5.  ✅ DONE in full
+(G2.0 gate v12; G2.1/G2.2a Opus v10/v13; G2.2b headline ✅ Fable v14,
+`5e423ec` — see the v14 revision-log entry for the executed route);
 G2.0 ✅ PASSED (v12 — statement fixed and stubbed in `TanTwoTheta.lean`;
 see the v12 revision-log entry; the stages below are kept for provenance,
 with G2.2a spectral repulsion added and routed for Opus).**  The v7 route note stands: the G1 mirror gives
@@ -1145,7 +1195,9 @@ theorem at a worst eigenvector (E2-style chaining, Opus 3/5, mirrors
 `sqrt_one_sub_sq_cosPrincipalAngles_le`); (b) Frobenius-only via
 eigenbasis summation.
 
-**G3 — Subspace tanΘ. Difficulty 5/5 → 4.5/5.  G3.0 ✅ PASSED (v12 —
+**G3 — Subspace tanΘ. Difficulty 5/5 → 4.5/5.  ✅ DONE (headline proved by
+Fable, v14, `5ee2781` — see the v14 revision-log entry for the executed
+route, which needed neither sub-brick (ii) nor (iii)); G3.0 ✅ PASSED (v12 —
 statement fixed and stubbed in `TanTheta.lean`, per-vector pole-free form;
 see the v12 revision-log entry; the sub-bricks below are now route
 *candidates*, not mandatory).**  DK III Thm 6.3 / Stewart–Sun V.3.6 shape: **one
@@ -1452,18 +1504,19 @@ F3.a → F3.b → F3.c → F3.d ─→ F3.e → F3.f   [Batch 3: Fan dominance �
 F0.e/F3.e → F4.a → F4.b → F4.c       [Batch 4: part-III sinΘ ✅ DONE (b8de103)]
 F4 ─→ G1 ✅ (c17998d)                    [Batch 5: sin2Θ ✅ DONE]
 
-── remaining (v13) ─────────────────────────────────────────────
+── remaining (v14) ─────────────────────────────────────────────
 OP1 ✅, OP2 ✅, G2.1 ✅ (Opus, v10);  OP3.0 ✅, G2.0 ✅, G3.0 ✅ (Fable, v11–v12)
 OP3.A ✅, OP3.B ✅, G2.2a ✅ (Opus, v13)
-G2.2b tan2Θ headline proof (Fable)
-G3 tanΘ proof (Fable)
-(F3-annex: optional, anytime)
+G2.2b ✅ (Fable, v14, 5e423ec);  G3 ✅ (Fable, v14, 5ee2781)
+(F3-annex: optional, anytime — off the critical path)
 ```
 
-**All Opus work in the plan is complete.**  The only remaining items are the
-two Fable headline proofs — **G2.2b** (subspace tan 2Θ, now backed by the
-G2.1 block identities and the G2.2a spectral-repulsion lemma) and **G3**
-(subspace tan Θ) — the last two theorems of the DK III quartet.
+**THE PLAN IS COMPLETE.**  All four Part III theorems — sinΘ (F4.c), sin2Θ
+(G1, dictionary certified by OP3), tanΘ (G3), tan2Θ (G2.2b) — are formalized
+at the subspace level, axiom-clean, with the principal-angle dictionary
+certified and the Frobenius/op-norm instantiations in place.  The only
+unexecuted items are the explicitly optional Mathlib-attractive annex
+bricks.
 
 Each batch ends: `lake build` green, axiom check, golf pass, paper sync
 (move items out of §"What remains", extend the dictionary tables, update the
@@ -1477,9 +1530,9 @@ old completion/HLP rows moved to the annex).
 
 | Rank | Step | What | Difficulty | Assignee |
 |------|------|------|-----------|----------|
-| 1 | G3 | Subspace tanΘ (statement gated v12; per-vector pole-free form) | 5/5→4.5/5 | **Fable**; G3.0 ✅ PASSED (stub in `TanTheta.lean`) |
+| 1 | G3 | Subspace tanΘ (per-vector pole-free form) | 5/5→4.5/5 | ✅ DONE (Fable, v14, `5ee2781`) |
 | 2 | G1 | Subspace sin2Θ (mirror reduction to F4.c) | 5/5→3/5 | ✅ DONE (Fable, `c17998d`) |
-| 3 | G2.2b | Subspace tan2Θ headline (statement gated v12; Riccati/graph route) | 4.5/5 | **Fable**; G2.0 ✅ PASSED (stub in `TanTwoTheta.lean`) |
+| 3 | G2.2b | Subspace tan2Θ headline (GKMV sectorial route, distilled) | 4.5/5 | ✅ DONE (Fable, v14, `5e423ec`) |
 | 3′ | G2.2a | Spectral repulsion: off-diagonal perturbations avoid the gap | 3/5 | ✅ DONE (Opus, v13) |
 | 4 | F3.d | T-transform descent on the gauge (v4 crux) | 4/5 | ✅ DONE (Fable, `7481732`) |
 | 5 | F3.a | `diagOp` + operator SVD factorization | 3.5/5 | ✅ DONE (Fable, `7481732`) |

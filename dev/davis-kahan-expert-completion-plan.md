@@ -18,6 +18,29 @@ gates, `lake build` green after every step, `#print axioms` =
 
 - **v1 (2026-07-09, Fable):** initial plan, incorporating a review of Opus's
   2026-07-09 expert-gap diagnosis.
+- **v11 (2026-07-10, Fable — OP3.0 ✅ DONE; OP3.A/B unblocked):** the
+  coisometry padding lemma `singularValues_comp_adjoint_familyIsometry`
+  (`σ(X ∘ₗ ι_u⋆) = σ(X)` as finsupps) landed in `PrincipalAngles.lean` after
+  `familyIsometry_mem_span`; axiom-clean, full library green (8721 jobs).
+  Route as planned (gram conjugation + glued eigenbasis +
+  `eigenvalues_eq_of_eigenbasis`); the glued basis went through a `dite`
+  family `Fin (finrank 𝕜 E) → E` with `Fin.cast` into
+  `stdOrthonormalBasis 𝕜 Uᗮ` — no `collectedOrthonormalBasis` needed, just
+  `OrthonormalBasis.mk` + `finrank_span_eq_card` +
+  `Submodule.eq_top_of_finrank_eq`.  Lean notes: (i) `ι x` (LinearMap coe)
+  vs `familyIsometry hu x` (isometry coe) blocks
+  `LinearIsometry.inner_map_map` — bridge with a `rfl` helper
+  `hcoe : ∀ x, ι x = familyIsometry hu x` and rewrite; (ii) unfold only the
+  two outer `∘ₗ` with targeted `LinearMap.comp_apply` rewrites so
+  `apply_eigenvectorBasis` still matches the folded `adjoint X ∘ₗ X`;
+  (iii) Mathlib's `IsSymmetric.eigenvalues` is antitone in this pin
+  (`eigenvalues_antitone`), and gram-eigenvalue nonnegativity is
+  `isPositive_adjoint_comp_self.nonneg_eigenvalues` — both exactly as the v9
+  route assumed.  Mid-session FD-exhaustion recurred and was fixed by the
+  user; name verification went through `#check` probe files compiled with
+  `lake env lean` (one file, no directory walking) — a useful pattern when
+  `grep -r` is unavailable.  **OP3.A and OP3.B are now unblocked (Opus).**
+  Next Fable items: the G2.0 and G3.0 statement gates.
 - **v10 (2026-07-10, Opus — OP1, OP2, G2.1 ✅ DONE; G3-d=1 deferred to the
   gate):** the three fully-routed Opus tasks landed, all axiom-clean, full
   library green (8721 jobs).  **OP1** (`SinTwoThetaUINorm.lean`, `section
@@ -1393,8 +1416,8 @@ old completion/HLP rows moved to the annex).
 | 12 | F3.f | `star` invariance | 1/5 | ✅ DONE (Fable, `7481732`) |
 | — | annex α | Weak-majorization completion (optional) | 2.5/5 | either, after F4 |
 | — | annex β | Hardy–Littlewood–Pólya (optional) | 4/5 | Fable, after F4 |
-| — | OP3.0 | Coisometry padding lemma `σ(X ∘ₗ ι_u⋆) = σ(X)` (v9) | 3.5/5 | **Fable**, next Fable slot |
-| — | OP3.A | cos Θ dictionary `σ(P̂∘P) = cosPrincipalAngles` (v9) | 2.5/5 | Opus, after OP3.0 |
+| — | OP3.0 | Coisometry padding lemma `σ(X ∘ₗ ι_u⋆) = σ(X)` (v9) | 3.5/5 | ✅ DONE (Fable, v11) |
+| — | OP3.A | cos Θ dictionary `σ(P̂∘P) = cosPrincipalAngles` (v9) | 2.5/5 | Opus, **unblocked** |
 | — | OP3.B | sin 2Θ headline `N(QP̂P) = N(diagOp c√(1−c²))` (v9) | 2.5/5 | Opus, after OP3.A |
 | — | OP2 | Frobenius `UnitarilyInvariantNorm` instance | 2/5 | ✅ DONE (Opus, v10) |
 | — | OP1 | Spectral (eigenvalue-hypothesis) corollaries of G1 | 2/5 | ✅ DONE (Opus, v10) |

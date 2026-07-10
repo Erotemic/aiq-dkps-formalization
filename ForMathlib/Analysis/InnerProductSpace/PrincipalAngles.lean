@@ -237,6 +237,150 @@ theorem familyIsometry_mem_span {u : Fin d → E} (hu : Orthonormal 𝕜 u)
   rw [familyIsometry_apply]
   exact Submodule.sum_smul_mem _ _ fun i _ => Submodule.subset_span (Set.mem_range_self i)
 
+/-- **Coisometry padding: precomposing with the adjoint of a `familyIsometry`
+preserves singular values.**  For an orthonormal family `u : Fin d → E` and an
+endomorphism `X` of `EuclideanSpace 𝕜 (Fin d)`, the composite
+`X ∘ₗ ι_u⋆ : E →ₗ[𝕜] EuclideanSpace 𝕜 (Fin d)` has the same singular values as
+`X`, as finsupps — the `finrank 𝕜 E − d` extra slots on the left are the zero
+padding.  `ι_u⋆ ∘ ι_u = 1` gives the gram identity
+`gram (X ∘ₗ ι_u⋆) = ι_u ∘ₗ gram X ∘ₗ ι_u⋆`, whose eigendata is that of `gram X`
+pushed through `ι_u` and extended by `0` on `(span (range u))ᗮ`; gram
+eigenvalues are nonnegative and sorted, so the padded vector is still sorted
+and the sorted-eigenvalue uniqueness (`eigenvalues_eq_of_eigenbasis`) closes.
+This transports singular-value data between the coordinate model and the
+ambient space (plan step OP3.0). -/
+theorem singularValues_comp_adjoint_familyIsometry
+    {u : Fin d → E} (hu : Orthonormal 𝕜 u)
+    (X : EuclideanSpace 𝕜 (Fin d) →ₗ[𝕜] EuclideanSpace 𝕜 (Fin d)) :
+    (X ∘ₗ LinearMap.adjoint (familyIsometry hu).toLinearMap).singularValues
+      = X.singularValues := by
+  classical
+  set ι : EuclideanSpace 𝕜 (Fin d) →ₗ[𝕜] E := (familyIsometry hu).toLinearMap with hι
+  set Y : E →ₗ[𝕜] EuclideanSpace 𝕜 (Fin d) := X ∘ₗ LinearMap.adjoint ι with hYdef
+  set U : Submodule 𝕜 E := Submodule.span 𝕜 (Set.range u) with hUdef
+  -- `ι` is isometric onto `U`: `ι⋆ ∘ ι = 1` and `ι⋆` kills `Uᗮ`.
+  have hadj : ∀ x, LinearMap.adjoint ι (ι x) = x := fun x =>
+    ext_inner_right 𝕜 fun y => by
+      rw [LinearMap.adjoint_inner_left]
+      exact (familyIsometry hu).inner_map_map x y
+  have hker : ∀ y ∈ Uᗮ, LinearMap.adjoint ι y = 0 := fun y hy =>
+    ext_inner_right 𝕜 fun z => by
+      rw [LinearMap.adjoint_inner_left, inner_zero_left]
+      exact Submodule.inner_left_of_mem_orthogonal (familyIsometry_mem_span hu z) hy
+  -- The gram of `Y` is the gram of `X` conjugated through `ι`.
+  have hgram : LinearMap.adjoint Y ∘ₗ Y
+      = ι ∘ₗ ((LinearMap.adjoint X ∘ₗ X) ∘ₗ LinearMap.adjoint ι) := by
+    rw [hYdef, LinearMap.adjoint_comp, LinearMap.adjoint_adjoint]
+    ext x
+    simp only [LinearMap.comp_apply]
+  -- Dimensions.
+  have hd : finrank 𝕜 (EuclideanSpace 𝕜 (Fin d)) = d := finrank_euclideanSpace_fin
+  have hdimU : finrank 𝕜 U = d := by
+    rw [hUdef, finrank_span_eq_card hu.linearIndependent, Fintype.card_fin]
+  have hsum := Submodule.finrank_add_finrank_orthogonal U
+  have hdn : d ≤ finrank 𝕜 E := by omega
+  have hdimperp : finrank 𝕜 (Uᗮ : Submodule 𝕜 E) = finrank 𝕜 E - d := by omega
+  -- Eigendata of `gram X`.
+  have hGX : (LinearMap.adjoint X ∘ₗ X).IsSymmetric := X.isSymmetric_adjoint_comp_self
+  have hμ_anti : Antitone (hGX.eigenvalues hd) := hGX.eigenvalues_antitone hd
+  have hμ_nonneg : ∀ i, 0 ≤ hGX.eigenvalues hd i := fun i =>
+    X.isPositive_adjoint_comp_self.nonneg_eigenvalues hd i
+  -- The glued eigenbasis of `gram Y`: `ι (fᵢ)` for `i < d` (`f` the eigenbasis
+  -- of `gram X`), an orthonormal basis of `Uᗮ` beyond.
+  set g := stdOrthonormalBasis 𝕜 (Uᗮ : Submodule 𝕜 E) with hg
+  set w : Fin (finrank 𝕜 E) → E := fun i =>
+    if h : (i : ℕ) < d then ι (hGX.eigenvectorBasis hd ⟨(i : ℕ), h⟩)
+    else (g (Fin.cast hdimperp.symm ⟨(i : ℕ) - d, by have := i.isLt; omega⟩) : E)
+    with hw
+  have hw_lt : ∀ (i : Fin (finrank 𝕜 E)) (h : (i : ℕ) < d),
+      w i = ι (hGX.eigenvectorBasis hd ⟨(i : ℕ), h⟩) := fun i h => by
+    simp only [hw]; exact dif_pos h
+  have hw_ge : ∀ (i : Fin (finrank 𝕜 E)) (h : ¬ (i : ℕ) < d),
+      w i = (g (Fin.cast hdimperp.symm
+        ⟨(i : ℕ) - d, by have := i.isLt; omega⟩) : E) := fun i h => by
+    simp only [hw]; exact dif_neg h
+  have hw_mem_lt : ∀ (i : Fin (finrank 𝕜 E)) (h : (i : ℕ) < d), w i ∈ U := fun i h => by
+    rw [hw_lt i h, hUdef]; exact familyIsometry_mem_span hu _
+  have hw_mem_ge : ∀ (i : Fin (finrank 𝕜 E)) (h : ¬ (i : ℕ) < d), w i ∈ Uᗮ := fun i h => by
+    rw [hw_ge i h]; exact SetLike.coe_mem _
+  -- Orthonormality of the glued family.
+  have hw_on : Orthonormal 𝕜 w := by
+    rw [orthonormal_iff_ite]
+    intro i j
+    by_cases hi : (i : ℕ) < d
+    · by_cases hj : (j : ℕ) < d
+      · have hcoe : ∀ x, ι x = familyIsometry hu x := fun _ => rfl
+        rw [hw_lt i hi, hw_lt j hj, hcoe, hcoe, (familyIsometry hu).inner_map_map,
+          orthonormal_iff_ite.mp (hGX.eigenvectorBasis hd).orthonormal]
+        by_cases hij : i = j
+        · subst hij; rw [if_pos rfl, if_pos rfl]
+        · rw [if_neg (fun hc => hij (Fin.ext (by simpa using congrArg Fin.val hc))),
+            if_neg hij]
+      · rw [if_neg (fun hc : i = j => hj (hc ▸ hi))]
+        exact Submodule.inner_right_of_mem_orthogonal (hw_mem_lt i hi) (hw_mem_ge j hj)
+    · by_cases hj : (j : ℕ) < d
+      · rw [if_neg (fun hc : i = j => hi (hc ▸ hj))]
+        exact Submodule.inner_left_of_mem_orthogonal (hw_mem_lt j hj) (hw_mem_ge i hi)
+      · rw [hw_ge i hi, hw_ge j hj, ← Submodule.coe_inner,
+          orthonormal_iff_ite.mp g.orthonormal]
+        by_cases hij : i = j
+        · subst hij; rw [if_pos rfl, if_pos rfl]
+        · rw [if_neg (fun hc => ?_), if_neg hij]
+          rw [Fin.cast_inj] at hc
+          have hval : (i : ℕ) - d = (j : ℕ) - d := by
+            simpa using congrArg Fin.val hc
+          have hi' := i.isLt
+          have hj' := j.isLt
+          exact hij (Fin.ext (by omega))
+  -- The glued family is an orthonormal basis (cardinality = dimension).
+  have hw_span : ⊤ ≤ Submodule.span 𝕜 (Set.range w) := by
+    refine (Submodule.eq_top_of_finrank_eq ?_).ge
+    rw [finrank_span_eq_card hw_on.linearIndependent, Fintype.card_fin]
+  set bE : OrthonormalBasis (Fin (finrank 𝕜 E)) 𝕜 E :=
+    OrthonormalBasis.mk hw_on hw_span with hbE
+  have hbE_apply : ∀ i, bE i = w i := fun i => by
+    rw [hbE]; exact congrFun (OrthonormalBasis.coe_mk hw_on hw_span) i
+  -- The padded eigenvalue vector is antitone (gram eigenvalues are `≥ 0`).
+  have hμ'_anti : Antitone (fun i : Fin (finrank 𝕜 E) =>
+      if h : (i : ℕ) < d then hGX.eigenvalues hd ⟨(i : ℕ), h⟩ else 0) := by
+    intro i j hij
+    have hvij : (i : ℕ) ≤ (j : ℕ) := hij
+    dsimp only
+    by_cases hj : (j : ℕ) < d
+    · have hi : (i : ℕ) < d := lt_of_le_of_lt hvij hj
+      rw [dif_pos hi, dif_pos hj]
+      exact hμ_anti (Fin.mk_le_mk.mpr hvij)
+    · rw [dif_neg hj]
+      by_cases hi : (i : ℕ) < d
+      · rw [dif_pos hi]; exact hμ_nonneg _
+      · rw [dif_neg hi]
+  -- The glued basis diagonalizes `gram Y` with the padded eigenvalues.
+  have heig : ∀ i : Fin (finrank 𝕜 E), (LinearMap.adjoint Y ∘ₗ Y) (bE i)
+      = (((if h : (i : ℕ) < d then hGX.eigenvalues hd ⟨(i : ℕ), h⟩ else 0 : ℝ)) : 𝕜)
+        • bE i := by
+    intro i
+    rw [hbE_apply i, hgram]
+    by_cases h : (i : ℕ) < d
+    · rw [dif_pos h, hw_lt i h, LinearMap.comp_apply, LinearMap.comp_apply, hadj,
+        hGX.apply_eigenvectorBasis hd, map_smul]
+    · rw [dif_neg h, hw_ge i h, LinearMap.comp_apply, LinearMap.comp_apply,
+        hker _ (SetLike.coe_mem _), map_zero, map_zero, RCLike.ofReal_zero, zero_smul]
+  have heq := eigenvalues_eq_of_eigenbasis Y.isSymmetric_adjoint_comp_self rfl bE
+    hμ'_anti heig
+  -- Read off the singular values slot by slot.
+  refine Finsupp.ext fun i => ?_
+  rcases lt_or_ge i d with hid | hid
+  · have hin : i < finrank 𝕜 E := lt_of_lt_of_le hid hdn
+    rw [Y.singularValues_of_lt rfl hin, X.singularValues_of_lt hd hid, heq]
+    simp only [dif_pos hid]
+  · rcases lt_or_ge i (finrank 𝕜 E) with hin | hin
+    · rw [Y.singularValues_of_lt rfl hin,
+        X.singularValues_of_finrank_le (hd.trans_le hid), heq]
+      simp only [dif_neg (not_lt.mpr hid)]
+      exact Real.sqrt_zero
+    · rw [Y.singularValues_of_finrank_le hin,
+        X.singularValues_of_finrank_le (hd.trans_le hid)]
+
 /-- Coordinates of the overlap operator: `(overlapOp hu hv y) i = ⟪uᵢ, ι_v y⟫`. -/
 theorem overlapOp_coord {u v : Fin d → E} (hu : Orthonormal 𝕜 u) (hv : Orthonormal 𝕜 v)
     (y : EuclideanSpace 𝕜 (Fin d)) (i : Fin d) :

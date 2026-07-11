@@ -20,6 +20,27 @@ hand-count). The ledger `.llm_resource_tally/ledger/` (at this repo's root) is a
 per-session, concurrency-safe, and stores measurements only.
 <!-- END llm_resource_tally -->
 
+## Lean proof-engineering rules
+
+Before substantial work in `ForMathlib/Analysis/InnerProductSpace/`, read
+[`dev/lean-proof-engineering-lessons.md`](dev/lean-proof-engineering-lessons.md).
+It records the project's recurring failures around bundled composition,
+projection representations, semilinear scalars, adjoints, dependent `if`s,
+finite-dimensional instances, and declaration parsing.
+
+The highest-value operating rules are:
+
+- make theorem and goal representations match with `change` or a small bridge
+  equality before rewriting;
+- prefer an explicit `calc` and exact theorem application to a broad `simpa`
+  across coercions, adjoints, or semilinear maps;
+- inspect the exact pinned Mathlib source instead of guessing theorem names;
+- design the valid and failure branches of inverse-like definitions before
+  implementing them;
+- search for reductions through existing abstractions before starting a
+  coordinate proof;
+- never claim a declaration is complete until Lean has accepted it.
+
 ## Lean source conventions
 
 - **Never write the words `sorry` or `axiom` in comments or docstrings.** A genuine

@@ -173,6 +173,49 @@ private theorem term_le_rawStress (Δ : DisMat n) (z : Config n d) (i j : Fin n)
   exact Finset.single_le_sum (f := fun i' => ∑ j', (‖z i' - z j'‖ - Δ i' j')^2)
     (fun i' _ => Finset.sum_nonneg (fun j' _ => sq_nonneg _)) (Finset.mem_univ i)
 
+/-- An exact realization has zero raw stress. -/
+theorem rawStress_eq_zero_of_realizes {Δ : DisMat n} {z : Config n d}
+    (hz : RealizesDissimilarity z Δ) :
+    rawStress n d Δ z = 0 := by
+  unfold rawStress
+  apply Finset.sum_eq_zero
+  intro i _
+  apply Finset.sum_eq_zero
+  intro j _
+  rw [← hz i j]
+  simp [pairDist]
+
+/-- Every exact realization is a raw-stress minimizer. -/
+theorem mem_MDS_of_realizes {Δ : DisMat n} {z : Config n d}
+    (hz : RealizesDissimilarity z Δ) :
+    z ∈ MDS n d Δ := by
+  intro z'
+  rw [rawStress_eq_zero_of_realizes hz]
+  exact rawStress_nonneg Δ z'
+
+/--
+If the target dissimilarities admit one exact realization, every raw-stress
+minimizer exactly realizes the same dissimilarities.
+-/
+theorem realizes_of_mem_MDS_of_exists_realizes {Δ : DisMat n} {z : Config n d}
+    (hexact : ∃ z₀ : Config n d, RealizesDissimilarity z₀ Δ)
+    (hz : z ∈ MDS n d Δ) :
+    RealizesDissimilarity z Δ := by
+  obtain ⟨z₀, hz₀⟩ := hexact
+  have hz_le_zero : rawStress n d Δ z ≤ 0 := by
+    calc
+      rawStress n d Δ z ≤ rawStress n d Δ z₀ := hz z₀
+      _ = 0 := rawStress_eq_zero_of_realizes hz₀
+  have hz_zero : rawStress n d Δ z = 0 :=
+    le_antisymm hz_le_zero (rawStress_nonneg Δ z)
+  intro i j
+  have hterm : (‖z i - z j‖ - Δ i j) ^ 2 ≤ 0 := by
+    simpa [hz_zero] using term_le_rawStress Δ z i j
+  have hresidual : ‖z i - z j‖ - Δ i j = 0 := by
+    nlinarith [sq_nonneg (‖z i - z j‖ - Δ i j)]
+  change ‖z i - z j‖ = Δ i j
+  linarith
+
 /-- Continuity of raw stress in the configuration (a finite sum of continuous
 maps in the Pi type `Config n d`). Internal helper / step of the proof: supplies
 the continuity needed to extract minimizers from compact sets.
@@ -819,6 +862,19 @@ Formalized by Claude Fable 5 (claude-fable-5[1m]).
 -/
 def UniquePairProfile (n d : Nat) (Δ : DisMat n) : Prop :=
   ∀ ψ₁ ∈ MDS n d Δ, ∀ ψ₂ ∈ MDS n d Δ, ∀ i j : Fin n, pairDist ψ₁ i j = pairDist ψ₂ i j
+
+/--
+Exact realizability dispatches the distance-profile uniqueness assumption:
+when one configuration realizes every target dissimilarity, every minimizer has
+zero stress and therefore realizes that same pairwise-distance profile.
+-/
+theorem uniquePairProfile_of_exists_realizes {Δ : DisMat n}
+    (hexact : ∃ z : Config n d, RealizesDissimilarity z Δ) :
+    UniquePairProfile n d Δ := by
+  intro ψ₁ hψ₁ ψ₂ hψ₂ i j
+  have h₁ := realizes_of_mem_MDS_of_exists_realizes hexact hψ₁
+  have h₂ := realizes_of_mem_MDS_of_exists_realizes hexact hψ₂
+  exact (h₁ i j).trans (h₂ i j).symm
 
 /--
 **Probabilistic raw-stress MDS stability with a fixed limit configuration**

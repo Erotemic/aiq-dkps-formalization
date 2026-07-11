@@ -189,6 +189,79 @@ theorem abs_entry_sub_le_frobSub {n : Nat} (A B : DisMat n) (i j : Fin n) :
     |A i j - B i j| ≤ frobSub A B := by
   simpa [frobSub] using abs_entry_le_frob (fun i j => A i j - B i j) i j
 
+/--
+The Frobenius distance is the Euclidean norm of the flattened entrywise
+residual family.
+
+This is the common norm bridge used by triangle inequalities and convergence
+arguments for finite dissimilarity matrices.
+-/
+theorem norm_flattened_sub_eq_frobSub {n : Nat} (A B : DisMat n) :
+    ‖(WithLp.toLp 2 (fun p : Fin n × Fin n => A p.1 p.2 - B p.1 p.2) :
+        EuclideanSpace ℝ (Fin n × Fin n))‖ = frobSub A B := by
+  rw [EuclideanSpace.norm_eq, frobSub, frob, frobSq]
+  congr 1
+  rw [Fintype.sum_prod_type]
+  refine Finset.sum_congr rfl fun i _ => Finset.sum_congr rfl fun j _ => ?_
+  simp [Real.norm_eq_abs, sq_abs]
+
+/-- The Frobenius distance is nonnegative. -/
+theorem frobSub_nonneg {n : Nat} (A B : DisMat n) :
+    0 ≤ frobSub A B := by
+  rw [← norm_flattened_sub_eq_frobSub]
+  exact norm_nonneg _
+
+/-- The Frobenius distance from a dissimilarity matrix to itself is zero. -/
+theorem frobSub_self {n : Nat} (A : DisMat n) :
+    frobSub A A = 0 := by
+  simp [frobSub, frob, frobSq]
+
+/-- Triangle inequality for the Frobenius distance on dissimilarity matrices. -/
+theorem frobSub_triangle {n : Nat} (A B C : DisMat n) :
+    frobSub A C ≤ frobSub A B + frobSub B C := by
+  let x : EuclideanSpace ℝ (Fin n × Fin n) :=
+    WithLp.toLp 2 (fun p : Fin n × Fin n => A p.1 p.2 - B p.1 p.2)
+  let y : EuclideanSpace ℝ (Fin n × Fin n) :=
+    WithLp.toLp 2 (fun p : Fin n × Fin n => B p.1 p.2 - C p.1 p.2)
+  have hxy : x + y =
+      WithLp.toLp 2 (fun p : Fin n × Fin n => A p.1 p.2 - C p.1 p.2) := by
+    apply (WithLp.linearEquiv 2 ℝ _).injective
+    ext p
+    simp [x, y]
+  rw [← norm_flattened_sub_eq_frobSub A C,
+    ← norm_flattened_sub_eq_frobSub A B,
+    ← norm_flattened_sub_eq_frobSub B C, ← hxy]
+  exact norm_add_le x y
+
+/--
+For a fixed finite matrix shape, entrywise convergence implies convergence in
+Frobenius distance.
+
+This packages the finite-sum argument needed to discharge deterministic
+matrix-limit assumptions from pointwise limits of dissimilarity entries.
+-/
+theorem tendsto_frobSub_zero_of_entrywise {n : Nat}
+    (A : Nat → DisMat n) (B : DisMat n)
+    (h : ∀ i j : Fin n, Tendsto (fun r => A r i j) atTop (𝓝 (B i j))) :
+    Tendsto (fun r => frobSub (A r) B) atTop (𝓝 0) := by
+  have hsq : ∀ i j : Fin n,
+      Tendsto (fun r => (A r i j - B i j) ^ 2) atTop (𝓝 0) := by
+    intro i j
+    have hsub : Tendsto (fun r => A r i j - B i j) atTop
+        (𝓝 (B i j - B i j)) :=
+      (h i j).sub tendsto_const_nhds
+    simpa using hsub.pow 2
+  have hsum : Tendsto
+      (fun r => ∑ i : Fin n, ∑ j : Fin n, (A r i j - B i j) ^ 2)
+      atTop (𝓝 0) := by
+    simpa using tendsto_finsetSum Finset.univ fun i _ =>
+      tendsto_finsetSum Finset.univ fun j _ => hsq i j
+  simpa [frobSub, frob, frobSq] using hsum.sqrt
+
+/-- A configuration exactly realizes a target dissimilarity matrix. -/
+def RealizesDissimilarity {n d : Nat} (z : Config n d) (Δ : DisMat n) : Prop :=
+  ∀ i j : Fin n, pairDist z i j = Δ i j
+
 /-! ## Response-matrix dissimilarities -/
 
 /--

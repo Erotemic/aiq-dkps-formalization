@@ -161,6 +161,32 @@ theorem fixed_models_fixed_queries_consistency_of_uniqueProfile
         ConvergesInProbability P (fun t ω => pairDistErr (ψhat (u t) ω) ψ i j) 0 := by
   exact rawStress_mds_stability P Dseq DeltaInf ψhat hψhat huniq hD
 
+/--
+Fixed-model consistency when the limiting dissimilarities are exactly
+realizable in the chosen embedding dimension.
+
+Exact realizability supplies the distance-profile uniqueness premise required
+by the repaired fixed-limit theorem, so callers need not prove that technical
+condition separately.
+-/
+theorem fixed_models_fixed_queries_consistency_of_exactRealization
+  (P : Measure Ω)
+  {n d : Nat}
+  (Dseq : Nat → Ω → DisMat n)
+  (DeltaInf : DisMat n)
+  (ψhat : Nat → Ω → Config n d)
+  (hψhat : ∀ r ω, ψhat r ω ∈ MDS n d (Dseq r ω))
+  (hexact : ∃ ψ : Config n d, RealizesDissimilarity ψ DeltaInf)
+  (hD : ConvergesInProbabilityZero P (fun r ω => frobSub (Dseq r ω) DeltaInf)) :
+  ∃ u : Nat → Nat,
+    Subseq u ∧
+    ∃ ψ : Config n d,
+      ψ ∈ MDS n d DeltaInf ∧
+      ∀ i j : Fin n,
+        ConvergesInProbability P (fun t ω => pairDistErr (ψhat (u t) ω) ψ i j) 0 := by
+  exact fixed_models_fixed_queries_consistency_of_uniqueProfile P Dseq DeltaInf ψhat hψhat
+    (RawStress.uniquePairProfile_of_exists_realizes hexact) hD
+
 /-! ## Paper layer 2: fixed model set, growing query set -/
 
 /--
@@ -290,6 +316,28 @@ theorem growing_queries_dissimilarity_converges
   linarith
 
 /--
+The growing-query dissimilarity conclusion with the deterministic limit
+assumption reduced to entrywise convergence.
+
+Because the model set is fixed and finite, pointwise convergence of every
+population dissimilarity entry automatically gives the required Frobenius
+convergence.
+-/
+theorem growing_queries_dissimilarity_converges_of_entrywise
+  (P : Measure Ω)
+  {n : Nat}
+  (Dseq : Nat → Ω → DisMat n)
+  (Delta : Nat → DisMat n)
+  (DeltaInf : DisMat n)
+  (hsample :
+    ConvergesInProbabilityZero P (fun r ω => frobSub (Dseq r ω) (Delta r)))
+  (hentry : ∀ i j : Fin n,
+    Tendsto (fun r => Delta r i j) atTop (𝓝 (DeltaInf i j))) :
+  ConvergesInProbabilityZero P (fun r ω => frobSub (Dseq r ω) DeltaInf) := by
+  exact growing_queries_dissimilarity_converges P Dseq Delta DeltaInf hsample
+    (tendsto_frobSub_zero_of_entrywise Delta DeltaInf hentry)
+
+/--
 Fixed `n`, growing-query consistency: paper Theorem 3 shape, with the repaired
 probability-step hypotheses threaded through.
 
@@ -328,6 +376,34 @@ theorem fixed_models_growing_queries_consistency_of_uniqueProfile
         ConvergesInProbability P (fun t ω => pairDistErr (ψhat (u t) ω) ψ i j) 0 := by
   exact fixed_models_fixed_queries_consistency_of_uniqueProfile P Dseq DeltaInf ψhat hψhat huniq
     (growing_queries_dissimilarity_converges P Dseq Delta DeltaInf hsample hlimit)
+
+/--
+Fixed-model, growing-query consistency with both technical limit assumptions
+dispatched by natural structural hypotheses: exact realizability of the limit
+and entrywise convergence of the population dissimilarities.
+-/
+theorem fixed_models_growing_queries_consistency_of_exactRealization_entrywise
+  (P : Measure Ω)
+  {n d : Nat}
+  (Dseq : Nat → Ω → DisMat n)
+  (Delta : Nat → DisMat n)
+  (DeltaInf : DisMat n)
+  (ψhat : Nat → Ω → Config n d)
+  (hψhat : ∀ r ω, ψhat r ω ∈ MDS n d (Dseq r ω))
+  (hexact : ∃ ψ : Config n d, RealizesDissimilarity ψ DeltaInf)
+  (hsample :
+    ConvergesInProbabilityZero P (fun r ω => frobSub (Dseq r ω) (Delta r)))
+  (hentry : ∀ i j : Fin n,
+    Tendsto (fun r => Delta r i j) atTop (𝓝 (DeltaInf i j))) :
+  ∃ u : Nat → Nat,
+    Subseq u ∧
+    ∃ ψ : Config n d,
+      ψ ∈ MDS n d DeltaInf ∧
+      ∀ i j : Fin n,
+        ConvergesInProbability P (fun t ω => pairDistErr (ψhat (u t) ω) ψ i j) 0 := by
+  exact fixed_models_fixed_queries_consistency_of_exactRealization P Dseq DeltaInf ψhat
+    hψhat hexact
+    (growing_queries_dissimilarity_converges_of_entrywise P Dseq Delta DeltaInf hsample hentry)
 
 /-! ## Paper layer 3: growing model set and growing query set -/
 
@@ -400,6 +476,34 @@ theorem growing_models_growing_queries_perStage_consistency_of_uniqueProfile
       (fun r ω => Dseq r ω k) (DeltaInf k) (fun r ω => ψhat r ω k)
       (fun r ω => hψhat r ω k) (huniq k) (hD k)
   exact ⟨ψ, hψ_mem, fun i j => hψ_conv i j⟩
+
+/--
+Per-stage growing-model consistency when every stage limit is exactly
+realizable in the common embedding dimension.
+-/
+theorem growing_models_growing_queries_perStage_consistency_of_exactRealization
+  (P : Measure Ω)
+  (d : Nat)
+  (nOf : Nat → Nat)
+  (Dseq : Nat → Ω → (k : Nat) → DisMat (nOf k))
+  (DeltaInf : (k : Nat) → DisMat (nOf k))
+  (ψhat : Nat → Ω → (k : Nat) → Config (nOf k) d)
+  (hψhat : ∀ r ω k, ψhat r ω k ∈ MDS (nOf k) d (Dseq r ω k))
+  (hexact : ∀ k, ∃ ψ : Config (nOf k) d,
+    RealizesDissimilarity ψ (DeltaInf k))
+  (hD : ∀ k, ConvergesInProbabilityZero P
+    (fun r ω => frobSub (Dseq r ω k) (DeltaInf k))) :
+  ∃ u : Nat → Nat,
+    Subseq u ∧
+    ∀ k : Nat,
+      ∃ ψ : Config (nOf k) d,
+        ψ ∈ MDS (nOf k) d (DeltaInf k) ∧
+        ∀ i j : Fin (nOf k),
+          ConvergesInProbability P
+            (fun t ω => pairDistErr (ψhat (u t) ω k) ψ i j) 0 := by
+  exact growing_models_growing_queries_perStage_consistency_of_uniqueProfile P d nOf Dseq
+    DeltaInf ψhat hψhat
+    (fun k => RawStress.uniquePairProfile_of_exists_realizes (hexact k)) hD
 
 /--
 Triangular-array consistency in the paper's Theorem-5 *shape*: the per-stage

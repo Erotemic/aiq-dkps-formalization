@@ -26,6 +26,28 @@ between projection estimates and operator Riccati equations.
   operator angle.
 -/
 
+
+/-! ## Weak-agent execution plan: graph subspaces
+
+Work with subtype maps rather than ambient formulas first.  Define the graph
+embedding from `U` to `E` by `u ↦ u + X u`, where `IsAngularOperator U X`
+ensures `X u ∈ Uᗮ`.  Prove it is bounded below by
+`‖u + Xu‖² = ‖u‖² + ‖Xu‖²`; its range is therefore closed.  Define
+`graphSubspace` as that range and obtain the orthogonal-projection instance
+from closedness.
+
+For the projection formula, define
+`G := I + X.adjoint ∘L X` on `U`.  Prove `G ≥ I`, hence invertible, before
+mentioning `G⁻¹` or `G⁻¹/²`.  Construct the normalized graph isometry
+`J := graphEmbedding ∘ G⁻¹/²`; then the projection is `J ∘L J.adjoint`.
+Expand this identity blockwise and only afterward package the ambient
+`graphProjectionFormula`.
+
+For acute-to-graph, restrict `projection U` to `V`, prove it is bounded below,
+apply the bounded inverse theorem, and define the angular operator from the
+inverse.  Uniqueness is coordinatewise after applying `P_U` and `P_Uᗮ`.
+-/
+
 namespace ForMathlib
 namespace DavisKahanExt
 

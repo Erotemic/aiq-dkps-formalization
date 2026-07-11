@@ -31,6 +31,36 @@ independent choices.
    complexification.  Keep all projection-algebra lemmas scalar-generic.
 -/
 
+
+/-! ## Weak-agent execution plan: stage the two-projection calculus
+
+Do not define six angle operators independently.  Use this dependency order:
+
+1. `operatorAbsoluteValue`, reusing the positive square-root/`abs` API already
+   present for finite linear maps and extending it to continuous maps.
+2. `sinAngleOperator` from `|P-Q|`.  This identity is more primitive than the
+   full angle operator and supports the Davis--Kahan norm statements directly.
+3. `cosAngleOperator` from the positive square root of
+   `P Q P + Pᗮ Qᗮ Pᗮ` on the appropriate reducing blocks.
+4. prove sine/cosine commute and satisfy `sin²+cos²=1`.
+5. define `angleOperator` by `arcsin sin` on `[0,1]` rather than starting with
+   `arccos`; endpoint behavior is easier to align with the subspace gap.
+6. define tangent only through a proof-carrying inverse of cosine.
+7. define double-angle sine polynomially; define double-angle tangent through
+   a proof-carrying inverse of `cos²-sin²`.
+
+For the bounded complex case, use CFC uniqueness: prove scalar functions agree
+on the spectrum, then use functional-calculus extensionality.  For real
+scalars, transport the completed complex construction; do not duplicate the
+Halmos decomposition.
+
+For graph representation, introduce explicit subtype maps
+`V →L U` and `V →L Uᗮ`.  Prove the first is bounded below from
+`subspaceGap U V < 1`, use the bounded inverse theorem, and only then extend
+the angular map to the ambient space by precomposition with `projection U`.
+This gives `IsAngularOperator` definitionally and avoids later block-cleanup.
+-/
+
 namespace ForMathlib
 namespace DavisKahanExt
 

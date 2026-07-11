@@ -37,6 +37,71 @@ principal block.  The bounded experimental theorem should eventually supply
 all geometry except finite matrix normalization.
 -/
 
+
+/-! ## Weak-agent execution plan: direct rotation
+
+### A. Use the existing finite polar-decomposition API
+
+Let
+
+`S := projection V ∘ₗ projection U +
+      complementaryProjection V ∘ₗ complementaryProjection U`.
+
+Prove from `hacute` that `ker S = ⊥`; in finite dimension this gives
+bijectivity and `IsUnit S`.  Then define `directRotation` with
+`polarUnitaryEquiv hS`, not by choosing principal planes.  The repository
+already provides `polarFactor`, `polarUnitaryEquiv`,
+`polarUnitaryEquiv_coe`, and `polar_decomposition_unitary` in
+`PolarDecomposition.lean`.  This immediately makes
+`directRotation_eq_polarFactor` a short simp theorem.
+
+Before constructing the bundled isometry, prove algebraically:
+
+* `S ∘ₗ projection U = projection V ∘ₗ S`;
+* `S.adjoint ∘ₗ S` commutes with `projection U`;
+* therefore `abs S` and its inverse commute with `projection U`.
+
+The last step should use the positive functional calculus already developed
+for `abs`; avoid a basis calculation.  Combining these facts gives the
+intertwining theorem, and range equality follows from it plus bijectivity.
+
+### B. Derive symmetry and the square identity from polar uniqueness
+
+Compute `S(V,U) = S(U,V).adjoint`.  Use uniqueness of the polar factor of an
+invertible operator to obtain `directRotation_symm`.  For the square identity,
+first prove it on the generic two-projection block or derive the algebraic
+identity for the polar factors of `S` and `S.adjoint`; verify the reflection
+order on the explicit planar model before generalizing.
+
+### C. Defer `angleComplexStructure`
+
+Do not block the basic direct rotation on a full operator-angle calculus.
+First prove the polar construction, mapping, symmetry, common-part identity,
+and square identity.  Define `angleComplexStructure` later from
+
+`J := (W - W.adjoint) * (2 sinAngleOperator U V)⁻¹`
+
+on the support of the sine operator, extended by zero on its kernel, or from
+the principal-plane decomposition.  The trigonometric formula and commutation
+with the angle operator are downstream of this definition.
+
+### D. Extremality
+
+For arbitrary UI norms, reduce to singular values on each principal plane.
+Create a single finite majorization lemma comparing the displacement-square
+singular values of the direct rotation with those of any competing unitary.
+Use `UnitarilyInvariantNorm.apply_le_of_kyFanSum_le` afterward.  The
+`π/3`-restricted unsquared displacement result should reuse a second scalar
+block inequality; do not infer it from the unconditional squared theorem.
+
+### E. Bundle/coercion traps
+
+Keep `S` and polar calculations as `LinearMap`s.  Convert to
+`LinearIsometryEquiv` once.  When using a bundled isometry in an equality,
+state an intermediate equality of its `toLinearMap`; extensional equality of
+the bundles can then use the appropriate ext theorem.
+-/
+
 namespace ForMathlib
 namespace DavisKahanTheory
 

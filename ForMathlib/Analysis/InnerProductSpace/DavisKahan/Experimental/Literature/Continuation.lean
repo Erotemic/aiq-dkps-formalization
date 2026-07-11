@@ -14,6 +14,28 @@ dimensional tangent theorems require selecting the perturbed spectral
 component by a norm-continuous path of Riesz projections.
 -/
 
+
+/-! ## Weak-agent execution plan: continuation
+
+Split this module into a local analytic theorem and a global topological
+argument.
+
+Local theorem: under a fixed separating contour and a uniform resolvent bound,
+prove norm continuity of the Riesz projection from the second resolvent
+identity.  State a quantitative Lipschitz estimate; continuity is its
+corollary.
+
+Global theorem: for a continuous path of projections `P t`, prove rank or
+component constancy.  In finite dimension use `‖P-Q‖ < 1` to construct an
+isomorphism between the ranges.  In infinite dimension use the same estimate
+to obtain the graph representation.  Cover the parameter interval by local
+neighborhoods and use connectedness/clopen reasoning.
+
+Keep the spectral identification separate: show the continued Riesz
+projection equals the requested spectral projection only after the path
+argument.  This prevents a cycle between continuity and spectral selection.
+-/
+
 namespace ForMathlib
 namespace DavisKahanExt
 

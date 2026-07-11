@@ -35,6 +35,45 @@ calculus foundation.
    the calculus.
 -/
 
+
+/-! ## Weak-agent execution plan: repair the spectral-calculus interface first
+
+The current total signatures are roadmap placeholders.  Do not fill them with
+arbitrary choices.  A Borel projection requires self-adjointness and a
+measurable set, and a Borel functional calculus requires measurability and a
+bounded-on-spectrum condition.
+
+Preferred refactor:
+
+* bundle a self-adjoint operator together with its spectral measure, or make
+  `hA : IsSelfAdjointOperator A` an argument of `spectralProjection`;
+* make `hs : MeasurableSet s` an argument, or define only the measure on the
+  measurable-set subtype;
+* replace unrestricted `f : ℝ → ℝ` by a bounded Borel function on
+  `realSpectrum A`.
+
+Build one projection-valued measure object with fields for empty/univ,
+intersection, adjointness, and strong countable additivity.  Define both
+indicator projections and Borel integration from that object.  Then the
+projection algebra theorems become field projections or one-line indicator
+identities, and `spectralSubspace_hasOrthogonalProjection` follows from the
+range of a star projection.
+
+Implementation order:
+
+1. scalar complex self-adjoint case only;
+2. indicator functions and finite Boolean algebra of projections;
+3. range/orthogonal-complement and reduction lemmas;
+4. bounded Borel integration and dominated convergence;
+5. strong countable additivity;
+6. real transfer through the real spectral bridge.
+
+Keep all purely algebraic theorems in a section parameterized by an abstract
+PVM.  This lets a weak agent prove complement/intersection/range statements
+without touching measure integration.  Do not import finite diagonalization
+into this foundation.
+-/
+
 namespace ForMathlib
 namespace DavisKahanExt
 

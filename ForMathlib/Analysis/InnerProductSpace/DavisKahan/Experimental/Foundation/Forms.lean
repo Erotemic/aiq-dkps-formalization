@@ -30,6 +30,28 @@ after the form-domain Hilbert space is explicit.
    exactly the inequality consumed by the form Sylvester estimate.
 -/
 
+
+/-! ## Weak-agent execution plan: closed forms before form perturbation theorems
+
+Use a bundled densely-defined sesquilinear form with a domain submodule and a
+closed graph/form norm.  Separate algebraic form operations from analytic
+closedness.  The minimal dependency ladder is:
+
+1. form domain intersection and restriction;
+2. symmetric, lower-bounded, and closed predicates;
+3. form norm and completeness of the domain;
+4. bounded form perturbations;
+5. relative form bounds;
+6. KLMN construction of the perturbed self-adjoint operator;
+7. resolvent comparison and spectral-subspace consequences.
+
+When proving KLMN, shift by a lower bound so the form is coercive, use
+Lax--Milgram to construct the resolvent, and recover the operator from the
+representation theorem.  Keep constants explicit throughout.  Do not encode a
+form as an everywhere-defined function on the ambient Hilbert space; that
+would make domain-sensitive statements formally false.
+-/
+
 namespace ForMathlib
 namespace DavisKahanExt
 

@@ -24,6 +24,73 @@ The final classic theorem is stronger: it is stated for every unitarily
 invariant norm and has both residual and perturbation conclusions.
 -/
 
+
+/-! ## Weak-agent execution plan: Riccati identity and branch selection
+
+### A. Raw `tan 2Θ` estimate
+
+Prove the residual theorem before the perturbation theorem.  In the splitting
+`U ⊕ Uᗮ`, write the reducing equation for the represented subspace and extract
+the two block equations.  Eliminate the diagonal terms to obtain the Riccati
+or double-angle Sylvester identity.  Package that identity as a named lemma
+whose left side is exactly the operator used by `tanTwoThetaEmbedding`; this
+prevents repeated block algebra in every norm specialization.
+
+Quarter-turn avoidance should be proved from injectivity of the denominator
+operator, not assumed through a total inverse.  Use `InternalGap A U δ` to
+show a vector in the denominator kernel would solve a homogeneous separated
+Sylvester equation, hence vanish.  Only then rewrite the totalized
+`tanTwoThetaEmbedding` to its proof-carrying branch and apply the ordered
+rectangular UI estimate.  The perturbation form follows by parameterizing `V`
+with an isometry and rewriting its residual as `(B-A) ∘ X`.
+
+### B. Finite continuation for the canonical branch
+
+Do not begin with the experimental infinite-dimensional Riesz integral.  The
+finite theorem can use the existing eigenbasis-defined `spectralProjection`.
+Introduce the path
+
+`Apath t := A + ((t : ℝ) : 𝕜) • H`, for `t ∈ Set.Icc 0 1`.
+
+Prove these helpers in order:
+
+1. `isSymmetric_Apath`.
+2. A uniform exclusion of the cut interval `(a,b)` from the spectrum of
+   `Apath t`; the off-diagonal hypothesis is used here through the squared
+   block equation or spectral-repulsion estimate.
+3. Local constancy of the number of eigenvalues below `a`.  Use continuity of
+   ordered eigenvalues in finite dimensions, or prove local norm continuity of
+   the finite spectral projector from a fixed contour once the resolvent
+   helper exists.
+4. Norm continuity of
+   `P t := spectralProjection (Apath t) (Set.Iic a)` on each neighborhood with
+   the same selected eigenvalue indices.
+5. Openness and closedness of `{t | ‖P t - projection U‖ < 1}` in `[0,1]`.
+   It contains zero; connectedness of the interval gives the endpoint.
+6. Convert `‖P 1 - projection U‖ < 1` to `IsAcute` using the projection-gap
+   characterization already present in the supported core.
+
+Once `isAcute_canonical_tanTwoTheta` is proved, derive
+`tanTwoTheta_spectralSubspace_le` by the raw perturbation theorem.  For
+`existsUnique_reducingSubspace_preserving_gap`, existence is the same spectral
+subspace; uniqueness should follow from the spectral inclusion and the finite
+spectral decomposition, not from a second continuation argument.
+
+### C. Repulsion
+
+Treat `spectral_repulsion_compression` as a separate min--max root.  Build the
+isometry from `Uᗮ` to the graph `Vᗮ`, compute the compressed quadratic form,
+and prove a pointwise Rayleigh inequality.  Then use the ordered-eigenvalue
+min--max theorem.  The eigenvalue and UI-norm statements must be corollaries;
+do not repeat graph computations in them.
+
+### D. Avoid circular dependencies
+
+The continuation theorem may use the already proved raw `tan 2Θ` estimate only
+if that estimate does not itself assume canonical acuteness.  Keep the raw
+quarter-turn theorem and the canonical acute-branch theorem in this order.
+-/
+
 namespace ForMathlib
 namespace DavisKahanTheory
 

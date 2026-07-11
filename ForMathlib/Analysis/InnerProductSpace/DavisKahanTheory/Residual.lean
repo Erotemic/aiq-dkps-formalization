@@ -39,6 +39,81 @@ Pythagorean identity; these unlock the Ritz-minimality statements without any
 spectral argument.
 -/
 
+
+/-! ## Weak-agent execution plan: residual geometry and total angle embeddings
+
+### A. Do not hide partial inverses inside unconditional definitions
+
+Introduce hypothesis-carrying helpers first:
+
+* `tanThetaEmbeddingOfTransverse U X htrans`;
+* `tanTwoThetaEmbeddingOfQuarterTurn U X hquarter`.
+
+For the cosine block, use the coordinate map `cosThetaEmbedding U X : F →ₗ E`.
+Its codomain is ambient `E`, so first corestrict it to `U`; transversality gives
+injectivity, and equality of finite ranks on the represented subspace gives
+bijectivity onto its range.  Build the inverse with `LinearEquiv.ofBijective`
+and compose it with the sine block.  Keep subtype coercions in named maps such
+as `cosThetaToSubspace`; otherwise `change` goals become unmanageable.
+
+To preserve the present total API, define `tanThetaEmbedding` by
+`if h : IsTransverse ... then tanThetaEmbeddingOfTransverse ... h else 0`.
+Add an `_eq_of_transverse` simp theorem and make every mathematical theorem use
+that lemma.  Use the same pattern for the quarter-turn denominator in
+`tanTwoThetaEmbedding`.  Never use an arbitrary classical inverse without an
+explicit fallback branch, because downstream simplification would then depend
+on proof irrelevance and hidden choices.
+
+### B. Double-angle sine should be polynomial
+
+Define `sinTwoThetaEmbedding` without inverses.  In principal coordinates it
+is `2 sin θ cos θ`; at the map level use the sine block followed by the adjoint
+or cosine Gram factor that has the same singular values.  First prove a Gram
+identity for the chosen formula, then identify its singular values.  Keep this
+construction independent of transversality.
+
+### C. Galerkin orthogonality and Pythagoras
+
+Prove a reusable isometry identity
+
+`X.toLinearMap.adjoint ∘ₗ X.toLinearMap = LinearMap.id`.
+
+Then `adjoint_comp_ritzResidual_eq_zero` should be a one-page composition
+calculation.  For the Frobenius theorem, first prove the pointwise decomposition
+
+`residual A X M = ritzResidual A X + X.toLinearMap ∘ₗ (compression A X - M)`.
+
+Evaluate on an arbitrary orthonormal basis of `F`.  The cross term vanishes by
+Galerkin orthogonality and `LinearMap.adjoint_inner_left`; sum the scalar
+Pythagorean identities, then rewrite with `frobenius_apply`.  Derive minimality
+from the squared identity using nonnegativity; do not start with square roots.
+
+### D. Singular values of the sine embedding
+
+Use the isometric equivalence from `F` onto `approximateSubspace X`:
+corestrict `X.toLinearMap` to its range, prove bijectivity, and package it as a
+`LinearIsometryEquiv`.  Precomposition by this equivalence does not change
+singular values.  After transport, the map is exactly the canonical cross
+projection from `approximateSubspace X` into `Uᗮ`; apply the existing
+`singularValues_sinThetaMap` theorem.  Prove the map equality with
+`LinearMap.ext` before rewriting singular values.
+
+### E. Residual perturbation bound
+
+After `residual_eq_perturbation_comp`, apply the rectangular right ideal
+inequality.  The continuous operator norm of an isometric embedding is one
+when `F` is nontrivial; split the subsingleton case first.  Avoid proving a new
+singular-value estimate here.
+
+### F. Signature checkpoint
+
+`tanThetaEmbedding_defined_iff` currently describes injectivity of the cosine
+block, not whether the totalized definition exists.  Keep it as a kernel
+criterion and rename it later if desired.  The actual computation theorem
+should be `_eq_of_transverse`; downstream agents must not unfold the `if`
+branch manually.
+-/
+
 namespace ForMathlib
 namespace DavisKahanTheory
 

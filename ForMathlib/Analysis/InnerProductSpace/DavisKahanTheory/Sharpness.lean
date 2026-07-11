@@ -34,6 +34,62 @@ should then be a scalar trigonometric simplification, making failures at right
 angles or quarter turns explicit rather than hidden in abstract geometry.
 -/
 
+
+/-! ## Weak-agent execution plan: explicit planar extremizers
+
+Use the standard basis `e0`, `e1` of `EuclideanSpace 𝕜 (Fin 2)`.  Add local
+abbreviations and simp lemmas before defining any operator:
+
+* `uθ := cos θ • e0 + sin θ • e1`;
+* `vθ := -sin θ • e0 + cos θ • e1`;
+* orthonormality of `uθ,vθ`;
+* `modelSubspace = 𝕜 ∙ e0` and
+  `rotatedModelSubspace θ = 𝕜 ∙ uθ`.
+
+Prefer `Submodule.span 𝕜 {e0}` and `Submodule.span 𝕜 {uθ}`.  Prove membership
+and projection formulas once.  Then establish the `2 × 2` matrices of both
+orthogonal projections by `LinearMap.ext` on `e0,e1`.
+
+Define `modelGappedOperator a b` by
+`e0 ↦ a • e0`, `e1 ↦ b • e1`.  For the `sin Θ` extremizer, use
+
+`Rθ D Rθ⁻¹ - D`,
+
+where `Rθ` sends `e0,e1` to `uθ,vθ`.  Its eigenvalues are
+`±(b-a) sin θ`, so its operator norm is `(b-a) sin θ` on the stated angle
+range.  Prove this by an explicit characteristic/eigenvector calculation or
+by squaring the matrix to a scalar multiple of the identity.
+
+Do not reuse that perturbation for the tangent and double-angle theorems.
+For each remaining model, first write the exact equality conditions from the
+corresponding block/Sylvester proof and solve the resulting scalar equations
+for the four matrix entries.  Add a private theorem recording those entries,
+then define the operator from the solved matrix.  This is safer than guessing a
+rotation conjugate and discovering later that the zero-compression or
+off-diagonal hypothesis fails.
+
+For every model, prove in this order:
+
+1. symmetry;
+2. the required reducing and compression/off-diagonal hypotheses;
+3. the exact internal or ordered gap;
+4. the singular values of the perturbation;
+5. the singular values of the angle operator;
+6. the displayed UI-norm equality by unitary invariance and homogeneity.
+
+For a `2 × 2` operator whose square is `r^2 • id`, use that identity to prove
+both singular values are `|r|`; avoid expanding the general singular-value
+definition repeatedly.  Keep trigonometric side conditions (`sin θ ≥ 0`,
+`cos θ > 0`, `cos (2θ) > 0`) as named lemmas.
+
+For direct sums, define the block operator by the decomposition
+`Fin (2*m) ≃ Fin m × Fin 2` and transport `m` copies of the planar model.
+Prove the singular-value multiset is repeated blockwise before invoking any UI
+norm.  The scalar limit theorem should use existing `Real.tendsto_sin_div` and
+`Real.tendsto_tan_div`-style lemmas if available; isolate it from the operator
+sharpness development.
+-/
+
 namespace ForMathlib
 namespace DavisKahanTheory
 

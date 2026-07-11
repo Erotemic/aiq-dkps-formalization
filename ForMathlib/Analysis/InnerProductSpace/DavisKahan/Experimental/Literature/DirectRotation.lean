@@ -24,6 +24,26 @@ trigonometric formulas should be consequences of uniqueness of the acute
 unitary and the operator-angle functional calculus, not separate choices.
 -/
 
+
+/-! ## Weak-agent execution plan: bounded direct rotation
+
+Let `P,Q` be the two orthogonal projections and
+`S := QP + QᗮPᗮ`.  Prove acuteness makes `S` bounded below, hence invertible.
+Define the direct rotation as the unitary polar factor
+`S (S* S)^(-1/2)`.  Add named lemmas for:
+
+* `S P = Q S`;
+* `S* S` commutes with `P`;
+* the inverse square root commutes with `P`;
+* the polar factor intertwines `P,Q`;
+* reversal of the pair takes adjoints.
+
+Prove mapping and square identities before any extremality theorem.  For the
+operator-norm minimizer, reduce to the Halmos generic two-projection block and
+prove the scalar fiber inequality.  Do not generalize that result to arbitrary
+symmetric ideals without a separate majorization theorem.
+-/
+
 namespace ForMathlib
 namespace DavisKahanExt
 

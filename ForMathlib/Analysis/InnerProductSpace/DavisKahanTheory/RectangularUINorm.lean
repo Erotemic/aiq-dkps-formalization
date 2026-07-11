@@ -40,6 +40,112 @@ of `singularValues_zeroExtension`, so later concrete wrappers carry no new
 analytic content.
 -/
 
+
+/-! ## Weak-agent execution plan: rectangular singular values and UI norms
+
+Treat this file as an API-building project, not as a list of independent
+`sorry`s.  The following order avoids circularity and uses machinery already
+present in this repository.
+
+### A. Establish the rectangular SVD/gauge seam first
+
+The hard root of `apply_le_of_kyFanSum_le` is not zero extension.  It is the
+fact that a rectangular UI seminorm depends only on the singular values.
+Introduce private helpers before attempting Fan dominance:
+
+* `rectangularDiagonal` on fixed orthonormal bases, sending the first
+  `min (finrank 𝕜 E) (finrank 𝕜 F)` basis vectors to the corresponding
+  nonnegative diagonal entries and the rest to zero;
+* `exists_rectangular_svd`, returning `U : F ≃ₗᵢ[𝕜] F`,
+  `V : E ≃ₗᵢ[𝕜] E`, and a diagonal map `D` with
+  `A = U.toLinearMap ∘ₗ D ∘ₗ V.toLinearMap`;
+* `singularValues_rectangularDiagonal`, including the zero-padding statement;
+* a finite symmetric gauge obtained by evaluating `N` on
+  `rectangularDiagonal`.
+
+Build `exists_rectangular_svd` from eigenbases of `A.adjoint ∘ₗ A` and the
+polar vectors `A vᵢ / σᵢ`.  Split indices with `σᵢ = 0`; complete the resulting
+orthonormal family in `F`.  Do not divide before introducing the nonzero
+singular-value hypothesis.  Equality of maps should be proved by
+`LinearMap.ext` followed by expansion in the domain eigenbasis.
+
+Once this seam exists, copy the gauge-level weak-majorization descent from
+`UnitarilyInvariantNorm.apply_le_of_kyFanSum_le`; do not duplicate operator
+algebra from that file.  This yields rectangular Fan dominance directly and
+makes `apply_le_of_singularValues_le` a finite-sum corollary.
+
+### B. Prove the ideal inequalities only after Fan dominance
+
+The repository already contains the rectangular singular-value estimate
+`singularValues_comp_le` in `KyFan.lean`.  For the left ideal property, set
+`c := ‖C.toContinuousLinearMap‖`, prove
+
+`(C ∘ₗ A).singularValues i ≤ c * A.singularValues i`,
+
+identify the right side with the singular values of `((c : 𝕜) • A)` using
+`singularValues_real_smul`, apply `apply_le_of_singularValues_le`, and finish
+with `N.smul_eq`.  The right ideal property should be obtained by applying the
+left result to adjoints after `adjointTransport` is available; this avoids
+reproving the Gram-order argument for a genuinely rectangular right factor.
+
+### C. Implement `adjointTransport` directly
+
+Use `toFun A := N A.adjoint`.  The additive and scalar fields follow from the
+adjoint laws; remember that the adjoint of `c • A` uses `star c`, whose norm is
+`‖c‖`.  For invariance, adjoint reverses composition, so the two unitary
+arguments swap and become their adjoints/symmetries.  Prove
+`adjointTransport_apply` by `rfl` if possible.  Add private simp lemmas for the
+adjoint of the relevant threefold composition rather than asking `simp` to
+normalize every coercion at once.
+
+### D. Keep zero extension secondary and define it pointwise
+
+The existing `LinearMap.singularValues` is already rectangular, so zero
+extension is only a compatibility tool.  Define
+
+`zeroExtension A (x,y) = (0, A x)`
+
+on `WithLp 2 (E × F)`.  A robust implementation constructs the map with
+`toFun z := WithLp.toLp 2 (0, A (WithLp.ofLp z).1)` and proves linearity by
+extensionality on the two product coordinates.  Immediately add simp lemmas
+for its application and adjoint.  For `singularValues_zeroExtension`, prove the
+Gram operator is block diagonal with blocks `A.adjoint ∘ₗ A` and `0`; then use
+an orthonormal basis formed by concatenating eigenvectors of the first block
+with any orthonormal basis of `F`.  Handle `i < finrank 𝕜 E` and the zero tail
+as separate cases; do not attempt a single `simp` proof of the sorted sequence.
+
+### E. Concrete norms
+
+Construct concrete norms in this order:
+
+1. `kyFan k` from `rectangularKyFanSum`; prove its triangle inequality by the
+   rectangular Ky Fan variational principle already used in `KyFan.lean`.
+2. `nuclear` as `kyFan (finrank 𝕜 E)`; zero padding makes this valid even when
+   the codomain is smaller.
+3. `opNorm` either from the ordinary continuous-linear-map norm or from
+   `kyFan 1`; the ordinary norm gives the shortest structure proof.
+4. `frobenius` from the basis sum of squares, using the existing square proof
+   as a template and a rectangular Parseval calculation.
+5. `schatten p` only after a finite `ℓp` symmetric-gauge lemma is available.
+
+Do not define all five through `ofSquareFamily`; that constructor is useful for
+compatibility tests, but it hides the evaluation lemmas needed downstream.
+`toRectangular` in the square case should be the direct structure copy, making
+`toRectangular_apply` definitional.  `ofSquareFamily` may use zero extension,
+but its documentation must not claim dimension-independent uniqueness unless
+compatibility between the supplied square norms is added as a hypothesis.
+
+### F. Elaboration traps
+
+* Distinguish `A.adjoint` as a `LinearMap` from continuous-map adjoints.
+* Normalize `LinearMap.comp_apply` explicitly before rewriting pointwise.
+* Use real scalar coercions `((c : ℝ) : 𝕜)` when invoking
+  `singularValues_real_smul`.
+* Split zero-dimensional spaces before using a norm-one or basis witness.
+* Prove sequence equalities with `funext i` and explicit rank cases; sorted
+  singular-value functions rarely close by `simp` globally.
+-/
+
 namespace ForMathlib
 namespace DavisKahanTheory
 

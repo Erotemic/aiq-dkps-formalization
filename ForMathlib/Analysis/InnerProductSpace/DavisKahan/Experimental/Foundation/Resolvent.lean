@@ -29,6 +29,44 @@ subspaces and continuation under perturbation.
   functional calculus.
 -/
 
+
+/-! ## Weak-agent execution plan: proof-carrying resolvents and Riesz projections
+
+Refactor the total `resolventOperator` before proving identities.  The elegant
+interface is either
+
+`resolventOperator A z (hz : InResolventSet A z)`
+
+or a bundled subtype containing an inverse and its two inverse laws.  If the
+public total definition must remain temporarily, define it with an `if hz`
+branch and prove an `_eq_of_mem` theorem; every analytic result must rewrite
+through that theorem first.
+
+Prove inverse uniqueness once.  Then both resolvent identities are ring
+algebra with named inverse equations; use `ContinuousLinearMap.ext` and
+`noncomm_ring` only after compositions are reassociated.
+
+Do not define `ContourSeparatesSpectrum` as an opaque proposition.  Replace or
+supplement it with a structure containing:
+
+* a piecewise `C1` or rectifiable closed path;
+* a proof every contour point is in the resolvent set;
+* a uniform resolvent bound;
+* winding number one on the selected spectrum and zero on the complement.
+
+Define `rieszProjection` with the repository/mathlib contour-integral API and
+include the normalization factor in the definition.  Prove continuity of the
+integrand before forming the integral.  Establish agreement with the Borel
+spectral projection by functional-calculus extensionality on the spectrum;
+then obtain idempotence and self-adjointness from that equality rather than by
+a first, difficult double-integral proof.
+
+For continuation, first prove the local estimate from the second resolvent
+identity, then pass it through the contour integral.  Keep the finite
+continuation theorem separate: it may use a fixed finite contour and needs no
+general PVM construction.
+-/
+
 namespace ForMathlib
 namespace DavisKahanExt
 

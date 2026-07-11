@@ -33,6 +33,31 @@ objects before the literature theorems depend on them.
    verified operations rather than from arbitrary total choices.
 -/
 
+
+/-! ## Weak-agent execution plan: unbounded operators
+
+The current declarations are architectural placeholders.  Do not prove
+operator equalities until domains are explicit.  First choose one bundled
+closed densely-defined operator representation and use it consistently:
+
+* domain as a dense submodule;
+* graph norm and closedness;
+* application only to subtype elements of the domain;
+* adjoint with its domain;
+* resolvent as a bounded inverse from the ambient space into the graph-norm
+  domain.
+
+Build, in order: graph norm Banach structure, closed graph embedding, bounded
+resolvent, resolvent identities, and spectral projections.  Only then state
+unbounded Davis--Kahan results.  Equality of unbounded operators must include
+domain equality; never use ambient function extensionality alone.
+
+For early progress, formalize semibounded self-adjoint operators through their
+closed quadratic forms and derive bounded resolvents from Lax--Milgram.  This
+interfaces naturally with the `Forms` module and avoids manipulating raw
+unbounded products before domain lemmas exist.
+-/
+
 namespace ForMathlib
 namespace DavisKahanExt
 

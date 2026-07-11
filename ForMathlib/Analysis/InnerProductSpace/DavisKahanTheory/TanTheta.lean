@@ -36,6 +36,41 @@ transport back to the full-space tangent operator.  Concrete operator and
 Frobenius endpoints are only specializations of the all-UI parent statement.
 -/
 
+
+/-! ## Weak-agent execution plan: graph coordinates and `tan Θ`
+
+1. Implement the hypothesis-carrying graph map first:
+   `graphOperatorOfTransverse U X htrans`.  It should be the same corestricted
+   cosine inverse used by `tanThetaEmbeddingOfTransverse`, followed by the
+   complementary projection.  Define the current total `graphOperator` with
+   the same `if h : IsTransverse ... then ... else 0` convention as the
+   residual module.  Then `graphOperator_eq_tanThetaEmbedding` is a branch
+   simplification plus extensionality, not a second geometric construction.
+2. Prove `singularValues_graphOperator` by rewriting to the tangent embedding
+   and using a single principal-coordinate theorem.  Do not independently
+   diagonalize both maps.
+3. Prove `isTransverse_of_tanTheta_residual_gap` before the norm theorem.  Work
+   with `y ∈ ker (cosThetaEmbedding U X)`, derive that the sine vector solves a
+   homogeneous ordered Sylvester equation, and use the positive gap to force
+   it to zero.  Since `X` is an isometry and its sine and cosine components are
+   both zero, conclude `y = 0`.
+4. In `tanTheta_residual_le`, rewrite the tangent map to the transverse helper,
+   derive its graph Sylvester equation explicitly, and apply
+   `uiNorm_sylvester_le_of_orderedGap`.  The Galerkin equality should only be
+   used to cancel the selected diagonal block.
+5. For perturbation statements, choose an isometric parameterization of `V`
+   and use `residual_eq_perturbation_comp`; do not rebuild graph geometry in
+   the full ambient space.  Convert rectangular and square UI norms only at
+   the final line.
+6. Keep the vector theorem independent: it is the pole-free coercive estimate
+   and can be proved before the total tangent operator.
+
+Elaboration warning: `IsTransverse` is one-sided in this finite API.  When a
+surjective cosine block is needed, prove the relevant finrank equality from
+the chosen isometric parameterization instead of silently treating
+transversality as bijectivity.
+-/
+
 namespace ForMathlib
 namespace DavisKahanTheory
 

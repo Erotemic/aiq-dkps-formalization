@@ -32,6 +32,36 @@ Build this layer bottom-up from compact operators.
    Davis--Kahan estimates by approximation.
 -/
 
+
+/-! ## Weak-agent execution plan: symmetric ideals
+
+Do not attempt the general `SymmetricNormIdeal` endpoint first.  Build a ladder
+whose early stages can compile independently:
+
+1. finite-rank continuous operators, with singular values defined by
+   restriction to the finite-dimensional range/domain support;
+2. compact operators and their singular-value sequence, using the compact
+   positive spectral theorem for `T.adjoint ∘L T`;
+3. Ky Fan gauges and the two ideal inequalities;
+4. Schatten membership and norm for a fixed `p`;
+5. completeness and finite-rank density;
+6. the abstract symmetric-gauge ideal package.
+
+Each ideal should be represented by a subtype carrying `mem`; define its norm
+on the subtype instead of a total gauge plus repeated membership hypotheses.
+Keep a coercion to bounded operators and prove composition/adjoint closure as
+subtype constructors.  This will make later Sylvester statements readable.
+
+The finite-to-compact transfer should approximate `T` by spectral truncations
+of `|T|`, prove the Davis--Kahan inequality on each finite-rank truncation, and
+pass to the ideal norm using completeness.  Do not assume operator-norm
+convergence implies convergence in an arbitrary ideal norm.
+
+Before general symmetric ideals, finish Hilbert--Schmidt and trace class as
+test cases.  They expose missing summability and adjoint APIs without the full
+symmetric-gauge representation theorem.
+-/
+
 namespace ForMathlib
 namespace DavisKahanExt
 

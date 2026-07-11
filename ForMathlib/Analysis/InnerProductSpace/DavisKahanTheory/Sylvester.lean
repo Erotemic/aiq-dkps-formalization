@@ -37,6 +37,89 @@ separate theorem with the `pi/2` constant and then derive residual results by
 applying the rectangular norm ideal property.
 -/
 
+
+/-! ## Weak-agent execution plan: finite Sylvester inversion and sharp bounds
+
+### A. Repair the total solution definition without adding hypotheses
+
+`solveSylvester A B C` is intentionally total, while invertibility is only
+known under a gap.  Define it by a decidable branch on bijectivity:
+
+* if `h : Function.Bijective (sylvesterOperator A B)`, use
+  `(LinearEquiv.ofBijective _ h).symm C`;
+* otherwise return `0`.
+
+Add a private lemma saying the definition reduces to that inverse under a
+supplied bijectivity proof.  In `sylvesterOperator_solveSylvester`, derive
+injectivity from the gap, obtain surjectivity with
+`LinearMap.injective_iff_surjective`, enter the positive branch, and use
+`LinearEquiv.apply_symm_apply`.  This is cleaner than choosing eigenbases in
+the definition and confines coordinates to the injectivity proof.
+
+### B. Direct injectivity proof
+
+Use eigenbases `eA` and `eB` for the symmetric maps.  For `Y` in the kernel,
+apply the equation to `eB j` and take inner product with `eA i`.  After rewriting
+both eigenvector equations, obtain
+
+`(α i - β j) * ⟪eA i, Y (eB j)⟫ = 0`.
+
+Turn `SpectraSeparated ... δ` and `0 < δ` into `α i - β j ≠ 0`; then every
+matrix coefficient vanishes.  Prove `Y (eB j) = 0` by the orthonormal-basis
+extensionality theorem and finally prove `Y = 0` by `LinearMap.ext` plus basis
+induction/expansion.  Introduce named helpers for “eigenvalue belongs to the
+restricted spectrum” and “separation implies denominator nonzero” so the main
+proof is not dominated by set-membership coercions.
+
+### C. Ordered form bounds: generalize the existing absorption proof
+
+Do not diagonalize for `uiNorm_sylvester_le_of_form_bounds`.  The file
+`SylvesterBound.lean` already proves an abstract seminorm absorption theorem
+for square continuous maps.  Extract or copy that theorem with three spaces:
+
+* left endomorphism on `F`;
+* right endomorphism on `E`;
+* rectangular unknown `E →L[𝕜] F`.
+
+Its assumptions are exactly additivity, absolute homogeneity, and left/right
+ideal inequalities.  Instantiate those with the rectangular UI norm after
+converting finite linear maps to continuous linear maps.  The same midpoint
+shift proves the separated form with constant one.  This route is both shorter
+and more robust than an eigenvalue Schur-multiplier proof.
+
+### D. Interval/exterior gap
+
+First construct the lower and upper spectral subspaces of `A` relative to
+`a-δ` and `b+δ`.  Decompose the codomain into these reducing blocks and write
+`X = Xlo + Xhi` by postcomposition with the two projections.  Each block
+satisfies an ordered Sylvester equation, so apply the constant-one theorem to
+both.  To recombine without losing a factor two, prove the pinching/Ky-Fan
+lemma for orthogonal codomain blocks before proving this theorem.  The natural
+root theorem is `kyFan_sylvester_le_of_intervalGap`; derive the arbitrary
+`N` result from rectangular Fan dominance rather than proving it separately.
+
+### E. Arbitrary disjoint spectra
+
+Keep `uiNorm_sylvester_le_of_spectralDistance` independent.  The absorption
+argument does not prove the `π/2` theorem.  Preferred finite route:
+
+1. diagonalize both endpoints;
+2. represent the inverse as the Schur multiplier
+   `m i j = 1 / (α i - β j)`;
+3. prove the Bhatia--Davis--McIntosh multiplier bound on every Ky Fan norm;
+4. invoke rectangular Fan dominance.
+
+Do not let this theorem block the interval/exterior Davis--Kahan chain.
+
+### F. Coercion discipline
+
+Perform algebra in `LinearMap` until the final norm estimate.  When invoking
+`SylvesterBound`, create named continuous maps and prove the equation with
+`ContinuousLinearMap.ext`; do not repeatedly unfold `toContinuousLinearMap`.
+After any composition rewrite, normalize with `LinearMap.comp_apply` or
+`ContinuousLinearMap.comp_apply` before using eigenvector equations.
+-/
+
 namespace ForMathlib
 namespace DavisKahanTheory
 

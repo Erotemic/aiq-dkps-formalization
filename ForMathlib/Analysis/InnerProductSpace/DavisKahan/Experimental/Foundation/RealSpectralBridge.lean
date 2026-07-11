@@ -16,6 +16,48 @@ secondary route.  The declarations here are excluded from the supported
 umbrella until the bridge is discharged.
 -/
 
+
+/-! ## Weak-agent execution plan: the real spectral-order bridge
+
+Do not try to prove `upperFormBoundOn_top_of_spectrum_subset_Iic` by rewriting
+complex CFC theorems under real scalars; the missing instance is the substance
+of the problem.  Choose one of the following routes and complete its helper
+API first.
+
+### Preferred route: minimal norm-preserving complexification
+
+1. Introduce a complex Hilbert space `Complexification E` and an isometric
+   real-linear embedding `ofReal : E →ₗᵢ[ℝ] Complexification E`.
+2. Extend a real bounded operator `A` to a complex-linear operator
+   `complexify A`, with simp lemmas for application to `ofReal x`, adjoint,
+   subtraction, scalar shifts, and quadratic forms.
+3. Prove self-adjointness transports and prove the real spectrum is the real
+   part of the complex spectrum for self-adjoint `A`.  It is enough here to
+   prove the one-sided implication needed for the upper spectral bound.
+4. Apply the existing complex theorem
+   `upperFormBoundOn_top_of_spectrum_subset_Iic` to `complexify A` and pull the
+   quadratic-form inequality back along `ofReal`.
+
+Keep complexification lemmas in the dedicated foundation module; this bridge
+should contain only the final transport.
+
+### Alternative route: real CFC/star order
+
+Construct the missing real continuous-functional-calculus instance for
+self-adjoint operators, then prove that spectrum containment of `cI-A` in
+`[0,∞)` implies positivity.  Convert positivity to the displayed quadratic
+form inequality.  Do not use the norm bound `‖A‖ ≤ c`; it loses sign
+information and is insufficient.
+
+### Proof organization
+
+First prove a global theorem on `⊤`; the lower theorem is negation, and the
+restricted theorems should remain pure transport through
+`ContinuousLinearMap.IsSymmetric.restrict_of_invariant`.  Test every coercion
+between continuous and plain linear maps in a tiny local `example` before
+embedding it into the restriction proof.
+-/
+
 namespace ForMathlib
 namespace DavisKahan
 namespace Experimental

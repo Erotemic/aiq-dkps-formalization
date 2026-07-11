@@ -214,5 +214,35 @@ theorem norm_starProjection_sub_eq_max (U V : Submodule ℂ H)
   rw [hfin]
   rfl
 
+/-- **The sharp (factor-one) operator-norm Davis--Kahan projector theorem.**  With
+a two-sided coercive spectral gap — `A`'s form `≥ (c+g)` on `U` and `≤ c` on
+`Uᗮ`, `B`'s form `≥ (c+g)` on `W` and `≤ c` on `Wᗮ` — the spectral projectors on
+an *arbitrary* complex Hilbert space satisfy the sharp bound
+
+`‖P_U − P_W‖ ≤ ‖B − A‖ / g`
+
+with constant one and no equal-rank hypothesis.  Combines the projector-difference
+identity `norm_starProjection_sub_eq_max` with the two dimension-free directed
+`sin Θ` estimates `sinTheta_directed_coercive`. -/
+theorem opNorm_starProjection_sub_le_of_coercive
+    {A B : H →L[ℂ] H} (hA : IsSelfAdjointOperator A) (hB : IsSelfAdjointOperator B)
+    {U W : Submodule ℂ H} [U.HasOrthogonalProjection] [W.HasOrthogonalProjection]
+    (hU : Reduces A U) (hW : Reduces B W)
+    {c g : ℝ} (hg : 0 < g)
+    (hUc : ∀ x ∈ U, (c + g) * ‖x‖ ^ 2 ≤ RCLike.re ⟪A x, x⟫_ℂ)
+    (hUlo : ∀ x ∈ Uᗮ, RCLike.re ⟪A x, x⟫_ℂ ≤ c * ‖x‖ ^ 2)
+    (hWc : ∀ x ∈ W, (c + g) * ‖x‖ ^ 2 ≤ RCLike.re ⟪B x, x⟫_ℂ)
+    (hWlo : ∀ x ∈ Wᗮ, RCLike.re ⟪B x, x⟫_ℂ ≤ c * ‖x‖ ^ 2) :
+    ‖(U.starProjection - W.starProjection : H →L[ℂ] H)‖ ≤ ‖B - A‖ / g := by
+  rw [norm_starProjection_sub_eq_max U W]
+  refine max_le ?_ ?_
+  · rw [show (1 - W.starProjection : H →L[ℂ] H) = Wᗮ.starProjection from
+      (Submodule.starProjection_orthogonal' W).symm]
+    exact sinTheta_directed_coercive hA hB hU (reduces_orthogonalComplement hB hW.2) hg hUc hWlo
+  · rw [show (1 - U.starProjection : H →L[ℂ] H) = Uᗮ.starProjection from
+      (Submodule.starProjection_orthogonal' U).symm]
+    have h := sinTheta_directed_coercive hB hA hW (reduces_orthogonalComplement hA hU.2) hg hWc hUlo
+    rwa [show ‖A - B‖ = ‖B - A‖ from by rw [← neg_sub, norm_neg]] at h
+
 end DavisKahanExt
 end ForMathlib

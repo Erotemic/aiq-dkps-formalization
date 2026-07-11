@@ -1,0 +1,176 @@
+/-
+Copyright (c) 2026 Kitware, Inc. All rights reserved.
+Released under Apache 2.0 license as described in the file LICENSE.
+Authors: Jon Crall, GPT 5.6 High
+-/
+import ForMathlib.Analysis.InnerProductSpace.DavisKahanTheory.Sylvester
+import ForMathlib.Analysis.InnerProductSpace.SinThetaUINorm
+
+/-!
+# The complete finite-dimensional `sin Θ` theorem family
+
+Literature map:
+
+* `ForMathlib/prose/Davis-Kahan-1970-part-III-core-arguments.tex`,
+  Section 7, "The sin Theta theorem".
+* Davis--Kahan (1970), Section 2 (`sin Θ`) and Section 6 (proof and symmetric
+  extension).
+* `ForMathlib/prose/Yu-Wang-Samworth-2014-core-arguments.tex`,
+  Sections "The symmetric-matrix variant" and "Lower bound on the residual".
+
+The residual theorem is the numerical analyst's form.  The perturbation
+version is the operator theorist's form.  Both are stated for every relevant
+unitarily invariant norm, followed by the interval, spectral-projector, and
+concrete-norm corollaries expected from the final API.
+-/
+
+namespace ForMathlib
+namespace DavisKahanTheory
+
+open scoped InnerProductSpace BigOperators
+open Module (finrank)
+
+variable {𝕜 : Type*} [RCLike 𝕜]
+variable {E : Type*} [NormedAddCommGroup E] [InnerProductSpace 𝕜 E]
+  [FiniteDimensional 𝕜 E]
+variable {F : Type*} [NormedAddCommGroup F] [InnerProductSpace 𝕜 F]
+  [FiniteDimensional 𝕜 F]
+
+/-! ## Residual form -/
+
+/-- **Davis--Kahan `sin Θ`, residual form, every UI norm.**
+
+The spectrum of the approximate coordinate operator `M` lies in `[a,b]`, the
+unwanted spectrum of `A` on `Uᗮ` lies outside `(a-δ,b+δ)`, and `R = AX-XM`.
+Then `δ ‖sin Θ‖ ≤ ‖R‖`. -/
+theorem sinTheta_residual_le
+    (N : RectangularUnitarilyInvariantNorm 𝕜 F E)
+    {A : E →ₗ[𝕜] E} (hA : A.IsSymmetric) {U : Submodule 𝕜 E}
+    [U.HasOrthogonalProjection] (hU : Reduces A U)
+    (X : F →ₗᵢ[𝕜] E) {M : F →ₗ[𝕜] F} (hM : M.IsSymmetric)
+    {a b δ : ℝ} (hδ : 0 < δ)
+    (hMspec : SpectrumIn M ⊤ (Set.Icc a b))
+    (hAspec : SpectrumIn A Uᗮ {lam | lam ∉ Set.Ioo (a - δ) (b + δ)}) :
+    δ * N (sinThetaEmbedding U X) ≤ N (residual A X M) := by
+  sorry
+
+/-- Ordered half-line residual form. -/
+theorem sinTheta_residual_le_of_orderedGap
+    (N : RectangularUnitarilyInvariantNorm 𝕜 F E)
+    {A : E →ₗ[𝕜] E} (hA : A.IsSymmetric) {U : Submodule 𝕜 E}
+    [U.HasOrthogonalProjection] (hU : Reduces A U)
+    (X : F →ₗᵢ[𝕜] E) {M : F →ₗ[𝕜] F} (hM : M.IsSymmetric)
+    {δ : ℝ} (hδ : 0 < δ) (hgap : OrderedGap M ⊤ A Uᗮ δ) :
+    δ * N (sinThetaEmbedding U X) ≤ N (residual A X M) := by
+  sorry
+
+/-- General disjoint-spectrum residual form.  The `π/2` loss is the
+Bhatia--Davis--McIntosh extension, not the sharp interval/exterior theorem. -/
+theorem sinTheta_residual_le_of_spectralDistance
+    (N : RectangularUnitarilyInvariantNorm 𝕜 F E)
+    {A : E →ₗ[𝕜] E} (hA : A.IsSymmetric) {U : Submodule 𝕜 E}
+    [U.HasOrthogonalProjection] (hU : Reduces A U)
+    (X : F →ₗᵢ[𝕜] E) {M : F →ₗ[𝕜] F} (hM : M.IsSymmetric)
+    {δ : ℝ} (hδ : 0 < δ)
+    (hgap : SpectraSeparated M ⊤ A Uᗮ δ) :
+    δ * N (sinThetaEmbedding U X) ≤ (Real.pi / 2) * N (residual A X M) := by
+  sorry
+
+/-! ## Perturbation form -/
+
+/-- **Davis--Kahan `sin Θ`, perturbation form, every square UI norm.** -/
+theorem sinTheta_perturbation_le
+    (N : UnitarilyInvariantNorm 𝕜 E)
+    {A B : E →ₗ[𝕜] E} (hA : A.IsSymmetric) (hB : B.IsSymmetric)
+    {U V : Submodule 𝕜 E} [U.HasOrthogonalProjection]
+    [V.HasOrthogonalProjection] (hU : Reduces A U) (hV : Reduces B V)
+    {a b δ : ℝ} (hδ : 0 < δ)
+    (hgap : IntervalExteriorGap A B U V a b δ) :
+    δ * N (sinThetaMap U V) ≤ N (B - A) := by
+  sorry
+
+/-- **Symmetric `sin Θ` theorem.**  The full-space angle operator contains
+both one-sided sine blocks.  Consequently the sharp full-space conclusion
+requires the reverse mixed gap as well as the forward one; a single mixed gap
+controls only `sinThetaMap U V` (except in the operator norm).  This is
+Davis--Kahan Proposition 6.1. -/
+theorem sinAngleOperator_perturbation_le
+    (N : UnitarilyInvariantNorm 𝕜 E)
+    {A B : E →ₗ[𝕜] E} (hA : A.IsSymmetric) (hB : B.IsSymmetric)
+    {U V : Submodule 𝕜 E} [U.HasOrthogonalProjection]
+    [V.HasOrthogonalProjection] (hU : Reduces A U) (hV : Reduces B V)
+    {δ : ℝ} (hδ : 0 < δ)
+    (hgapUV : HybridGap A B U V δ)
+    (hgapVU : HybridGap B A V U δ) :
+    δ * N (sinAngleOperator U V) ≤ N (B - A) := by
+  sorry
+
+/-- Ordered half-line perturbation form. -/
+theorem sinTheta_perturbation_le_of_orderedGap
+    (N : UnitarilyInvariantNorm 𝕜 E)
+    {A B : E →ₗ[𝕜] E} (hA : A.IsSymmetric) (hB : B.IsSymmetric)
+    {U V : Submodule 𝕜 E} [U.HasOrthogonalProjection]
+    [V.HasOrthogonalProjection] (hU : Reduces A U) (hV : Reduces B V)
+    {δ : ℝ} (hδ : 0 < δ)
+    (hgap : OrderedGap A U B Vᗮ δ) :
+    δ * N (sinThetaMap U V) ≤ N (B - A) := by
+  sorry
+
+/-- Canonical spectral-projector statement with no eigenbasis in the API. -/
+theorem sinTheta_spectralSubspace_le
+    (N : UnitarilyInvariantNorm 𝕜 E)
+    {A B : E →ₗ[𝕜] E} (hA : A.IsSymmetric) (hB : B.IsSymmetric)
+    {a b δ : ℝ} (hδ : 0 < δ)
+    (hAselected : SpectrumIn A (spectralSubspace A (Set.Icc a b)) (Set.Icc a b))
+    (hBoutside : SpectrumIn B (spectralSubspace B (Set.Icc a b))ᗮ
+      {lam | lam ∉ Set.Ioo (a - δ) (b + δ)}) :
+    δ * N (sinThetaMap (spectralSubspace A (Set.Icc a b))
+        (spectralSubspace B (Set.Icc a b))) ≤ N (B - A) := by
+  sorry
+
+/-- Difference-of-projectors operator-norm form. -/
+theorem opNorm_projection_sub_projection_le
+    {A B : E →ₗ[𝕜] E} (hA : A.IsSymmetric) (hB : B.IsSymmetric)
+    {U V : Submodule 𝕜 E} [U.HasOrthogonalProjection]
+    [V.HasOrthogonalProjection] (hU : Reduces A U) (hV : Reduces B V)
+    (hrank : finrank 𝕜 U = finrank 𝕜 V)
+    {a b δ : ℝ} (hδ : 0 < δ)
+    (hgap : IntervalExteriorGap A B U V a b δ) :
+    δ * ‖(projection U - projection V).toContinuousLinearMap‖ ≤
+      ‖(B - A).toContinuousLinearMap‖ := by
+  sorry
+
+/-- Frobenius form. -/
+theorem frobenius_sinTheta_le
+    {A B : E →ₗ[𝕜] E} (hA : A.IsSymmetric) (hB : B.IsSymmetric)
+    {U V : Submodule 𝕜 E} [U.HasOrthogonalProjection]
+    [V.HasOrthogonalProjection] (hU : Reduces A U) (hV : Reduces B V)
+    {a b δ : ℝ} (hδ : 0 < δ)
+    (hgap : IntervalExteriorGap A B U V a b δ) :
+    δ * UnitarilyInvariantNorm.frobenius 𝕜 E (sinThetaMap U V) ≤
+      UnitarilyInvariantNorm.frobenius 𝕜 E (B - A) := by
+  sorry
+
+/-- Ky Fan form, simultaneously controlling every singular-value prefix. -/
+theorem kyFan_sinTheta_le
+    {A B : E →ₗ[𝕜] E} (hA : A.IsSymmetric) (hB : B.IsSymmetric)
+    {U V : Submodule 𝕜 E} [U.HasOrthogonalProjection]
+    [V.HasOrthogonalProjection] (hU : Reduces A U) (hV : Reduces B V)
+    {a b δ : ℝ} (hδ : 0 < δ)
+    (hgap : IntervalExteriorGap A B U V a b δ) (k : ℕ) :
+    δ * kyFanSum k (sinThetaMap U V) ≤ kyFanSum k (B - A) := by
+  sorry
+
+/-- General two-sided spectral separation with the `π/2` constant. -/
+theorem sinTheta_perturbation_le_of_spectralDistance
+    (N : UnitarilyInvariantNorm 𝕜 E)
+    {A B : E →ₗ[𝕜] E} (hA : A.IsSymmetric) (hB : B.IsSymmetric)
+    {U V : Submodule 𝕜 E} [U.HasOrthogonalProjection]
+    [V.HasOrthogonalProjection] (hU : Reduces A U) (hV : Reduces B V)
+    {δ : ℝ} (hδ : 0 < δ)
+    (hgap : SpectraSeparated A U B Vᗮ δ) :
+    δ * N (sinThetaMap U V) ≤ (Real.pi / 2) * N (B - A) := by
+  sorry
+
+end DavisKahanTheory
+end ForMathlib

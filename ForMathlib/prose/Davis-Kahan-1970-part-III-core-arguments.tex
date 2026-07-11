@@ -1,0 +1,464 @@
+% Formalization-oriented distillation of Davis--Kahan (1970), Part III.
+% This is an independent mathematical writeup, not a transcription.
+% Model provenance for this distillation and the associated Lean scaffold:
+% GPT 5.6 High.
+
+\documentclass[11pt]{article}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb,amsthm,mathtools,booktabs,longtable}
+\usepackage[colorlinks=true,linkcolor=black,citecolor=blue,urlcolor=blue]{hyperref}
+
+\newcommand{\K}{\mathbb K}
+\newcommand{\Hh}{\mathcal H}
+\newcommand{\Rr}{\mathcal R}
+\newcommand{\Nn}{\mathcal N}
+\newcommand{\spec}{\operatorname{spec}}
+\newcommand{\ran}{\operatorname{ran}}
+\newcommand{\dist}{\operatorname{dist}}
+\newcommand{\diag}{\operatorname{diag}}
+\newcommand{\pinch}{\operatorname{pinch}}
+\newcommand{\sv}{\operatorname{sv}}
+\newcommand{\id}{\operatorname{id}}
+\newcommand{\op}{\mathrm{op}}
+\newcommand{\HS}{\mathrm{HS}}
+\newcommand{\abs}[1]{\left|#1\right|}
+\newcommand{\norm}[1]{\left\lVert#1\right\rVert}
+\newcommand{\inner}[2]{\left\langle#1,#2\right\rangle}
+
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{definition}[theorem]{Definition}
+\theoremstyle{remark}
+\newtheorem{remark}[theorem]{Remark}
+
+\title{The finite-dimensional Davis--Kahan theory:\\
+formalization-oriented proof distillation and Lean roadmap}
+\author{GPT 5.6 High}
+\date{10 July 2026}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+This document distills the finite-dimensional content and proof architecture of
+Davis and Kahan's \emph{The Rotation of Eigenvectors by a Perturbation. III}
+(SIAM Journal on Numerical Analysis 7 (1970), 1--46), together with the
+finite-dimensional antecedents in Davis (1963).  It is written to support the
+Lean files under
+\texttt{ForMathlib/Analysis/InnerProductSpace/DavisKahanTheory/}.
+It deliberately expands the operator-theoretic prose into the intermediate
+objects, block identities, singular-value statements, and spectral-selection
+lemmas that a final Lean proof will require.  It is an independent distillation,
+not a transcription of the source paper.
+\end{abstract}
+
+\tableofcontents
+
+\section{Scope and source map}
+
+The 1970 paper centers on four independent sharp estimates:
+\(\sin\Theta\), \(\tan\Theta\), \(\sin 2\Theta\), and
+\(\tan 2\Theta\).  Each has a perturbation form and a residual form, and the
+bounds are stated for arbitrary unitarily invariant norms.  The paper separates
+its development into: the geometry of two subspaces; the direct rotation and
+its extremal properties; a sharp estimate for the Sylvester expression
+\(AX-XB\); proofs of the single-angle theorems; proofs of the double-angle
+theorems; and the spectral-selection/repulsion interpretation of the
+double-angle bounds.
+
+The Lean scaffold follows the same dependency order.  Definitions are made on
+submodules and isometric embeddings rather than on a chosen pair of coordinate
+bases.  Finite dimensionality permits every spectral statement to be reduced to
+an orthonormal eigenbasis, but basis independence must be proved before the
+public theorem layer is considered complete.
+
+\section{Coordinate-free reducing subspaces and spectral blocks}
+
+Let \(A:\Hh\to\Hh\) be Hermitian and let \(P\) be the orthogonal projector
+onto a reducing subspace \(U\).  Thus
+\[
+  AP=PA, \qquad A=PAP+P^\perp A P^\perp.
+\]
+In finite dimensions it is convenient to define the spectrum carried by
+\(U\) as the set of real \(\lambda\) for which there is a nonzero
+\(x\in U\) with \(Ax=\lambda x\).  The canonical spectral subspace for a set
+\(\Omega\subseteq\mathbb R\) is
+\[
+  U_\Omega(A)=\operatorname{span}\{x:Ax=\lambda x,\ \lambda\in\Omega\}.
+\]
+The associated orthogonal projector is denoted \(P_\Omega(A)\).
+
+The formalization must prove that this construction is independent of the
+chosen eigenbasis, reduces \(A\), has the expected range and kernel, and
+respects complements, disjoint unions, intersections, and restriction to
+intervals.  Repeated eigenvalues must not be split by an arbitrary ordering of
+an eigenbasis.
+
+For two blocks \((A,U)\) and \((B,V)\), the basic gap predicates are:
+\begin{align*}
+  \operatorname{Sep}_\delta(A|_U,B|_V)
+    &:\Longleftrightarrow
+      \abs{\lambda-\mu}\ge\delta
+      \quad(\lambda\in\spec(A|_U),\ \mu\in\spec(B|_V)),\\
+  \operatorname{OrdSep}_\delta(A|_U,B|_V)
+    &:\Longleftrightarrow
+      \lambda+\delta\le\mu
+      \quad(\lambda\in\spec(A|_U),\ \mu\in\spec(B|_V)).
+\end{align*}
+The sharp single-angle theorem uses interval/exterior or ordered separation;
+a merely disjoint pair of arbitrary spectral sets leads instead to the later
+\(\pi/2\)-constant extension.
+
+\section{Unitarily invariant norms, singular values, and rectangular maps}
+
+For a linear map \(X:E\to F\) between finite-dimensional Hilbert spaces, let
+\(s_1(X)\ge s_2(X)\ge\cdots\ge0\) denote its singular values, padded by zero.
+A rectangular unitarily invariant seminorm is invariant under
+\(X\mapsto UXV\) for unitary maps on the codomain and domain.  It is represented
+by a symmetric gauge of the singular-value sequence.
+
+The formal infrastructure needed by the paper consists of:
+\begin{enumerate}
+\item singular-value invariance under left and right unitary factors;
+\item invariance under adjoint and under zero extension to a square operator;
+\item the ideal inequalities
+\[
+  \Nn(CX)\le \norm{C}_{\op}\Nn(X),\qquad
+  \Nn(XD)\le \Nn(X)\norm{D}_{\op};
+\]
+\item Ky Fan dominance: if
+\(\sum_{j<k}s_j(X)\le\sum_{j<k}s_j(Y)\) for every \(k\), then
+\(\Nn(X)\le\Nn(Y)\) for every unitarily invariant seminorm;
+\item concrete operator, Frobenius, nuclear, Ky Fan, and Schatten instances.
+\end{enumerate}
+
+The 1970 proofs use the word ``compatible'' for norms satisfying the ideal
+property with respect to the bound norm.  In finite dimensions, the required
+compatibility follows from the singular-value ideal inequalities.
+
+\section{Principal angles and the direct rotation}
+
+Let \(P,Q\) be orthogonal projectors with ranges \(U,V\).  Their canonical
+angles are encoded without choosing bases by the positive contractions obtained
+from the two-projector decomposition.  In equal finite rank, the singular
+values of \(QP\) are \(\cos\theta_j\), those of \(Q^\perp P\) are
+\(\sin\theta_j\), and the nonzero singular values of \(P-Q\) are the sine
+values with the standard multiplicities.
+
+A complete Lean dictionary should include:
+\begin{align*}
+  \sv(QP)&=(\cos\theta_j)_j,\\
+  \sv(Q^\perp P)&=(\sin\theta_j)_j,\\
+  \norm{P-Q}_{\op}&=\max_j\sin\theta_j,\\
+  \norm{P-Q}_{\HS}^2&=2\sum_j\sin^2\theta_j,\\
+  \sv\bigl(2P^\perp QP\bigr)&=(\sin 2\theta_j)_j.
+\end{align*}
+Unequal ranks require explicit zero/one padding and a convention for unmatched
+directions.
+
+When the pair is acute, the direct rotation \(W\) is the canonical unitary
+mapping \(U\) onto \(V\), acting as the identity on the common and doubly
+orthogonal parts.  On each nontrivial principal two-plane it is ordinary
+rotation by \(\theta_j\).  Its equivalent formulas include a polar-factor
+formula, a trigonometric formula
+\[
+  W=\cos\Theta+J\sin\Theta,
+\]
+and the reflection identity
+\[
+  W^2=(2Q-I)(2P-I).
+\]
+The angle operator commutes with \(P,Q,J,W\).
+
+\section{Compressions, Ritz operators, and residual identities}
+
+Let \(X:F\to E\) be an isometric embedding representing an approximate
+subspace.  For Hermitian \(A:E\to E\), define
+\[
+  M_X=X^*AX,\qquad R_X=AX-XM_X.
+\]
+More generally, for a proposed coordinate operator \(M\), define
+\(R(A,X,M)=AX-XM\).  The following facts are implicit in the numerical-analysis
+formulation and should be explicit Lean lemmas:
+\begin{enumerate}
+\item \(M_X\) is Hermitian;
+\item \(X^*R_X=0\) (Galerkin orthogonality);
+\item \(R_X=0\) iff \(\ran X\) reduces \(A\);
+\item residuals transform naturally under a unitary change of coordinates;
+\item if \(BX=XM\), then
+\[
+  R(A,X,M)=(A-B)X;
+\]
+\item in Frobenius norm,
+\[
+  \norm{R(A,X,M)}_{\HS}^2
+  =\norm{R_X}_{\HS}^2+\norm{M_X-M}_{\HS}^2,
+\]
+so the Ritz compression minimizes the residual.
+\end{enumerate}
+
+Projecting the residual into an exact reducing decomposition gives the block
+Sylvester equations from which all four angle estimates follow.
+
+\section{The Sylvester estimate \texorpdfstring{$AX-XB=C$}{AX-XB=C}}
+
+The elementary ordered theorem is the engine of the sharp constant-one
+results.
+
+\begin{theorem}[ordered Sylvester estimate]
+Let \(A\) and \(B\) be Hermitian on possibly different finite-dimensional
+Hilbert spaces.  Assume, after a common scalar translation, that
+\(A\ge(c+\delta)I\) and \(B\le cI\), with \(\delta>0\).  If
+\(AX-XB=C\), then for every compatible unitarily invariant seminorm,
+\[
+  \delta\,\Nn(X)\le\Nn(C).
+\]
+\end{theorem}
+
+The proof first handles bound-norm coercivity and then passes to every
+unitarily invariant norm via Ky Fan variational characterizations.  The roles
+of \(A\) and \(B\) may be interchanged.  Interval/exterior separation is
+reduced to ordered pieces and recombined through the projector/Ky Fan lemmas.
+
+For arbitrary disjoint spectral sets separated by \(\delta\), the sharp
+constant one generally fails.  The finite-dimensional Bhatia--Davis--McIntosh
+extension instead has
+\[
+  \delta\,\Nn(X)\le \frac{\pi}{2}\Nn(C).
+\]
+This extension must remain a separate theorem so that it does not weaken the
+classic interval theorem silently.
+
+\section{The \texorpdfstring{$\sin\Theta$}{sin Theta} theorem}
+
+Let \(U\) reduce \(A\), and let \(X:F\to E\) be an isometric approximate
+basis with Hermitian coordinate operator \(M\).  Suppose
+\(\spec(M)\subseteq[a,b]\), while
+\(\spec(A|_{U^\perp})\) lies outside
+\((a-\delta,b+\delta)\).  Projecting
+\(AX-XM=R\) into \(U^\perp\) gives a Sylvester equation for
+\(P_{U^\perp}X\).  Hence
+\[
+  \delta\,\Nn(P_{U^\perp}X)\le\Nn(R).
+\]
+The singular values of \(P_{U^\perp}X\) are the principal sines, producing the
+residual \(\sin\Theta\) theorem.
+
+If \(X\) spans a reducing subspace of \(B=A+H\), then
+\(R=-HX\).  The ideal inequality and the square angle-operator dictionary give
+the perturbation form
+\[
+  \delta\,\Nn(\sin\Theta)\le\Nn(H).
+\]
+The one-sided cross-projection and full projector-difference formulations must
+be distinguished in unequal rank.  The general disjoint-spectrum variant has
+the \(\pi/2\) constant described in the previous section.
+
+\section{The \texorpdfstring{$\tan\Theta$}{tan Theta} theorem}
+
+Assume an ordered gap between the unwanted exact block and the approximate
+coordinate spectrum, and impose the Ritz/Galerkin condition so that the
+relevant diagonal residual block vanishes.  The cosine block is then injective.
+Writing the approximate subspace as the graph of an operator \(T:U\to U^\perp\),
+the singular values of \(T\) are \(\tan\theta_j\).
+
+The residual block equation and the ordered Sylvester estimate yield
+\[
+  \delta\,\Nn(\tan\Theta)\le\Nn(R)
+\]
+for every unitarily invariant norm.  In the perturbation formulation, the
+vanishing compression condition is
+\[
+  QHQ=0
+\]
+on the chosen perturbed subspace, and the conclusion is
+\[
+  \delta\,\Nn(\tan\Theta)\le\Nn(H).
+\]
+The proof needs explicit lemmas establishing transversality, the graph
+representation, the tangent singular-value dictionary, and the Ky Fan passage
+from finite-rank test projectors to arbitrary unitarily invariant norms.
+
+\section{The \texorpdfstring{$\sin 2\Theta$}{sin 2 Theta} theorem}
+
+The double-angle theorem depends only on the internal gap of the unperturbed
+operator.  Let \(U\) reduce \(A\), and assume the spectra of
+\(A|_U\) and \(A|_{U^\perp}\) are separated by \(\delta\).  For an approximate
+invariant pair \((X,M)\), the two projected residual equations combine to give
+\[
+  \delta\,\Nn(\sin 2\Theta)\le 2\Nn(R).
+\]
+
+For the perturbation form, let \(V\) reduce \(B=A+H\).  Reflect \(A\) through
+\(V\):
+\[
+  A'=J_VAJ_V,\qquad D_V(A)=A'-A.
+\]
+The cross-projection between \(U\) and its reflected image has singular values
+\(\sin 2\theta_j\).  The single-angle theorem gives
+\[
+  \delta\,\Nn(\sin 2\Theta)\le\Nn(D_V(A)).
+\]
+Since \(J_VBJ_V=B\),
+\[
+  D_V(A)=J_V(A-B)J_V-(A-B),
+\]
+and unitary invariance plus the triangle inequality gives
+\(\Nn(D_V(A))\le2\Nn(H)\).  Therefore
+\[
+  \delta\,\Nn(\sin 2\Theta)\le2\Nn(H).
+\]
+
+\section{The \texorpdfstring{$\tan 2\Theta$}{tan 2 Theta} theorem}
+
+Assume in addition that the perturbation is off diagonal relative to the
+unperturbed splitting:
+\[
+  PHP=0,\qquad P^\perp H P^\perp=0.
+\]
+The coupled block equations become a Riccati/graph equation.  On each principal
+two-plane the denominator contains \(\cos 2\theta_j\), and the off-diagonal gap
+forces the selected solution to satisfy \(\theta_j<\pi/4\).  The resulting
+sharp estimates are
+\[
+  \delta\,\Nn(\tan 2\Theta)\le2\Nn(R),
+  \qquad
+  \delta\,\Nn(\tan 2\Theta)\le2\Nn(H).
+\]
+A complete formal proof requires more than the largest-angle scalar algebra:
+it needs the tangent-double-angle singular-value dictionary, Ky Fan estimates,
+and a theorem selecting the acute reducing subspace of the perturbed operator.
+
+\section{Spectral selection and repulsion}
+
+The interpretation section of the 1970 paper proves that an off-diagonal
+perturbation admits a unique ``correct'' reducing subspace on the prescribed
+side of the gap.  In finite dimensions the formal theorem should construct this
+subspace as a canonical spectral subspace of \(A+H\), prove that it is acute
+relative to \(U\), and prove the equivalence between the spectral-side
+conditions and the bound \(\Theta\le\pi/4\).
+
+The same analysis yields spectral repulsion.  The perturbed eigenvalues on each
+side of the gap move away from the gap, and compression through the cosine
+block gives both ordered-eigenvalue and symmetric-gauge inequalities.  The Lean
+roadmap therefore includes:
+\begin{enumerate}
+\item existence and uniqueness of the reducing subspace preserving the gap;
+\item acuteness and strict \(\theta_{\max}<\pi/4\) under the quantitative
+hypotheses;
+\item compression comparison through the cosine block;
+\item eigenvalue-by-eigenvalue repulsion;
+\item a Ky Fan/UI-norm repulsion statement;
+\item the continuation argument that keeps the canonical spectral projector on
+the same branch along \(A+tH\).
+\end{enumerate}
+
+\section{Extremal properties of the direct rotation}
+
+Among all unitaries carrying \(U\) onto \(V\), the direct rotation has the
+precise extremal properties isolated in Section~4.  The unconditional
+all-unitarily-invariant-norm statement is for the positive displacement
+square \((I-W^*)(I-W)\), not for \(I-W\) itself.  The latter minimization can
+fail for some unitarily invariant norms; Davis--Kahan recover it uniformly
+when the largest angle is at most \(\pi/3\).  The finite roadmap records:
+\begin{enumerate}
+\item uniqueness from the intertwining relation plus nonnegative real part;
+\item minimization of \(\Nn{(I-W^*)(I-W)}\) for every unitarily invariant norm;
+\item minimization of \(\Nn{I-W}\) for every unitarily invariant norm under
+      the largest-angle bound \(\theta_{\max}\le\pi/3\);
+\item minimization of maximal vector displacement;
+\item minimization of the sum of squared displacements of an orthonormal basis;
+\item compatibility with the blockwise polar-factor intertwining unitary used
+in Davis's 1963 total-rotation theory.
+\end{enumerate}
+These results are geometric rather than prerequisites for the four inequalities,
+but they complete the classic theory's interpretation of the angle operator.
+
+\section{Sharpness and planar equality models}
+
+All four constants are best possible.  The equality calculations reduce to a
+real or complex two-dimensional principal plane.  Take
+\[
+  P=\begin{bmatrix}1&0\\0&0\end{bmatrix},\qquad
+  Q=\begin{bmatrix}\cos^2\theta&\sin\theta\cos\theta\\
+                    \sin\theta\cos\theta&\sin^2\theta\end{bmatrix},
+\]
+and diagonal or off-diagonal Hermitian operators chosen so that the gap and
+residual equations are equalities.  Direct sums of these planes realize any
+finite singular-value list and therefore equality simultaneously for all
+unitarily invariant norms.
+
+The Lean sharpness layer should provide the explicit matrices/operators,
+compute their principal angles and residuals, prove equality in each theorem,
+and derive that the constants one and two cannot be decreased.  It should also
+record the pole obstruction for \(\tan\Theta\) and the \(\pi/4\) branch
+restriction for \(\tan2\Theta\).
+
+\section{Lean module map and proof order}
+
+\begin{longtable}{p{0.36\textwidth}p{0.56\textwidth}}
+\toprule
+Lean module & Mathematical responsibility \\
+\midrule
+\texttt{Basic.lean} & canonical spectral subspaces, projectors, angle objects,
+reducing/gap predicates, pinch and off-diagonal predicates \\
+\texttt{RectangularUINorm.lean} & rectangular UI seminorms, singular-value
+instances, ideal property, Fan dominance and square compatibility \\
+\texttt{Residual.lean} & compression, Ritz operator, residual algebra,
+Galerkin orthogonality, graph/sine/tangent embeddings \\
+\texttt{Sylvester.lean} & ordered and interval/exterior \(AX-XB=C\) estimates,
+Ky Fan form, and the separate \(\pi/2\) extension \\
+\texttt{SinTheta.lean} & residual, perturbation, projector, interval, Ky Fan,
+operator, and Frobenius \(\sin\Theta\) statements \\
+\texttt{TanTheta.lean} & transversality, graph operator, tangent singular values,
+residual and perturbation \(\tan\Theta\) statements \\
+\texttt{SinTwoTheta.lean} & mirror defect and residual/perturbation
+\(\sin2\Theta\) statements \\
+\texttt{TanTwoTheta.lean} & off-diagonal graph/Riccati theory,
+\(\tan2\Theta\), spectral selection, acuteness, and repulsion \\
+\texttt{Generalized.lean} & Theorems 6.1--6.3 and 8.2:
+non-orthonormal trial maps, unequal dimensions, square-norm fallback, and
+continuation to the acute branch \\
+\texttt{DirectRotation.lean} & canonical direct rotation and extremal geometry \\
+\texttt{Davis1963.lean} & total rotation, eigenvalue-motion subtraction, and
+one-vector double-angle ancestors \\
+\texttt{Sharpness.lean} & two-dimensional extremizers and optimal constants \\
+\texttt{Statistics.lean} & population-gap, aligned-basis, and
+Yu--Wang--Samworth corollaries \\
+\texttt{SingularSubspace.lean} & Gram operators, Hermitian dilation, and
+left/right singular-subspace corollaries \\
+\bottomrule
+\end{longtable}
+
+The intended implementation order is the order of this table.  Later headline
+theorems should be proved by the named lower-level seams rather than by
+repeating eigenbasis calculations.  Existing proved files should be reused
+where their statement matches; scaffold declarations may then become wrappers
+or be deleted in favor of the proved canonical theorem.
+
+\begin{thebibliography}{9}
+\bibitem{Davis1963}
+C. Davis,
+\emph{The rotation of eigenvectors by a perturbation},
+J. Math. Anal. Appl. 6 (1963), 159--173.
+
+\bibitem{DavisKahan1970}
+C. Davis and W. M. Kahan,
+\emph{The rotation of eigenvectors by a perturbation. III},
+SIAM J. Numer. Anal. 7 (1970), 1--46.
+
+\bibitem{Mirsky1960}
+L. Mirsky,
+\emph{Symmetric gauge functions and unitarily invariant norms},
+Quart. J. Math. Oxford 11 (1960), 50--59.
+
+\bibitem{YWS2015}
+Y. Yu, T. Wang, and R. J. Samworth,
+\emph{A useful variant of the Davis--Kahan theorem for statisticians},
+Biometrika 102 (2015), 315--323.
+\end{thebibliography}
+
+\end{document}

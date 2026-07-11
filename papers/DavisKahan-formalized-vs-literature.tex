@@ -65,13 +65,17 @@ general-interval spectral subspaces, Davis's sharper total-rotation estimate
 and per-eigenvector $\sin2\theta$ and $\tan2\theta$ theorems, the operator
 Sylvester bound and the dimension-free operator-norm $\sin\Theta$ theorem it
 powers, a canonical principal-angle API with a certified dictionary, and ---
-completing the programme --- the full Davis--Kahan Part~III quartet at the
-subspace level: the $\sin\Theta$ and $\sin2\Theta$ theorems in every
-unitarily invariant norm (built on a Ky Fan / Fan-dominance mini-library, with
-the Frobenius norm as a first-class instance) and the $\tan\Theta$ and
-$\tan2\Theta$ theorems in their sharp classical operator-norm forms.  The
-closing section, which formerly ranked the missing theorems, now records that
-nothing of the Part~III programme remains.
+a large part of the Part~III programme at the subspace level: the
+$\sin\Theta$ and $\sin2\Theta$ perturbation theorems in every unitarily
+invariant norm (built on a Ky Fan / Fan-dominance mini-library, with the
+Frobenius norm as a first-class instance), and sharp operator-norm endpoints
+for $\tan\Theta$ and $\tan2\Theta$.  The original 1970 paper states all
+four headline families for arbitrary unitarily invariant norms and supplies
+both residual and perturbation forms.  The closing section therefore records
+the remaining canonical-angle, rectangular-residual, tangent-norm,
+spectral-selection, direct-rotation, generalized, and sharpness layers now
+represented by the theorem scaffold under
+\texttt{ForMathlib/Analysis/InnerProductSpace/DavisKahanTheory/}.
 \end{abstract}
 
 \vspace{1.5em}
@@ -219,14 +223,17 @@ total-rotation theory is formalized together with its polar-decomposition
 substrate, and Davis's per-eigenvector $\sin2\theta$ and $\tan2\theta$ theorems
 are formalized in a phase-free product form, and a canonical principal-angle
 API is packaged, and the dimension-free operator-norm $\sin\Theta$ theorem is
-formalized on top of the operator Sylvester bound.  Since then the programme
-has been completed: the four Part~III theorems --- $\sin\Theta$,
-$\sin2\Theta$, $\tan\Theta$, $\tan2\Theta$ --- are all formalized at the
-subspace level (the first two in every unitarily invariant norm, the tangent
-theorems in their classical operator-norm forms), with the principal-angle
-dictionary certified.  The purpose of this note is to explain exactly which
-part has been formalized and how it relates to the paper statements; the
-closing section records what, if anything, remains.
+formalized on top of the operator Sylvester bound.  The proved development
+therefore closes a large and useful portion of the finite-dimensional theory,
+but not the complete 1970 theorem surface.  In particular, the original paper
+states $\sin\Theta$, $\tan\Theta$, $\sin2\Theta$, and $\tan2\Theta$ for
+arbitrary unitarily invariant norms, with residual as well as perturbation
+forms.  The theorem scaffold added under
+\texttt{ForMathlib/Analysis/InnerProductSpace/DavisKahanTheory/} records that
+larger target, including the coordinate-free geometry and spectral-selection
+lemmas implicit in the paper.  The purpose of this note is to explain exactly
+which part has been proved and how the remaining declarations relate to the
+literature.
 
 
 
@@ -744,35 +751,62 @@ spectral theorem for unitaries, and equality on the $2\times2$ model.  A
 Rayleigh bound ties $t^2$ to $\mu_0$ and monotonicity of
 $\tau\mapsto4\tau(1-\tau)$ on $[0,\tfrac12]$ finishes.
 
-\section{What remains, ranked by difficulty}\label{sec:remains}
+\section{What remains, ranked by dependency}\label{sec:remains}
 
-Each downstream consumer in this repository is already served by the
-Frobenius and operator-norm results above.  A full roadmap for closing them --- the Davis--Kahan~III quartet
-($\sin\Theta$, $\sin2\Theta$, $\tan\Theta$, $\tan2\Theta$) at the subspace
-level in every unitarily invariant norm, via a Ky Fan / Fan-dominance
-mini-library, together with the certified principal-angle dictionary --- is
-maintained, with per-step proof routes and difficulty grades, in
-\texttt{dev/davis-kahan-expert-completion-plan.md}; the executed plan for
-everything above is \texttt{dev/davis-kahan-gap-closure-plan.md} (v6, closed).
+The proved files already serve the repository's present Frobenius and
+operator-norm consumers.  They should nevertheless not be described as the
+entire Davis--Kahan Part~III theory.  The 1970 paper treats
+$\sin\Theta$, $\tan\Theta$, $\sin2\Theta$, and $\tan2\Theta$ as four
+independent sharp estimates for arbitrary unitarily invariant norms, and it
+uses compatible rectangular norms and residual equations as part of the
+native statement surface.
 
-Nothing of the Davis--Kahan Part~III programme remains: the quartet
-($\sin\Theta$, $\sin2\Theta$, $\tan\Theta$, $\tan2\Theta$) is formalized at
-the subspace level --- the sine theorems in every unitarily invariant norm,
-the tangent theorems in their sharp classical operator-norm forms (the
-sources checked assert no UI-norm tangent statements, and none is claimed)
---- with the principal-angle dictionary certified and the Frobenius,
-operator-norm, and eigenvalue-hypothesis instantiations in place.  What is
-left is strictly optional:
+The source-level roadmap is now the scaffold rooted at
+\texttt{ForMathlib.Analysis.InnerProductSpace.DavisKahanTheory}.  Its new
+modules are intentionally admitted with \texttt{sorry}; they state the target
+API close to the form expected after completion and cite the associated TeX
+proof distillations.  Model provenance for this scaffold and its accompanying
+1970 proof distillation is \textbf{GPT 5.6 High}.
+
+The remaining work is ordered by mathematical dependency:
 
 \begin{enumerate}
-\item \emph{Mathlib-attractive annex bricks (off any critical path).}
-  Weak-majorization completion and Hardy--Littlewood--P\'olya in weights form
-  (the Fan-dominance proof deliberately bypasses both), and upstreaming
-  candidates tracked in \texttt{comparator/}.
-\item \emph{Beyond Part~III (out of scope by design).}  Infinite-dimensional
-  /spectral-measure versions, and the Bhatia--Davis--McIntosh $\pi/2$-constant
-  $\sin\Theta$ theorem under general two-sided separation.
+\item \emph{Canonical spectral and angle geometry.}
+  Make spectral subspaces basis-independent; define principal-angle sine,
+  cosine, tangent, and double-angle operators on submodules; handle unequal
+  ranks and prove the projector/singular-value dictionaries.
+\item \emph{Rectangular unitarily invariant norms and residual algebra.}
+  Generalize the square-map norm API to maps between distinct finite Hilbert
+  spaces, prove the ideal and zero-extension laws, and expose Ritz compression,
+  Galerkin orthogonality, and residual-minimization identities.
+\item \emph{The Sylvester engines.}
+  Prove the sharp ordered and interval/exterior estimates for every compatible
+  unitarily invariant norm, plus the separate $\pi/2$ general-separation
+  extension.
+\item \emph{Complete the four-theorem square.}
+  Supply residual and perturbation forms of all four angle theorems in every
+  unitarily invariant norm, together with operator, Frobenius, Ky Fan, nuclear,
+  and Schatten corollaries.  The largest unclosed pieces are the all-norm
+  tangent families and the residual double-angle families.
+\item \emph{Spectral selection and repulsion.}
+  Formalize the Section~8 branch-selection theorem, the compression/repulsion
+  inequalities, and the continuation argument selecting the acute perturbed
+  spectral subspace.
+\item \emph{Direct rotation, generalized forms, and sharpness.}
+  Complete the canonical direct-rotation formulas and qualified extremal
+  properties; the nonorthonormal and unequal-dimensional theorems; Davis's
+  1963 total-rotation theory; and the two-dimensional equality models proving
+  optimality of the constants.
+\item \emph{Derived interfaces.}
+  Finish the Yu--Wang--Samworth/statistical wrappers, singular-subspace and
+  Hermitian-dilation forms, and matrix-facing formulations.
 \end{enumerate}
+
+The detailed source map is in
+\texttt{ForMathlib/prose/Davis-Kahan-1970-part-III-core-arguments.tex}; the
+1963 and YWS dependencies remain in their existing distillations.  This
+separates proved results from roadmap declarations without understating the
+scope of the classic literature.
 
 \section{Dictionary to the Lean source}\label{sec:dictionary}
 

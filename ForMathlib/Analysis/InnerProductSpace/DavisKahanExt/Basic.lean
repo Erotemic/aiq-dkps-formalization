@@ -8,6 +8,8 @@ import Mathlib
 /-!
 # Infinite-dimensional Davis--Kahan foundations
 
+This module also owns the shared reflection API used by `DoubleAngle`.
+
 This file introduces the bounded-operator and closed-subspace vocabulary used
 throughout `DavisKahanExt`.
 
@@ -23,9 +25,7 @@ open scoped InnerProductSpace
 
 variable {𝕜 : Type*} [RCLike 𝕜]
 variable {E : Type*} [NormedAddCommGroup E] [InnerProductSpace 𝕜 E]
-  [CompleteSpace E]
 variable {F : Type*} [NormedAddCommGroup F] [InnerProductSpace 𝕜 F]
-  [CompleteSpace F]
 
 abbrev BoundedOperator (𝕜 : Type*) (E : Type*) [RCLike 𝕜]
     [NormedAddCommGroup E] [InnerProductSpace 𝕜 E] := E →L[𝕜] E
@@ -205,6 +205,206 @@ versions should later specialize this result.
 theorem reduces_orthogonalComplement {A : E →L[𝕜] E}
     (hA : IsSelfAdjointOperator A) {U : Submodule 𝕜 E}
     (hU : ∀ x ∈ U, A x ∈ U) : Reduces A U := by
+  refine ⟨hU, ?_⟩
+  intro x hx
+  rw [Submodule.mem_orthogonal]
+  intro u hu
+  rw [← hA u x]
+  exact Submodule.inner_right_of_mem_orthogonal (hU u hu) hx
+
+/-- A reducing subspace projection commutes with the operator.
+
+This is the bounded Hilbert-space version of the projection-commutation lemma
+already used by the finite-dimensional `sin Θ` development.  Unlike
+`reduces_orthogonalComplement`, self-adjointness is not needed here because
+`Reduces A U` explicitly includes invariance of both `U` and `Uᗮ`.
+
+Lean proof route for a weaker agent:
+
+1. Split `x` into `P_U x + (x - P_U x)`.
+2. Use the two conjuncts of `hU` to put the images of those summands in `U`
+   and `Uᗮ` respectively.
+3. Project the split image; the first summand is fixed and the second vanishes.
+4. Upgrade the pointwise equality to equality of continuous linear maps.
+-/
+theorem projection_comp_comm_of_reduces
+    (A : E →L[𝕜] E) (U : Submodule 𝕜 E)
+    [U.HasOrthogonalProjection] (hU : Reduces A U) :
+    projection U ∘L A = A ∘L projection U := by
+  ext x
+  change U.starProjection (A x) = A (U.starProjection x)
+  have hpx : U.starProjection x ∈ U := U.starProjection_apply_mem x
+  have hrest : x - U.starProjection x ∈ Uᗮ :=
+    U.sub_starProjection_mem_orthogonal x
+  have hApx : A (U.starProjection x) ∈ U := hU.1 _ hpx
+  have hArest : A (x - U.starProjection x) ∈ Uᗮ := hU.2 _ hrest
+  have hsplit : A x = A (U.starProjection x) + A (x - U.starProjection x) := by
+    rw [← map_add]
+    congr 1
+    abel
+  rw [hsplit, map_add,
+    Submodule.starProjection_eq_self_iff.mpr hApx,
+    (Submodule.starProjection_apply_eq_zero_iff U).mpr hArest,
+    add_zero]
+
+/-- Pointwise form of `projection_comp_comm_of_reduces`.
+
+Lean proof route for a weaker agent:
+
+1. Evaluate the map equality at `x` with `congrArg`.
+2. Simplify both compositions with `ContinuousLinearMap.comp_apply`.
+-/
+theorem projection_apply_comm_of_reduces
+    (A : E →L[𝕜] E) (U : Submodule 𝕜 E)
+    [U.HasOrthogonalProjection] (hU : Reduces A U) (x : E) :
+    projection U (A x) = A (projection U x) := by
+  have h := congrArg (fun T : E →L[𝕜] E => T x)
+    (projection_comp_comm_of_reduces A U hU)
+  simpa only [ContinuousLinearMap.comp_apply] using h
+
+/-- Reflection through a closed subspace, using mathlib's bundled
+linear isometry. -/
+noncomputable def reflectionOperator (U : Submodule 𝕜 E)
+    [U.HasOrthogonalProjection] : E →L[𝕜] E :=
+  U.reflection.toLinearIsometry.toContinuousLinearMap
+
+/-- Pointwise formula for the reflection.
+
+Lean proof route for a weaker agent:
+
+1. Unfold `reflectionOperator` and `projection`.
+2. Apply mathlib's `Submodule.reflection_apply` theorem.
+-/
+theorem reflectionOperator_apply (U : Submodule 𝕜 E)
+    [U.HasOrthogonalProjection] (x : E) :
+    reflectionOperator U x = (2 : 𝕜) • projection U x - x := by
+  change U.reflection x = (2 : 𝕜) • U.starProjection x - x
+  rw [Submodule.reflection_apply, ← Nat.cast_smul_eq_nsmul 𝕜]
+  norm_num
+
+/-- Reflection is an involution.
+
+Lean proof route for a weaker agent:
+
+1. Extensionalize at an arbitrary vector.
+2. Reduce to `Submodule.reflection_reflection`.
+-/
+theorem reflectionOperator_involutive (U : Submodule 𝕜 E)
+    [U.HasOrthogonalProjection] :
+    reflectionOperator U ∘L reflectionOperator U =
+      ContinuousLinearMap.id 𝕜 E := by
+  ext x
+  change U.reflection (U.reflection x) = x
+  exact U.reflection_reflection x
+
+/-- Reflection preserves norms and is onto.
+
+Lean proof route for a weaker agent:
+
+1. Use `LinearIsometryEquiv.norm_map` for norm preservation.
+2. Use surjectivity of the bundled equivalence.
+-/
+theorem reflectionOperator_isUnitary (U : Submodule 𝕜 E)
+    [U.HasOrthogonalProjection] : IsUnitaryOperator (reflectionOperator U) := by
+  refine ⟨?_, ?_⟩
+  · intro x
+    change ‖U.reflection x‖ = ‖x‖
+    exact U.reflection.norm_map x
+  · change Function.Surjective U.reflection
+    exact U.reflection.surjective
+
+/-- The reflection has operator norm at most one, including on the zero space.
+
+Lean proof route for a weaker agent:
+
+1. Apply `ContinuousLinearMap.opNorm_le_bound` with bound one.
+2. Discharge the pointwise estimate using reflection's exact norm preservation.
+-/
+theorem norm_reflectionOperator_le_one (U : Submodule 𝕜 E)
+    [U.HasOrthogonalProjection] : ‖reflectionOperator U‖ ≤ 1 := by
+  refine ContinuousLinearMap.opNorm_le_bound _ zero_le_one ?_
+  intro x
+  change ‖U.reflection x‖ ≤ 1 * ‖x‖
+  simpa only [one_mul] using le_of_eq (U.reflection.norm_map x)
+
+/-- A reducing operator commutes with the corresponding reflection.
+
+Lean proof route for a weaker agent:
+
+1. Expand both reflections as `2P-I` pointwise.
+2. Rewrite `P(Ax)` with `projection_apply_comm_of_reduces`.
+3. Use linearity of `A` to normalize both sides.
+-/
+theorem reflectionOperator_comm_of_reduces
+    (A : E →L[𝕜] E) (U : Submodule 𝕜 E)
+    [U.HasOrthogonalProjection] (hU : Reduces A U) :
+    reflectionOperator U ∘L A = A ∘L reflectionOperator U := by
+  ext x
+  change reflectionOperator U (A x) = A (reflectionOperator U x)
+  rw [reflectionOperator_apply, reflectionOperator_apply,
+    projection_apply_comm_of_reduces A U hU, map_sub, map_smul]
+
+/-- Complementary projection as `I-P`, pointwise.
+
+Lean proof route for a weaker agent:
+
+1. Unfold both projection abbreviations.
+2. Rewrite with `Submodule.starProjection_orthogonal` and simplify.
+-/
+theorem complementaryProjection_apply (U : Submodule 𝕜 E)
+    [U.HasOrthogonalProjection] (x : E) :
+    complementaryProjection U x = x - projection U x := by
+  simp only [complementaryProjection, projection]
+  rw [Submodule.starProjection_orthogonal]
+  simp
+
+/-- Twice the diagonal pinch is the average numerator `A + JAJ`.
+
+Lean proof route for a weaker agent:
+
+1. Extensionalize and replace every complementary projection by `I-P`.
+2. Replace both reflections by `2P-I`.
+3. Push `A` and `P` through sums and scalar multiples.
+4. Close the resulting module identity with `module`.
+-/
+theorem two_smul_diagonalPart_eq_add_reflectionConjugate
+    (U : Submodule 𝕜 E) [U.HasOrthogonalProjection] (A : E →L[𝕜] E) :
+    (2 : 𝕜) • diagonalPart U A =
+      A + reflectionOperator U ∘L A ∘L reflectionOperator U := by
+  ext x
+  simp only [diagonalPart, ContinuousLinearMap.comp_apply,
+    add_apply, smul_apply]
+  simp_rw [complementaryProjection_apply, reflectionOperator_apply]
+  simp only [map_sub, map_smul]
+  module
+
+/-- Twice the off-diagonal extraction is `A-JAJ`.
+
+Lean proof route for a weaker agent:
+
+1. Unfold `offDiagonalPart`.
+2. Distribute the scalar over subtraction.
+3. Rewrite the diagonal term with
+   `two_smul_diagonalPart_eq_add_reflectionConjugate`.
+4. Normalize the additive identity with `module`.
+-/
+theorem two_smul_offDiagonalPart_eq_sub_reflectionConjugate
+    (U : Submodule 𝕜 E) [U.HasOrthogonalProjection] (A : E →L[𝕜] E) :
+    (2 : 𝕜) • offDiagonalPart U A =
+      A - reflectionOperator U ∘L A ∘L reflectionOperator U := by
+  unfold offDiagonalPart
+  rw [smul_sub, two_smul_diagonalPart_eq_add_reflectionConjugate]
+  module
+
+/-- Double-angle residual map for an isometric approximate invariant pair.
+
+The eventual implementation should construct the orthogonal projection onto
+`LinearMap.range X` from `hX : IsometricEmbedding X` and return the ambient
+cross block representing `sin (2 Θ(U, range X))`.  It is kept abstract here
+until the closed-range/isometry bridge is available.
+-/
+noncomputable def sinTwoThetaEmbedding (U : Submodule 𝕜 E)
+    [U.HasOrthogonalProjection] (X : F →L[𝕜] E) : F →L[𝕜] E := by
   sorry
 
 /-- The gap metric is symmetric. 
@@ -226,7 +426,9 @@ versions should later specialize this result.
 theorem subspaceGap_comm (U V : Submodule 𝕜 E)
     [U.HasOrthogonalProjection] [V.HasOrthogonalProjection] :
     subspaceGap U V = subspaceGap V U := by
-  sorry
+  unfold subspaceGap
+  rw [show projection V - projection U = -(projection U - projection V) by abel,
+    norm_neg]
 
 /-- The directed gap is bounded by the symmetric gap. 
 
@@ -247,7 +449,26 @@ versions should later specialize this result.
 theorem directedGap_le_subspaceGap (U V : Submodule 𝕜 E)
     [U.HasOrthogonalProjection] [V.HasOrthogonalProjection] :
     directedGap U V ≤ subspaceGap U V := by
-  sorry
+  have hcomp : complementaryProjection V ∘L projection U =
+      (projection U - projection V) ∘L projection U := by
+    ext x
+    simp only [ContinuousLinearMap.comp_apply, sub_apply]
+    rw [complementaryProjection_apply V (projection U x)]
+    rw [show projection U (projection U x) = projection U x by
+      exact Submodule.starProjection_eq_self_iff.mpr
+        (U.starProjection_apply_mem x)]
+  have hP : ‖projection U‖ ≤ 1 := by
+    refine ContinuousLinearMap.opNorm_le_bound _ zero_le_one fun x => ?_
+    simpa [projection] using U.norm_starProjection_apply_le x
+  unfold directedGap subspaceGap
+  rw [hcomp]
+  calc
+    ‖(projection U - projection V) ∘L projection U‖
+        ≤ ‖projection U - projection V‖ * ‖projection U‖ :=
+      ContinuousLinearMap.opNorm_comp_le _ _
+    _ ≤ ‖projection U - projection V‖ * 1 :=
+      mul_le_mul_of_nonneg_left hP (norm_nonneg _)
+    _ = ‖projection U - projection V‖ := mul_one _
 
 end DavisKahanExt
 end ForMathlib

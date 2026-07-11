@@ -98,7 +98,20 @@ theorem spectralProjection_compl (A : E →L[𝕜] E) (s : Set ℝ) :
       ContinuousLinearMap.id 𝕜 E - spectralProjection A s := by
   sorry
 
-/-- Strong countable additivity of the spectral resolution. -/
+/-- Strong countable additivity of the spectral resolution.
+
+Long-term proof strategy: construct the scalar spectral measures
+`mu_x_y(s) = inner (E_A(s) x) y` by the Riesz representation theorem applied
+to the continuous functional calculus, then assemble the projection-valued
+measure by polarization.  For pairwise disjoint sets, scalar countable
+additivity and orthogonality give convergence of partial projection sums on
+each vector; identify the limit with the projection of the union by testing
+inner products against a dense set.
+
+This theorem is deliberately not on the critical path for the first bounded
+Davis--Kahan results.  Gap-selected projections should first be built from
+continuous functional calculus on clopen spectral components or from Riesz
+contours. -/
 theorem spectralProjection_stronglyCountablyAdditive (A : E →L[𝕜] E) :
     StronglyCountablyAdditive (spectralProjection A) := by
   sorry

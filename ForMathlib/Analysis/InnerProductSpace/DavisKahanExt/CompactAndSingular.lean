@@ -67,7 +67,14 @@ theorem hermitianDilation_selfAdjoint (T : E →L[𝕜] F) :
     IsSelfAdjointOperator (hermitianDilation T) := by
   sorry
 
-/-- Infinite-dimensional Wedin theorem for isolated singular spectral sets. -/
+/-- Infinite-dimensional Wedin theorem for isolated singular spectral sets.
+
+Proof strategy: construct the Hermitian dilation
+`D(T) = [[0,T*],[T,0]]`, prove it is self-adjoint, and identify its positive and
+negative spectral subspaces with the left/right singular subspaces of `T`.
+Observe `D(T)-D(S)=D(T-S)` and prove `‖D(T-S)‖=‖T-S‖`.  Apply the self-adjoint
+`sin Theta` theorem to the isolated spectral sets and project the resulting
+block estimate back to the desired left or right singular subspace. -/
 theorem wedin_singularSubspace
     {S T : E →L[𝕜] F} (s t : Set ℝ)
     {d : ℝ} (hd : 0 < d)

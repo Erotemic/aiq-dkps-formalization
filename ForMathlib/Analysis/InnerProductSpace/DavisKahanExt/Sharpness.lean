@@ -3,7 +3,8 @@ Copyright (c) 2026 Kitware, Inc. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Jon Crall, GPT 5.6 High
 -/
-import ForMathlib.Analysis.InnerProductSpace.DavisKahanExt.CompactAndSingular
+import ForMathlib.Analysis.InnerProductSpace.DavisKahanExt.OperatorAngle
+import ForMathlib.Analysis.InnerProductSpace.DavisKahanExt.SymmetricIdeals
 
 /-!
 # Sharp constants and planar extremal models
@@ -19,21 +20,21 @@ open scoped InnerProductSpace
 
 variable {𝕜 : Type*} [RCLike 𝕜]
 
-abbrev Plane := EuclideanSpace 𝕜 (Fin 2)
+abbrev Plane (𝕜 : Type*) [RCLike 𝕜] := EuclideanSpace 𝕜 (Fin 2)
 
-noncomputable def modelProjection0 : Plane (𝕜 := 𝕜) →L[𝕜] Plane := by
+noncomputable def modelProjection0 : Plane 𝕜 →L[𝕜] Plane 𝕜 := by
   sorry
 
 noncomputable def modelProjectionTheta (theta : ℝ) :
-    Plane (𝕜 := 𝕜) →L[𝕜] Plane := by
+    Plane 𝕜 →L[𝕜] Plane 𝕜 := by
   sorry
 
 noncomputable def modelGappedOperator (d : ℝ) :
-    Plane (𝕜 := 𝕜) →L[𝕜] Plane := by
+    Plane 𝕜 →L[𝕜] Plane 𝕜 := by
   sorry
 
 noncomputable def modelOffDiagonalPerturbation (d theta : ℝ) :
-    Plane (𝕜 := 𝕜) →L[𝕜] Plane := by
+    Plane 𝕜 →L[𝕜] Plane 𝕜 := by
   sorry
 
 /-- Equality model for the constant-one `sin Θ` theorem. -/
@@ -63,7 +64,15 @@ theorem sqrtTwo_threshold_sharp :
 
 /-- Orthogonal sums of planar blocks transfer finite-dimensional equality
 models to infinite-dimensional symmetric ideals whenever the sum belongs to
-the ideal. -/
+the ideal.
+
+Proof strategy: choose an orthogonal family of two-dimensional reducing
+subspaces and place a scaled planar equality model on each block.  Select the
+scales so that the singular-value sequence belongs to the target ideal.  Use
+finite partial sums, ideal completeness, and continuity of the gauge to pass
+the equality from finite block sums to the limit.  The single planar model
+should be proved first and reused to establish optimal universal constants
+before any ideal theory is available. -/
 theorem orthogonalSum_planar_extremizers
     {E : Type*} [NormedAddCommGroup E] [InnerProductSpace 𝕜 E]
     [CompleteSpace E]

@@ -26,6 +26,53 @@ $\tan 2\Theta$, Albeverio--Motovilov on the a priori $\tan\Theta$ theorem,
 Seelmann on generic $\sin 2\Theta$ estimates, and the standard Kato theory of
 closed operators and quadratic forms.
 
+
+\section{Shared-core strategy}
+The efficient development is not to prove the entire infinite-dimensional
+scaffold before returning to the finite theory.  The first target is a small
+bounded Hilbert-space core: projection algebra, two-projection geometry,
+operator angles, graph subspaces, direct rotation, the ordered operator-norm
+Sylvester theorem, and the ordered $\sin\Theta$ and reflection
+$\sin 2\Theta$ estimates.  These arguments are basis free and should be
+specialized back to finite dimensions.
+
+Finite-dimensional singular-value lists, arbitrary finite unitarily invariant
+norms, Frobenius identities, eigenvalue-order combinatorics, and statistical
+corollaries should remain in the finite development.  Waiting for infinite
+symmetric ideals before closing those results would be inefficient.
+
+\section{Staged proof order}
+The proposed milestones are:
+\begin{enumerate}
+\item projection algebra and the gap metric;
+\item the identity $\sin\Theta=|P-Q|$ and graph representation of acute pairs;
+\item planar sharpness and direct rotation;
+\item the ordered semigroup proof of the Sylvester estimate;
+\item ordered residual and perturbation $\sin\Theta$ and reflection
+      $\sin 2\Theta$;
+\item finite specialization of those operator-norm results;
+\item clopen-spectrum or Riesz projections and norm-continuous continuation;
+\item bounded Riccati equations, off-diagonal gap preservation, and tangent
+      theorems;
+\item arbitrary separated spectra with the $\pi/2$ constant;
+\item symmetric ideals, compact singular-subspace theory, unbounded operators,
+      and quadratic forms.
+\end{enumerate}
+
+\section{Why Borel calculus is not the first dependency}
+Most isolated-gap Davis--Kahan statements need only a projection onto a
+spectral component separated by positive distance.  The indicator of such a
+component is continuous on the spectrum, so continuous functional calculus
+or a Riesz contour is sufficient.  Full Borel functional calculus and strong
+countable additivity remain important endpoints, but they should not block the
+first operator-norm perturbation theorems.
+
+\section{Finite specialization contract}
+A later bridge should convert finite-dimensional linear maps to continuous
+linear maps, identify the two projection APIs, and specialize operator-angle,
+graph, direct-rotation, ordered $\sin\Theta$, and $\sin 2\Theta$ theorems.  It
+should import only the bounded core, never the full unbounded or ideal stack.
+
 \section{Bounded Hilbert-space setup}
 Let $A$ and $B$ be bounded self-adjoint operators on a Hilbert space $\Hh$.
 A closed subspace $U$ reduces $A$ when both $U$ and $U^\perp$ are invariant.

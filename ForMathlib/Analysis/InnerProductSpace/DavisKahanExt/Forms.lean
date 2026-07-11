@@ -50,7 +50,15 @@ noncomputable def ClosedForm.associatedOperator
     ClosedOperator (𝕜 := 𝕜) (E := E) := by
   sorry
 
-/-- KLMN theorem. -/
+/-- KLMN theorem.
+
+Proof strategy: shift the reference form to make its form norm coercive and
+complete.  Relative form bound below one proves equivalence of the original
+and perturbed form norms, hence closedness of the sum.  Establish lower
+semiboundedness by absorbing the relative term.  The representation theorem
+then produces the associated self-adjoint operator.  Formalization should
+first package the form-domain Hilbert space and bounded inclusion into the
+ambient space. -/
 theorem klmn
     (a v : ClosedForm (𝕜 := 𝕜) (E := E))
     {alpha beta : ℝ} (hrel : FormRelativelyBounded a v alpha beta)

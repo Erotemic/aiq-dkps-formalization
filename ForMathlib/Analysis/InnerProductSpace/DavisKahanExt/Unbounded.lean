@@ -69,9 +69,15 @@ noncomputable def realSpectrum
     (A : ClosedOperator (𝕜 := 𝕜) (E := E)) : Set ℝ := by
   sorry
 
-/-- Spectral-set separation for closed operators. -/
+/-- Spectral-set separation for closed operators, possibly acting on
+different Hilbert spaces.  The separation condition depends only on the two
+real spectra, so requiring a common ambient space would be artificial and
+would block the diagonal-block Riccati theory. -/
 def SpectralSetsSeparated
-    (A B : ClosedOperator (𝕜 := 𝕜) (E := E))
+    {F : Type*} [NormedAddCommGroup F] [InnerProductSpace 𝕜 F]
+    [CompleteSpace F]
+    (A : ClosedOperator (𝕜 := 𝕜) (E := E))
+    (B : ClosedOperator (𝕜 := 𝕜) (E := F))
     (s t : Set ℝ) (d : ℝ) : Prop :=
   s ⊆ A.realSpectrum ∧ t ⊆ B.realSpectrum ∧
     ∀ a ∈ s, ∀ b ∈ t, d ≤ |a - b|
@@ -97,7 +103,19 @@ theorem isSelfAdjoint_addBounded
   sorry
 
 /-- Kato--Rellich theorem for relatively bounded perturbations with relative
-bound below one. -/
+bound below one.
+
+Proof strategy: equip the common domain with the graph norm of `A`.  Relative
+boundedness with coefficient below one makes the perturbed graph norm
+equivalent to the original graph norm, so `A+B` is closed.  Prove surjectivity
+of `A+B-z` for one nonreal `z` by factoring
+
+`A+B-z = (I + B(A-z)⁻¹)(A-z)`
+
+and applying a Neumann series after choosing `|Im z|` large enough.  Symmetry
+plus surjectivity at `z` and `conj z` yields self-adjointness.  Reconcile the
+local `ClosedOperator` structure with mathlib's partial-map adjoint API before
+attempting this proof. -/
 theorem isSelfAdjoint_of_relativelyBounded
     (A : ClosedOperator (𝕜 := 𝕜) (E := E))
     (hA : A.IsSelfAdjoint) (V : A.domain →ₗ[𝕜] E)

@@ -32,7 +32,14 @@ noncomputable def continuedProjection (A H : E →L[𝕜] E)
     (contour : ℝ → 𝕜) (t : ℝ) : E →L[𝕜] E :=
   rieszProjection (operatorPath A H t) contour
 
-/-- Norm continuity of the selected projection path. -/
+/-- Norm continuity of the selected projection path.
+
+Proof strategy: fix a contour that remains uniformly inside the resolvent set.
+Use the second resolvent identity to prove uniform norm continuity of
+`z ↦ (z-A_t)⁻¹` in the path parameter, dominate the contour integrand by the
+inverse distance to the spectrum, and pass continuity through the contour
+Bochner integral.  Derive an explicit Lipschitz estimate when the contour
+margin is quantitative. -/
 theorem continuous_continuedProjection
     (A H : E →L[𝕜] E) (s : Set ℝ) (contour : ℝ → 𝕜)
     (hsep : ∀ t : ℝ,
@@ -68,7 +75,13 @@ theorem continuedProjection_eq_spectralProjection
   sorry
 
 /-- Norm-close projections have canonically isomorphic ranges; this is the
-local step used to propagate dimension and Fredholm-index data along a path. -/
+local step used to propagate dimension and Fredholm-index data along a path.
+
+Proof strategy: for projections `P,Q` with `‖P-Q‖<1`, show `Q|Ran(P)` is
+bounded below and `P|Ran(Q)` is its inverse up to the invertible positive
+operators `PQP` and `QPQ`.  Construct the canonical range equivalence using
+the polar factor of `QP`, or equivalently `(PQP)^{-1/2}`.  This lemma replaces
+finite rank counting in the infinite branch-selection proof. -/
 theorem range_equiv_of_projection_norm_lt_one
     (P Q : E →L[𝕜] E)
     (hP : IsOrthogonalProjection P) (hQ : IsOrthogonalProjection Q)

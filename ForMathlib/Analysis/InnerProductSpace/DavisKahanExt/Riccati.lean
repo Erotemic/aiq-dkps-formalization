@@ -62,7 +62,22 @@ theorem graph_reduces_iff_solvesRiccati
   sorry
 
 /-- Existence of a bounded solution when one diagonal spectrum lies in a gap
-of the other and the coupling is below the sharp threshold. -/
+of the other and the coupling is below the sharp threshold.
+
+Preferred proof strategy:
+
+1. follow the path from the diagonal operator to the coupled block operator;
+2. use a uniformly separating contour to continue the target spectral
+   projection in norm;
+3. prove the continued range stays acute with respect to the first coordinate
+   subspace while the projection distance is below one;
+4. apply the graph-subspace theorem to obtain a bounded angular operator `X`;
+5. expand invariance of the graph to obtain the Riccati equation.
+
+A contraction mapping on
+`X ↦ S⁻¹ (X B01 X - B10)`, where `S X = A1 X - X A0`, can supply a local
+small-coupling theorem and norm estimates, but continuation is the better
+construction for selecting the correct spectral branch. -/
 theorem exists_riccati_solution_of_gap
     (H : BlockOperatorData (𝕜 := 𝕜) (E0 := E0) (E1 := E1))
     {left right d : ℝ} (hd : 0 < d)
@@ -92,7 +107,14 @@ theorem unique_contractive_riccati_solution
     X = Y := by
   sorry
 
-/-- Block diagonalization by the graph transform. -/
+/-- Block diagonalization by the graph transform.
+
+Proof strategy: form the triangular graph transform
+`T = [[I,-X*],[X,I]]`, prove its inverse using `I+X*X` and `I+XX*`, and use the
+Riccati equation to cancel the off-diagonal blocks of `T⁻¹ L T`.  Normalize
+`T` by the inverse square roots of those positive operators to obtain a
+unitary transform in the self-adjoint case.  Domain-free bounded block algebra
+should be completed here before attempting the unbounded analogue. -/
 theorem blockDiagonalization_of_riccati
     (H : BlockOperatorData (𝕜 := 𝕜) (E0 := E0) (E1 := E1))
     {X : E0 →L[𝕜] E1} (hX : SolvesRiccati H X) :

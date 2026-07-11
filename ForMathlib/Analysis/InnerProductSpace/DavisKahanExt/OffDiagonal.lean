@@ -35,7 +35,13 @@ noncomputable instance continuedSpectralSubspace_hasOrthogonalProjection
   sorry
 
 /-- Off-diagonal perturbations preserve the separating gap below the sharp
-`√2 d` threshold. -/
+`√2 d` threshold.
+
+Proof strategy: first obtain enclosure of each perturbed spectral component
+from the Schur complement or Riccati block diagonalization.  Show the two
+enclosures remain disjoint under the scalar inequality `‖H‖ < sqrt 2 * d`.
+Use norm-continuity of the Riesz projection along `A+tH` to rule out branch
+switching, then identify the endpoint with the continued spectral subspace. -/
 theorem gap_preserved_of_offDiagonal
     {A H : E →L[𝕜] E}
     (hA : IsSelfAdjointOperator A) (hH : IsSelfAdjointOperator H)
@@ -59,7 +65,19 @@ theorem tanTwoTheta_offDiagonal
     ‖tanTwoAngleOperator U V‖ ≤ 2 * ‖H‖ / d := by
   sorry
 
-/-- A priori `tan Θ` theorem in the finite-gap configuration. -/
+/-- A priori `tan Θ` theorem in the finite-gap configuration.
+
+Proof strategy: select the continued spectral subspace and represent it as the
+graph of the contractive Riccati solution `X`.  Combine spectral enclosure for
+the perturbed diagonal blocks with the Riccati equation to obtain a scalar
+quadratic inequality for `x = ‖X‖`.  Solve the majorant inequality on the
+contractive branch and translate through
+
+`‖P-Q‖ = x / sqrt(1+x^2)`.
+
+The sharp `sqrt 2 * d` threshold is where the selected scalar branch ceases to
+remain uniformly acute.  Keep the scalar optimization and trigonometric
+identity in separate lemmas so the operator proof is mostly monotonicity. -/
 theorem aPrioriTanTheta
     {A H : E →L[𝕜] E}
     (hA : IsSelfAdjointOperator A) (hH : IsSelfAdjointOperator H)

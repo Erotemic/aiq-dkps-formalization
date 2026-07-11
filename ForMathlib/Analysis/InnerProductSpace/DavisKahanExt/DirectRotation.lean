@@ -3,7 +3,8 @@ Copyright (c) 2026 Kitware, Inc. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Jon Crall, GPT 5.6 High
 -/
-import ForMathlib.Analysis.InnerProductSpace.DavisKahanExt.OffDiagonal
+import ForMathlib.Analysis.InnerProductSpace.DavisKahanExt.GraphSubspace
+import ForMathlib.Analysis.InnerProductSpace.DavisKahanExt.DoubleAngle
 
 /-!
 # Infinite-dimensional direct rotations
@@ -21,7 +22,16 @@ variable {𝕜 : Type*} [RCLike 𝕜]
 variable {E : Type*} [NormedAddCommGroup E] [InnerProductSpace 𝕜 E]
   [CompleteSpace E]
 
-/-- Canonical direct rotation. -/
+/-- Canonical direct rotation.
+
+Construction strategy: set
+
+`S = P_V P_U + P_{Vᗮ} P_{Uᗮ}`.
+
+For an acute pair, prove `S* S` is bounded below by a positive scalar.  Define
+the direct rotation as the polar factor `S (S* S)^{-1/2}` using continuous
+functional calculus.  This construction automatically yields a unitary that
+intertwines the two projections and is stable under finite specialization. -/
 noncomputable def directRotation (U V : Submodule 𝕜 E)
     [U.HasOrthogonalProjection] [V.HasOrthogonalProjection]
     (hacute : IsAcute U V) : E →L[𝕜] E := by
@@ -57,7 +67,14 @@ theorem directRotation_sq
       reflectionOperator V ∘L reflectionOperator U := by
   sorry
 
-/-- Direct rotation minimizes maximal displacement from the identity. -/
+/-- Direct rotation minimizes maximal displacement from the identity.
+
+Proof strategy: reduce by the two-projection decomposition to scalar
+`2 x 2` angle fibers.  On each generic fiber, every unitary carrying the first
+line to the second has displacement at least that of the shorter rotation.
+Take the supremum over the angle spectrum.  State and prove any necessary
+angle restriction explicitly; do not infer an unrestricted extremal theorem
+for arbitrary symmetric ideal gauges from the operator-norm result. -/
 theorem directRotation_minimal
     (U V : Submodule 𝕜 E) [U.HasOrthogonalProjection]
     [V.HasOrthogonalProjection] (hacute : IsAcute U V)

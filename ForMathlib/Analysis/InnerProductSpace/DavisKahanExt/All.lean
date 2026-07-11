@@ -26,8 +26,13 @@ import ForMathlib.Analysis.InnerProductSpace.DavisKahanExt.Sharpness
 # Infinite-dimensional Davis--Kahan extension scaffold
 
 This umbrella module intentionally lives inside the new `DavisKahanExt`
-directory.  The overlay does not modify `ForMathlib.lean` or any existing
-module.  Compile explicitly with:
+directory.  The overlay does not modify `ForMathlib.lean` or any existing module.
+Build the dependency graph explicitly with:
 
-`lake env lean ForMathlib/Analysis/InnerProductSpace/DavisKahanExt/All.lean`
+`lake build ForMathlib.Analysis.InnerProductSpace.DavisKahanExt.All`
+
+A direct `lake env lean .../All.lean` invocation expects the imported local
+modules to have already been compiled to `.olean` files; it is not the initial
+build command.  See `DavisKahanExt/PROOF_PLAN.md` for the shared-core and
+finite-specialization roadmap.
 -/

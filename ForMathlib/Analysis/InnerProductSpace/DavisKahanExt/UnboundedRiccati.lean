@@ -69,7 +69,15 @@ def ClosedOperator.ReducesSubspace
   (∀ x : A.domain, (x : G) ∈ Uᗮ → A.toLinearMap x ∈ Uᗮ)
 
 /-- Reducing graph subspaces correspond to strong Riccati solutions under the
-explicit domain condition. -/
+explicit domain condition.
+
+Proof strategy: work first on the algebraic core `dom A0 x dom A1`.  Expand
+invariance of `(u, Xu)` under the block operator and use domain preservation
+to justify every unbounded composition.  The second component gives the
+strong Riccati equation; the adjoint graph gives reduction rather than mere
+invariance.  Conversely, use the strong equation to show graph invariance and
+then invoke self-adjointness to obtain invariance of the orthogonal complement.
+Keep domain transport as named lemmas rather than hidden coercion proofs. -/
 theorem graph_reduces_iff_strongRiccati
     (H : UnboundedBlockData (𝕜 := 𝕜) (E0 := E0) (E1 := E1))
     (X : E0 →L[𝕜] E1) :

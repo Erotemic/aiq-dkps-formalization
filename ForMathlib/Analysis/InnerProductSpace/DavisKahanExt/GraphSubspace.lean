@@ -3,7 +3,7 @@ Copyright (c) 2026 Kitware, Inc. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Jon Crall, GPT 5.6 High
 -/
-import ForMathlib.Analysis.InnerProductSpace.DavisKahanExt.DoubleAngle
+import ForMathlib.Analysis.InnerProductSpace.DavisKahanExt.OperatorAngle
 
 /-!
 # Graph subspaces and angular operators
@@ -37,7 +37,21 @@ noncomputable def graphProjectionFormula
     (X : E →L[𝕜] E) : E →L[𝕜] E := by
   sorry
 
-/-- Every acute subspace is the graph of a unique bounded angular operator. -/
+/-- Every acute subspace is the graph of a unique bounded angular operator.
+
+Proof strategy:
+
+* regard `P_U|_V : V -> U` as a bounded map between Banach spaces;
+* prove it is bijective from the acute/equal-defect hypotheses;
+* invoke the bounded inverse theorem;
+* set `X u = P_{Uᗮ} ((P_U|_V)⁻¹ u)` and extend it by zero on `Uᗮ`;
+* prove the graph equality by decomposing each `v ∈ V` into its `U` and
+  `Uᗮ` components;
+* prove uniqueness by applying `P_U` and `P_{Uᗮ}` to an arbitrary graph
+  representation.
+
+The finite-dimensional theorem should later be a specialization of this
+result, not an independent basis calculation. -/
 theorem existsUnique_angularOperator
     (U V : Submodule 𝕜 E) [U.HasOrthogonalProjection]
     [V.HasOrthogonalProjection] (hacute : IsAcute U V) :
@@ -45,7 +59,14 @@ theorem existsUnique_angularOperator
       IsAngularOperator U X ∧ graphSubspace U X = V := by
   sorry
 
-/-- Projection onto a graph subspace in terms of the angular operator. -/
+/-- Projection onto a graph subspace in terms of the angular operator.
+
+Proof strategy: define the isometry from `U` into the graph by normalizing
+`u ↦ u + X u` with `(I + X*X)^{-1/2}`.  The graph projection is `J J*`.
+Expand this product in the decomposition `U ⊕ Uᗮ`, commute the functional
+calculus terms through `X` using the polar decomposition, and identify the
+four blocks with `graphProjectionFormula`.  Prove positivity and invertibility
+of `I + X*X` before performing block algebra. -/
 theorem projection_graphSubspace_formula
     (U : Submodule 𝕜 E) [U.HasOrthogonalProjection]
     (X : E →L[𝕜] E) (hX : IsAngularOperator U X) :

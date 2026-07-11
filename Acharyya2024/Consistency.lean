@@ -76,6 +76,26 @@ theorem rawStress_mds_stability_set
     ∀ i j : Fin n, pairDistErr (ψhat r ω) ψ i j ≤ ε}) atTop (𝓝 0) :=
   RawStress.mds_stability_inProbability_set P Dseq DeltaInf ψhat hψhat hD hε
 
+/-- Unconditional raw-stress stability for the canonical MDS choice.
+
+The selected estimator `RawStress.mdsConfig (Dseq r ω)` is automatically a
+minimizer, so the theorem exposes only the genuine statistical premise
+`Dseq → DeltaInf` in probability. -/
+theorem rawStress_mds_stability_set_canonical
+  (P : Measure Ω)
+  {n d : Nat}
+  (Dseq : Nat → Ω → DisMat n)
+  (DeltaInf : DisMat n)
+  (hD : ConvergesInProbabilityZero P (fun r ω => frobSub (Dseq r ω) DeltaInf))
+  {ε : Real} (hε : 0 < ε) :
+  Tendsto (fun r => P {ω | ¬ ∃ ψ ∈ MDS n d DeltaInf,
+    ∀ i j : Fin n,
+      pairDistErr (RawStress.mdsConfig (d := d) (Dseq r ω)) ψ i j ≤ ε})
+    atTop (𝓝 0) := by
+  exact rawStress_mds_stability_set P Dseq DeltaInf
+    (fun r ω => RawStress.mdsConfig (d := d) (Dseq r ω))
+    (fun r ω => RawStress.mdsConfig_mem (d := d) (Dseq r ω)) hD hε
+
 /--
 Trosset-style raw-stress MDS stability — REPAIRED + PROVED (2026-06-11).
 
@@ -186,6 +206,31 @@ theorem fixed_models_fixed_queries_consistency_of_exactRealization
         ConvergesInProbability P (fun t ω => pairDistErr (ψhat (u t) ω) ψ i j) 0 := by
   exact fixed_models_fixed_queries_consistency_of_uniqueProfile P Dseq DeltaInf ψhat hψhat
     (RawStress.uniquePairProfile_of_exists_realizes hexact) hD
+
+/-- Fixed-model exact-realizability consistency for the canonical MDS
+estimator.
+
+This is the lowest-plumbing paper-facing form: existence and membership of the
+sample raw-stress minimizer are discharged by `RawStress.mdsConfig`, while exact
+realizability dispatches the limiting profile-uniqueness condition. -/
+theorem fixed_models_fixed_queries_consistency_canonical_of_exactRealization
+  (P : Measure Ω)
+  {n d : Nat}
+  (Dseq : Nat → Ω → DisMat n)
+  (DeltaInf : DisMat n)
+  (hexact : ∃ ψ : Config n d, RealizesDissimilarity ψ DeltaInf)
+  (hD : ConvergesInProbabilityZero P (fun r ω => frobSub (Dseq r ω) DeltaInf)) :
+  ∃ u : Nat → Nat,
+    Subseq u ∧
+    ∃ ψ : Config n d,
+      ψ ∈ MDS n d DeltaInf ∧
+      ∀ i j : Fin n,
+        ConvergesInProbability P
+          (fun t ω => pairDistErr
+            (RawStress.mdsConfig (d := d) (Dseq (u t) ω)) ψ i j) 0 := by
+  exact fixed_models_fixed_queries_consistency_of_exactRealization P Dseq DeltaInf
+    (fun r ω => RawStress.mdsConfig (d := d) (Dseq r ω))
+    (fun r ω => RawStress.mdsConfig_mem (d := d) (Dseq r ω)) hexact hD
 
 /-! ## Paper layer 2: fixed model set, growing query set -/
 
@@ -405,6 +450,36 @@ theorem fixed_models_growing_queries_consistency_of_exactRealization_entrywise
     hψhat hexact
     (growing_queries_dissimilarity_converges_of_entrywise P Dseq Delta DeltaInf hsample hentry)
 
+/-- Fixed-model, growing-query consistency for the canonical raw-stress
+estimator, with exact realizability and entrywise population convergence.
+
+All minimizer-selection and deterministic Frobenius-limit plumbing is
+discharged internally. -/
+theorem fixed_models_growing_queries_consistency_canonical_of_exactRealization_entrywise
+  (P : Measure Ω)
+  {n d : Nat}
+  (Dseq : Nat → Ω → DisMat n)
+  (Delta : Nat → DisMat n)
+  (DeltaInf : DisMat n)
+  (hexact : ∃ ψ : Config n d, RealizesDissimilarity ψ DeltaInf)
+  (hsample :
+    ConvergesInProbabilityZero P (fun r ω => frobSub (Dseq r ω) (Delta r)))
+  (hentry : ∀ i j : Fin n,
+    Tendsto (fun r => Delta r i j) atTop (𝓝 (DeltaInf i j))) :
+  ∃ u : Nat → Nat,
+    Subseq u ∧
+    ∃ ψ : Config n d,
+      ψ ∈ MDS n d DeltaInf ∧
+      ∀ i j : Fin n,
+        ConvergesInProbability P
+          (fun t ω => pairDistErr
+            (RawStress.mdsConfig (d := d) (Dseq (u t) ω)) ψ i j) 0 := by
+  exact fixed_models_growing_queries_consistency_of_exactRealization_entrywise
+    P Dseq Delta DeltaInf
+    (fun r ω => RawStress.mdsConfig (d := d) (Dseq r ω))
+    (fun r ω => RawStress.mdsConfig_mem (d := d) (Dseq r ω))
+    hexact hsample hentry
+
 /-! ## Paper layer 3: growing model set and growing query set -/
 
 /--
@@ -505,6 +580,33 @@ theorem growing_models_growing_queries_perStage_consistency_of_exactRealization
     DeltaInf ψhat hψhat
     (fun k => RawStress.uniquePairProfile_of_exists_realizes (hexact k)) hD
 
+/-- Per-stage growing-model consistency for the canonical raw-stress estimator
+when every stage limit is exactly realizable. -/
+theorem growing_models_growing_queries_perStage_consistency_canonical_of_exactRealization
+  (P : Measure Ω)
+  (d : Nat)
+  (nOf : Nat → Nat)
+  (Dseq : Nat → Ω → (k : Nat) → DisMat (nOf k))
+  (DeltaInf : (k : Nat) → DisMat (nOf k))
+  (hexact : ∀ k, ∃ ψ : Config (nOf k) d,
+    RealizesDissimilarity ψ (DeltaInf k))
+  (hD : ∀ k, ConvergesInProbabilityZero P
+    (fun r ω => frobSub (Dseq r ω k) (DeltaInf k))) :
+  ∃ u : Nat → Nat,
+    Subseq u ∧
+    ∀ k : Nat,
+      ∃ ψ : Config (nOf k) d,
+        ψ ∈ MDS (nOf k) d (DeltaInf k) ∧
+        ∀ i j : Fin (nOf k),
+          ConvergesInProbability P
+            (fun t ω => pairDistErr
+              (RawStress.mdsConfig (d := d) (Dseq (u t) ω k)) ψ i j) 0 := by
+  exact growing_models_growing_queries_perStage_consistency_of_exactRealization
+    P d nOf Dseq DeltaInf
+    (fun r ω k => RawStress.mdsConfig (d := d) (Dseq r ω k))
+    (fun r ω k => RawStress.mdsConfig_mem (d := d) (Dseq r ω k))
+    hexact hD
+
 /--
 Triangular-array consistency in the paper's Theorem-5 *shape*: the per-stage
 dissimilarity convergence is split into a per-stage sampling error against a
@@ -554,5 +656,35 @@ theorem growing_models_growing_queries_perStage_consistency_of_sample_limit_uniq
   exact growing_queries_dissimilarity_converges P
     (fun r ω => Dseq r ω k) (fun r => Delta r k) (DeltaInf k)
     (hsample k) (hlimit k)
+
+/-- Canonical-MDS version of the per-stage sample/population-limit theorem,
+with exact realizability replacing the profile-uniqueness premise. -/
+theorem growing_models_growing_queries_perStage_consistency_canonical_of_sample_limit_exactRealization
+  (P : Measure Ω)
+  (d : Nat)
+  (nOf : Nat → Nat)
+  (Dseq : Nat → Ω → (k : Nat) → DisMat (nOf k))
+  (Delta : Nat → (k : Nat) → DisMat (nOf k))
+  (DeltaInf : (k : Nat) → DisMat (nOf k))
+  (hexact : ∀ k, ∃ ψ : Config (nOf k) d,
+    RealizesDissimilarity ψ (DeltaInf k))
+  (hsample : ∀ k, ConvergesInProbabilityZero P
+    (fun r ω => frobSub (Dseq r ω k) (Delta r k)))
+  (hlimit : ∀ k, Tendsto (fun r => frobSub (Delta r k) (DeltaInf k)) atTop (𝓝 0)) :
+  ∃ u : Nat → Nat,
+    Subseq u ∧
+    ∀ k : Nat,
+      ∃ ψ : Config (nOf k) d,
+        ψ ∈ MDS (nOf k) d (DeltaInf k) ∧
+        ∀ i j : Fin (nOf k),
+          ConvergesInProbability P
+            (fun t ω => pairDistErr
+              (RawStress.mdsConfig (d := d) (Dseq (u t) ω k)) ψ i j) 0 := by
+  exact growing_models_growing_queries_perStage_consistency_of_sample_limit_uniqueProfile
+    P d nOf Dseq Delta DeltaInf
+    (fun r ω k => RawStress.mdsConfig (d := d) (Dseq r ω k))
+    (fun r ω k => RawStress.mdsConfig_mem (d := d) (Dseq r ω k))
+    (fun k => RawStress.uniquePairProfile_of_exists_realizes (hexact k))
+    hsample hlimit
 
 end Acharyya2024.Consistency

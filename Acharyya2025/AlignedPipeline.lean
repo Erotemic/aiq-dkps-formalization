@@ -36,6 +36,7 @@ import Acharyya2025.MathlibBridge
 import Acharyya2025.OperatorBridge
 import Acharyya2025.ConfigPerturbation
 import Acharyya2025.MatrixPerturbation
+import Acharyya2025.GramRealization
 import Acharyya2025.Bridge
 import ForMathlib.MeasureTheory.CompactExists
 
@@ -49,6 +50,7 @@ open Acharyya2025.Deterministic
 open Acharyya2025.MathlibBridge
 open Acharyya2025.ConfigPerturbation
 open Acharyya2025.MatrixPerturbation
+open Acharyya2025.GramRealization
 
 /-! ### (1) Symmetry plumbing -/
 
@@ -104,6 +106,32 @@ theorem symmetricDisMat_classicalMDSMatrix {n : Nat} {D : DisMat n}
   simp only [doubleCenter]
   rw [hAsym j i, hrc i, hrc j]
   ring
+
+/-! ### Canonical population CMDS realization -/
+
+/-- Canonical `d`-dimensional Gram realization of a population CMDS matrix.
+
+The PSD/rank hypotheses already imply existence of a suitable population
+configuration. Naming the selected realization here prevents every downstream
+theorem from carrying an arbitrary `ψ` together with a separate entrywise Gram
+identity. -/
+noncomputable def canonicalCMDSConfig {n d : Nat} (D : DisMat n)
+    (hB : (disMatToMatrix (classicalMDSMatrix D)).PosSemidef)
+    (hrank : (disMatToMatrix (classicalMDSMatrix D)).rank ≤ d) : Config n d :=
+  configOfPosSemidefRankLe (disMatToMatrix (classicalMDSMatrix D)) hB hrank
+
+/-- The canonical CMDS configuration realizes the population centered Gram
+matrix entrywise. -/
+theorem canonicalCMDSConfig_gram_eq {n d : Nat} (D : DisMat n)
+    (hB : (disMatToMatrix (classicalMDSMatrix D)).PosSemidef)
+    (hrank : (disMatToMatrix (classicalMDSMatrix D)).rank ≤ d)
+    (i j : Fin n) :
+    (∑ k : Fin d,
+      canonicalCMDSConfig D hB hrank i k * canonicalCMDSConfig D hB hrank j k)
+      = classicalMDSMatrix D i j := by
+  simpa [canonicalCMDSConfig, disMatToMatrix] using
+    configOfPosSemidefRankLe_gram_eq
+      (disMatToMatrix (classicalMDSMatrix D)) hB hrank i j
 
 /-! ### (2) The aligned estimator (choice-based) -/
 
@@ -162,6 +190,17 @@ noncomputable def alignedSpectralConfig {n d : Nat} (hd : d ≤ n)
   else fun i => spectralConfig
       (Matrix.toEuclideanLin (disMatToMatrix (classicalMDSMatrix (Dhat u ω))))
       (opSym (hsym u ω)) hd i
+
+/-- Aligned spectral estimator against the canonical PSD/rank realization of
+the population CMDS matrix. -/
+noncomputable def alignedSpectralConfigCanonical {n d : Nat} (hd : d ≤ n)
+    {Ω : Type} (Dhat : Nat → Ω → DisMat n)
+    (hsym : ∀ u ω, (disMatToMatrix (classicalMDSMatrix (Dhat u ω))).IsHermitian)
+    (D : DisMat n)
+    (hB : (disMatToMatrix (classicalMDSMatrix D)).PosSemidef)
+    (hrank : (disMatToMatrix (classicalMDSMatrix D)).rank ≤ d)
+    (c : Nat → Real) (u : Nat) (ω : Ω) : Config n d :=
+  alignedSpectralConfig hd Dhat hsym (canonicalCMDSConfig D hB hrank) c u ω
 
 /--
 Defining property of the aligned estimator: when the alignment exists with bound
@@ -458,6 +497,39 @@ theorem highProb_aligned_configError_of_entrywise_close
     (alignExists_of_entrywiseClose hd Dhat D hsym hB hrank hα_pos hfloor hΛ ψ hψ
       rate u (hrate_nonneg u) hu.1 hu.2 ω hω)
 
+/-- Canonical-population-configuration form of
+`highProb_aligned_configError_of_entrywise_close`.
+
+The PSD/rank package constructs the population configuration and proves its
+Gram identity internally, leaving only the genuine spectral and probabilistic
+hypotheses in the public theorem signature. -/
+theorem highProb_aligned_configError_of_entrywise_close_canonical
+    {Ω : Type} [MeasurableSpace Ω]
+    (P : Nat → MeasureTheory.Measure Ω)
+    {n d : Nat} (hd : d ≤ n)
+    (Dhat : Nat → Ω → DisMat n) (D : DisMat n)
+    (hsym : ∀ u ω, (disMatToMatrix (classicalMDSMatrix (Dhat u ω))).IsHermitian)
+    (hB : (disMatToMatrix (classicalMDSMatrix D)).PosSemidef)
+    (hrank : (disMatToMatrix (classicalMDSMatrix D)).rank ≤ d)
+    {α Λ : Real} (hα_pos : 0 < α)
+    (hfloor : ∀ i : Fin n, (i : ℕ) < d →
+      α ≤ MatrixPerturbation.sortedEigenvalues hB.isHermitian i)
+    (hΛ : ∀ l, MatrixPerturbation.sortedEigenvalues hB.isHermitian l ≤ Λ)
+    (rate : Nat → Real) (hrate_nonneg : ∀ u, 0 ≤ rate u)
+    (hrate_zero : Tendsto (fun u => (n : Real) * rate u) atTop (𝓝 0))
+    (hcenter : HighProbAtTop P (fun u => {ω |
+      Acharyya2025.Bridge.EntrywiseClose
+        (classicalMDSMatrix (Dhat u ω)) (classicalMDSMatrix D) (rate u)})) :
+    HighProbAtTop P (fun u => {ω |
+      ConfigError
+        (alignedSpectralConfigCanonical hd Dhat hsym D hB hrank
+          (fun u => configBound n d α Λ ((n : Real) * rate u)) u ω)
+        (canonicalCMDSConfig D hB hrank)
+        ≤ configBound n d α Λ ((n : Real) * rate u)}) := by
+  exact highProb_aligned_configError_of_entrywise_close P hd Dhat D hsym
+    hB hrank hα_pos hfloor hΛ (canonicalCMDSConfig D hB hrank)
+    (canonicalCMDSConfig_gram_eq D hB hrank) rate hrate_nonneg hrate_zero hcenter
+
 /-! ### (4) End-to-end response-mean → aligned ConfigError -/
 
 /-- **Response-mean concentration to CMDS-entrywise closeness (high-probability).**
@@ -610,5 +682,47 @@ theorem highProb_aligned_configError_of_response_mean
   exact highProb_aligned_configError_of_entrywise_close P hd Dhat D
     (fun u ω => isHermitian_disMatToMatrix_classicalMDSMatrix_responseDist (Xbar u ω))
     hB hrank hα_pos hfloor hΛ ψ hψ rate hrate_nonneg hrate_zero hcenter
+
+/-- End-to-end response-mean concentration against the canonical population
+CMDS realization.
+
+Compared with `highProb_aligned_configError_of_response_mean`, callers no
+longer provide a population configuration or prove its Gram identity: both are
+constructed from `hB` and `hrank`. -/
+theorem highProb_aligned_configError_of_response_mean_canonical
+    {Ω : Type} [MeasurableSpace Ω]
+    (P : Nat → MeasureTheory.Measure Ω)
+    {n m p d : Nat} (hn : 0 < n) (hd : d ≤ n)
+    (Xbar : Nat → Ω → Fin n → Mat m p) (μ : Fin n → Mat m p)
+    (hB : (disMatToMatrix (classicalMDSMatrix (responseDist μ))).PosSemidef)
+    (hrank : (disMatToMatrix (classicalMDSMatrix (responseDist μ))).rank ≤ d)
+    {α Λ : Real} (hα_pos : 0 < α)
+    (hfloor : ∀ i : Fin n, (i : ℕ) < d →
+      α ≤ MatrixPerturbation.sortedEigenvalues hB.isHermitian i)
+    (hΛ : ∀ l, MatrixPerturbation.sortedEigenvalues hB.isHermitian l ≤ Λ)
+    (η R : Nat → Real)
+    (hrate_nonneg : ∀ u, 0 ≤ Acharyya2025.Bridge.cmdsEntrywiseRate n m (R u) (η u))
+    (hrate_zero : Tendsto
+      (fun u => (n : Real) * Acharyya2025.Bridge.cmdsEntrywiseRate n m (R u) (η u))
+      atTop (𝓝 0))
+    (hmean : HighProbAtTop P
+      (fun u => {ω | Acharyya2025.Bridge.UniformResponseMeanClose (Xbar u ω) μ (η u)}))
+    (hsample_bound : ∀ u ω i j, |responseDist (Xbar u ω) i j| ≤ R u)
+    (hpopulation_bound : ∀ u i j, |responseDist μ i j| ≤ R u) :
+    HighProbAtTop P (fun u => {ω |
+      ConfigError
+        (alignedSpectralConfigCanonical hd
+          (fun u ω => responseDist (Xbar u ω))
+          (fun u ω => isHermitian_disMatToMatrix_classicalMDSMatrix_responseDist (Xbar u ω))
+          (responseDist μ) hB hrank
+          (fun u => configBound n d α Λ
+            ((n : Real) * Acharyya2025.Bridge.cmdsEntrywiseRate n m (R u) (η u))) u ω)
+        (canonicalCMDSConfig (responseDist μ) hB hrank)
+        ≤ configBound n d α Λ
+            ((n : Real) * Acharyya2025.Bridge.cmdsEntrywiseRate n m (R u) (η u))}) := by
+  exact highProb_aligned_configError_of_response_mean P hn hd Xbar μ hB hrank
+    hα_pos hfloor hΛ (canonicalCMDSConfig (responseDist μ) hB hrank)
+    (canonicalCMDSConfig_gram_eq (responseDist μ) hB hrank)
+    η R hrate_nonneg hrate_zero hmean hsample_bound hpopulation_bound
 
 end Acharyya2025.AlignedPipeline

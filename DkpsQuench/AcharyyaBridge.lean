@@ -621,4 +621,98 @@ theorem queryEfficient_nn_of_second_moment
     hpopulation_bound indexOf ψ ψHat hψ hψHat f_ref score Qstar Qsub γ h_lipQ
     h_gamma_pos hXmeas h_cover h_cover_meas hMSE_Q_pos
 
+/-- Fully grounded Quench capstone using the canonical population CMDS
+configuration.
+
+This removes the redundant `ψFinite` witness and entrywise Gram proof from
+`queryEfficient_nn_of_second_moment`.  The finite target configuration is the
+canonical PSD/rank realization, so callers only need to identify their abstract
+model embedding with that canonical finite configuration. -/
+theorem queryEfficient_nn_of_second_moment_canonical
+    [DecidableEq Q]
+    (Pf : Measure (Model Q X)) [IsProbabilityMeasure Pf]
+    (μ : Nat → Measure Ω) (hμ : ∀ k, IsProbabilityMeasure (μ k))
+    {n m p d : Nat} (hn : 0 < n) (hd : d ≤ n)
+    (Xbar : Nat → Ω → Fin n → Acharyya2024.Mat m p)
+    (μvec : Fin n → Acharyya2024.Mat m p)
+    (hB : (Acharyya2025.MathlibBridge.disMatToMatrix
+        (Acharyya2025.Deterministic.classicalMDSMatrix
+          (Acharyya2024.responseDist μvec))).PosSemidef)
+    (hrank : (Acharyya2025.MathlibBridge.disMatToMatrix
+        (Acharyya2025.Deterministic.classicalMDSMatrix
+          (Acharyya2024.responseDist μvec))).rank ≤ d)
+    {α Λ : Real} (hα_pos : 0 < α)
+    (hfloor : ∀ i : Fin n, (i : ℕ) < d →
+      α ≤ Acharyya2025.MatrixPerturbation.sortedEigenvalues hB.isHermitian i)
+    (hΛ : ∀ l, Acharyya2025.MatrixPerturbation.sortedEigenvalues hB.isHermitian l ≤ Λ)
+    (η R : Nat → Real)
+    (hrate_nonneg : ∀ u,
+      0 ≤ Acharyya2025.Bridge.cmdsEntrywiseRate n m (R u) (η u))
+    (hrate_zero : Filter.Tendsto
+      (fun u => (n : Real) * Acharyya2025.Bridge.cmdsEntrywiseRate n m (R u) (η u))
+      Filter.atTop (nhds 0))
+    (σ2 : Nat → Real)
+    (hint : ∀ u (i : Fin n),
+      Integrable (fun ω => ‖Xbar u ω i - μvec i‖ ^ 2) (μ u))
+    (hσ2 : ∀ u (i : Fin n),
+      ∫ ω, ‖Xbar u ω i - μvec i‖ ^ 2 ∂(μ u) ≤ σ2 u)
+    (hη_pos : ∀ u, 0 < η u)
+    (hratio : Filter.Tendsto
+      (fun u => (n : Real) * σ2 u / (η u) ^ 2) Filter.atTop (nhds 0))
+    (hsample_bound : ∀ u ω i j,
+      |Acharyya2024.responseDist (Xbar u ω) i j| ≤ R u)
+    (hpopulation_bound : ∀ u i j,
+      |Acharyya2024.responseDist μvec i j| ≤ R u)
+    (indexOf : Model Q X → Fin n)
+    (ψ : Model Q X → Vec d)
+    (ψHat : Nat → Ω → Model Q X → Vec d)
+    (hψ : ∀ f, ψ f =
+      Acharyya2025.AlignedPipeline.canonicalCMDSConfig
+        (Acharyya2024.responseDist μvec) hB hrank (indexOf f))
+    (hψHat : ∀ u ω f, ψHat u ω f =
+      Acharyya2025.AlignedPipeline.alignedSpectralConfigCanonical hd
+        (fun u ω => Acharyya2024.responseDist (Xbar u ω))
+        (fun u ω =>
+          Acharyya2025.AlignedPipeline.isHermitian_disMatToMatrix_classicalMDSMatrix_responseDist
+            (Xbar u ω))
+        (Acharyya2024.responseDist μvec) hB hrank
+        (fun u => Acharyya2025.ConfigPerturbation.configBound n d α Λ
+          ((n : Real) * Acharyya2025.Bridge.cmdsEntrywiseRate n m (R u) (η u)))
+        u ω (indexOf f))
+    (f_ref : ∀ k, Ω → Fin k → Model Q X)
+    (score : Model Q X → Finset Q → ℝ)
+    (Qstar Qsub : Finset Q)
+    (γ : ℝ)
+    (h_lipQ : ∀ (f f' : Model Q X),
+      |score f Qstar - score f' Qstar| ≤ γ * ‖ψ f - ψ f'‖)
+    (h_gamma_pos : 0 < γ)
+    (hXmeas : ∀ k, Measurable (fun ω => Acharyya2024.responseDist (Xbar k ω)))
+    (h_cover : ∀ ρ > 0,
+      _root_.HighProbAtTop μ hμ
+        (fun k => {ω | ∀ f, ∃ i, ‖ψ (f_ref k ω i) - ψ f‖ ≤ ρ}))
+    (h_cover_meas : ∀ ρ > 0, ∀ k,
+      MeasurableSet {ω | ∀ f, ∃ i, ‖ψ (f_ref k ω i) - ψ f‖ ≤ ρ})
+    (hMSE_Q_pos :
+      0 < MSE (Q := Q) (X := X) Pf (yFull score Qstar)
+        (yQ (Q := Q) (X := X) score Qsub)) :
+    ∀ δ : ENNReal, 0 < δ →
+      ∃ k : ℕ,
+        (μ k) {ω |
+          MSE (Q := Q) (X := X) Pf (yFull score Qstar)
+            (fun f => yNN_paper (d := d)
+              (fun u ω (_ : Finset Q) f => ψHat u ω f)
+              f_ref score Qstar Qsub k ω f)
+          ≤ MSE (Q := Q) (X := X) Pf (yFull score Qstar)
+              (yQ (Q := Q) (X := X) score Qsub)} ≥ 1 - δ := by
+  exact queryEfficient_nn_of_second_moment Pf μ hμ hn hd Xbar μvec hB hrank
+    hα_pos hfloor hΛ
+    (Acharyya2025.AlignedPipeline.canonicalCMDSConfig
+      (Acharyya2024.responseDist μvec) hB hrank)
+    (Acharyya2025.AlignedPipeline.canonicalCMDSConfig_gram_eq
+      (Acharyya2024.responseDist μvec) hB hrank)
+    η R hrate_nonneg hrate_zero σ2 hint hσ2 hη_pos hratio
+    hsample_bound hpopulation_bound indexOf ψ ψHat hψ hψHat
+    f_ref score Qstar Qsub γ h_lipQ h_gamma_pos hXmeas
+    h_cover h_cover_meas hMSE_Q_pos
+
 end DkpsQuench.AcharyyaBridge

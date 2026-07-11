@@ -63,7 +63,7 @@ This is the encoding that lets the matrix-world `B` invoke the operator-world
 Weyl / Davis–Kahan machinery. -/
 -- `hB` : `B` is Hermitian — over ℝ this is symmetry; an implicit encoding of the
 --        paper's "(doubly centered) symmetric dissimilarity matrix".
-noncomputable def opSym {B : Matrix (Fin n) (Fin n) ℝ} (hB : B.IsHermitian) :
+theorem opSym {B : Matrix (Fin n) (Fin n) ℝ} (hB : B.IsHermitian) :
     (Matrix.toEuclideanLin B).IsSymmetric :=
   isSymmetric_toEuclideanLin_of_isHermitian hB
 

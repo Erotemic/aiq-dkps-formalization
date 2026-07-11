@@ -10,6 +10,7 @@ sample `iSup` alignment error.
 
 import Acharyya2025.Bridge
 import Acharyya2025.AlignedPipeline
+import Acharyya2025.GramRealization
 import Acharyya2025.RateChain
 import Helm2025.Basic
 
@@ -222,6 +223,40 @@ theorem alignmentConsistency_of_highProb_configError
       (Measure.pi (fun _ : Fin (n + 1) => P))
       ψhat rate hgood_meas hrate hconfig
 
+/-- The true latent configuration supplies positive semidefiniteness of its
+population CMDS matrix whenever its entrywise Gram identity is known. -/
+theorem populationCMDS_posSemidef_of_gram
+    {n d d' : Nat}
+    (Dpop : (Sample n d d') → Acharyya2024.DisMat (n + 1))
+    (hgram : ∀ ω i j, (∑ k, (ω i).1 k * (ω j).1 k)
+      = Acharyya2025.Deterministic.classicalMDSMatrix (Dpop ω) i j)
+    (ω : Sample n d d') :
+    (Acharyya2025.MathlibBridge.disMatToMatrix
+      (Acharyya2025.Deterministic.classicalMDSMatrix (Dpop ω))).PosSemidef := by
+  exact (Acharyya2025.GramRealization.posSemidef_and_rank_le_of_config_gram_eq
+    (Acharyya2025.MathlibBridge.disMatToMatrix
+      (Acharyya2025.Deterministic.classicalMDSMatrix (Dpop ω)))
+    (fun i : Fin (n + 1) => (ω i).1)
+    (fun i j => by
+      simpa [Acharyya2025.MathlibBridge.disMatToMatrix] using hgram ω i j)).1
+
+/-- The true latent configuration also supplies the ambient-dimension rank
+bound for its population CMDS matrix. -/
+theorem populationCMDS_rank_le_of_gram
+    {n d d' : Nat}
+    (Dpop : (Sample n d d') → Acharyya2024.DisMat (n + 1))
+    (hgram : ∀ ω i j, (∑ k, (ω i).1 k * (ω j).1 k)
+      = Acharyya2025.Deterministic.classicalMDSMatrix (Dpop ω) i j)
+    (ω : Sample n d d') :
+    (Acharyya2025.MathlibBridge.disMatToMatrix
+      (Acharyya2025.Deterministic.classicalMDSMatrix (Dpop ω))).rank ≤ d := by
+  exact (Acharyya2025.GramRealization.posSemidef_and_rank_le_of_config_gram_eq
+    (Acharyya2025.MathlibBridge.disMatToMatrix
+      (Acharyya2025.Deterministic.classicalMDSMatrix (Dpop ω)))
+    (fun i : Fin (n + 1) => (ω i).1)
+    (fun i j => by
+      simpa [Acharyya2025.MathlibBridge.disMatToMatrix] using hgram ω i j)).2
+
 /--
 **Helm alignment consistency from the aligned CMDS spectral estimator — assumptions made explicit.**
 
@@ -366,5 +401,61 @@ theorem alignmentConsistency_of_aligned_spectral
     (fun u => Acharyya2025.ConfigPerturbation.configBound (n + 1) d α Λ
       (((n + 1 : ℕ) : ℝ) * rate u))
     hgood_meas hrate_c hconfig
+
+/-- Helm alignment consistency with PSD and rank derived from the true latent
+Gram identity.
+
+Compared with `alignmentConsistency_of_aligned_spectral`, this removes two
+redundant structural assumptions: a matrix represented as the Gram matrix of
+the true `d`-dimensional latents is automatically positive semidefinite and has
+rank at most `d`.  The eigengap floor and eigenvalue cap remain genuine
+spectral-stability inputs. -/
+theorem alignmentConsistency_of_aligned_spectral_of_gram
+    {n d d' : Nat} (hd : d ≤ n + 1)
+    (P : Measure (Z d d')) [IsProbabilityMeasure P]
+    (Dhat : Nat → (Sample n d d') → Acharyya2024.DisMat (n + 1))
+    (hsym : ∀ u ω,
+      (Acharyya2025.MathlibBridge.disMatToMatrix
+        (Acharyya2025.Deterministic.classicalMDSMatrix (Dhat u ω))).IsHermitian)
+    (Dpop : (Sample n d d') → Acharyya2024.DisMat (n + 1))
+    {α Λ : Real} (hα_pos : 0 < α)
+    (hgram : ∀ ω i j, (∑ k, (ω i).1 k * (ω j).1 k)
+      = Acharyya2025.Deterministic.classicalMDSMatrix (Dpop ω) i j)
+    (hcap : ∀ ω l,
+      Acharyya2025.MatrixPerturbation.sortedEigenvalues
+        (populationCMDS_posSemidef_of_gram Dpop hgram ω).isHermitian l ≤ Λ)
+    (rate : Nat → Real) (hrate_nonneg : ∀ u, 0 ≤ rate u)
+    (hrate_zero : Tendsto (fun u => ((n + 1 : ℕ) : ℝ) * rate u) atTop (𝓝 0))
+    (hgood_meas :
+      ∀ u, MeasurableSet
+        {ω : Sample n d d' |
+          |(⨆ i : Fin (n + 1),
+              dist
+                (Acharyya2025.AlignedPipeline.alignedSpectralConfig hd Dhat hsym
+                  (fun i : Fin (n + 1) => (ω i).1)
+                  (fun u => Acharyya2025.ConfigPerturbation.configBound (n + 1) d α Λ
+                    (((n + 1 : ℕ) : ℝ) * rate u)) u ω i)
+                ((ω i).1))|
+            ≤ Acharyya2025.ConfigPerturbation.configBound (n + 1) d α Λ
+                (((n + 1 : ℕ) : ℝ) * rate u)})
+    (hgood :
+      HighProbAtTop (fun _u : Nat => Measure.pi (fun _ : Fin (n + 1) => P))
+        (fun u =>
+          {ω : Sample n d d' |
+            Acharyya2025.Bridge.EntrywiseClose
+                (Acharyya2025.Deterministic.classicalMDSMatrix (Dhat u ω))
+                (Acharyya2025.Deterministic.classicalMDSMatrix (Dpop ω)) (rate u)
+            ∧ (∀ i : Fin (n + 1), (i : ℕ) < d →
+                α ≤ Acharyya2025.MatrixPerturbation.sortedEigenvalues
+                  (populationCMDS_posSemidef_of_gram Dpop hgram ω).isHermitian i)})) :
+    DKPSAlignmentConsistency n d d' P
+      (fun u ω => Acharyya2025.AlignedPipeline.alignedSpectralConfig hd Dhat hsym
+        (fun i : Fin (n + 1) => (ω i).1)
+        (fun u => Acharyya2025.ConfigPerturbation.configBound (n + 1) d α Λ
+          (((n + 1 : ℕ) : ℝ) * rate u)) u ω) := by
+  exact alignmentConsistency_of_aligned_spectral hd P Dhat hsym Dpop hα_pos
+    (fun ω => populationCMDS_posSemidef_of_gram Dpop hgram ω)
+    (fun ω => populationCMDS_rank_le_of_gram Dpop hgram ω)
+    hcap hgram rate hrate_nonneg hrate_zero hgood_meas hgood
 
 end Helm2025.DKPS.AcharyyaBridge

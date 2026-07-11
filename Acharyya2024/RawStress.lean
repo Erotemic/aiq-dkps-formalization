@@ -410,6 +410,19 @@ theorem mds_nonempty :
         ≤ rawStress n d Δ (center z') := hwmin (center z') hcz'K
       _ = rawStress n d Δ z' := rawStress_center Δ z'
 
+/-- A canonical raw-stress minimizer, selected from `mds_nonempty`.
+
+This packages the unavoidable nonconstructive choice once, so downstream
+paper-facing theorems can name an MDS estimator without carrying a separate
+configuration and membership proof through every layer. -/
+noncomputable def mdsConfig (Δ : DisMat n) : Config n d :=
+  Classical.choose (mds_nonempty (n := n) (d := d) Δ)
+
+/-- The canonical raw-stress configuration is a global minimizer. -/
+theorem mdsConfig_mem (Δ : DisMat n) :
+    mdsConfig (n := n) (d := d) Δ ∈ MDS n d Δ :=
+  Classical.choose_spec (mds_nonempty (n := n) (d := d) Δ)
+
 /-! ## (d) Deterministic stability -/
 
 /--
@@ -693,6 +706,32 @@ theorem center_mem_mds {Δ : DisMat n} {z : Config n d} (hz : z ∈ MDS n d Δ) 
   intro z'
   rw [rawStress_center]
   exact hz z'
+
+/-- A canonical centered raw-stress minimizer.
+
+Centering removes translation ambiguity while preserving both raw stress and
+all pairwise distances.  This is the most convenient deterministic witness for
+compactness and rigidity arguments that need a normalized representative. -/
+noncomputable def centeredMDSConfig (Δ : DisMat n) : Config n d :=
+  center (mdsConfig (n := n) (d := d) Δ)
+
+/-- The canonical centered configuration remains a raw-stress minimizer. -/
+theorem centeredMDSConfig_mem (Δ : DisMat n) :
+    centeredMDSConfig (n := n) (d := d) Δ ∈ MDS n d Δ := by
+  exact center_mem_mds (mdsConfig_mem (n := n) (d := d) Δ)
+
+/-- The canonical centered minimizer has zero coordinate sum when the model
+index type is nonempty. -/
+theorem sum_centeredMDSConfig_eq_zero (hn : n ≠ 0) (Δ : DisMat n) :
+    ∑ i : Fin n, centeredMDSConfig (n := n) (d := d) Δ i = 0 := by
+  exact sum_center_eq_zero hn (mdsConfig (n := n) (d := d) Δ)
+
+/-- Centering the canonical minimizer does not change its pairwise-distance
+profile. -/
+theorem pairDist_centeredMDSConfig (Δ : DisMat n) (i j : Fin n) :
+    pairDist (centeredMDSConfig (n := n) (d := d) Δ) i j =
+      pairDist (mdsConfig (n := n) (d := d) Δ) i j := by
+  exact pairDist_center (mdsConfig (n := n) (d := d) Δ) i j
 
 /--
 **Uniform modulus of continuity for raw-stress MDS** (the key to closing the

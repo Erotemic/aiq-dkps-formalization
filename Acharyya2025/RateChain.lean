@@ -331,6 +331,48 @@ theorem highProb_aligned_configError_endToEndRate
     hrate_nonneg hrate_zero hmean hsample_bound
     (fun _u i j => hpopulation_bound i j)
 
+/-- Canonical population-realization form of the explicit end-to-end rate
+theorem.
+
+The population CMDS configuration and its Gram proof are synthesized from the
+PSD/rank hypotheses, so the public assumptions now match the structural matrix
+conditions actually used by the spectral pipeline. -/
+theorem highProb_aligned_configError_endToEndRate_canonical
+    {Ω : Type} [MeasurableSpace Ω]
+    (P : Nat → Measure Ω) [∀ u, IsProbabilityMeasure (P u)]
+    {n m p d : Nat} (hn : 0 < n) (hd : d ≤ n)
+    (Xbar : Nat → Ω → Fin n → Mat m p) (μ : Fin n → Mat m p)
+    (hB : (disMatToMatrix (classicalMDSMatrix (responseDist μ))).PosSemidef)
+    (hrank : (disMatToMatrix (classicalMDSMatrix (responseDist μ))).rank ≤ d)
+    {α Λ : Real} (hα_pos : 0 < α)
+    (hfloor : ∀ i : Fin n, (i : ℕ) < d →
+      α ≤ MatrixPerturbation.sortedEigenvalues hB.isHermitian i)
+    (hΛ : ∀ l, MatrixPerturbation.sortedEigenvalues hB.isHermitian l ≤ Λ)
+    (t : Nat → Real) (R : Real) (σ2 : Nat → Real)
+    (hint : ∀ u (i : Fin n), Integrable (fun ω => ‖Xbar u ω i - μ i‖ ^ 2) (P u))
+    (hσ2 : ∀ u (i : Fin n), ∫ ω, ‖Xbar u ω i - μ i‖ ^ 2 ∂(P u) ≤ σ2 u)
+    (ht_pos : ∀ u, 0 < t u)
+    (hratio : Tendsto (fun u => (n : Real) * σ2 u / (t u) ^ 2) atTop (𝓝 0))
+    (hrate_nonneg : ∀ u, 0 ≤ cmdsEntrywiseRate n m R (t u))
+    (hrate_zero : Tendsto
+      (fun u => (n : Real) * cmdsEntrywiseRate n m R (t u)) atTop (𝓝 0))
+    (hsample_bound : ∀ u ω i j, |responseDist (Xbar u ω) i j| ≤ R)
+    (hpopulation_bound : ∀ i j, |responseDist μ i j| ≤ R) :
+    HighProbAtTop P (fun u => {ω |
+      ConfigError
+        (alignedSpectralConfigCanonical hd
+          (fun u ω => responseDist (Xbar u ω))
+          (fun u ω => isHermitian_disMatToMatrix_classicalMDSMatrix_responseDist
+            (Xbar u ω))
+          (responseDist μ) hB hrank (endToEndRate n m d α Λ R t) u ω)
+        (canonicalCMDSConfig (responseDist μ) hB hrank)
+        ≤ endToEndRate n m d α Λ R t u}) := by
+  exact highProb_aligned_configError_endToEndRate P hn hd Xbar μ hB hrank
+    hα_pos hfloor hΛ (canonicalCMDSConfig (responseDist μ) hB hrank)
+    (canonicalCMDSConfig_gram_eq (responseDist μ) hB hrank)
+    t R σ2 hint hσ2 ht_pos hratio hrate_nonneg hrate_zero
+    hsample_bound hpopulation_bound
+
 /-! ### (4) Consistency corollary -/
 
 /--

@@ -159,35 +159,112 @@ def IntervalSylvesterGap (A : F →ₗ[𝕜] F) (B : E →ₗ[𝕜] E)
 
 /-- The Sylvester operator is injective under positive spectral separation.
 
-Lean proof route for a weaker agent:
-
-1. Preferred route: specialize uniqueness from the experimental foundation Sylvester module through the finite continuous-linear-map bridge.
-2. A direct eigenbasis proof is also immediate from nonzero scalar denominators.
+The proof is coordinate-free at the API boundary but uses the canonical
+self-adjoint eigenbases internally.  Testing `A X - X B = 0` against an
+`A`-eigenvector after evaluating at a `B`-eigenvector gives
+`(α - β) * ⟪X eβ, eα⟫ = 0`; separation makes the scalar factor nonzero, and
+two basis-extensionality steps force `X = 0`.
 -/
 theorem sylvesterOperator_injective {A : F →ₗ[𝕜] F} {B : E →ₗ[𝕜] E}
     (hA : A.IsSymmetric) (hB : B.IsSymmetric) {δ : ℝ} (hδ : 0 < δ)
     (hgap : SpectraSeparated A ⊤ B ⊤ δ) :
     Function.Injective (sylvesterOperator A B) := by
-  sorry
+  intro X Y hXY
+  have hker : sylvesterOperator A B (X - Y) = 0 := by
+    rw [map_sub, hXY, sub_self]
+  apply sub_eq_zero.mp
+  apply (hB.eigenvectorBasis rfl).toBasis.ext
+  intro j
+  apply InnerProductSpace.ext_inner_right_basis (hA.eigenvectorBasis rfl).toBasis
+  intro i
+  let α : ℝ := hA.eigenvalues rfl i
+  let β : ℝ := hB.eigenvalues rfl j
+  have hα : α ∈ restrictedSpectrum A ⊤ :=
+    ⟨hA.eigenvectorBasis rfl i, Submodule.mem_top,
+      (hA.eigenvectorBasis rfl).orthonormal.ne_zero i,
+      by simpa [α] using hA.apply_eigenvectorBasis rfl i⟩
+  have hβ : β ∈ restrictedSpectrum B ⊤ :=
+    ⟨hB.eigenvectorBasis rfl j, Submodule.mem_top,
+      (hB.eigenvectorBasis rfl).orthonormal.ne_zero j,
+      by simpa [β] using hB.apply_eigenvectorBasis rfl j⟩
+  have hαβ : α ≠ β := by
+    have habs : 0 < |α - β| := lt_of_lt_of_le hδ (hgap α β hα hβ)
+    exact sub_ne_zero.mp (abs_pos.mp habs)
+  have hαβ𝕜 : (α : 𝕜) ≠ (β : 𝕜) := fun h =>
+    hαβ (RCLike.ofReal_injective h)
+  have hpoint := LinearMap.congr_fun hker (hB.eigenvectorBasis rfl j)
+  change A ((X - Y) (hB.eigenvectorBasis rfl j)) -
+      (X - Y) (B (hB.eigenvectorBasis rfl j)) = 0 at hpoint
+  have heq : A ((X - Y) (hB.eigenvectorBasis rfl j)) =
+      (X - Y) (B (hB.eigenvectorBasis rfl j)) :=
+    sub_eq_zero.mp hpoint
+  have hinner :
+      ⟪(X - Y) (hB.eigenvectorBasis rfl j),
+          A (hA.eigenvectorBasis rfl i)⟫_𝕜 =
+        ⟪(X - Y) (B (hB.eigenvectorBasis rfl j)),
+          hA.eigenvectorBasis rfl i⟫_𝕜 := by
+    calc
+      _ = ⟪A ((X - Y) (hB.eigenvectorBasis rfl j)),
+          hA.eigenvectorBasis rfl i⟫_𝕜 :=
+        (hA ((X - Y) (hB.eigenvectorBasis rfl j))
+          (hA.eigenvectorBasis rfl i)).symm
+      _ = _ := congrArg (fun z : F => ⟪z, hA.eigenvectorBasis rfl i⟫_𝕜) heq
+  have hscalar :
+      (α : 𝕜) * ⟪(X - Y) (hB.eigenvectorBasis rfl j),
+          hA.eigenvectorBasis rfl i⟫_𝕜 =
+        (β : 𝕜) * ⟪(X - Y) (hB.eigenvectorBasis rfl j),
+          hA.eigenvectorBasis rfl i⟫_𝕜 := by
+    simpa only [α, β, hA.apply_eigenvectorBasis rfl i,
+      hB.apply_eigenvectorBasis rfl j, map_smul, inner_smul_left,
+      inner_smul_right, RCLike.conj_ofReal] using hinner
+  have hmul :
+      ((α : 𝕜) - (β : 𝕜)) *
+          ⟪(X - Y) (hB.eigenvectorBasis rfl j),
+            hA.eigenvectorBasis rfl i⟫_𝕜 = 0 := by
+    rw [sub_mul, hscalar, sub_self]
+  have hcoeff := (mul_eq_zero.mp hmul).resolve_left (sub_ne_zero.mpr hαβ𝕜)
+  simpa using hcoeff
 
-/-- Unique solution of the finite-dimensional Sylvester equation. -/
+/-- Unique solution of the finite-dimensional Sylvester equation.
+
+The definition is total: when the Sylvester operator is bijective it uses the
+inverse linear equivalence, and otherwise it returns zero.  All computation
+lemmas enter the bijective branch explicitly. -/
 noncomputable def solveSylvester (A : F →ₗ[𝕜] F) (B : E →ₗ[𝕜] E)
     (C : E →ₗ[𝕜] F) : E →ₗ[𝕜] F := by
-  sorry
+  classical
+  exact if h : Function.Bijective (sylvesterOperator A B) then
+    (LinearEquiv.ofBijective (sylvesterOperator A B) h).symm C
+  else
+    0
+
+private theorem solveSylvester_eq_of_bijective
+    (A : F →ₗ[𝕜] F) (B : E →ₗ[𝕜] E) (C : E →ₗ[𝕜] F)
+    (h : Function.Bijective (sylvesterOperator A B)) :
+    solveSylvester A B C =
+      (LinearEquiv.ofBijective (sylvesterOperator A B) h).symm C := by
+  classical
+  simp only [solveSylvester, dif_pos h]
 
 /-- The chosen solution satisfies the Sylvester equation under separation.
 
-Lean proof route for a weaker agent:
-
-1. Preferred route: specialize the experimental foundation Sylvester module.
-2. If the finite `solveSylvester` remains an eigenbasis definition, prove this entrywise and use separation to divide by every eigenvalue difference.
+Injectivity above implies surjectivity because the Sylvester operator is an
+endomorphism of the finite-dimensional map space.  The result is therefore
+the `apply_symm_apply` identity of the linear equivalence built from that
+bijection; no second coordinate calculation is needed.
 -/
 theorem sylvesterOperator_solveSylvester {A : F →ₗ[𝕜] F}
     {B : E →ₗ[𝕜] E} (hA : A.IsSymmetric) (hB : B.IsSymmetric)
     {δ : ℝ} (hδ : 0 < δ) (hgap : SpectraSeparated A ⊤ B ⊤ δ)
     (C : E →ₗ[𝕜] F) :
     A ∘ₗ solveSylvester A B C - solveSylvester A B C ∘ₗ B = C := by
-  sorry
+  have hinj : Function.Injective (sylvesterOperator A B) :=
+    sylvesterOperator_injective hA hB hδ hgap
+  have hbij : Function.Bijective (sylvesterOperator A B) :=
+    ⟨hinj, LinearMap.injective_iff_surjective.mp hinj⟩
+  change sylvesterOperator A B (solveSylvester A B C) = C
+  rw [solveSylvester_eq_of_bijective A B C hbij]
+  exact (LinearEquiv.ofBijective (sylvesterOperator A B) hbij).apply_symm_apply C
 
 /-- Sharp constant-one ordered Sylvester estimate in every rectangular UI
 norm.

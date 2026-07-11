@@ -247,30 +247,6 @@ theorem invariant (U : F ≃ₗᵢ[𝕜] F) (V : E ≃ₗᵢ[𝕜] E)
     N (U.toLinearMap ∘ₗ A ∘ₗ V.toLinearMap) = N A :=
   N.invariant' U V A
 
-/-- Left ideal property.
-
-Lean proof route for a weaker agent:
-
-1. Prove the Ky Fan prefix inequalities for the singular values of the composition using the finite ideal inequality `s_j(CA) ≤ ‖C‖ s_j(A)` (or its right-handed form).
-2. Sum the prefix inequalities and invoke finite Fan dominance for the symmetric gauge defining `N`.
-3. Rewrite scalar multiplication through `smul_eq` and normalize the operator norm coercions.
--/
-theorem comp_le_opNorm_mul (C : F →ₗ[𝕜] F) (A : E →ₗ[𝕜] F) :
-    N (C ∘ₗ A) ≤ ‖C.toContinuousLinearMap‖ * N A := by
-  sorry
-
-/-- Right ideal property.
-
-Lean proof route for a weaker agent:
-
-1. Prove the Ky Fan prefix inequalities for the singular values of the composition using the finite ideal inequality `s_j(CA) ≤ ‖C‖ s_j(A)` (or its right-handed form).
-2. Sum the prefix inequalities and invoke finite Fan dominance for the symmetric gauge defining `N`.
-3. Rewrite scalar multiplication through `smul_eq` and normalize the operator norm coercions.
--/
-theorem comp_le_mul_opNorm (A : E →ₗ[𝕜] F) (C : E →ₗ[𝕜] E) :
-    N (A ∘ₗ C) ≤ N A * ‖C.toContinuousLinearMap‖ := by
-  sorry
-
 /-- Fan dominance in rectangular form.
 
 Lean proof route for a weaker agent:
@@ -293,13 +269,34 @@ Lean proof route for a weaker agent:
 -/
 theorem apply_le_of_singularValues_le {A B : E →ₗ[𝕜] F}
     (h : ∀ i, A.singularValues i ≤ B.singularValues i) : N A ≤ N B := by
-  sorry
+  apply N.apply_le_of_kyFanSum_le
+  intro k
+  unfold rectangularKyFanSum
+  exact Finset.sum_le_sum fun i _ => h (i : ℕ)
 
 /-- Adjoint transport to the transposed rectangular norm. -/
 noncomputable def adjointTransport
     (N : RectangularUnitarilyInvariantNorm 𝕜 E F) :
-    RectangularUnitarilyInvariantNorm 𝕜 F E := by
-  sorry
+    RectangularUnitarilyInvariantNorm 𝕜 F E where
+  toFun A := N A.adjoint
+  add_le' A B := by
+    simpa only [map_add] using N.add_le A.adjoint B.adjoint
+  smul' a A := by
+    rw [map_smulₛₗ]
+    calc
+      N ((starRingEnd 𝕜) a • A.adjoint) =
+          ‖(starRingEnd 𝕜) a‖ * N A.adjoint :=
+        N.smul_eq ((starRingEnd 𝕜) a) A.adjoint
+      _ = ‖a‖ * N A.adjoint := by
+        congr 1
+        change ‖star a‖ = ‖a‖
+        exact norm_star a
+  invariant' U V A := by
+    change N (U.toLinearMap ∘ₗ A ∘ₗ V.toLinearMap).adjoint = N A.adjoint
+    simpa only [LinearMap.adjoint_comp,
+      V.adjoint_toLinearMap_eq_symm, U.adjoint_toLinearMap_eq_symm,
+      LinearMap.comp_assoc] using
+      N.invariant V.symm U.symm A.adjoint
 
 /--
 Lean proof route for a weaker agent:
@@ -309,12 +306,53 @@ Lean proof route for a weaker agent:
 -/
 @[simp] theorem adjointTransport_apply (A : E →ₗ[𝕜] F) :
     (adjointTransport N).toFun A.adjoint = N.toFun A := by
-  sorry
+  simp only [adjointTransport, LinearMap.adjoint_adjoint]
+
+
+/-- Left ideal property.  This is Fan dominance applied to the pointwise
+singular-value bound for composition by a bounded left factor. -/
+theorem comp_le_opNorm_mul (C : F →ₗ[𝕜] F) (A : E →ₗ[𝕜] F) :
+    N (C ∘ₗ A) ≤ ‖C.toContinuousLinearMap‖ * N A := by
+  let c : ℝ := ‖C.toContinuousLinearMap‖
+  have hc : 0 ≤ c := norm_nonneg _
+  calc
+    N (C ∘ₗ A) ≤ N (((c : 𝕜)) • A) :=
+      N.apply_le_of_singularValues_le fun i => by
+        rw [singularValues_real_smul A hc i]
+        exact singularValues_comp_le hc
+          (fun y => C.toContinuousLinearMap.le_opNorm y) A i
+    _ = c * N A := by
+      rw [N.smul_eq, RCLike.norm_ofReal, abs_of_nonneg hc]
+    _ = ‖C.toContinuousLinearMap‖ * N A := by rfl
+
+/-- Right ideal property, obtained from the left ideal property by adjoint
+transport. -/
+theorem comp_le_mul_opNorm (A : E →ₗ[𝕜] F) (C : E →ₗ[𝕜] E) :
+    N (A ∘ₗ C) ≤ N A * ‖C.toContinuousLinearMap‖ := by
+  have h := comp_le_opNorm_mul (adjointTransport N) C.adjoint A.adjoint
+  rw [← LinearMap.adjoint_comp, adjointTransport_apply,
+    adjointTransport_apply, LinearMap.adjoint_toContinuousLinearMap,
+    LinearIsometryEquiv.norm_map] at h
+  simpa only [mul_comm] using h
+
+/-- Product-coordinate form of the zero extension, `(x,y) ↦ (0,A x)`. -/
+private noncomputable def zeroExtensionProd (A : E →ₗ[𝕜] F) :
+    (E × F) →ₗ[𝕜] (E × F) where
+  toFun z := (0, A z.1)
+  map_add' x y := by ext <;> simp
+  map_smul' c x := by ext <;> simp
 
 /-- Zero extension of a rectangular map to a square endomorphism. -/
 noncomputable def zeroExtension (A : E →ₗ[𝕜] F) :
-    WithLp 2 (E × F) →ₗ[𝕜] WithLp 2 (E × F) := by
-  sorry
+    WithLp 2 (E × F) →ₗ[𝕜] WithLp 2 (E × F) :=
+  (WithLp.linearEquiv 2 𝕜 (E × F)).symm.toLinearMap ∘ₗ
+    zeroExtensionProd A ∘ₗ
+      (WithLp.linearEquiv 2 𝕜 (E × F)).toLinearMap
+
+@[simp] theorem zeroExtension_apply (A : E →ₗ[𝕜] F)
+    (z : WithLp 2 (E × F)) :
+    zeroExtension A z = WithLp.toLp 2 (0, A (WithLp.ofLp z).1) := by
+  rfl
 
 /-- Singular values are unchanged by zero extension, apart from zero padding.
 
@@ -348,8 +386,8 @@ noncomputable def kyFan (k : ℕ) : RectangularUnitarilyInvariantNorm 𝕜 E F :
   sorry
 
 /-- Nuclear/trace norm. -/
-noncomputable def nuclear : RectangularUnitarilyInvariantNorm 𝕜 E F := by
-  sorry
+noncomputable def nuclear : RectangularUnitarilyInvariantNorm 𝕜 E F :=
+  kyFan (finrank 𝕜 E)
 
 /-- Schatten `p`-norm for `1 ≤ p`. -/
 noncomputable def schatten (p : ℝ) (hp : 1 ≤ p) :
@@ -386,8 +424,11 @@ end RectangularUnitarilyInvariantNorm
 /-- Restrict a rectangular UI norm to square maps. -/
 noncomputable def RectangularUnitarilyInvariantNorm.toSquare
     (N : RectangularUnitarilyInvariantNorm 𝕜 E E) :
-    UnitarilyInvariantNorm 𝕜 E := by
-  sorry
+    UnitarilyInvariantNorm 𝕜 E where
+  toFun := N.toFun
+  add_le' := N.add_le'
+  smul' := N.smul'
+  invariant' := N.invariant'
 
 end DavisKahanTheory
 
@@ -402,8 +443,11 @@ variable {E : Type*} [NormedAddCommGroup E] [InnerProductSpace 𝕜 E]
 /-- Embed the existing square abstraction into the rectangular API. -/
 noncomputable def toRectangular
     (N : UnitarilyInvariantNorm 𝕜 E) :
-    RectangularUnitarilyInvariantNorm 𝕜 E E := by
-  sorry
+    RectangularUnitarilyInvariantNorm 𝕜 E E where
+  toFun := N.toFun
+  add_le' := N.add_le'
+  smul' := N.smul'
+  invariant' := N.invariant'
 
 /--
 Lean proof route for a weaker agent:
@@ -413,8 +457,8 @@ Lean proof route for a weaker agent:
 -/
 @[simp] theorem toRectangular_apply
     (N : UnitarilyInvariantNorm 𝕜 E) (A : E →ₗ[𝕜] E) :
-    N.toRectangular A = N A := by
-  sorry
+    N.toRectangular A = N A :=
+  rfl
 
 end UnitarilyInvariantNorm
 end ForMathlib

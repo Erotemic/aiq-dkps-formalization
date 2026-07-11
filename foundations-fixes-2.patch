@@ -1,0 +1,16 @@
+--- a/Acharyya2024/Common.lean
++++ b/Acharyya2024/Common.lean
+@@ -254,10 +254,9 @@
+   have hsum : Tendsto
+       (fun r => ∑ i : Fin n, ∑ j : Fin n, (A r i j - B i j) ^ 2)
+       atTop (𝓝 0) := by
+-    simpa using tendsto_finset_sum Finset.univ fun i _ =>
+-      tendsto_finset_sum Finset.univ fun j _ => hsq i j
+-  simpa [Function.comp_apply, frobSub, frob, frobSq] using
+-    (Real.continuous_sqrt.tendsto 0).comp hsum
++    simpa using tendsto_finsetSum Finset.univ fun i _ =>
++      tendsto_finsetSum Finset.univ fun j _ => hsq i j
++  simpa [frobSub, frob, frobSq] using hsum.sqrt
+
+ /-- A configuration exactly realizes a target dissimilarity matrix. -/
+ def RealizesDissimilarity {n d : Nat} (z : Config n d) (Δ : DisMat n) : Prop :=

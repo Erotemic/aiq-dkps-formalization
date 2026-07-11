@@ -76,7 +76,8 @@ Lean proof route for a weaker agent:
 3. Finish with antisymmetry; keep this as a structure-level lemma with no singular-value dependency.
 -/
 @[simp] theorem apply_zero : N (0 : E →ₗ[𝕜] F) = 0 := by
-  sorry
+  have h := N.smul' 0 (0 : E →ₗ[𝕜] F)
+  simpa using h
 
 /--
 Lean proof route for a weaker agent:
@@ -86,7 +87,14 @@ Lean proof route for a weaker agent:
 3. Close by `simpa` after normalizing the coercion from the structure to its function field.
 -/
 theorem nonneg (A : E →ₗ[𝕜] F) : 0 ≤ N A := by
-  sorry
+  have h := N.add_le' A (-A)
+  rw [add_neg_cancel] at h
+  have hneg : N.toFun (-A) = N.toFun A := by
+    have h1 := N.smul' (-1) A
+    simpa using h1
+  have hz : N.toFun (0 : E →ₗ[𝕜] F) = 0 := apply_zero N
+  rw [hz, hneg] at h
+  linarith
 
 /--
 Lean proof route for a weaker agent:
@@ -95,8 +103,8 @@ Lean proof route for a weaker agent:
 2. Use `change` to expose `N.toFun` if coercion prevents field application.
 3. Close by `simpa` after normalizing the coercion from the structure to its function field.
 -/
-theorem add_le (A B : E →ₗ[𝕜] F) : N (A + B) ≤ N A + N B := by
-  sorry
+theorem add_le (A B : E →ₗ[𝕜] F) : N (A + B) ≤ N A + N B :=
+  N.add_le' A B
 
 /--
 Lean proof route for a weaker agent:
@@ -105,8 +113,8 @@ Lean proof route for a weaker agent:
 2. Use `change` to expose `N.toFun` if coercion prevents field application.
 3. Close by `simpa` after normalizing the coercion from the structure to its function field.
 -/
-theorem smul_eq (a : 𝕜) (A : E →ₗ[𝕜] F) : N (a • A) = ‖a‖ * N A := by
-  sorry
+theorem smul_eq (a : 𝕜) (A : E →ₗ[𝕜] F) : N (a • A) = ‖a‖ * N A :=
+  N.smul' a A
 
 /--
 Lean proof route for a weaker agent:
@@ -117,8 +125,8 @@ Lean proof route for a weaker agent:
 -/
 theorem invariant (U : F ≃ₗᵢ[𝕜] F) (V : E ≃ₗᵢ[𝕜] E)
     (A : E →ₗ[𝕜] F) :
-    N (U.toLinearMap ∘ₗ A ∘ₗ V.toLinearMap) = N A := by
-  sorry
+    N (U.toLinearMap ∘ₗ A ∘ₗ V.toLinearMap) = N A :=
+  N.invariant' U V A
 
 /-- Left ideal property.
 

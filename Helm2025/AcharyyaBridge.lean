@@ -458,4 +458,70 @@ theorem alignmentConsistency_of_aligned_spectral_of_gram
     (fun ω => populationCMDS_rank_le_of_gram Dpop hgram ω)
     hcap hgram rate hrate_nonneg hrate_zero hgood_meas hgood
 
+
+/-- Helm alignment consistency with the population spectral ceiling obtained
+from a uniform entrywise envelope on the random population CMDS matrices.
+
+Unlike the fixed-population Acharyya and Quench pipelines, Helm's population
+matrix depends on the latent sample `ω`, so its leading eigenvalue is itself
+random and cannot serve directly as the deterministic rate parameter.  A
+uniform entrywise bound `β` gives the deterministic ceiling `(n + 1) * β` for
+every sample and removes the less transparent pointwise eigenvalue-cap
+assumption. -/
+theorem alignmentConsistency_of_aligned_spectral_of_gram_entrywiseBound
+    {n d d' : Nat} (hd : d ≤ n + 1)
+    (P : Measure (Z d d')) [IsProbabilityMeasure P]
+    (Dhat : Nat → (Sample n d d') → Acharyya2024.DisMat (n + 1))
+    (hsym : ∀ u ω,
+      (Acharyya2025.MathlibBridge.disMatToMatrix
+        (Acharyya2025.Deterministic.classicalMDSMatrix (Dhat u ω))).IsHermitian)
+    (Dpop : (Sample n d d') → Acharyya2024.DisMat (n + 1))
+    {α β : Real} (hα_pos : 0 < α)
+    (hgram : ∀ ω i j, (∑ k, (ω i).1 k * (ω j).1 k)
+      = Acharyya2025.Deterministic.classicalMDSMatrix (Dpop ω) i j)
+    (hentry : ∀ ω i j,
+      |Acharyya2025.Deterministic.classicalMDSMatrix (Dpop ω) i j| ≤ β)
+    (rate : Nat → Real) (hrate_nonneg : ∀ u, 0 ≤ rate u)
+    (hrate_zero : Tendsto (fun u => ((n + 1 : ℕ) : ℝ) * rate u) atTop (𝓝 0))
+    (hgood_meas :
+      ∀ u, MeasurableSet
+        {ω : Sample n d d' |
+          |(⨆ i : Fin (n + 1),
+              dist
+                (Acharyya2025.AlignedPipeline.alignedSpectralConfig hd Dhat hsym
+                  (fun i : Fin (n + 1) => (ω i).1)
+                  (fun u => Acharyya2025.ConfigPerturbation.configBound (n + 1) d α
+                    (((n + 1 : ℕ) : ℝ) * β)
+                    (((n + 1 : ℕ) : ℝ) * rate u)) u ω i)
+                ((ω i).1))|
+            ≤ Acharyya2025.ConfigPerturbation.configBound (n + 1) d α
+                (((n + 1 : ℕ) : ℝ) * β)
+                (((n + 1 : ℕ) : ℝ) * rate u)})
+    (hgood :
+      HighProbAtTop (fun _u : Nat => Measure.pi (fun _ : Fin (n + 1) => P))
+        (fun u =>
+          {ω : Sample n d d' |
+            Acharyya2025.Bridge.EntrywiseClose
+                (Acharyya2025.Deterministic.classicalMDSMatrix (Dhat u ω))
+                (Acharyya2025.Deterministic.classicalMDSMatrix (Dpop ω)) (rate u)
+            ∧ (∀ i : Fin (n + 1), (i : ℕ) < d →
+                α ≤ Acharyya2025.MatrixPerturbation.sortedEigenvalues
+                  (populationCMDS_posSemidef_of_gram Dpop hgram ω).isHermitian i)})) :
+    DKPSAlignmentConsistency n d d' P
+      (fun u ω => Acharyya2025.AlignedPipeline.alignedSpectralConfig hd Dhat hsym
+        (fun i : Fin (n + 1) => (ω i).1)
+        (fun u => Acharyya2025.ConfigPerturbation.configBound (n + 1) d α
+          (((n + 1 : ℕ) : ℝ) * β)
+          (((n + 1 : ℕ) : ℝ) * rate u)) u ω) := by
+  have hcap : ∀ ω l,
+      Acharyya2025.MatrixPerturbation.sortedEigenvalues
+        (populationCMDS_posSemidef_of_gram Dpop hgram ω).isHermitian l
+        ≤ (((n + 1 : ℕ) : ℝ) * β) := by
+    intro ω l
+    apply Acharyya2025.MatrixPerturbation.sortedEigenvalues_le_of_entry_le
+    intro i j
+    simpa [Acharyya2025.MathlibBridge.disMatToMatrix] using hentry ω i j
+  exact alignmentConsistency_of_aligned_spectral_of_gram hd P Dhat hsym Dpop
+    hα_pos hgram hcap rate hrate_nonneg hrate_zero hgood_meas hgood
+
 end Helm2025.DKPS.AcharyyaBridge

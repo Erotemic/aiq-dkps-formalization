@@ -117,6 +117,54 @@ theorem sortedEigenvalues_nonneg {B : Matrix (Fin n) (Fin n) ℝ}
     0 ≤ sortedEigenvalues hB.isHermitian i :=
   (isPositive_toEuclideanLin hB).nonneg_eigenvalues hn_eq i
 
+/-- The canonical spectral ceiling of a nonempty positive-semidefinite matrix:
+its largest sorted eigenvalue.
+
+The upper spectral bound used by the configuration perturbation estimate is not
+an independent assumption in finite dimension.  Antitonicity of the sorted
+eigenvalues makes the leading eigenvalue a canonical valid ceiling. -/
+noncomputable def topEigenvalue {B : Matrix (Fin n) (Fin n) ℝ}
+    (hn : 0 < n) (hB : B.PosSemidef) : ℝ :=
+  sortedEigenvalues hB.isHermitian ⟨0, hn⟩
+
+/-- The canonical spectral ceiling is nonnegative. -/
+theorem topEigenvalue_nonneg {B : Matrix (Fin n) (Fin n) ℝ}
+    (hn : 0 < n) (hB : B.PosSemidef) :
+    0 ≤ topEigenvalue hn hB :=
+  sortedEigenvalues_nonneg hB ⟨0, hn⟩
+
+/-- Every sorted eigenvalue is bounded by the canonical leading-eigenvalue
+ceiling. -/
+theorem sortedEigenvalues_le_topEigenvalue {B : Matrix (Fin n) (Fin n) ℝ}
+    (hn : 0 < n) (hB : B.PosSemidef) (i : Fin n) :
+    sortedEigenvalues hB.isHermitian i ≤ topEigenvalue hn hB := by
+  letI : NeZero n := ⟨Nat.ne_of_gt hn⟩
+  exact (opSym hB.isHermitian).eigenvalues_antitone hn_eq (Fin.zero_le i)
+
+/-- A uniform entrywise bound on a Hermitian matrix gives an explicit bound on
+all of its sorted eigenvalues.  This form is useful when the population matrix
+varies with the sample: a single entrywise envelope yields a deterministic
+spectral ceiling even though the leading eigenvalue itself is sample-dependent. -/
+theorem abs_sortedEigenvalues_le_of_entry_le
+    {B : Matrix (Fin n) (Fin n) ℝ} (hB : B.IsHermitian)
+    {β : ℝ} (hβ : ∀ i j, |B i j| ≤ β) (k : Fin n) :
+    |sortedEigenvalues hB k| ≤ (n : ℝ) * β := by
+  set u := (opSym hB).eigenvectorBasis hn_eq with hu
+  have hnorm1 : ‖u k‖ = 1 := u.orthonormal.1 k
+  have happly : Matrix.toEuclideanLin B (u k) = sortedEigenvalues hB k • u k := by
+    rw [hu]
+    exact (opSym hB).apply_eigenvectorBasis hn_eq k
+  have hle : ‖Matrix.toEuclideanLin B (u k)‖ ≤ (n : ℝ) * β * ‖u k‖ :=
+    ForMathlib.norm_toEuclideanLin_le_of_entry_le hβ (u k)
+  rwa [happly, norm_smul, Real.norm_eq_abs, hnorm1, mul_one, mul_one] at hle
+
+/-- Non-absolute version of the entrywise spectral ceiling. -/
+theorem sortedEigenvalues_le_of_entry_le
+    {B : Matrix (Fin n) (Fin n) ℝ} (hB : B.IsHermitian)
+    {β : ℝ} (hβ : ∀ i j, |B i j| ≤ β) (k : Fin n) :
+    sortedEigenvalues hB k ≤ (n : ℝ) * β :=
+  le_trans (le_abs_self _) (abs_sortedEigenvalues_le_of_entry_le hB hβ k)
+
 /-! ### Deliverable (2b): tail eigenvalues vanish (rank transport)
 
 The matrix rank of `B` equals the finrank of the range of `toEuclideanLin B`
@@ -456,5 +504,33 @@ theorem exists_isometry_configError_le_of_entrywise_close
       rw [hψi, ← map_sub, V.norm_map]
     rw [hConfigEq]
     exact hW₀_bound
+
+
+/-- Matrix-world assembly with the spectral ceiling chosen canonically as the
+largest population eigenvalue.
+
+This removes the redundant `Λ` and `hΛ` inputs from the deterministic theorem.
+Only the positive lower spectral floor remains a genuine stability condition. -/
+theorem exists_isometry_configError_le_of_entrywise_close_topEigenvalue
+    {n d : ℕ} (hn : 0 < n) (hd : d ≤ n)
+    (B Bhat : Matrix (Fin n) (Fin n) ℝ)
+    (hB : B.PosSemidef)
+    (hBhat : Bhat.IsHermitian)
+    (hrank : B.rank ≤ d)
+    {α η : ℝ} (hα_pos : 0 < α) (hη_nonneg : 0 ≤ η)
+    (hfloor : ∀ i : Fin n, (i : ℕ) < d → α ≤ sortedEigenvalues hB.isHermitian i)
+    (hentry : ∀ i j, |Bhat i j - B i j| ≤ η)
+    (hsmall : (n : ℝ) * η ≤ α / 2)
+    (hpolar : (d : ℝ) * (4 * (n : ℝ) * ((n : ℝ) * η)^2 / α^2) ≤ 1/2)
+    (ψ : Acharyya2024.Config n d)
+    (hψ : ∀ i j, (∑ k : Fin d, ψ i k * ψ j k) = B i j) :
+    ∃ W : EuclideanSpace ℝ (Fin d) →ₗ[ℝ] EuclideanSpace ℝ (Fin d),
+      (∀ x y, ⟪W x, W y⟫_ℝ = ⟪x, y⟫_ℝ) ∧
+      Acharyya2024.ConfigError
+        (fun i => W (spectralConfig (Matrix.toEuclideanLin Bhat) (opSym hBhat) hd i)) ψ
+        ≤ configBound n d α (topEigenvalue hn hB) ((n : ℝ) * η) := by
+  exact exists_isometry_configError_le_of_entrywise_close hd B Bhat hB hBhat hrank
+    hα_pos hη_nonneg hfloor (sortedEigenvalues_le_topEigenvalue hn hB)
+    hentry hsmall hpolar ψ hψ
 
 end Acharyya2025.MatrixPerturbation

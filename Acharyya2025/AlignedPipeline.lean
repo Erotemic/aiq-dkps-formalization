@@ -725,4 +725,174 @@ theorem highProb_aligned_configError_of_response_mean_canonical
     (canonicalCMDSConfig_gram_eq (responseDist μ) hB hrank)
     η R hrate_nonneg hrate_zero hmean hsample_bound hpopulation_bound
 
+
+/-! ### Canonical population spectral ceiling
+
+For nonempty finite PSD population matrices, the leading sorted eigenvalue is a
+canonical ceiling for the entire spectrum.  The wrappers below remove the
+redundant upper-eigenvalue parameter and proof from the public aligned-pipeline
+interfaces while preserving the genuine positive lower floor. -/
+
+/-- Deterministic alignment existence with the population spectral ceiling
+chosen as the leading eigenvalue. -/
+theorem alignExists_of_entrywiseClose_topEigenvalue {Ω : Type}
+    {n d : Nat} (hn : 0 < n) (hd : d ≤ n)
+    (Dhat : Nat → Ω → DisMat n) (D : DisMat n)
+    (hsym : ∀ u ω, (disMatToMatrix (classicalMDSMatrix (Dhat u ω))).IsHermitian)
+    (hB : (disMatToMatrix (classicalMDSMatrix D)).PosSemidef)
+    (hrank : (disMatToMatrix (classicalMDSMatrix D)).rank ≤ d)
+    {α : Real} (hα_pos : 0 < α)
+    (hfloor : ∀ i : Fin n, (i : ℕ) < d →
+      α ≤ MatrixPerturbation.sortedEigenvalues hB.isHermitian i)
+    (ψ : Config n d)
+    (hψ : ∀ i j, (∑ k, ψ i k * ψ j k) = classicalMDSMatrix D i j)
+    (rate : Nat → Real) (u : Nat)
+    (hrate_nonneg : 0 ≤ rate u)
+    (hsmall : (n : Real) * rate u ≤ α / 2)
+    (hpolar : (d : Real) * (4 * (n : Real) * ((n : Real) * rate u)^2 / α^2) ≤ 1/2)
+    (ω : Ω)
+    (hω : Acharyya2025.Bridge.EntrywiseClose
+      (classicalMDSMatrix (Dhat u ω)) (classicalMDSMatrix D) (rate u)) :
+    AlignExists hd Dhat hsym ψ
+      (fun u => configBound n d α (MatrixPerturbation.topEigenvalue hn hB)
+        ((n : Real) * rate u)) u ω := by
+  exact alignExists_of_entrywiseClose hd Dhat D hsym hB hrank hα_pos hfloor
+    (MatrixPerturbation.sortedEigenvalues_le_topEigenvalue hn hB)
+    ψ hψ rate u hrate_nonneg hsmall hpolar ω hω
+
+/-- High-probability aligned configuration control with the upper spectral
+ceiling synthesized from the population matrix. -/
+theorem highProb_aligned_configError_of_entrywise_close_topEigenvalue
+    {Ω : Type} [MeasurableSpace Ω]
+    (P : Nat → MeasureTheory.Measure Ω)
+    {n d : Nat} (hn : 0 < n) (hd : d ≤ n)
+    (Dhat : Nat → Ω → DisMat n) (D : DisMat n)
+    (hsym : ∀ u ω, (disMatToMatrix (classicalMDSMatrix (Dhat u ω))).IsHermitian)
+    (hB : (disMatToMatrix (classicalMDSMatrix D)).PosSemidef)
+    (hrank : (disMatToMatrix (classicalMDSMatrix D)).rank ≤ d)
+    {α : Real} (hα_pos : 0 < α)
+    (hfloor : ∀ i : Fin n, (i : ℕ) < d →
+      α ≤ MatrixPerturbation.sortedEigenvalues hB.isHermitian i)
+    (ψ : Config n d)
+    (hψ : ∀ i j, (∑ k, ψ i k * ψ j k) = classicalMDSMatrix D i j)
+    (rate : Nat → Real) (hrate_nonneg : ∀ u, 0 ≤ rate u)
+    (hrate_zero : Tendsto (fun u => (n : Real) * rate u) atTop (𝓝 0))
+    (hcenter : HighProbAtTop P (fun u => {ω |
+      Acharyya2025.Bridge.EntrywiseClose
+        (classicalMDSMatrix (Dhat u ω)) (classicalMDSMatrix D) (rate u)})) :
+    HighProbAtTop P (fun u => {ω |
+      ConfigError
+        (alignedSpectralConfig hd Dhat hsym ψ
+          (fun u => configBound n d α (MatrixPerturbation.topEigenvalue hn hB)
+            ((n : Real) * rate u)) u ω) ψ
+        ≤ configBound n d α (MatrixPerturbation.topEigenvalue hn hB)
+            ((n : Real) * rate u)}) := by
+  exact highProb_aligned_configError_of_entrywise_close P hd Dhat D hsym hB hrank
+    hα_pos hfloor (MatrixPerturbation.sortedEigenvalues_le_topEigenvalue hn hB)
+    ψ hψ rate hrate_nonneg hrate_zero hcenter
+
+/-- Canonical-population-configuration version with the upper spectral ceiling
+also synthesized internally. -/
+theorem highProb_aligned_configError_of_entrywise_close_canonical_topEigenvalue
+    {Ω : Type} [MeasurableSpace Ω]
+    (P : Nat → MeasureTheory.Measure Ω)
+    {n d : Nat} (hn : 0 < n) (hd : d ≤ n)
+    (Dhat : Nat → Ω → DisMat n) (D : DisMat n)
+    (hsym : ∀ u ω, (disMatToMatrix (classicalMDSMatrix (Dhat u ω))).IsHermitian)
+    (hB : (disMatToMatrix (classicalMDSMatrix D)).PosSemidef)
+    (hrank : (disMatToMatrix (classicalMDSMatrix D)).rank ≤ d)
+    {α : Real} (hα_pos : 0 < α)
+    (hfloor : ∀ i : Fin n, (i : ℕ) < d →
+      α ≤ MatrixPerturbation.sortedEigenvalues hB.isHermitian i)
+    (rate : Nat → Real) (hrate_nonneg : ∀ u, 0 ≤ rate u)
+    (hrate_zero : Tendsto (fun u => (n : Real) * rate u) atTop (𝓝 0))
+    (hcenter : HighProbAtTop P (fun u => {ω |
+      Acharyya2025.Bridge.EntrywiseClose
+        (classicalMDSMatrix (Dhat u ω)) (classicalMDSMatrix D) (rate u)})) :
+    HighProbAtTop P (fun u => {ω |
+      ConfigError
+        (alignedSpectralConfigCanonical hd Dhat hsym D hB hrank
+          (fun u => configBound n d α (MatrixPerturbation.topEigenvalue hn hB)
+            ((n : Real) * rate u)) u ω)
+        (canonicalCMDSConfig D hB hrank)
+        ≤ configBound n d α (MatrixPerturbation.topEigenvalue hn hB)
+            ((n : Real) * rate u)}) := by
+  exact highProb_aligned_configError_of_entrywise_close_canonical P hd Dhat D hsym
+    hB hrank hα_pos hfloor
+    (MatrixPerturbation.sortedEigenvalues_le_topEigenvalue hn hB)
+    rate hrate_nonneg hrate_zero hcenter
+
+/-- Response-mean concentration with the upper spectral ceiling selected as the
+leading population eigenvalue. -/
+theorem highProb_aligned_configError_of_response_mean_topEigenvalue
+    {Ω : Type} [MeasurableSpace Ω]
+    (P : Nat → MeasureTheory.Measure Ω)
+    {n m p d : Nat} (hn : 0 < n) (hd : d ≤ n)
+    (Xbar : Nat → Ω → Fin n → Mat m p) (μ : Fin n → Mat m p)
+    (hB : (disMatToMatrix (classicalMDSMatrix (responseDist μ))).PosSemidef)
+    (hrank : (disMatToMatrix (classicalMDSMatrix (responseDist μ))).rank ≤ d)
+    {α : Real} (hα_pos : 0 < α)
+    (hfloor : ∀ i : Fin n, (i : ℕ) < d →
+      α ≤ MatrixPerturbation.sortedEigenvalues hB.isHermitian i)
+    (ψ : Config n d)
+    (hψ : ∀ i j, (∑ k, ψ i k * ψ j k)
+      = classicalMDSMatrix (responseDist μ) i j)
+    (η R : Nat → Real)
+    (hrate_nonneg : ∀ u, 0 ≤ Acharyya2025.Bridge.cmdsEntrywiseRate n m (R u) (η u))
+    (hrate_zero : Tendsto
+      (fun u => (n : Real) * Acharyya2025.Bridge.cmdsEntrywiseRate n m (R u) (η u))
+      atTop (𝓝 0))
+    (hmean : HighProbAtTop P
+      (fun u => {ω | Acharyya2025.Bridge.UniformResponseMeanClose (Xbar u ω) μ (η u)}))
+    (hsample_bound : ∀ u ω i j, |responseDist (Xbar u ω) i j| ≤ R u)
+    (hpopulation_bound : ∀ u i j, |responseDist μ i j| ≤ R u) :
+    HighProbAtTop P (fun u => {ω |
+      ConfigError
+        (alignedSpectralConfig hd (fun u ω => responseDist (Xbar u ω))
+          (fun u ω => isHermitian_disMatToMatrix_classicalMDSMatrix_responseDist (Xbar u ω))
+          ψ
+          (fun u => configBound n d α (MatrixPerturbation.topEigenvalue hn hB)
+            ((n : Real) * Acharyya2025.Bridge.cmdsEntrywiseRate n m (R u) (η u))) u ω) ψ
+        ≤ configBound n d α (MatrixPerturbation.topEigenvalue hn hB)
+            ((n : Real) * Acharyya2025.Bridge.cmdsEntrywiseRate n m (R u) (η u))}) := by
+  exact highProb_aligned_configError_of_response_mean P hn hd Xbar μ hB hrank
+    hα_pos hfloor (MatrixPerturbation.sortedEigenvalues_le_topEigenvalue hn hB)
+    ψ hψ η R hrate_nonneg hrate_zero hmean hsample_bound hpopulation_bound
+
+/-- Canonical response-mean pipeline with both the population configuration and
+upper spectral ceiling synthesized from PSD/rank data. -/
+theorem highProb_aligned_configError_of_response_mean_canonical_topEigenvalue
+    {Ω : Type} [MeasurableSpace Ω]
+    (P : Nat → MeasureTheory.Measure Ω)
+    {n m p d : Nat} (hn : 0 < n) (hd : d ≤ n)
+    (Xbar : Nat → Ω → Fin n → Mat m p) (μ : Fin n → Mat m p)
+    (hB : (disMatToMatrix (classicalMDSMatrix (responseDist μ))).PosSemidef)
+    (hrank : (disMatToMatrix (classicalMDSMatrix (responseDist μ))).rank ≤ d)
+    {α : Real} (hα_pos : 0 < α)
+    (hfloor : ∀ i : Fin n, (i : ℕ) < d →
+      α ≤ MatrixPerturbation.sortedEigenvalues hB.isHermitian i)
+    (η R : Nat → Real)
+    (hrate_nonneg : ∀ u, 0 ≤ Acharyya2025.Bridge.cmdsEntrywiseRate n m (R u) (η u))
+    (hrate_zero : Tendsto
+      (fun u => (n : Real) * Acharyya2025.Bridge.cmdsEntrywiseRate n m (R u) (η u))
+      atTop (𝓝 0))
+    (hmean : HighProbAtTop P
+      (fun u => {ω | Acharyya2025.Bridge.UniformResponseMeanClose (Xbar u ω) μ (η u)}))
+    (hsample_bound : ∀ u ω i j, |responseDist (Xbar u ω) i j| ≤ R u)
+    (hpopulation_bound : ∀ u i j, |responseDist μ i j| ≤ R u) :
+    HighProbAtTop P (fun u => {ω |
+      ConfigError
+        (alignedSpectralConfigCanonical hd
+          (fun u ω => responseDist (Xbar u ω))
+          (fun u ω => isHermitian_disMatToMatrix_classicalMDSMatrix_responseDist (Xbar u ω))
+          (responseDist μ) hB hrank
+          (fun u => configBound n d α (MatrixPerturbation.topEigenvalue hn hB)
+            ((n : Real) * Acharyya2025.Bridge.cmdsEntrywiseRate n m (R u) (η u))) u ω)
+        (canonicalCMDSConfig (responseDist μ) hB hrank)
+        ≤ configBound n d α (MatrixPerturbation.topEigenvalue hn hB)
+            ((n : Real) * Acharyya2025.Bridge.cmdsEntrywiseRate n m (R u) (η u))}) := by
+  exact highProb_aligned_configError_of_response_mean_canonical P hn hd Xbar μ hB hrank
+    hα_pos hfloor (MatrixPerturbation.sortedEigenvalues_le_topEigenvalue hn hB)
+    η R hrate_nonneg hrate_zero hmean hsample_bound hpopulation_bound
+
 end Acharyya2025.AlignedPipeline

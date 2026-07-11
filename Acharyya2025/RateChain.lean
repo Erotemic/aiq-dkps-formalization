@@ -412,4 +412,99 @@ theorem tendsto_endToEndRate_zero (n m d : Nat) (α Λ R : Real)
         * ((m : Real)⁻¹ * 2)))))
   exact tendsto_configBound_comp_zero n d α Λ hlin
 
+
+/-! ### End-to-end rate with a canonical spectral ceiling -/
+
+/-- The end-to-end rate specialized to the canonical largest-eigenvalue ceiling
+of the population CMDS matrix. -/
+noncomputable def endToEndRateTopEigenvalue
+    {n : Nat} (hn : 0 < n)
+    (m d : Nat) {B : Matrix (Fin n) (Fin n) ℝ} (hB : B.PosSemidef)
+    (α R : Real) (t : Nat → Real) : Nat → Real :=
+  endToEndRate n m d α (MatrixPerturbation.topEigenvalue hn hB) R t
+
+/-- The explicit end-to-end theorem with the upper spectral ceiling discharged
+by the leading population eigenvalue. -/
+theorem highProb_aligned_configError_endToEndRate_topEigenvalue
+    {Ω : Type} [MeasurableSpace Ω]
+    (P : Nat → Measure Ω) [∀ u, IsProbabilityMeasure (P u)]
+    {n m p d : Nat} (hn : 0 < n) (hd : d ≤ n)
+    (Xbar : Nat → Ω → Fin n → Mat m p) (μ : Fin n → Mat m p)
+    (hB : (disMatToMatrix (classicalMDSMatrix (responseDist μ))).PosSemidef)
+    (hrank : (disMatToMatrix (classicalMDSMatrix (responseDist μ))).rank ≤ d)
+    {α : Real} (hα_pos : 0 < α)
+    (hfloor : ∀ i : Fin n, (i : ℕ) < d →
+      α ≤ MatrixPerturbation.sortedEigenvalues hB.isHermitian i)
+    (ψ : Config n d)
+    (hψ : ∀ i j, (∑ k, ψ i k * ψ j k)
+      = classicalMDSMatrix (responseDist μ) i j)
+    (t : Nat → Real) (R : Real) (σ2 : Nat → Real)
+    (hint : ∀ u (i : Fin n), Integrable (fun ω => ‖Xbar u ω i - μ i‖ ^ 2) (P u))
+    (hσ2 : ∀ u (i : Fin n), ∫ ω, ‖Xbar u ω i - μ i‖ ^ 2 ∂(P u) ≤ σ2 u)
+    (ht_pos : ∀ u, 0 < t u)
+    (hratio : Tendsto (fun u => (n : Real) * σ2 u / (t u) ^ 2) atTop (𝓝 0))
+    (hrate_nonneg : ∀ u, 0 ≤ cmdsEntrywiseRate n m R (t u))
+    (hrate_zero : Tendsto
+      (fun u => (n : Real) * cmdsEntrywiseRate n m R (t u)) atTop (𝓝 0))
+    (hsample_bound : ∀ u ω i j, |responseDist (Xbar u ω) i j| ≤ R)
+    (hpopulation_bound : ∀ i j, |responseDist μ i j| ≤ R) :
+    HighProbAtTop P (fun u => {ω |
+      ConfigError
+        (alignedSpectralConfig hd (fun u ω => responseDist (Xbar u ω))
+          (fun u ω => isHermitian_disMatToMatrix_classicalMDSMatrix_responseDist
+            (Xbar u ω))
+          ψ (endToEndRateTopEigenvalue hn m d hB α R t) u ω) ψ
+        ≤ endToEndRateTopEigenvalue hn m d hB α R t u}) := by
+  exact highProb_aligned_configError_endToEndRate P hn hd Xbar μ hB hrank
+    hα_pos hfloor (MatrixPerturbation.sortedEigenvalues_le_topEigenvalue hn hB)
+    ψ hψ t R σ2 hint hσ2 ht_pos hratio hrate_nonneg hrate_zero
+    hsample_bound hpopulation_bound
+
+/-- Canonical population realization and canonical upper spectral ceiling for
+the explicit end-to-end rate theorem. -/
+theorem highProb_aligned_configError_endToEndRate_canonical_topEigenvalue
+    {Ω : Type} [MeasurableSpace Ω]
+    (P : Nat → Measure Ω) [∀ u, IsProbabilityMeasure (P u)]
+    {n m p d : Nat} (hn : 0 < n) (hd : d ≤ n)
+    (Xbar : Nat → Ω → Fin n → Mat m p) (μ : Fin n → Mat m p)
+    (hB : (disMatToMatrix (classicalMDSMatrix (responseDist μ))).PosSemidef)
+    (hrank : (disMatToMatrix (classicalMDSMatrix (responseDist μ))).rank ≤ d)
+    {α : Real} (hα_pos : 0 < α)
+    (hfloor : ∀ i : Fin n, (i : ℕ) < d →
+      α ≤ MatrixPerturbation.sortedEigenvalues hB.isHermitian i)
+    (t : Nat → Real) (R : Real) (σ2 : Nat → Real)
+    (hint : ∀ u (i : Fin n), Integrable (fun ω => ‖Xbar u ω i - μ i‖ ^ 2) (P u))
+    (hσ2 : ∀ u (i : Fin n), ∫ ω, ‖Xbar u ω i - μ i‖ ^ 2 ∂(P u) ≤ σ2 u)
+    (ht_pos : ∀ u, 0 < t u)
+    (hratio : Tendsto (fun u => (n : Real) * σ2 u / (t u) ^ 2) atTop (𝓝 0))
+    (hrate_nonneg : ∀ u, 0 ≤ cmdsEntrywiseRate n m R (t u))
+    (hrate_zero : Tendsto
+      (fun u => (n : Real) * cmdsEntrywiseRate n m R (t u)) atTop (𝓝 0))
+    (hsample_bound : ∀ u ω i j, |responseDist (Xbar u ω) i j| ≤ R)
+    (hpopulation_bound : ∀ i j, |responseDist μ i j| ≤ R) :
+    HighProbAtTop P (fun u => {ω |
+      ConfigError
+        (alignedSpectralConfigCanonical hd
+          (fun u ω => responseDist (Xbar u ω))
+          (fun u ω => isHermitian_disMatToMatrix_classicalMDSMatrix_responseDist
+            (Xbar u ω))
+          (responseDist μ) hB hrank
+          (endToEndRateTopEigenvalue hn m d hB α R t) u ω)
+        (canonicalCMDSConfig (responseDist μ) hB hrank)
+        ≤ endToEndRateTopEigenvalue hn m d hB α R t u}) := by
+  exact highProb_aligned_configError_endToEndRate_canonical P hn hd Xbar μ hB hrank
+    hα_pos hfloor (MatrixPerturbation.sortedEigenvalues_le_topEigenvalue hn hB)
+    t R σ2 hint hσ2 ht_pos hratio hrate_nonneg hrate_zero
+    hsample_bound hpopulation_bound
+
+/-- The canonically capped end-to-end rate still vanishes whenever the
+response-mean tolerance vanishes. -/
+theorem tendsto_endToEndRateTopEigenvalue_zero
+    {n : Nat} (hn : 0 < n) (m d : Nat)
+    {B : Matrix (Fin n) (Fin n) ℝ} (hB : B.PosSemidef)
+    (α R : Real) {t : Nat → Real} (ht : Tendsto t atTop (𝓝 0)) :
+    Tendsto (endToEndRateTopEigenvalue hn m d hB α R t) atTop (𝓝 0) := by
+  exact tendsto_endToEndRate_zero n m d α
+    (MatrixPerturbation.topEigenvalue hn hB) R ht
+
 end Acharyya2025.RateChain

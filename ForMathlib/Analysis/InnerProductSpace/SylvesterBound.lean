@@ -486,6 +486,78 @@ private theorem rectangular_nonneg_of_add_le_of_smul (f : E →L[𝕜] F) : 0 �
   linarith
 
 include hadd hsmul hidealL hidealR in
+/-- **Rectangular polar-absorption Sylvester bound in an arbitrary operator
+seminorm.**  Let `H` be symmetric and coercive by `r + g`, let `T` have
+operator norm at most `r`, and suppose
+
+`H X - Z T = Y`,
+
+where `Z` has the same seminorm as `X`.  Then `g * N X ≤ N Y`.
+
+This is the operator-ideal generalization of
+`gap_mul_opNorm_le_of_comp_sub_comp_eq`.  Its hypotheses are exactly the
+subadditivity, absolute homogeneity, and two-sided ideal inequalities carried
+by every rectangular unitarily invariant norm.  No finite-dimensionality,
+spectral theorem, completeness, or singular-value argument is used. -/
+theorem gap_mul_le_of_comp_sub_comp_eq_rectangular
+    {H : F →L[𝕜] F} {T : E →L[𝕜] E} {X Z Y : E →L[𝕜] F}
+    (hH : H.IsSymmetric) {r g : ℝ} (hr : 0 ≤ r) (hg : 0 < g)
+    (hHc : ∀ x, (r + g) * ‖x‖ ^ 2 ≤ RCLike.re ⟪H x, x⟫_𝕜)
+    (hT : ‖T‖ ≤ r) (hZX : N Z = N X)
+    (hEq : H ∘L X - Z ∘L T = Y) :
+    g * N X ≤ N Y := by
+  rcases eq_or_ne X 0 with rfl | hX
+  · have hN0 : N (0 : E →L[𝕜] F) = 0 := by
+      have h := hsmul 0 0
+      rwa [zero_smul, norm_zero, zero_mul] at h
+    simpa [hN0] using rectangular_nonneg_of_add_le_of_smul hadd hsmul Y
+  · obtain ⟨v₀, hv₀⟩ := DFunLike.ne_iff.mp hX
+    simp only [zero_apply] at hv₀
+    have hrgH : r + g ≤ ‖H‖ :=
+      le_opNorm_of_le_re_inner_map_self hHc hv₀
+    have hcorr : ‖(‖H‖ : 𝕜) • (1 : F →L[𝕜] F) - H‖ ≤ ‖H‖ - (r + g) :=
+      norm_opNorm_smul_one_sub_le hH hrgH hHc
+    have habsorb : ((‖H‖ : ℝ) : 𝕜) • X =
+        Y + (((‖H‖ : 𝕜) • (1 : F →L[𝕜] F) - H) ∘L X) + Z ∘L T := by
+      ext v
+      have hv : H (X v) - Z (T v) = Y v := by
+        simpa [sub_apply, ContinuousLinearMap.comp_apply] using
+          congrArg (fun W : E →L[𝕜] F => W v) hEq
+      simp only [add_apply, smul_apply, ContinuousLinearMap.comp_apply,
+        sub_apply, one_apply_eq_self]
+      rw [← hv]
+      module
+    have hNX : 0 ≤ N X := rectangular_nonneg_of_add_le_of_smul hadd hsmul X
+    have hNZ : 0 ≤ N Z := rectangular_nonneg_of_add_le_of_smul hadd hsmul Z
+    have hmain : ‖H‖ * N X ≤
+        N Y + (‖H‖ - (r + g)) * N X + N X * r := by
+      calc
+        ‖H‖ * N X = N (((‖H‖ : ℝ) : 𝕜) • X) := by
+          rw [hsmul, RCLike.norm_ofReal, abs_of_nonneg (norm_nonneg H)]
+        _ = N (Y + (((‖H‖ : 𝕜) • (1 : F →L[𝕜] F) - H) ∘L X) + Z ∘L T) := by
+          rw [habsorb]
+        _ ≤ N Y + N (((‖H‖ : 𝕜) • (1 : F →L[𝕜] F) - H) ∘L X) +
+              N (Z ∘L T) := by
+          have h1 := hadd
+            (Y + (((‖H‖ : 𝕜) • (1 : F →L[𝕜] F) - H) ∘L X))
+            (Z ∘L T)
+          have h2 := hadd Y (((‖H‖ : 𝕜) • (1 : F →L[𝕜] F) - H) ∘L X)
+          linarith
+        _ ≤ N Y + (‖H‖ - (r + g)) * N X + N X * r := by
+          gcongr
+          · calc
+              N (((‖H‖ : 𝕜) • (1 : F →L[𝕜] F) - H) ∘L X)
+                  ≤ ‖(‖H‖ : 𝕜) • (1 : F →L[𝕜] F) - H‖ * N X :=
+                    hidealL _ _
+              _ ≤ (‖H‖ - (r + g)) * N X := by
+                    exact mul_le_mul_of_nonneg_right hcorr hNX
+          · calc
+              N (Z ∘L T) ≤ N Z * ‖T‖ := hidealR _ _
+              _ ≤ N Z * r := mul_le_mul_of_nonneg_left hT hNZ
+              _ = N X * r := by rw [hZX]
+    linarith
+
+include hadd hsmul hidealL hidealR in
 /-- Rectangular coercive Sylvester bound in any operator seminorm with
 left and right ideal inequalities. -/
 theorem le_div_of_comp_add_comp_eq_rectangular

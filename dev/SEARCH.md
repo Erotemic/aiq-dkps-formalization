@@ -9,6 +9,7 @@ upstream refactor, or see an error that feels familiar.
 |---|---|
 | A check failed that the build did *not* (comparator, `#print axioms`, kernel) | `dev/journals/` first |
 | Confusing Lean error / elaboration / instance / universe symptom | `dev/journals/` |
+| Bundled maps, coercions, projections, adjoints, semilinear scalars, dependent `if`, parser trouble | `dev/lean-proof-engineering-lessons.md` |
 | About to restate a theorem, slim a conformance, pick a leaf, minimize imports | `dev/benchmark-candidates/` |
 | About to polish a proof for upstream (fold tactic traces into `simp`-friendly lemmas) | `dev/mathlib-proof-polishing.md` |
 | Choosing/relating a Mathlib lemma, checking a gap, naming | both |
@@ -23,6 +24,9 @@ rg -n "statement do not match|universe|lean4export|\.\{u_|variable|instance.*ord
 
 # Lean elaboration / proof-engineering symptoms
 rg -n "motive is not type correct|failed to synthesize|defeq|definitional|sorryAx|#print axioms|sorry" dev/
+
+# Davis--Kahan proof-construction traps
+rg -n "change|bundled|projection|starProjection|RingHom.id|starRingEnd|adjoint|NeZero|Subsingleton|dependent.*if|doc comment|simpa" dev/lean-proof-engineering-lessons.md
 
 # Mathlib API / duplication / naming
 rg -n "already (exists|in Mathlib)|posSemidef|gram|eigenvalues|rank|duplicat|naming|dot.notation" dev/

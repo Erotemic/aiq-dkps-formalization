@@ -11,12 +11,13 @@ them.
 The search entry point is [`SEARCH.md`](SEARCH.md). It gives grep patterns and
 routing rules so agents search this memory instead of reading it all.
 
-The two subtrees:
+The durable reference files and two subtrees:
 
 ```text
 dev/
-  SEARCH.md                   # How to search engineering memory
-  mathlib-proof-polishing.md  # Reference: "folding" proofs to Mathlib style (read before a polishing pass)
+  SEARCH.md                         # How to search engineering memory
+  lean-proof-engineering-lessons.md # Recurring Lean elaboration/API/parser traps
+  mathlib-proof-polishing.md        # Reference: "folding" proofs to Mathlib style
   benchmark-candidates/       # Distilled hard questions from real formalization/comparator mistakes
   journals/                   # Postmortems of bugs that took real effort to diagnose
 ```
@@ -97,6 +98,18 @@ journals/
 
 ---
 
+## `dev/lean-proof-engineering-lessons.md`
+
+A durable reference for recurring Lean failures encountered in the
+finite-dimensional Davis–Kahan development: bundled-map normalization,
+projection representation bridges, semilinear scalars, adjoint orientation,
+dependent branches, `NeZero` setup, subsingleton cases, parser-sensitive
+docstrings, and the decision to reduce through existing abstractions before
+starting coordinates. Search it by the exact API or symptom before reopening a
+known dead end.
+
+---
+
 ## `dev/mathlib-proof-polishing.md`
 
 A standalone **reference** (not a postmortem, not a test question) distilling how
@@ -119,8 +132,9 @@ comparator/      -> per-PR comparator configs
 ForMathlib/      -> the upstreamable, paper-agnostic Mathlib candidates
 Acharyya*/ …     -> the four DKPS paper theorem layers (end states)
 dev/             -> long-running engineering memory (you are here)
-  benchmark-candidates/  -> distilled "hard question" corpus from real mistakes
-  journals/              -> effortful-debug postmortems
+  lean-proof-engineering-lessons.md -> durable Lean proof-construction rules
+  benchmark-candidates/               -> distilled "hard question" corpus
+  journals/                            -> effortful-debug postmortems
 ```
 
 The auto-memory at

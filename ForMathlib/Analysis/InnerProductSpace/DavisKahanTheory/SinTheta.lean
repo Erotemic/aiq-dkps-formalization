@@ -146,6 +146,79 @@ theorem opNorm_spectralSubspace_directed_sinTheta_le {A B : E →ₗ[𝕜] E}
   opNorm_directed_sinTheta_le hA hB (reduces_spectralSubspace A s)
     (reduces_spectralSubspace B t) hg hUspec hVspec hε0 hε
 
+/-! ## Two-sided projector-difference operator-norm form
+
+Combining the two one-sided directed estimates through the projection identity
+`P_U − P_W = P_U P_{Wᗮ} − P_{Uᗮ} P_W` gives the symmetric projector-difference
+bound with the literature-faithful factor `2`.  The sharp factor `1` needs the
+equal-rank projector/directed-map norm identity (`opNorm_projection_sub_eq_...`,
+still an open obligation), so the factor `2` is used unconditionally here. -/
+
+/-- **Two-sided operator-norm Davis--Kahan projector theorem.**  With a genuine
+two-sided spectral gap — `A`'s spectrum on `U` above `c+g` and on `Uᗮ` below `c`,
+`B`'s spectrum on `W` above `c+g` and on `Wᗮ` below `c` — and perturbation size
+`ε`, the spectral projectors satisfy
+
+`‖P_U − P_W‖ ≤ 2 (ε / g)`.
+
+This is the finite-dimensional projective Davis--Kahan `sin Θ` conclusion in the
+operator norm (factor two). -/
+theorem opNorm_starProjection_sub_le_two {A B : E →ₗ[𝕜] E}
+    (hA : A.IsSymmetric) (hB : B.IsSymmetric)
+    {U W : Submodule 𝕜 E} [U.HasOrthogonalProjection] [W.HasOrthogonalProjection]
+    (hU : Reduces A U) (hW : Reduces B W)
+    {c g ε : ℝ} (hg : 0 < g)
+    (hUhi : SpectrumIn A U (Set.Ici (c + g))) (hUlo : SpectrumIn A Uᗮ (Set.Iic c))
+    (hWhi : SpectrumIn B W (Set.Ici (c + g))) (hWlo : SpectrumIn B Wᗮ (Set.Iic c))
+    (hε0 : 0 ≤ ε) (hε : ∀ x, ‖(B - A) x‖ ≤ ε * ‖x‖) :
+    ‖(U.starProjection - W.starProjection : E →L[𝕜] E)‖ ≤ 2 * (ε / g) := by
+  haveI : CompleteSpace E := FiniteDimensional.complete 𝕜 E
+  have hWperp : Reduces B Wᗮ := reduces_orthogonal_of_isSymmetric hB hW
+  have hUperp : Reduces A Uᗮ := reduces_orthogonal_of_isSymmetric hA hU
+  have hε' : ∀ x, ‖(A - B) x‖ ≤ ε * ‖x‖ := fun x => by
+    rw [show A - B = -(B - A) by abel, LinearMap.neg_apply, norm_neg]; exact hε x
+  have h1 : ‖(Wᗮ.starProjection ∘L U.starProjection : E →L[𝕜] E)‖ ≤ ε / g :=
+    opNorm_directed_sinTheta_le hA hB hU hWperp hg hUhi hWlo hε0 hε
+  have h2 : ‖(Uᗮ.starProjection ∘L W.starProjection : E →L[𝕜] E)‖ ≤ ε / g :=
+    opNorm_directed_sinTheta_le hB hA hW hUperp hg hWhi hUlo hε0 hε'
+  have hstar1 : star (Wᗮ.starProjection ∘L U.starProjection : E →L[𝕜] E)
+      = U.starProjection ∘L Wᗮ.starProjection := by
+    rw [ContinuousLinearMap.star_eq_adjoint, ContinuousLinearMap.adjoint_comp,
+      ← ContinuousLinearMap.star_eq_adjoint, ← ContinuousLinearMap.star_eq_adjoint,
+      (isSelfAdjoint_starProjection U).star_eq, (isSelfAdjoint_starProjection Wᗮ).star_eq]
+  have hadj1 : ‖(U.starProjection ∘L Wᗮ.starProjection : E →L[𝕜] E)‖
+      = ‖(Wᗮ.starProjection ∘L U.starProjection : E →L[𝕜] E)‖ := by
+    rw [← hstar1]; exact norm_star (Wᗮ.starProjection ∘L U.starProjection : E →L[𝕜] E)
+  have hid : (U.starProjection - W.starProjection : E →L[𝕜] E)
+      = U.starProjection ∘L Wᗮ.starProjection - Uᗮ.starProjection ∘L W.starProjection := by
+    ext x
+    simp only [ContinuousLinearMap.sub_apply, ContinuousLinearMap.comp_apply,
+      Submodule.starProjection_orthogonal_val, map_sub]
+    abel
+  calc ‖(U.starProjection - W.starProjection : E →L[𝕜] E)‖
+      = ‖(U.starProjection ∘L Wᗮ.starProjection
+          - Uᗮ.starProjection ∘L W.starProjection : E →L[𝕜] E)‖ := by rw [hid]
+    _ ≤ ‖(U.starProjection ∘L Wᗮ.starProjection : E →L[𝕜] E)‖
+        + ‖(Uᗮ.starProjection ∘L W.starProjection : E →L[𝕜] E)‖ := norm_sub_le _ _
+    _ ≤ ε / g + ε / g := add_le_add (hadj1.trans_le h1) h2
+    _ = 2 * (ε / g) := by ring
+
+/-- **Two-sided operator-norm spectral-projector Davis--Kahan theorem.**  The
+projector-difference bound for the canonical spectral subspaces (they reduce
+their operators automatically). -/
+theorem opNorm_spectralSubspace_sub_le_two {A B : E →ₗ[𝕜] E}
+    (hA : A.IsSymmetric) (hB : B.IsSymmetric) {s t : Set ℝ}
+    {c g ε : ℝ} (hg : 0 < g)
+    (hAhi : SpectrumIn A (spectralSubspace A s) (Set.Ici (c + g)))
+    (hAlo : SpectrumIn A (spectralSubspace A s)ᗮ (Set.Iic c))
+    (hBhi : SpectrumIn B (spectralSubspace B t) (Set.Ici (c + g)))
+    (hBlo : SpectrumIn B (spectralSubspace B t)ᗮ (Set.Iic c))
+    (hε0 : 0 ≤ ε) (hε : ∀ x, ‖(B - A) x‖ ≤ ε * ‖x‖) :
+    ‖((spectralSubspace A s).starProjection
+        - (spectralSubspace B t).starProjection : E →L[𝕜] E)‖ ≤ 2 * (ε / g) :=
+  opNorm_starProjection_sub_le_two hA hB (reduces_spectralSubspace A s)
+    (reduces_spectralSubspace B t) hg hAhi hAlo hBhi hBlo hε0 hε
+
 /-! ## Perturbation form -/
 
 /-- **Davis--Kahan `sin Θ`, perturbation form, every square UI norm.**

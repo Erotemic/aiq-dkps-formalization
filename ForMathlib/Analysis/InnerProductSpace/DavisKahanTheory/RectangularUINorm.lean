@@ -5,6 +5,7 @@ Authors: Jon Crall, GPT 5.6 High
 -/
 import ForMathlib.Analysis.InnerProductSpace.DavisKahanTheory.Basic
 import ForMathlib.Analysis.InnerProductSpace.KyFan
+import ForMathlib.Analysis.InnerProductSpace.GramMatrix
 import Mathlib.Analysis.InnerProductSpace.ProdL2
 
 /-!
@@ -252,6 +253,213 @@ theorem invariant (U : F ≃ₗᵢ[𝕜] F) (V : E ≃ₗᵢ[𝕜] E)
     N (U.toLinearMap ∘ₗ A ∘ₗ V.toLinearMap) = N A :=
   N.invariant' U V A
 
+/-- Equal singular-value data determines a rectangular map up to left and right
+unitary factors.  The right unitary aligns the two Gram eigenbases; Gram
+rigidity then supplies the left unitary. -/
+private theorem exists_unitary_factorization_of_singularValues_eq
+    {A B : E →ₗ[𝕜] F} (hσ : A.singularValues = B.singularValues) :
+    ∃ (U : F ≃ₗᵢ[𝕜] F) (V : E ≃ₗᵢ[𝕜] E),
+      A = U.toLinearMap ∘ₗ B ∘ₗ V.toLinearMap := by
+  let hA := A.isSymmetric_adjoint_comp_self
+  let hB := B.isSymmetric_adjoint_comp_self
+  let bA := hA.eigenvectorBasis rfl
+  let bB := hB.eigenvectorBasis rfl
+  let K := bB.equiv bA (Equiv.refl _)
+  have hKb : ∀ i, K (bB i) = bA i := fun i => by
+    simp [K, bA, bB]
+  have hKsymm : ∀ i, K.symm (bA i) = bB i := fun i => by
+    rw [← hKb i, LinearIsometryEquiv.symm_apply_apply]
+  have heig : hA.eigenvalues rfl = hB.eigenvalues rfl := by
+    funext i
+    rw [← A.sq_singularValues_fin rfl i,
+      ← B.sq_singularValues_fin rfl i, hσ]
+  have hgram_conj : A.adjoint ∘ₗ A =
+      K.toLinearMap ∘ₗ (B.adjoint ∘ₗ B) ∘ₗ K.symm.toLinearMap := by
+    refine bA.toBasis.ext fun i => ?_
+    change (A.adjoint ∘ₗ A) (bA i) =
+      K ((B.adjoint ∘ₗ B) (K.symm (bA i)))
+    rw [hKsymm i]
+    change (A.adjoint ∘ₗ A) (hA.eigenvectorBasis rfl i) =
+      K ((B.adjoint ∘ₗ B) (hB.eigenvectorBasis rfl i))
+    rw [hA.apply_eigenvectorBasis rfl i,
+      hB.apply_eigenvectorBasis rfl i, map_smul, hKb i,
+      congrFun heig i]
+  have hgram : B.adjoint ∘ₗ B =
+      (A ∘ₗ K.toLinearMap).adjoint ∘ₗ (A ∘ₗ K.toLinearMap) := by
+    ext x
+    have hx := congrArg K.symm (LinearMap.congr_fun hgram_conj (K x))
+    simpa only [LinearMap.adjoint_comp, K.adjoint_toLinearMap_eq_symm,
+      LinearMap.comp_apply,
+      LinearIsometryEquiv.coe_toLinearEquiv, LinearEquiv.coe_coe,
+      LinearIsometryEquiv.symm_apply_apply,
+      LinearIsometryEquiv.apply_symm_apply] using hx.symm
+  have hinner : ∀ x y,
+      ⟪B x, B y⟫_𝕜 = ⟪(A ∘ₗ K.toLinearMap) x, (A ∘ₗ K.toLinearMap) y⟫_𝕜 := by
+    intro x y
+    calc
+      ⟪B x, B y⟫_𝕜 = ⟪(B.adjoint ∘ₗ B) x, y⟫_𝕜 := by
+        rw [LinearMap.comp_apply, LinearMap.adjoint_inner_left]
+      _ = ⟪((A ∘ₗ K.toLinearMap).adjoint ∘ₗ
+          (A ∘ₗ K.toLinearMap)) x, y⟫_𝕜 := by rw [hgram]
+      _ = ⟪(A ∘ₗ K.toLinearMap) x, (A ∘ₗ K.toLinearMap) y⟫_𝕜 := by
+        rw [LinearMap.comp_apply, LinearMap.adjoint_inner_left]
+  obtain ⟨U, hU⟩ := exists_linearIsometryEquiv_map_eq_of_inner_eq
+    (φ := fun x : E => B x)
+    (ψ := fun x : E => (A ∘ₗ K.toLinearMap) x) hinner
+  refine ⟨U, K.symm, ?_⟩
+  ext x
+  simpa only [LinearMap.comp_apply,
+    LinearIsometryEquiv.coe_toLinearEquiv, LinearEquiv.coe_coe,
+    LinearIsometryEquiv.apply_symm_apply] using (hU (K.symm x)).symm
+
+/-- Extend a unitary action on an isometrically embedded coordinate space to
+an ambient unitary. -/
+private theorem exists_ambient_unitary_intertwining
+    {H K : Type*}
+    [NormedAddCommGroup H] [InnerProductSpace 𝕜 H]
+    [NormedAddCommGroup K] [InnerProductSpace 𝕜 K]
+    [FiniteDimensional 𝕜 K]
+    (ι : H →ₗᵢ[𝕜] K) (U : H ≃ₗᵢ[𝕜] H) :
+    ∃ W : K ≃ₗᵢ[𝕜] K,
+      W.toLinearMap ∘ₗ ι.toLinearMap =
+        ι.toLinearMap ∘ₗ U.toLinearMap := by
+  obtain ⟨W, hW⟩ := exists_linearIsometryEquiv_map_eq_of_inner_eq
+    (φ := fun x : H => ι x) (ψ := fun x : H => ι (U x)) (by
+      intro x y
+      rw [ι.inner_map_map, ι.inner_map_map, U.inner_map_map])
+  refine ⟨W, ?_⟩
+  ext x
+  simpa only [LinearMap.comp_apply, LinearIsometry.coe_toLinearMap,
+    LinearIsometryEquiv.coe_toLinearEquiv, LinearEquiv.coe_coe] using hW x
+
+/-- Lift an endomorphism of a common coordinate space to a rectangular map by
+an isometric codomain embedding and a coisometric domain projection. -/
+private noncomputable def coordinateLift
+    {H : Type*} [NormedAddCommGroup H] [InnerProductSpace 𝕜 H]
+    [FiniteDimensional 𝕜 H]
+    (ιE : H →ₗᵢ[𝕜] E) (ιF : H →ₗᵢ[𝕜] F)
+    (X : H →ₗ[𝕜] H) : E →ₗ[𝕜] F :=
+  ιF.toLinearMap ∘ₗ X ∘ₗ LinearMap.adjoint ιE.toLinearMap
+
+private theorem singularValues_coordinateLift
+    {H : Type*} [NormedAddCommGroup H] [InnerProductSpace 𝕜 H]
+    [FiniteDimensional 𝕜 H]
+    (ιE : H →ₗᵢ[𝕜] E) (ιF : H →ₗᵢ[𝕜] F)
+    (X : H →ₗ[𝕜] H) :
+    (coordinateLift ιE ιF X).singularValues = X.singularValues := by
+  unfold coordinateLift
+  calc
+    (ιF.toLinearMap ∘ₗ X ∘ₗ LinearMap.adjoint ιE.toLinearMap).singularValues =
+        (X ∘ₗ LinearMap.adjoint ιE.toLinearMap).singularValues :=
+      singularValues_linearIsometry_comp ιF _
+    _ = X.singularValues :=
+      singularValues_comp_adjoint_linearIsometry ιE X
+
+/-- Pull a rectangular UI norm back to square operators on a common coordinate
+space.  Ambient extensions of the coordinate unitaries prove full square
+unitary invariance. -/
+private noncomputable def coordinateSquareNorm
+    {H : Type*} [NormedAddCommGroup H] [InnerProductSpace 𝕜 H]
+    [FiniteDimensional 𝕜 H]
+    (N : RectangularUnitarilyInvariantNorm 𝕜 E F)
+    (ιE : H →ₗᵢ[𝕜] E) (ιF : H →ₗᵢ[𝕜] F) :
+    UnitarilyInvariantNorm 𝕜 H where
+  toFun X := N (coordinateLift ιE ιF X)
+  add_le' X Y := by
+    have hmap : coordinateLift ιE ιF (X + Y) =
+        coordinateLift ιE ιF X + coordinateLift ιE ιF Y := by
+      ext x
+      simp [coordinateLift, LinearMap.comp_apply]
+    rw [hmap]
+    exact N.add_le _ _
+  smul' a X := by
+    have hmap : coordinateLift ιE ιF (a • X) =
+        a • coordinateLift ιE ιF X := by
+      ext x
+      simp [coordinateLift, LinearMap.comp_apply]
+    rw [hmap]
+    exact N.smul_eq a _
+  invariant' U V X := by
+    obtain ⟨UF, hUF⟩ := exists_ambient_unitary_intertwining ιF U
+    obtain ⟨WE, hWE⟩ := exists_ambient_unitary_intertwining ιE V.symm
+    have hadj : LinearMap.adjoint ιE.toLinearMap ∘ₗ WE.symm.toLinearMap =
+        V.toLinearMap ∘ₗ LinearMap.adjoint ιE.toLinearMap := by
+      have h := congrArg LinearMap.adjoint hWE
+      simpa only [LinearMap.adjoint_comp,
+        WE.adjoint_toLinearMap_eq_symm,
+        (V.symm).adjoint_toLinearMap_eq_symm,
+        LinearIsometryEquiv.symm_symm] using h
+    have hlift : coordinateLift ιE ιF
+          (U.toLinearMap ∘ₗ X ∘ₗ V.toLinearMap) =
+        UF.toLinearMap ∘ₗ coordinateLift ιE ιF X ∘ₗ
+          WE.symm.toLinearMap := by
+      ext z
+      simp only [coordinateLift, LinearMap.comp_apply]
+      calc
+        ιF (U (X (V (LinearMap.adjoint ιE.toLinearMap z)))) =
+            UF (ιF (X (V (LinearMap.adjoint ιE.toLinearMap z)))) :=
+          (LinearMap.congr_fun hUF _).symm
+        _ = UF (ιF (X (LinearMap.adjoint ιE.toLinearMap (WE.symm z)))) := by
+          have hz := LinearMap.congr_fun hadj z
+          simp only [LinearMap.comp_apply,
+            LinearIsometryEquiv.coe_toLinearEquiv, LinearEquiv.coe_coe] at hz
+          exact congrArg (fun q => UF (ιF (X q))) hz.symm
+    rw [hlift]
+    exact N.invariant UF WE.symm _
+
+/-- The initial coordinate embedding determined by the first `d` vectors of
+the standard orthonormal basis. -/
+private noncomputable def initialCoordinateIsometry
+    {K : Type*} [NormedAddCommGroup K] [InnerProductSpace 𝕜 K]
+    [FiniteDimensional 𝕜 K]
+    {d : ℕ} (hd : d ≤ finrank 𝕜 K) :
+    EuclideanSpace 𝕜 (Fin d) →ₗᵢ[𝕜] K :=
+  familyIsometry ((stdOrthonormalBasis 𝕜 K).orthonormal.comp
+    (fun i => Fin.castLE hd i) (Fin.castLE_injective hd))
+
+/-- The square diagonal operator carrying the nonzero rectangular singular
+coordinates. -/
+private noncomputable def singularValueDiagonal (d : ℕ)
+    (A : E →ₗ[𝕜] F) :
+    EuclideanSpace 𝕜 (Fin d) →ₗ[𝕜] EuclideanSpace 𝕜 (Fin d) :=
+  diagOp (EuclideanSpace.basisFun (Fin d) 𝕜)
+    (fun i => A.singularValues (i : ℕ))
+
+private theorem singularValues_singularValueDiagonal
+    {d : ℕ} (A : E →ₗ[𝕜] F) (hrank : finrank 𝕜 A.range ≤ d) :
+    (singularValueDiagonal d A).singularValues = A.singularValues := by
+  have hanti : Antitone (fun i : Fin d => A.singularValues (i : ℕ)) :=
+    fun i j hij => A.singularValues_antitone (Fin.le_def.mp hij)
+  have hnonneg : ∀ i : Fin d, 0 ≤ A.singularValues (i : ℕ) :=
+    fun i => A.singularValues_nonneg _
+  apply Finsupp.ext
+  intro i
+  rcases lt_or_ge i d with hi | hi
+  · simpa [singularValueDiagonal] using
+      singularValues_diagOp (𝕜 := 𝕜) finrank_euclideanSpace_fin
+        (EuclideanSpace.basisFun (Fin d) 𝕜) hanti hnonneg ⟨i, hi⟩
+  · have hcoord : finrank 𝕜 (EuclideanSpace 𝕜 (Fin d)) ≤ i := by
+      simpa only [finrank_euclideanSpace_fin] using hi
+    rw [(singularValueDiagonal d A).singularValues_of_finrank_le hcoord,
+      A.singularValues_eq_zero_iff_le_finrank_range.mpr (hrank.trans hi)]
+
+private theorem apply_eq_coordinateSquareNorm
+    {H : Type*} [NormedAddCommGroup H] [InnerProductSpace 𝕜 H]
+    [FiniteDimensional 𝕜 H]
+    (N : RectangularUnitarilyInvariantNorm 𝕜 E F)
+    (ιE : H →ₗᵢ[𝕜] E) (ιF : H →ₗᵢ[𝕜] F)
+    (A : E →ₗ[𝕜] F) (X : H →ₗ[𝕜] H)
+    (hσ : X.singularValues = A.singularValues) :
+    N A = coordinateSquareNorm N ιE ιF X := by
+  have hliftσ : (coordinateLift ιE ιF X).singularValues = A.singularValues :=
+    (singularValues_coordinateLift ιE ιF X).trans hσ
+  obtain ⟨U, V, hfac⟩ :=
+    exists_unitary_factorization_of_singularValues_eq hliftσ.symm
+  change N A = N (coordinateLift ιE ιF X)
+  rw [hfac]
+  exact N.invariant U V _
+
+
 /-- Fan dominance in rectangular form.
 
 Lean proof route for a weaker agent:
@@ -262,7 +470,44 @@ Lean proof route for a weaker agent:
 -/
 theorem apply_le_of_kyFanSum_le {A B : E →ₗ[𝕜] F}
     (h : ∀ k, rectangularKyFanSum k A ≤ rectangularKyFanSum k B) : N A ≤ N B := by
-  sorry
+  let d : ℕ := min (finrank 𝕜 E) (finrank 𝕜 F)
+  have hdE : d ≤ finrank 𝕜 E := by
+    dsimp [d]
+    exact min_le_left _ _
+  have hdF : d ≤ finrank 𝕜 F := by
+    dsimp [d]
+    exact min_le_right _ _
+  let ιE := initialCoordinateIsometry (𝕜 := 𝕜) (K := E) hdE
+  let ιF := initialCoordinateIsometry (𝕜 := 𝕜) (K := F) hdF
+  let XA := singularValueDiagonal d A
+  let XB := singularValueDiagonal d B
+  have hrankA : finrank 𝕜 A.range ≤ d := by
+    have hdom : finrank 𝕜 A.range ≤ finrank 𝕜 E := by
+      have hranknull := A.finrank_range_add_finrank_ker
+      omega
+    have hcod : finrank 𝕜 A.range ≤ finrank 𝕜 F := Submodule.finrank_le _
+    dsimp [d]
+    exact le_min hdom hcod
+  have hrankB : finrank 𝕜 B.range ≤ d := by
+    have hdom : finrank 𝕜 B.range ≤ finrank 𝕜 E := by
+      have hranknull := B.finrank_range_add_finrank_ker
+      omega
+    have hcod : finrank 𝕜 B.range ≤ finrank 𝕜 F := Submodule.finrank_le _
+    dsimp [d]
+    exact le_min hdom hcod
+  have hσA : XA.singularValues = A.singularValues := by
+    simpa only [XA] using singularValues_singularValueDiagonal A hrankA
+  have hσB : XB.singularValues = B.singularValues := by
+    simpa only [XB] using singularValues_singularValueDiagonal B hrankB
+  have hNA : N A = coordinateSquareNorm N ιE ιF XA :=
+    apply_eq_coordinateSquareNorm N ιE ιF A XA hσA
+  have hNB : N B = coordinateSquareNorm N ιE ιF XB :=
+    apply_eq_coordinateSquareNorm N ιE ιF B XB hσB
+  rw [hNA, hNB]
+  apply UnitarilyInvariantNorm.apply_le_of_kyFanSum_le
+  intro k
+  rw [kyFanSum_eq_sum_fin, kyFanSum_eq_sum_fin, hσA, hσB]
+  exact h k
 
 /-- Pointwise singular-value dominance implies norm dominance.
 
@@ -359,6 +604,38 @@ noncomputable def zeroExtension (A : E →ₗ[𝕜] F) :
     zeroExtension A z = WithLp.toLp 2 (0, A (WithLp.ofLp z).1) := by
   rfl
 
+/-- Isometric embedding into the first coordinate of the `L²` product. -/
+private noncomputable def zeroExtensionInl :
+    E →ₗᵢ[𝕜] WithLp 2 (E × F) :=
+  (((WithLp.linearEquiv 2 𝕜 (E × F)).symm.toLinearMap ∘ₗ
+      LinearMap.inl 𝕜 E F)).isometryOfInner (by
+    intro x y
+    simp [WithLp.prod_inner_apply])
+
+/-- Isometric embedding into the second coordinate of the `L²` product. -/
+private noncomputable def zeroExtensionInr :
+    F →ₗᵢ[𝕜] WithLp 2 (E × F) :=
+  (((WithLp.linearEquiv 2 𝕜 (E × F)).symm.toLinearMap ∘ₗ
+      LinearMap.inr 𝕜 E F)).isometryOfInner (by
+    intro x y
+    simp [WithLp.prod_inner_apply])
+
+@[simp] private theorem zeroExtensionInl_apply (x : E) :
+    zeroExtensionInl (𝕜 := 𝕜) (F := F) x = WithLp.toLp 2 (x, 0) := by
+  rfl
+
+@[simp] private theorem zeroExtensionInr_apply (y : F) :
+    zeroExtensionInr (𝕜 := 𝕜) (E := E) y = WithLp.toLp 2 (0, y) := by
+  rfl
+
+private theorem zeroExtensionInl_adjoint_apply
+    (z : WithLp 2 (E × F)) :
+    LinearMap.adjoint (zeroExtensionInl (𝕜 := 𝕜) (F := F)).toLinearMap z = z.fst := by
+  apply ext_inner_right 𝕜
+  intro x
+  rw [LinearMap.adjoint_inner_left]
+  simp [WithLp.prod_inner_apply]
+
 /-- Singular values are unchanged by zero extension, apart from zero padding.
 
 Lean proof route for a weaker agent:
@@ -368,7 +645,25 @@ Lean proof route for a weaker agent:
 -/
 theorem singularValues_zeroExtension (A : E →ₗ[𝕜] F) :
     (zeroExtension A).singularValues = A.singularValues := by
-  sorry
+  let ιE : E →ₗᵢ[𝕜] WithLp 2 (E × F) :=
+    zeroExtensionInl (𝕜 := 𝕜) (E := E) (F := F)
+  let ιF : F →ₗᵢ[𝕜] WithLp 2 (E × F) :=
+    zeroExtensionInr (𝕜 := 𝕜) (E := E) (F := F)
+  have hfactor : zeroExtension A =
+      ιF.toLinearMap ∘ₗ
+        (A ∘ₗ LinearMap.adjoint ιE.toLinearMap) := by
+    ext z
+    simp only [LinearMap.comp_apply, zeroExtension_apply, ιE, ιF,
+      LinearIsometry.coe_toLinearMap, zeroExtensionInr_apply,
+      zeroExtensionInl_adjoint_apply, WithLp.ofLp_fst]
+  rw [hfactor]
+  calc
+    (ιF.toLinearMap ∘ₗ
+        (A ∘ₗ LinearMap.adjoint ιE.toLinearMap)).singularValues =
+        (A ∘ₗ LinearMap.adjoint ιE.toLinearMap).singularValues :=
+      singularValues_linearIsometry_comp ιF _
+    _ = A.singularValues :=
+      singularValues_comp_adjoint_linearIsometry ιE A
 
 /-- Every square unitarily invariant norm has a compatible rectangular
 extension, unique after fixing its symmetric gauge family across dimensions. -/
@@ -399,13 +694,123 @@ noncomputable def opNorm : RectangularUnitarilyInvariantNorm 𝕜 E F where
 @[simp] theorem opNorm_apply (A : E →ₗ[𝕜] F) :
     opNorm A = ‖A.toContinuousLinearMap‖ := rfl
 
+/-- Minkowski for finite Euclidean column-norm vectors. -/
+private theorem sqrt_sum_add_sq_le_rect {m : ℕ} (f g : Fin m → ℝ) :
+    Real.sqrt (∑ i, (f i + g i) ^ 2)
+      ≤ Real.sqrt (∑ i, f i ^ 2) + Real.sqrt (∑ i, g i ^ 2) := by
+  let x : EuclideanSpace ℝ (Fin m) := (WithLp.equiv 2 (Fin m → ℝ)).symm f
+  let y : EuclideanSpace ℝ (Fin m) := (WithLp.equiv 2 (Fin m → ℝ)).symm g
+  have hnx : ‖x‖ = Real.sqrt (∑ i, f i ^ 2) := by
+    rw [EuclideanSpace.norm_eq]
+    exact congrArg _ (Finset.sum_congr rfl fun i _ => by
+      rw [show x i = f i from rfl, Real.norm_eq_abs, sq_abs])
+  have hny : ‖y‖ = Real.sqrt (∑ i, g i ^ 2) := by
+    rw [EuclideanSpace.norm_eq]
+    exact congrArg _ (Finset.sum_congr rfl fun i _ => by
+      rw [show y i = g i from rfl, Real.norm_eq_abs, sq_abs])
+  have hnxy : ‖x + y‖ = Real.sqrt (∑ i, (f i + g i) ^ 2) := by
+    rw [EuclideanSpace.norm_eq]
+    exact congrArg _ (Finset.sum_congr rfl fun i _ => by
+      rw [PiLp.add_apply, show x i = f i from rfl,
+        show y i = g i from rfl, Real.norm_eq_abs, sq_abs])
+  rw [← hnx, ← hny, ← hnxy]
+  exact norm_add_le x y
+
 /-- Frobenius/Hilbert--Schmidt norm as a rectangular UI norm. -/
-noncomputable def frobenius : RectangularUnitarilyInvariantNorm 𝕜 E F := by
-  sorry
+noncomputable def frobenius : RectangularUnitarilyInvariantNorm 𝕜 E F where
+  toFun A := Real.sqrt
+    (∑ i, ‖A (stdOrthonormalBasis 𝕜 E i)‖ ^ 2)
+  add_le' A B := by
+    have hmono :
+        Real.sqrt (∑ i, ‖(A + B) (stdOrthonormalBasis 𝕜 E i)‖ ^ 2) ≤
+          Real.sqrt (∑ i, (‖A (stdOrthonormalBasis 𝕜 E i)‖ +
+            ‖B (stdOrthonormalBasis 𝕜 E i)‖) ^ 2) := by
+      refine Real.sqrt_le_sqrt (Finset.sum_le_sum fun i _ => ?_)
+      refine pow_le_pow_left₀ (norm_nonneg _) ?_ 2
+      rw [LinearMap.add_apply]
+      exact norm_add_le _ _
+    exact hmono.trans (sqrt_sum_add_sq_le_rect _ _)
+  smul' a A := by
+    have h : ∀ i, ‖(a • A) (stdOrthonormalBasis 𝕜 E i)‖ ^ 2 =
+        ‖a‖ ^ 2 * ‖A (stdOrthonormalBasis 𝕜 E i)‖ ^ 2 := fun i => by
+      rw [LinearMap.smul_apply, norm_smul, mul_pow]
+    rw [show (∑ i, ‖(a • A) (stdOrthonormalBasis 𝕜 E i)‖ ^ 2) =
+        ‖a‖ ^ 2 * ∑ i, ‖A (stdOrthonormalBasis 𝕜 E i)‖ ^ 2 by
+        rw [Finset.mul_sum]
+        exact Finset.sum_congr rfl fun i _ => h i,
+      Real.sqrt_mul (sq_nonneg _), Real.sqrt_sq (norm_nonneg a)]
+  invariant' U V A := by
+    have key : ∀ i,
+        ‖(U.toLinearMap ∘ₗ A ∘ₗ V.toLinearMap)
+            (stdOrthonormalBasis 𝕜 E i)‖ ^ 2 =
+          ‖A (V (stdOrthonormalBasis 𝕜 E i))‖ ^ 2 := fun i => by
+      rw [show (U.toLinearMap ∘ₗ A ∘ₗ V.toLinearMap)
+          (stdOrthonormalBasis 𝕜 E i) =
+          U (A (V (stdOrthonormalBasis 𝕜 E i))) from rfl,
+        U.norm_map]
+    rw [show (∑ i, ‖(U.toLinearMap ∘ₗ A ∘ₗ V.toLinearMap)
+          (stdOrthonormalBasis 𝕜 E i)‖ ^ 2) =
+        ∑ i, ‖A (V (stdOrthonormalBasis 𝕜 E i))‖ ^ 2 from
+        Finset.sum_congr rfl fun i _ => key i,
+      sum_sq_norm_apply_unitary_comp A V rfl (stdOrthonormalBasis 𝕜 E)]
+
+/-- Singular values scale by the norm of an arbitrary scalar. -/
+private theorem singularValues_smul_rect (a : 𝕜) (A : E →ₗ[𝕜] F) (i : ℕ) :
+    (a • A).singularValues i = ‖a‖ * A.singularValues i := by
+  have hgram : (a • A).adjoint ∘ₗ (a • A) =
+      (((‖a‖ : ℝ) : 𝕜) • A).adjoint ∘ₗ (((‖a‖ : ℝ) : 𝕜) • A) := by
+    ext x
+    apply ext_inner_right 𝕜
+    intro y
+    rw [LinearMap.comp_apply, LinearMap.adjoint_inner_left,
+      LinearMap.comp_apply, LinearMap.adjoint_inner_left]
+    simp only [LinearMap.smul_apply, inner_smul_left, inner_smul_right,
+      RCLike.conj_ofReal]
+    rw [← mul_assoc, RCLike.mul_conj]
+    ring
+  calc
+    (a • A).singularValues i =
+        (((‖a‖ : ℝ) : 𝕜) • A).singularValues i :=
+      congrArg (fun s : ℕ →₀ ℝ => s i)
+        (singularValues_eq_of_gram_eq hgram)
+    _ = ‖a‖ * A.singularValues i :=
+      singularValues_real_smul A (norm_nonneg a) i
+
+private theorem rectangularKyFanSum_eq_zeroExtension
+    (k : ℕ) (A : E →ₗ[𝕜] F) :
+    rectangularKyFanSum k A = kyFanSum k (zeroExtension A) := by
+  rw [kyFanSum_eq_sum_fin]
+  unfold rectangularKyFanSum
+  rw [singularValues_zeroExtension]
+
+private theorem rectangularKyFanSum_add_le (k : ℕ)
+    (A B : E →ₗ[𝕜] F) :
+    rectangularKyFanSum k (A + B) ≤
+      rectangularKyFanSum k A + rectangularKyFanSum k B := by
+  have hadd : zeroExtension (A + B) =
+      zeroExtension A + zeroExtension B := by
+    ext z
+    simp only [zeroExtension_apply, LinearMap.add_apply]
+    simpa using
+      (WithLp.toLp_add (p := 2)
+        ((0, A (WithLp.ofLp z).1) : E × F)
+        ((0, B (WithLp.ofLp z).1) : E × F))
+  rw [rectangularKyFanSum_eq_zeroExtension,
+    rectangularKyFanSum_eq_zeroExtension,
+    rectangularKyFanSum_eq_zeroExtension, hadd]
+  exact kyFanSum_add_le k _ _
 
 /-- Ky Fan `k`-norm. -/
-noncomputable def kyFan (k : ℕ) : RectangularUnitarilyInvariantNorm 𝕜 E F := by
-  sorry
+noncomputable def kyFan (k : ℕ) : RectangularUnitarilyInvariantNorm 𝕜 E F where
+  toFun A := rectangularKyFanSum k A
+  add_le' A B := rectangularKyFanSum_add_le k A B
+  smul' a A := by
+    unfold rectangularKyFanSum
+    rw [Finset.mul_sum]
+    exact Finset.sum_congr rfl fun i _ => singularValues_smul_rect a A (i : ℕ)
+  invariant' U V A := by
+    unfold rectangularKyFanSum
+    rw [singularValues_unitary_comp, singularValues_comp_unitary]
 
 /-- Nuclear/trace norm. -/
 noncomputable def nuclear : RectangularUnitarilyInvariantNorm 𝕜 E F :=
@@ -428,7 +833,9 @@ Lean proof route for a weaker agent:
 theorem frobenius_apply (A : E →ₗ[𝕜] F)
     (b : OrthonormalBasis (Fin (finrank 𝕜 E)) 𝕜 E) :
     frobenius A = Real.sqrt (∑ i, ‖A (b i)‖ ^ 2) := by
-  sorry
+  show Real.sqrt (∑ i, ‖A (stdOrthonormalBasis 𝕜 E i)‖ ^ 2) = _
+  rw [← sum_sq_singularValues A rfl (stdOrthonormalBasis 𝕜 E),
+    ← sum_sq_singularValues A rfl b]
 
 /-- The Ky Fan norm evaluates to the prefix sum of singular values.
 
@@ -438,8 +845,22 @@ Lean proof route for a weaker agent:
 2. otherwise reduce through the zero-extension square norm.
 -/
 theorem kyFan_apply (k : ℕ) (A : E →ₗ[𝕜] F) :
-    kyFan k A = rectangularKyFanSum k A := by
-  sorry
+    kyFan k A = rectangularKyFanSum k A :=
+  rfl
+
+/-- The nuclear norm is the full domain-length singular-value sum; singular
+values past the rank are zero automatically. -/
+theorem nuclear_apply (A : E →ₗ[𝕜] F) :
+    nuclear A = ∑ i : Fin (finrank 𝕜 E), A.singularValues (i : ℕ) :=
+  rfl
+
+/-- The rectangular Frobenius norm is the Euclidean norm of the complete
+finite singular-value list. -/
+theorem frobenius_eq_sqrt_sum_sq_singularValues (A : E →ₗ[𝕜] F) :
+    frobenius A = Real.sqrt
+      (∑ i : Fin (finrank 𝕜 E), A.singularValues (i : ℕ) ^ 2) := by
+  rw [frobenius_apply A (stdOrthonormalBasis 𝕜 E),
+    sum_sq_singularValues A rfl (stdOrthonormalBasis 𝕜 E)]
 
 end RectangularUnitarilyInvariantNorm
 

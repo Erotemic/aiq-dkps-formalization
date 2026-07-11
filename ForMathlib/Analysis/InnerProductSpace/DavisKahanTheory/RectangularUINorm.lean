@@ -235,6 +235,11 @@ Lean proof route for a weaker agent:
 theorem smul_eq (a : 𝕜) (A : E →ₗ[𝕜] F) : N (a • A) = ‖a‖ * N A :=
   N.smul' a A
 
+/-- A rectangular UI seminorm is invariant under negation. -/
+@[simp] theorem apply_neg (A : E →ₗ[𝕜] F) : N (-A) = N A := by
+  have h := N.smul_eq (-1 : 𝕜) A
+  simpa using h
+
 /--
 Lean proof route for a weaker agent:
 
@@ -374,8 +379,25 @@ noncomputable def ofSquareFamily
   sorry
 
 /-- Operator norm as a rectangular UI norm. -/
-noncomputable def opNorm : RectangularUnitarilyInvariantNorm 𝕜 E F := by
-  sorry
+noncomputable def opNorm : RectangularUnitarilyInvariantNorm 𝕜 E F where
+  toFun A := ‖A.toContinuousLinearMap‖
+  add_le' A B := by
+    rw [map_add]
+    exact norm_add_le _ _
+  smul' a A := by
+    rw [map_smul]
+    exact norm_smul a _
+  invariant' U V A := by
+    have hcomp :
+        (U.toLinearMap ∘ₗ A ∘ₗ V.toLinearMap).toContinuousLinearMap =
+          (U : F →L[𝕜] F) ∘L A.toContinuousLinearMap ∘L (V : E →L[𝕜] E) := by
+      ext x
+      simp
+    rw [hcomp]
+    simp
+
+@[simp] theorem opNorm_apply (A : E →ₗ[𝕜] F) :
+    opNorm A = ‖A.toContinuousLinearMap‖ := rfl
 
 /-- Frobenius/Hilbert--Schmidt norm as a rectangular UI norm. -/
 noncomputable def frobenius : RectangularUnitarilyInvariantNorm 𝕜 E F := by

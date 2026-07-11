@@ -404,6 +404,148 @@ theorem le_div_of_comp_sub_comp_eq (hA : A.IsSymmetric) (hB : B.IsSymmetric)
 
 end AbstractSylvesterBound
 
+/-! ### Rectangular abstract Sylvester bounds -/
+
+section RectangularAbstractSylvesterBound
+
+variable {A : F →L[𝕜] F} {B : E →L[𝕜] E} {X Y : E →L[𝕜] F}
+variable {N : (E →L[𝕜] F) → ℝ}
+  (hadd : ∀ f g : E →L[𝕜] F, N (f + g) ≤ N f + N g)
+  (hsmul : ∀ (a : 𝕜) (f : E →L[𝕜] F), N (a • f) = ‖a‖ * N f)
+  (hidealL : ∀ C : F →L[𝕜] F, ∀ f : E →L[𝕜] F,
+    N (C ∘L f) ≤ ‖C‖ * N f)
+  (hidealR : ∀ f : E →L[𝕜] F, ∀ C : E →L[𝕜] E,
+    N (f ∘L C) ≤ N f * ‖C‖)
+
+include hadd hsmul in
+private theorem rectangular_nonneg_of_add_le_of_smul (f : E →L[𝕜] F) : 0 ≤ N f := by
+  have hN0 : N 0 = 0 := by
+    have h := hsmul 0 0
+    rwa [zero_smul, norm_zero, zero_mul] at h
+  have hneg : N (-f) = N f := by
+    rw [show -f = (-1 : 𝕜) • f by rw [neg_one_smul], hsmul,
+      norm_neg, norm_one, one_mul]
+  have h := hadd f (-f)
+  rw [add_neg_cancel, hN0, hneg] at h
+  linarith
+
+include hadd hsmul hidealL hidealR in
+/-- Rectangular coercive Sylvester bound in any operator seminorm with
+left and right ideal inequalities. -/
+theorem le_div_of_comp_add_comp_eq_rectangular
+    (hA : A.IsSymmetric) (hB : B.IsSymmetric)
+    {δ : ℝ} (hδ : 0 < δ)
+    (hAc : ∀ x, δ * ‖x‖ ^ 2 ≤ RCLike.re ⟪A x, x⟫_𝕜)
+    (hBc : ∀ x, δ * ‖x‖ ^ 2 ≤ RCLike.re ⟪B x, x⟫_𝕜)
+    (hXY : A ∘L X + X ∘L B = Y) : N X ≤ N Y / (2 * δ) := by
+  have hNY : 0 ≤ N Y := rectangular_nonneg_of_add_le_of_smul hadd hsmul Y
+  rcases eq_or_ne X 0 with rfl | hX
+  · have hN0 : N (0 : E →L[𝕜] F) = 0 := by
+      have h := hsmul 0 0
+      rwa [zero_smul, norm_zero, zero_mul] at h
+    rw [hN0]
+    positivity
+  · obtain ⟨x₀, hx₀⟩ := DFunLike.ne_iff.mp hX
+    simp only [zero_apply] at hx₀
+    have hδA : δ ≤ ‖A‖ := le_opNorm_of_le_re_inner_map_self hAc hx₀
+    have hδB : δ ≤ ‖B‖ :=
+      le_opNorm_of_le_re_inner_map_self hBc (x₀ := x₀) fun hx₀' =>
+        hx₀ (by rw [hx₀']; exact map_zero X)
+    have habsorb : ((‖A‖ + ‖B‖ : ℝ) : 𝕜) • X
+        = Y + ((‖A‖ : 𝕜) • 1 - A) ∘L X + X ∘L ((‖B‖ : 𝕜) • 1 - B) := by
+      ext v
+      have hv : A (X v) + X (B v) = Y v := by
+        simpa [add_apply, ContinuousLinearMap.comp_apply] using
+          congrArg (fun W : E →L[𝕜] F => W v) hXY
+      simp only [add_apply, smul_apply, ContinuousLinearMap.comp_apply, sub_apply,
+        one_apply_eq_self, map_sub, map_smul]
+      rw [← hv]
+      push_cast
+      module
+    have hkey : (‖A‖ + ‖B‖) * N X
+        ≤ N Y + (‖A‖ - δ) * N X + N X * (‖B‖ - δ) :=
+      calc
+        (‖A‖ + ‖B‖) * N X
+            = N (((‖A‖ + ‖B‖ : ℝ) : 𝕜) • X) := by
+                rw [hsmul, RCLike.norm_ofReal, abs_of_nonneg (by positivity)]
+        _ = N (Y + ((‖A‖ : 𝕜) • 1 - A) ∘L X
+              + X ∘L ((‖B‖ : 𝕜) • 1 - B)) := by rw [habsorb]
+        _ ≤ N Y + N (((‖A‖ : 𝕜) • 1 - A) ∘L X)
+              + N (X ∘L ((‖B‖ : 𝕜) • 1 - B)) := by
+                have h1 := hadd
+                  (Y + ((‖A‖ : 𝕜) • 1 - A) ∘L X)
+                  (X ∘L ((‖B‖ : 𝕜) • 1 - B))
+                have h2 := hadd Y (((‖A‖ : 𝕜) • 1 - A) ∘L X)
+                linarith
+        _ ≤ N Y + (‖A‖ - δ) * N X + N X * (‖B‖ - δ) := by
+                gcongr
+                · calc
+                    N (((‖A‖ : 𝕜) • 1 - A) ∘L X)
+                        ≤ ‖(‖A‖ : 𝕜) • 1 - A‖ * N X := hidealL _ _
+                    _ ≤ (‖A‖ - δ) * N X := by
+                        gcongr ?_ * _
+                        · exact rectangular_nonneg_of_add_le_of_smul hadd hsmul X
+                        · exact norm_opNorm_smul_one_sub_le hA hδA hAc
+                · calc
+                    N (X ∘L ((‖B‖ : 𝕜) • 1 - B))
+                        ≤ N X * ‖(‖B‖ : 𝕜) • 1 - B‖ := hidealR _ _
+                    _ ≤ N X * (‖B‖ - δ) := by
+                        gcongr _ * ?_
+                        · exact rectangular_nonneg_of_add_le_of_smul hadd hsmul X
+                        · exact norm_opNorm_smul_one_sub_le hB hδB hBc
+    have hexpand : (‖A‖ - δ) * N X + N X * (‖B‖ - δ)
+        = (‖A‖ + ‖B‖) * N X - 2 * δ * N X := by ring
+    have hfinal : 2 * δ * N X ≤ N Y := by linarith [hkey, hexpand]
+    rw [le_div_iff₀ (by positivity), mul_comm]
+    exact hfinal
+
+include hadd hsmul hidealL hidealR in
+/-- Rectangular separated Sylvester bound in any operator seminorm with
+left and right ideal inequalities. -/
+theorem le_div_of_comp_sub_comp_eq_rectangular
+    (hA : A.IsSymmetric) (hB : B.IsSymmetric)
+    {c g : ℝ} (hg : 0 < g)
+    (hAc : ∀ x, (c + g) * ‖x‖ ^ 2 ≤ RCLike.re ⟪A x, x⟫_𝕜)
+    (hBc : ∀ x, RCLike.re ⟪B x, x⟫_𝕜 ≤ c * ‖x‖ ^ 2)
+    (hXY : A ∘L X - X ∘L B = Y) : N X ≤ N Y / g := by
+  set r : ℝ := c + g / 2 with hr
+  have hA' : (A - (r : 𝕜) • (1 : F →L[𝕜] F)).IsSymmetric := fun x y => by
+    simp only [ContinuousLinearMap.coe_coe, sub_apply, smul_apply, one_apply_eq_self,
+      inner_sub_left, inner_sub_right, inner_smul_left, inner_smul_right,
+      RCLike.conj_ofReal]
+    congr 1
+    exact hA x y
+  have hB' : ((r : 𝕜) • (1 : E →L[𝕜] E) - B).IsSymmetric :=
+    isSymmetric_ofReal_smul_one_sub hB r
+  have hAc' : ∀ x, g / 2 * ‖x‖ ^ 2
+      ≤ RCLike.re ⟪(A - (r : 𝕜) • (1 : F →L[𝕜] F)) x, x⟫_𝕜 := by
+    intro x
+    have hneg : (A - (r : 𝕜) • (1 : F →L[𝕜] F)) x
+        = -(((r : 𝕜) • (1 : F →L[𝕜] F) - A) x) := by
+      simp [neg_sub]
+    rw [hneg, inner_neg_left, map_neg,
+      re_inner_ofReal_smul_one_sub_apply_self, hr]
+    linarith [hAc x]
+  have hBc' : ∀ x, g / 2 * ‖x‖ ^ 2
+      ≤ RCLike.re ⟪((r : 𝕜) • (1 : E →L[𝕜] E) - B) x, x⟫_𝕜 := by
+    intro x
+    rw [re_inner_ofReal_smul_one_sub_apply_self, hr]
+    linarith [hBc x]
+  have hXY' : (A - (r : 𝕜) • (1 : F →L[𝕜] F)) ∘L X
+      + X ∘L ((r : 𝕜) • (1 : E →L[𝕜] E) - B) = Y := by
+    ext v
+    have hv : A (X v) - X (B v) = Y v := by
+      simpa [sub_apply, ContinuousLinearMap.comp_apply] using
+        congrArg (fun W : E →L[𝕜] F => W v) hXY
+    simp only [add_apply, ContinuousLinearMap.comp_apply, sub_apply, smul_apply,
+      one_apply_eq_self, map_sub, map_smul, ← hv]
+    module
+  have hfin := le_div_of_comp_add_comp_eq_rectangular hadd hsmul hidealL hidealR
+    hA' hB' (by linarith : (0 : ℝ) < g / 2) hAc' hBc' hXY'
+  rwa [show 2 * (g / 2) = g by ring] at hfin
+
+end RectangularAbstractSylvesterBound
+
 end ContinuousLinearMap
 
 end ForMathlib

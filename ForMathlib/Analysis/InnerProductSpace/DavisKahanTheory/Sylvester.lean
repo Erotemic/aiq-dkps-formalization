@@ -266,13 +266,112 @@ theorem sylvesterOperator_solveSylvester {A : F →ₗ[𝕜] F}
   rw [solveSylvester_eq_of_bijective A B C hbij]
   exact (LinearEquiv.ofBijective (sylvesterOperator A B) hbij).apply_symm_apply C
 
+private theorem eigenvalue_mem_restrictedSpectrum_top
+    {T : E →ₗ[𝕜] E} (hT : T.IsSymmetric)
+    (i : Fin (Module.finrank 𝕜 E)) :
+    hT.eigenvalues rfl i ∈ restrictedSpectrum T ⊤ :=
+  ⟨hT.eigenvectorBasis rfl i, Submodule.mem_top,
+    (hT.eigenvectorBasis rfl).orthonormal.ne_zero i,
+    by simpa using hT.apply_eigenvectorBasis rfl i⟩
+
+private theorem re_inner_le_of_eigenvalues_le
+    {T : E →ₗ[𝕜] E} (hT : T.IsSymmetric) {c : ℝ}
+    (hc : ∀ i : Fin (Module.finrank 𝕜 E), hT.eigenvalues rfl i ≤ c)
+    (x : E) : RCLike.re ⟪T x, x⟫_𝕜 ≤ c * ‖x‖ ^ 2 := by
+  rw [re_inner_map_self_eq_sum_eigenvalues_mul_sq hT rfl x]
+  calc
+    (∑ i : Fin (Module.finrank 𝕜 E),
+        hT.eigenvalues rfl i * ‖(hT.eigenvectorBasis rfl).repr x i‖ ^ 2)
+        ≤ ∑ i : Fin (Module.finrank 𝕜 E),
+            c * ‖(hT.eigenvectorBasis rfl).repr x i‖ ^ 2 := by
+          exact Finset.sum_le_sum fun i _ =>
+            mul_le_mul_of_nonneg_right (hc i) (sq_nonneg _)
+    _ = c * ‖x‖ ^ 2 := by
+          rw [← Finset.mul_sum]
+          congr 1
+          simp_rw [OrthonormalBasis.repr_apply_apply]
+          exact (hT.eigenvectorBasis rfl).sum_sq_norm_inner_right x
+
+private theorem le_re_inner_of_le_eigenvalues
+    {T : E →ₗ[𝕜] E} (hT : T.IsSymmetric) {c : ℝ}
+    (hc : ∀ i : Fin (Module.finrank 𝕜 E), c ≤ hT.eigenvalues rfl i)
+    (x : E) : c * ‖x‖ ^ 2 ≤ RCLike.re ⟪T x, x⟫_𝕜 := by
+  rw [re_inner_map_self_eq_sum_eigenvalues_mul_sq hT rfl x]
+  calc
+    c * ‖x‖ ^ 2 = ∑ i : Fin (Module.finrank 𝕜 E),
+        c * ‖(hT.eigenvectorBasis rfl).repr x i‖ ^ 2 := by
+          rw [← Finset.mul_sum]
+          congr 1
+          simp_rw [OrthonormalBasis.repr_apply_apply]
+          exact (hT.eigenvectorBasis rfl).sum_sq_norm_inner_right x |>.symm
+    _ ≤ ∑ i : Fin (Module.finrank 𝕜 E),
+        hT.eigenvalues rfl i * ‖(hT.eigenvectorBasis rfl).repr x i‖ ^ 2 := by
+          exact Finset.sum_le_sum fun i _ =>
+            mul_le_mul_of_nonneg_right (hc i) (sq_nonneg _)
+
+private theorem uiNorm_sylvester_le_of_form_bounds_aux
+    (N : RectangularUnitarilyInvariantNorm 𝕜 E F)
+    {A : F →ₗ[𝕜] F} {B : E →ₗ[𝕜] E} {X C : E →ₗ[𝕜] F}
+    (hA : A.IsSymmetric) (hB : B.IsSymmetric) {c δ : ℝ} (hδ : 0 < δ)
+    (hAform : ∀ y, (c + δ) * ‖y‖ ^ 2 ≤ RCLike.re ⟪A y, y⟫_𝕜)
+    (hBform : ∀ x, RCLike.re ⟪B x, x⟫_𝕜 ≤ c * ‖x‖ ^ 2)
+    (hEq : A ∘ₗ X - X ∘ₗ B = C) :
+    δ * N X ≤ N C := by
+  let A' : F →L[𝕜] F := A.toContinuousLinearMap
+  let B' : E →L[𝕜] E := B.toContinuousLinearMap
+  let X' : E →L[𝕜] F := X.toContinuousLinearMap
+  let C' : E →L[𝕜] F := C.toContinuousLinearMap
+  let N' : (E →L[𝕜] F) → ℝ := fun T => N T.toLinearMap
+  have hA' : A'.IsSymmetric := fun x y => hA x y
+  have hB' : B'.IsSymmetric := fun x y => hB x y
+  have hadd : ∀ f g : E →L[𝕜] F, N' (f + g) ≤ N' f + N' g := by
+    intro f g
+    simp only [N', ContinuousLinearMap.toLinearMap_add]
+    exact N.add_le _ _
+  have hsmul : ∀ (a : 𝕜) (f : E →L[𝕜] F), N' (a • f) = ‖a‖ * N' f := by
+    intro a f
+    simp only [N', ContinuousLinearMap.toLinearMap_smul]
+    exact N.smul_eq _ _
+  have hidealL : ∀ D : F →L[𝕜] F, ∀ T : E →L[𝕜] F,
+      N' (D ∘L T) ≤ ‖D‖ * N' T := by
+    intro D T
+    change N (D.toLinearMap ∘ₗ T.toLinearMap) ≤ ‖D‖ * N T.toLinearMap
+    have h := N.comp_le_opNorm_mul D.toLinearMap T.toLinearMap
+    have hD : D.toLinearMap.toContinuousLinearMap = D := by
+      ext x
+      rfl
+    rwa [hD] at h
+  have hidealR : ∀ T : E →L[𝕜] F, ∀ D : E →L[𝕜] E,
+      N' (T ∘L D) ≤ N' T * ‖D‖ := by
+    intro T D
+    change N (T.toLinearMap ∘ₗ D.toLinearMap) ≤ N T.toLinearMap * ‖D‖
+    have h := N.comp_le_mul_opNorm T.toLinearMap D.toLinearMap
+    have hD : D.toLinearMap.toContinuousLinearMap = D := by
+      ext x
+      rfl
+    rwa [hD] at h
+  have hEq' : A' ∘L X' - X' ∘L B' = C' := by
+    ext x
+    simpa [A', B', X', C', ContinuousLinearMap.comp_apply] using
+      LinearMap.congr_fun hEq x
+  have hbound : N' X' ≤ N' C' / δ :=
+    ContinuousLinearMap.le_div_of_comp_sub_comp_eq_rectangular
+      hadd hsmul hidealL hidealR hA' hB' hδ hAform hBform hEq'
+  have hbound' : N X ≤ N C / δ := by
+    simpa [N', X', C'] using hbound
+  rw [le_div_iff₀ hδ] at hbound'
+  simpa [mul_comm] using hbound'
+
+
 /-- Sharp constant-one ordered Sylvester estimate in every rectangular UI
 norm.
 
-Lean proof route for a weaker agent:
-
-1. Use the existing finite `SylvesterBound` coercive theorem or specialize the supported ordered operator-norm theorem for the op-norm case.
-2. For arbitrary UI norms, prove Ky Fan domination and invoke finite Fan dominance.
+The proof first extends the integral-free absorption argument from square to
+rectangular operator seminorms.  In either ordered orientation, the largest
+eigenvalue of the lower block supplies a cut `c`; eigenbasis expansion then
+gives the global upper and lower quadratic-form bounds.  The reverse
+orientation is reduced to the first by taking adjoints and transporting the
+rectangular UI norm.
 -/
 theorem uiNorm_sylvester_le_of_orderedGap
     (N : RectangularUnitarilyInvariantNorm 𝕜 E F)
@@ -281,7 +380,71 @@ theorem uiNorm_sylvester_le_of_orderedGap
     (hgap : OrderedSylvesterGap A B δ)
     (hEq : A ∘ₗ X - X ∘ₗ B = C) :
     δ * N X ≤ N C := by
-  sorry
+  rcases subsingleton_or_nontrivial E with _ | _
+  · have hX0 : X = 0 := by
+      ext x
+      have hx : x = 0 := Subsingleton.elim _ _
+      subst x
+      simp
+    have hC0 : C = 0 := by
+      ext x
+      have hx : x = 0 := Subsingleton.elim _ _
+      subst x
+      simp
+    simp [hX0, hC0, N.apply_zero]
+  rcases subsingleton_or_nontrivial F with _ | _
+  · have hX0 : X = 0 := by
+      ext x
+      exact Subsingleton.elim _ _
+    have hC0 : C = 0 := by
+      ext x
+      exact Subsingleton.elim _ _
+    simp [hX0, hC0, N.apply_zero]
+  letI : NeZero (Module.finrank 𝕜 E) := ⟨Nat.ne_of_gt Module.finrank_pos⟩
+  letI : NeZero (Module.finrank 𝕜 F) := ⟨Nat.ne_of_gt Module.finrank_pos⟩
+  rcases hgap with hBA | hAB
+  · let j₀ : Fin (Module.finrank 𝕜 E) := ⟨0, Module.finrank_pos⟩
+    let c : ℝ := hB.eigenvalues rfl j₀
+    have hBform : ∀ x, RCLike.re ⟪B x, x⟫_𝕜 ≤ c * ‖x‖ ^ 2 :=
+      re_inner_le_of_eigenvalues_le hB (fun j =>
+        hB.eigenvalues_antitone rfl (Fin.zero_le j))
+    have hAform : ∀ y, (c + δ) * ‖y‖ ^ 2 ≤ RCLike.re ⟪A y, y⟫_𝕜 :=
+      le_re_inner_of_le_eigenvalues hA fun i =>
+        hBA c (hA.eigenvalues rfl i)
+          (eigenvalue_mem_restrictedSpectrum_top hB j₀)
+          (eigenvalue_mem_restrictedSpectrum_top hA i)
+    exact uiNorm_sylvester_le_of_form_bounds_aux N hA hB hδ hAform hBform hEq
+  · let i₀ : Fin (Module.finrank 𝕜 F) := ⟨0, Module.finrank_pos⟩
+    let c : ℝ := hA.eigenvalues rfl i₀
+    have hAform : ∀ y, RCLike.re ⟪A y, y⟫_𝕜 ≤ c * ‖y‖ ^ 2 :=
+      re_inner_le_of_eigenvalues_le hA (fun i =>
+        hA.eigenvalues_antitone rfl (Fin.zero_le i))
+    have hBform : ∀ x, (c + δ) * ‖x‖ ^ 2 ≤ RCLike.re ⟪B x, x⟫_𝕜 :=
+      le_re_inner_of_le_eigenvalues hB fun j =>
+        hAB c (hB.eigenvalues rfl j)
+          (eigenvalue_mem_restrictedSpectrum_top hA i₀)
+          (eigenvalue_mem_restrictedSpectrum_top hB j)
+    have hadj : X.adjoint ∘ₗ A - B ∘ₗ X.adjoint = C.adjoint := by
+      simpa only [map_sub, LinearMap.adjoint_comp, hA.adjoint_eq, hB.adjoint_eq] using
+        congrArg (fun T : E →ₗ[𝕜] F => T.adjoint) hEq
+    have hEqAdj : B ∘ₗ X.adjoint - X.adjoint ∘ₗ A = -C.adjoint := by
+      calc
+        B ∘ₗ X.adjoint - X.adjoint ∘ₗ A
+            = -(X.adjoint ∘ₗ A - B ∘ₗ X.adjoint) := by abel
+        _ = -C.adjoint := congrArg Neg.neg hadj
+    have hbound := uiNorm_sylvester_le_of_form_bounds_aux
+      (RectangularUnitarilyInvariantNorm.adjointTransport N)
+      hB hA hδ hBform hAform hEqAdj
+    have hXnorm :
+        (RectangularUnitarilyInvariantNorm.adjointTransport N) X.adjoint = N X := by
+      change N X.adjoint.adjoint = N X
+      rw [LinearMap.adjoint_adjoint]
+    have hCnorm :
+        (RectangularUnitarilyInvariantNorm.adjointTransport N) (-C.adjoint) = N C := by
+      change N ((-C.adjoint).adjoint) = N C
+      rw [map_neg, LinearMap.adjoint_adjoint, N.apply_neg]
+    rw [hXnorm, hCnorm] at hbound
+    exact hbound
 
 /-- Sharp constant-one interval/exterior Sylvester estimate in every
 rectangular UI norm.
@@ -334,7 +497,7 @@ theorem uiNorm_sylvester_le_of_form_bounds
     (hBform : ∀ x, RCLike.re ⟪B x, x⟫_𝕜 ≤ c * ‖x‖ ^ 2)
     (hEq : A ∘ₗ X - X ∘ₗ B = C) :
     δ * N X ≤ N C := by
-  sorry
+  exact uiNorm_sylvester_le_of_form_bounds_aux N hA hB hδ hAform hBform hEq
 
 /-- General disjoint-spectrum extension with the Bhatia--Davis--McIntosh
 constant `π/2`.  This is beyond the sharp interval/exterior classic theorem

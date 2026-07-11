@@ -493,6 +493,78 @@ theorem complementaryProjection_apply_comm_of_reduces {A : E →ₗ[𝕜] E}
     complementaryProjection U (A x) = A (complementaryProjection U x) :=
   projection_apply_comm_of_reduces hA (reduces_orthogonal_of_isSymmetric hA hU) x
 
+/-! ### Spectral gap ⟹ quadratic-form coercivity bridge
+
+These convert the abstract eigenvalue-set hypotheses (`SpectrumIn A U s`) into the
+quadratic-form bounds `re ⟪A x, x⟫ ≤ c ‖x‖²` (or `≥`) that the dimension-free
+operator-norm Sylvester/`sin Θ` machinery consumes.  This is the point where
+finite-dimensional spectral decomposition (an eigenbasis of the restriction) is
+genuinely used. -/
+
+/-- If every eigenvalue of a symmetric `T` is `≤ c`, the quadratic form is
+bounded above by `c ‖·‖²` (diagonalization: `∑ λᵢ ‖repr xᵢ‖² ≤ c ∑ ‖repr xᵢ‖²`). -/
+theorem re_inner_le_of_forall_eigenvalue_le {n : ℕ} {T : E →ₗ[𝕜] E}
+    (hT : T.IsSymmetric) (hn : finrank 𝕜 E = n) {c : ℝ}
+    (hc : ∀ i, hT.eigenvalues hn i ≤ c) (x : E) :
+    RCLike.re ⟪T x, x⟫_𝕜 ≤ c * ‖x‖ ^ 2 := by
+  refine re_inner_map_self_le_of_mem_specSubspace hT hn (p := fun _ => True)
+    (fun i _ => hc i) ?_
+  have htop : specSubspace (hT.eigenvectorBasis hn) (fun _ : Fin n => True) = ⊤ := by
+    rw [specSubspace, eq_top_iff, ← (hT.eigenvectorBasis hn).toBasis.span_eq]
+    exact Submodule.span_mono (by rintro y ⟨i, rfl⟩; exact ⟨⟨i, trivial⟩, by simp⟩)
+  rw [htop]; exact Submodule.mem_top
+
+/-- Dual: if every eigenvalue of a symmetric `T` is `≥ c`, the quadratic form is
+bounded below by `c ‖·‖²`. -/
+theorem le_re_inner_of_forall_le_eigenvalue {n : ℕ} {T : E →ₗ[𝕜] E}
+    (hT : T.IsSymmetric) (hn : finrank 𝕜 E = n) {c : ℝ}
+    (hc : ∀ i, c ≤ hT.eigenvalues hn i) (x : E) :
+    c * ‖x‖ ^ 2 ≤ RCLike.re ⟪T x, x⟫_𝕜 := by
+  refine le_re_inner_map_self_of_mem_specSubspace hT hn (p := fun _ => True)
+    (fun i _ => hc i) ?_
+  have htop : specSubspace (hT.eigenvectorBasis hn) (fun _ : Fin n => True) = ⊤ := by
+    rw [specSubspace, eq_top_iff, ← (hT.eigenvectorBasis hn).toBasis.span_eq]
+    exact Submodule.span_mono (by rintro y ⟨i, rfl⟩; exact ⟨⟨i, trivial⟩, by simp⟩)
+  rw [htop]; exact Submodule.mem_top
+
+/-- **The spectral-gap coercivity bridge (upper).**  If `A` is symmetric, `U`
+reduces `A`, and the `U`-carried spectrum lies in `Set.Iic c`, then the quadratic
+form of `A` is bounded above by `c ‖·‖²` on `U`. -/
+theorem re_inner_le_of_spectrumIn {A : E →ₗ[𝕜] E} (hA : A.IsSymmetric)
+    {U : Submodule 𝕜 E} (hU : Reduces A U) {c : ℝ}
+    (hspec : SpectrumIn A U (Set.Iic c)) {x : E} (hx : x ∈ U) :
+    RCLike.re ⟪A x, x⟫_𝕜 ≤ c * ‖x‖ ^ 2 := by
+  have hA'sym : (A.restrict hU).IsSymmetric := isSymmetric_restrict hA hU
+  have hev : ∀ i, hA'sym.eigenvalues rfl i ≤ c := fun i => by
+    have hmem : hA'sym.eigenvalues rfl i ∈ restrictedSpectrum (A.restrict hU) ⊤ :=
+      ⟨hA'sym.eigenvectorBasis rfl i, Submodule.mem_top,
+        (hA'sym.eigenvectorBasis rfl).orthonormal.ne_zero i,
+        hA'sym.apply_eigenvectorBasis rfl i⟩
+    rw [restrictedSpectrum_restrict] at hmem
+    exact hspec hmem
+  have hquad := re_inner_le_of_forall_eigenvalue_le hA'sym rfl hev ⟨x, hx⟩
+  rw [Submodule.coe_inner, LinearMap.coe_restrict_apply] at hquad
+  exact hquad
+
+/-- **The spectral-gap coercivity bridge (lower).**  If `A` is symmetric, `U`
+reduces `A`, and the `U`-carried spectrum lies in `Set.Ici c`, then the quadratic
+form of `A` is bounded below by `c ‖·‖²` on `U`. -/
+theorem le_re_inner_of_spectrumIn {A : E →ₗ[𝕜] E} (hA : A.IsSymmetric)
+    {U : Submodule 𝕜 E} (hU : Reduces A U) {c : ℝ}
+    (hspec : SpectrumIn A U (Set.Ici c)) {x : E} (hx : x ∈ U) :
+    c * ‖x‖ ^ 2 ≤ RCLike.re ⟪A x, x⟫_𝕜 := by
+  have hA'sym : (A.restrict hU).IsSymmetric := isSymmetric_restrict hA hU
+  have hev : ∀ i, c ≤ hA'sym.eigenvalues rfl i := fun i => by
+    have hmem : hA'sym.eigenvalues rfl i ∈ restrictedSpectrum (A.restrict hU) ⊤ :=
+      ⟨hA'sym.eigenvectorBasis rfl i, Submodule.mem_top,
+        (hA'sym.eigenvectorBasis rfl).orthonormal.ne_zero i,
+        hA'sym.apply_eigenvectorBasis rfl i⟩
+    rw [restrictedSpectrum_restrict] at hmem
+    exact hspec hmem
+  have hquad := le_re_inner_of_forall_le_eigenvalue hA'sym rfl hev ⟨x, hx⟩
+  rw [Submodule.coe_inner, LinearMap.coe_restrict_apply] at hquad
+  exact hquad
+
 /-- The canonical projector has the expected range.
 
 Lean proof route for a weaker agent:

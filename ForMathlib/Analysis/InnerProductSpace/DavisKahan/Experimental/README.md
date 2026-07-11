@@ -36,3 +36,4 @@ lake build ForMathlib.Analysis.InnerProductSpace.DavisKahan.Experimental.All
 
 Experimental modules may import supported modules.  Supported modules must not
 import this tree.
+See [`PROOF_STRATEGY_ROADMAP.md`](PROOF_STRATEGY_ROADMAP.md) for the dependency-ordered implementation plan.

@@ -25,6 +25,18 @@ square is minimized for every UI norm, whereas `‖I-W‖` itself needs an angle
 restriction for arbitrary UI norms.
 -/
 
+
+/-! ## Remaining construction plan
+
+Construct the finite direct rotation from the polar decomposition of
+`P_V P_U + P_Vperp P_Uperp`.  Define `angleComplexStructure` on each nontrivial
+principal two-plane by the quarter-turn matrix and zero on common summands.
+Prove mapping, intertwining, and inverse symmetry from polar-factor uniqueness;
+then identify the cosine/sine and exponential formulas by checking each
+principal block.  The bounded experimental theorem should eventually supply
+all geometry except finite matrix normalization.
+-/
+
 namespace ForMathlib
 namespace DavisKahanTheory
 
@@ -50,7 +62,7 @@ noncomputable def directRotation (U V : Submodule 𝕜 E)
 
 Lean proof route for a weaker agent:
 
-1. Preferred route: specialize the corresponding bounded theorem from `DavisKahanExt.DirectRotation` through the finite continuous-linear-map/isometry equivalence bridge
+1. Preferred route: specialize the corresponding bounded theorem from the experimental direct-rotation module through the finite continuous-linear-map/isometry equivalence bridge
 2. prove only the bundle/coercion normalization locally.
 -/
 theorem directRotation_map_eq (U V : Submodule 𝕜 E)
@@ -63,7 +75,7 @@ theorem directRotation_map_eq (U V : Submodule 𝕜 E)
 
 Lean proof route for a weaker agent:
 
-1. Preferred route: specialize the corresponding bounded theorem from `DavisKahanExt.DirectRotation` through the finite continuous-linear-map/isometry equivalence bridge
+1. Preferred route: specialize the corresponding bounded theorem from the experimental direct-rotation module through the finite continuous-linear-map/isometry equivalence bridge
 2. prove only the bundle/coercion normalization locally.
 -/
 theorem directRotation_comp_projection (U V : Submodule 𝕜 E)
@@ -77,7 +89,7 @@ theorem directRotation_comp_projection (U V : Submodule 𝕜 E)
 
 Lean proof route for a weaker agent:
 
-1. Preferred route: specialize the corresponding bounded theorem from `DavisKahanExt.DirectRotation` through the finite continuous-linear-map/isometry equivalence bridge
+1. Preferred route: specialize the corresponding bounded theorem from the experimental direct-rotation module through the finite continuous-linear-map/isometry equivalence bridge
 2. prove only the bundle/coercion normalization locally.
 -/
 theorem directRotation_symm (U V : Submodule 𝕜 E)
@@ -91,7 +103,7 @@ parts.
 
 Lean proof route for a weaker agent:
 
-1. Preferred route: specialize the corresponding bounded theorem from `DavisKahanExt.DirectRotation` through the finite continuous-linear-map/isometry equivalence bridge
+1. Preferred route: specialize the corresponding bounded theorem from the experimental direct-rotation module through the finite continuous-linear-map/isometry equivalence bridge
 2. prove only the bundle/coercion normalization locally.
 -/
 theorem directRotation_apply_eq_self_of_mem_common (U V : Submodule 𝕜 E)
@@ -105,7 +117,7 @@ theorem directRotation_apply_eq_self_of_mem_common (U V : Submodule 𝕜 E)
 
 Lean proof route for a weaker agent:
 
-1. Preferred route: specialize the corresponding bounded theorem from `DavisKahanExt.DirectRotation` through the finite continuous-linear-map/isometry equivalence bridge
+1. Preferred route: specialize the corresponding bounded theorem from the experimental direct-rotation module through the finite continuous-linear-map/isometry equivalence bridge
 2. prove only the bundle/coercion normalization locally.
 -/
 theorem directRotation_eq_polarFactor (U V : Submodule 𝕜 E)
@@ -120,8 +132,8 @@ theorem directRotation_eq_polarFactor (U V : Submodule 𝕜 E)
 
 Lean proof route for a weaker agent:
 
-1. Specialize the Ext polar-factor direct rotation, then use the finite two-projection functional calculus to identify the cosine, sine, and complex-structure factors.
-2. This should follow after the Ext operator-angle layer.
+1. Specialize the experimental polar-factor direct rotation, then use the finite two-projection functional calculus to identify the cosine, sine, and complex-structure factors.
+2. This should follow after the experimental operator-angle foundation.
 -/
 theorem directRotation_eq_cos_add_J_sin (U V : Submodule 𝕜 E)
     [U.HasOrthogonalProjection] [V.HasOrthogonalProjection]
@@ -134,7 +146,7 @@ theorem directRotation_eq_cos_add_J_sin (U V : Submodule 𝕜 E)
 
 Lean proof route for a weaker agent:
 
-1. Preferred route: specialize the corresponding bounded theorem from `DavisKahanExt.DirectRotation` through the finite continuous-linear-map/isometry equivalence bridge
+1. Preferred route: specialize the corresponding bounded theorem from the experimental direct-rotation module through the finite continuous-linear-map/isometry equivalence bridge
 2. prove only the bundle/coercion normalization locally.
 -/
 theorem directRotation_sq (U V : Submodule 𝕜 E)
@@ -149,8 +161,8 @@ theorem directRotation_sq (U V : Submodule 𝕜 E)
 
 Lean proof route for a weaker agent:
 
-1. Specialize the Ext polar-factor direct rotation, then use the finite two-projection functional calculus to identify the cosine, sine, and complex-structure factors.
-2. This should follow after the Ext operator-angle layer.
+1. Specialize the experimental polar-factor direct rotation, then use the finite two-projection functional calculus to identify the cosine, sine, and complex-structure factors.
+2. This should follow after the experimental operator-angle foundation.
 -/
 theorem directRotation_comm_angleOperator (U V : Submodule 𝕜 E)
     [U.HasOrthogonalProjection] [V.HasOrthogonalProjection]
@@ -191,7 +203,7 @@ unconditional all-UI extremal statement.
 Lean proof route for a weaker agent:
 
 1. Use the finite principal-plane decomposition and Davis--Kahan Section 4 scalar inequalities on each `2 × 2` block, then apply symmetric-gauge/Fan dominance.
-2. The Ext operator-norm minimizer supplies geometry but not the arbitrary finite UI conclusion.
+2. The experimental operator-norm minimizer supplies geometry but not the arbitrary finite UI conclusion.
 -/
 theorem directRotation_minimizes_displacementSquare_uiNorm
     (N : UnitarilyInvariantNorm 𝕜 E) (U V : Submodule 𝕜 E)
@@ -211,7 +223,7 @@ this restriction the statement is false for some UI norms.
 Lean proof route for a weaker agent:
 
 1. Use the finite principal-plane decomposition and Davis--Kahan Section 4 scalar inequalities on each `2 × 2` block, then apply symmetric-gauge/Fan dominance.
-2. The Ext operator-norm minimizer supplies geometry but not the arbitrary finite UI conclusion.
+2. The experimental operator-norm minimizer supplies geometry but not the arbitrary finite UI conclusion.
 -/
 theorem directRotation_minimizes_uiNorm_of_largestAngle_le_pi_div_three
     (N : UnitarilyInvariantNorm 𝕜 E) (U V : Submodule 𝕜 E)
@@ -227,7 +239,7 @@ theorem directRotation_minimizes_uiNorm_of_largestAngle_le_pi_div_three
 
 Lean proof route for a weaker agent:
 
-1. Preferred route: specialize the corresponding bounded theorem from `DavisKahanExt.DirectRotation` through the finite continuous-linear-map/isometry equivalence bridge
+1. Preferred route: specialize the corresponding bounded theorem from the experimental direct-rotation module through the finite continuous-linear-map/isometry equivalence bridge
 2. prove only the bundle/coercion normalization locally.
 -/
 theorem directRotation_minimizes_max_displacement
@@ -243,7 +255,7 @@ theorem directRotation_minimizes_max_displacement
 Lean proof route for a weaker agent:
 
 1. Use the finite principal-plane decomposition and Davis--Kahan Section 4 scalar inequalities on each `2 × 2` block, then apply symmetric-gauge/Fan dominance.
-2. The Ext operator-norm minimizer supplies geometry but not the arbitrary finite UI conclusion.
+2. The experimental operator-norm minimizer supplies geometry but not the arbitrary finite UI conclusion.
 -/
 theorem directRotation_minimizes_sum_sq_basis_angles
     {n : ℕ} (U V : Submodule 𝕜 E) [U.HasOrthogonalProjection]

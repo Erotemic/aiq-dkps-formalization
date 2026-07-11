@@ -15,6 +15,23 @@ actual restricted operators, and the double-angle embedding should eventually
 be built from the closed range of an isometric embedding.
 -/
 
+
+/-! ## Construction plan
+
+* Replace `realSpectrum` by the actual spectrum whenever the scalar field and
+  operator algebra support it.  For real Hilbert spaces, route spectral
+  inequalities through `RealSpectralBridge`; do not create a second opaque
+  spectrum once the real bridge exists.
+* Define `restrictedSpectrum` from `A.restrict hU`, which requires invariance
+  and completeness of the subspace.  The present hypothesis-free declaration
+  is only a compatibility surface and should be replaced by a theorem-facing
+  construction carrying those data.
+* Build `sinTwoThetaEmbedding` from the sine and cosine blocks of the isometric
+  embedding.  In principal coordinates its singular values must be
+  `sin (2 * theta_i)`; prove this first on the two-plane decomposition and then
+  transport it by unitary invariance.
+-/
+
 namespace ForMathlib
 namespace DavisKahan
 namespace Experimental
@@ -40,11 +57,21 @@ def IsOffDiagonalRelativeToProjection (P H : E →L[𝕜] E) : Prop :=
     (ContinuousLinearMap.id 𝕜 E - P) ∘L H ∘L
       (ContinuousLinearMap.id 𝕜 E - P) = 0
 
-/-- Provisional real spectrum interface for an `RCLike` self-adjoint operator. -/
+/-- Provisional real spectrum interface for an `RCLike` self-adjoint operator.
+
+Construction route: use the genuine Banach-algebra spectrum for real operators
+and the real-restricted CFC spectrum for complex operators, then prove the two
+interfaces agree on self-adjoint elements.  This definition should disappear
+once that scalar-uniform bridge exists. -/
 noncomputable def realSpectrum (A : E →L[𝕜] E) : Set ℝ := by
   sorry
 
-/-- Provisional spectrum of an operator restricted to a subspace. -/
+/-- Provisional spectrum of an operator restricted to a subspace.
+
+Construction route: redesign the signature to accept invariance and an
+orthogonal-complement instance, form the actual bounded restriction
+`A.restrict hU`, and take its spectrum.  Do not assign an arbitrary spectrum
+when no invariant restriction is available. -/
 noncomputable def restrictedSpectrum (A : E →L[𝕜] E)
     (U : Submodule 𝕜 E) : Set ℝ := by
   sorry
@@ -102,7 +129,13 @@ def OrderedInternalGap (A : E →L[𝕜] E) (U : Submodule 𝕜 E)
   OrderedSpectraSeparated A U A Uᗮ d ∨
     OrderedSpectraSeparated A Uᗮ A U d
 
-/-- Provisional double-angle residual map for an isometric embedding. -/
+/-- Provisional double-angle residual map for an isometric embedding.
+
+Construction route: split `X` into its `U` and `Uᗮ` projection blocks, form
+the normalized cross term `2 P_{Uᗮ} X (P_U X)⋆` on the coordinate space,
+and prove in principal coordinates that its singular values are
+`sin (2 * theta_i)`.  The eventual definition should reuse the supported
+projection-block API rather than introduce an independent angle calculus. -/
 noncomputable def sinTwoThetaEmbedding (U : Submodule 𝕜 E)
     [U.HasOrthogonalProjection] (X : F →L[𝕜] E) : F →L[𝕜] E := by
   sorry

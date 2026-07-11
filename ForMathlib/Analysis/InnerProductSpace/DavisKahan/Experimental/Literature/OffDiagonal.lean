@@ -14,6 +14,17 @@ spectral enclosure, the generalized `tan 2Θ` theorem, and the sharp a priori
 `tan Θ` theorem.
 -/
 
+
+/-! ## Construction plan
+
+Construct `continuedSpectralSubspace` from a Riesz projection along the path
+`A_t = A + t H`.  Prove the separating contour remains in the resolvent set
+using the off-diagonal gap estimate, prove norm continuity of the projection,
+and select the connected acute component beginning at the original subspace.
+The finite version may use ordered eigenvalue continuity, but the bounded
+version should use the resolvent/Riesz infrastructure.
+-/
+
 namespace ForMathlib
 namespace DavisKahanExt
 

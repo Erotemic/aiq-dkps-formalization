@@ -12,6 +12,22 @@ Literature writeup: local TeX, Sections 18--20, following the geometric
 Riccati approach of Kostrykin--Makarov--Motovilov.
 -/
 
+
+/-! ## Construction plan
+
+Construct all block objects through the orthogonal-sum linear isometry
+`U x Uperp ~= E`.
+
+* `blockOperator` is conjugation of the ambient operator by this equivalence.
+* `blockGraph` is the image of the graph of the angular operator.
+* `blockDiagonalOperator` is the diagonal part after conjugation by the direct
+  rotation.
+
+Prove graph invariance iff the Riccati equation by evaluating both block
+coordinates.  Only after that algebraic equivalence should the spectral gap be
+used to prove existence, uniqueness, and norm bounds for the angular solution.
+-/
+
 namespace ForMathlib
 namespace DavisKahanExt
 
@@ -33,18 +49,29 @@ structure BlockOperatorData where
   selfAdjoint1 : IsSelfAdjointOperator A1
   offDiagonalAdjoint : ∀ x y, ⟪B01 y, x⟫_𝕜 = ⟪y, B10 x⟫_𝕜
 
-/-- Bounded block operator on the Hilbert direct sum. -/
+/-- Bounded block operator on the Hilbert direct sum.
+
+Construction route: define `(x₀,x₁) ↦ (A₀x₀+B₀₁x₁, B₁₀x₀+A₁x₁)` on
+`WithLp 2`, prove the norm bound from the four block norms, and package it with
+`LinearMap.mkContinuous`. -/
 noncomputable def blockOperator
     (H : BlockOperatorData (𝕜 := 𝕜) (E0 := E0) (E1 := E1)) :
     WithLp 2 (E0 × E1) →L[𝕜] WithLp 2 (E0 × E1) := by
   sorry
 
-/-- Graph of a bounded angular operator in the Hilbert direct sum. -/
+/-- Graph of a bounded angular operator in the Hilbert direct sum.
+
+Construction route: take the range of the bounded embedding
+`x ↦ (x, X x)` and prove closedness using the bounded inverse given by the
+first-coordinate projection. -/
 noncomputable def blockGraph (X : E0 →L[𝕜] E1) :
     Submodule 𝕜 (WithLp 2 (E0 × E1)) := by
   sorry
 
-/-- Block-diagonal operator on the Hilbert direct sum. -/
+/-- Block-diagonal operator on the Hilbert direct sum.
+
+Construction route: define `(x₀,x₁) ↦ (D₀x₀,D₁x₁)` and use the `WithLp 2`
+product norm to bound it by `max ‖D₀‖ ‖D₁‖`. -/
 noncomputable def blockDiagonalOperator
     (D0 : E0 →L[𝕜] E0) (D1 : E1 →L[𝕜] E1) :
     WithLp 2 (E0 × E1) →L[𝕜] WithLp 2 (E0 × E1) := by

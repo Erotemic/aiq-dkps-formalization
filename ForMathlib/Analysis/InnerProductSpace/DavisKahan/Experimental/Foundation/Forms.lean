@@ -13,6 +13,23 @@ for Schrödinger operators and PDE applications where operator differences are
 not bounded on the ambient Hilbert space.
 -/
 
+
+/-! ## Construction plan
+
+The three constructors at the top of this module must be implemented only
+after the form-domain Hilbert space is explicit.
+
+1. Redesign `formSum` to carry equality of domains and the relative-bound data
+   needed for closedness; the permanent constructor should not choose a closed
+   form from arbitrary inputs.
+2. Construct `ClosedForm.associatedOperator` through the first representation
+   theorem: represent continuous functionals in the form norm, define the
+   operator domain by ambient representability, and prove the graph is closed.
+3. Define `formPerturbationSize` as the operator norm of the perturbing form on
+   the shifted form-domain Hilbert space.  Its evaluation theorem should expose
+   exactly the inequality consumed by the form Sylvester estimate.
+-/
+
 namespace ForMathlib
 namespace DavisKahanExt
 
@@ -40,19 +57,34 @@ def FormRelativelyBounded (a v : ClosedForm (𝕜 := 𝕜) (E := E))
       ‖v.form (hdom.symm ▸ x) (hdom.symm ▸ x)‖ ≤
         alpha * ‖(x : E)‖ ^ 2 + beta * ‖a.form x x‖
 
-/-- Closed form sum, constructed under a relative-bound hypothesis. -/
+/-- Closed form sum, constructed under a relative-bound hypothesis.
+
+Construction route: use the common form domain supplied by
+`FormRelativelyBounded`, add the two sesquilinear forms there, and transport
+closedness/lower semiboundedness from the norm-equivalence estimate.  The
+constructor should eventually take the relative-bound witness explicitly. -/
 noncomputable def formSum
     (a v : ClosedForm (𝕜 := 𝕜) (E := E)) :
     ClosedForm (𝕜 := 𝕜) (E := E) := by
   sorry
 
-/-- Operator associated with a closed semibounded form. -/
+/-- Operator associated with a closed semibounded form.
+
+Construction route: complete the form domain in the shifted form norm, use
+Riesz representation for vectors whose form functional is ambient-norm
+bounded, and define the operator domain from exactly those vectors.  Closedness
+and self-adjointness are consequences of the representation theorem. -/
 noncomputable def ClosedForm.associatedOperator
     (a : ClosedForm (𝕜 := 𝕜) (E := E)) :
     ClosedOperator (𝕜 := 𝕜) (E := E) := by
   sorry
 
-/-- Quantitative size of a form perturbation in the form-domain norm. -/
+/-- Quantitative size of a form perturbation in the form-domain norm.
+
+Construction route: define the form-domain Hilbert norm from a coercive shift
+of `a`, bundle `v` as a bounded sesquilinear form on that space, and take its
+operator norm.  Prove independence, up to the required equivalent constants,
+of the chosen admissible shift. -/
 noncomputable def formPerturbationSize
     (a v : ClosedForm (𝕜 := 𝕜) (E := E)) : ℝ := by
   sorry

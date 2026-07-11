@@ -192,7 +192,7 @@ theorem spectral_repulsion_eigenvalues
     {δ : ℝ} (hδ : 0 < δ) (horder : OrderedGap A U A Uᗮ δ) :
     ∀ lam ∈ restrictedSpectrum (A + H) Vᗮ,
       ∃ μ ∈ restrictedSpectrum A Uᗮ, μ ≤ lam := by
-  sorry
+  exact spectral_repulsion_compression hA hH hU hV hoff hacute hδ horder
 
 /-- Theorem 8.1(iii): symmetric-gauge/UI-norm spectral repulsion.
 
@@ -256,7 +256,8 @@ theorem opNorm_tanTwoTheta_le
     AvoidsQuarterTurn U V ∧
       δ * ‖(tanTwoAngleOperator U V).toContinuousLinearMap‖ ≤
         2 * ‖(B - A).toContinuousLinearMap‖ := by
-  sorry
+  exact tanTwoTheta_perturbation_le (UnitarilyInvariantNorm.opNorm 𝕜 E)
+    hA hB hU hV hoff hδ hgap
 
 /-- Frobenius endpoint.
 
@@ -275,7 +276,8 @@ theorem frobenius_tanTwoTheta_le
     AvoidsQuarterTurn U V ∧
       δ * UnitarilyInvariantNorm.frobenius 𝕜 E (tanTwoAngleOperator U V) ≤
         2 * UnitarilyInvariantNorm.frobenius 𝕜 E (B - A) := by
-  sorry
+  exact tanTwoTheta_perturbation_le (UnitarilyInvariantNorm.frobenius 𝕜 E)
+    hA hB hU hV hoff hδ hgap
 
 /-- Ky Fan endpoint.
 

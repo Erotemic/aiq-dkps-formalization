@@ -25,6 +25,18 @@ this file records the separate `π/2`-constant extension for arbitrary disjoint
 spectral sets; it must not be used silently in the classic constant-one API.
 -/
 
+
+/-! ## Remaining construction plan
+
+The Sylvester map itself is now explicit.  Next diagonalize the two symmetric
+endpoint operators, identify its matrix entries with multiplication by
+`lambda_i-mu_j`, and use spectral separation to prove injectivity and construct
+the inverse.  Prove the interval/exterior constant-one estimate through the
+ordered divided-difference multiplier.  Treat arbitrary separated spectra in a
+separate theorem with the `pi/2` constant and then derive residual results by
+applying the rectangular norm ideal property.
+-/
+
 namespace ForMathlib
 namespace DavisKahanTheory
 
@@ -38,8 +50,17 @@ variable {F : Type*} [NormedAddCommGroup F] [InnerProductSpace 𝕜 F]
 
 /-- Sylvester operator `X ↦ A X - X B`. -/
 noncomputable def sylvesterOperator (A : F →ₗ[𝕜] F) (B : E →ₗ[𝕜] E) :
-    (E →ₗ[𝕜] F) →ₗ[𝕜] (E →ₗ[𝕜] F) := by
-  sorry
+    (E →ₗ[𝕜] F) →ₗ[𝕜] (E →ₗ[𝕜] F) where
+  toFun X := A ∘ₗ X - X ∘ₗ B
+  map_add' X Y := by
+    ext x
+    simp only [LinearMap.comp_apply, LinearMap.add_apply, LinearMap.sub_apply,
+      map_add]
+    module
+  map_smul' c X := by
+    ext x
+    simp only [LinearMap.comp_apply, LinearMap.smul_apply, LinearMap.sub_apply,
+      map_smul, smul_sub, RingHom.id_apply]
 
 /-- Ordered spectral separation for the Sylvester equation. -/
 def OrderedSylvesterGap (A : F →ₗ[𝕜] F) (B : E →ₗ[𝕜] E)
@@ -57,7 +78,7 @@ def IntervalSylvesterGap (A : F →ₗ[𝕜] F) (B : E →ₗ[𝕜] E)
 
 Lean proof route for a weaker agent:
 
-1. Preferred route: specialize uniqueness from `DavisKahanExt.sylvester_unique` through the finite continuous-linear-map bridge.
+1. Preferred route: specialize uniqueness from the experimental foundation Sylvester module through the finite continuous-linear-map bridge.
 2. A direct eigenbasis proof is also immediate from nonzero scalar denominators.
 -/
 theorem sylvesterOperator_injective {A : F →ₗ[𝕜] F} {B : E →ₗ[𝕜] E}
@@ -75,7 +96,7 @@ noncomputable def solveSylvester (A : F →ₗ[𝕜] F) (B : E →ₗ[𝕜] E)
 
 Lean proof route for a weaker agent:
 
-1. Preferred route: specialize `DavisKahanExt.sylvester_solve`.
+1. Preferred route: specialize the experimental foundation Sylvester module.
 2. If the finite `solveSylvester` remains an eigenbasis definition, prove this entrywise and use separation to divide by every eigenvalue difference.
 -/
 theorem sylvesterOperator_solveSylvester {A : F →ₗ[𝕜] F}
@@ -90,7 +111,7 @@ norm.
 
 Lean proof route for a weaker agent:
 
-1. Use the existing finite `SylvesterBound` coercive theorem or specialize the Ext ordered operator-norm theorem for the op-norm case.
+1. Use the existing finite `SylvesterBound` coercive theorem or specialize the supported ordered operator-norm theorem for the op-norm case.
 2. For arbitrary UI norms, prove Ky Fan domination and invoke finite Fan dominance.
 -/
 theorem uiNorm_sylvester_le_of_orderedGap
@@ -108,7 +129,7 @@ rectangular UI norm.
 Lean proof route for a weaker agent:
 
 1. Split the exterior spectrum into the lower and upper ordered pieces, solve on the corresponding spectral blocks, establish Ky Fan domination with constant one, and combine by pinching.
-2. The operator-norm skeleton may reuse `DavisKahanExt.SinTheta`/`Sylvester`.
+2. The operator-norm skeleton may reuse the supported `DavisKahan.SinTheta` module and the experimental general Sylvester layer.
 -/
 theorem uiNorm_sylvester_le_of_intervalGap
     (N : RectangularUnitarilyInvariantNorm 𝕜 E F)
@@ -161,7 +182,7 @@ but belongs in the complete finite-dimensional roadmap.
 
 Lean proof route for a weaker agent:
 
-1. Prefer specialization of `DavisKahanExt.ideal_sylvester_le` once the Ext ideal signature is corrected
+1. Prefer specialization of the experimental symmetric-ideal Sylvester theorem once the experimental ideal signature is corrected
 2. alternatively formalize the finite Bhatia--Davis--McIntosh multiplier and finish by Fan dominance.
 -/
 theorem uiNorm_sylvester_le_of_spectralDistance

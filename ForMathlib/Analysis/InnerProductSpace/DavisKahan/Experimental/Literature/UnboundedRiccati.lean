@@ -12,6 +12,17 @@ Literature writeup: local TeX, Section 29.  The central extra obligation over
 the bounded theory is preservation of operator domains.
 -/
 
+
+/-! ## Construction plan
+
+Use the graph-norm direct sum of the two diagonal operator domains.  Define the
+unbounded block operator with domain `dom A0 x dom A1`; define bounded graph
+maps only when they preserve the appropriate domains.  Prove graph invariance
+iff the weak/domain-aware Riccati equation, then construct the block diagonal
+operator by conjugation with the graph rotation and prove equality first on a
+common core before closing both sides.
+-/
+
 namespace ForMathlib
 namespace DavisKahanExt
 
@@ -48,6 +59,15 @@ def StrongSolvesRiccati
       H.A1.toLinearMap ⟨X (x : E0), hdom x⟩ -
         X (H.A0.toLinearMap x) -
         X (H.B01 (X (x : E0))) + H.B10 (x : E0) = 0
+
+/-! ### Block and graph construction route
+
+Give the block operator the product domain `A0.domain × A1.domain`, define its
+map componentwise, and prove closedness by bounded perturbation of the diagonal
+closed operator.  Define the graph as the range of the bounded embedding
+`x ↦ (x, X x)`; prove it closed using the bounded inverse given by first
+coordinate projection, then obtain the orthogonal-projection instance from
+closedness. -/
 
 /-- Closed block operator matrix on the Hilbert direct sum. -/
 noncomputable def unboundedBlockOperator
@@ -99,7 +119,11 @@ def ClosedOperator.UnitaryEquivalent
     (∀ y : B.domain,
       A.toLinearMap ⟨Winv (y : G), hWinvdom y⟩ = Winv (B.toLinearMap y))
 
-/-- Closed block-diagonal representative obtained from a reducing graph. -/
+/-- Closed block-diagonal representative obtained from a reducing graph.
+
+Construction route: transport the two closed diagonal restrictions through
+the graph/direct-sum equivalence, define the product domain explicitly, and
+prove graph closedness componentwise before conjugating back. -/
 noncomputable def unboundedBlockDiagonalOperator
     (H : UnboundedBlockData (𝕜 := 𝕜) (E0 := E0) (E1 := E1))
     (X : E0 →L[𝕜] E1) :

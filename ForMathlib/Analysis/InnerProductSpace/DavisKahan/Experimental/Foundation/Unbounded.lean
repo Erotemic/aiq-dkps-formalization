@@ -15,6 +15,24 @@ closedness, graph norms, resolvents, and unbounded spectral calculus.
 Literature writeup: local TeX, Sections 26--29.
 -/
 
+
+/-! ## Construction plan
+
+The current roadmap structures should be replaced by graph-based analytic
+objects before the literature theorems depend on them.
+
+1. Represent a densely defined operator by a domain submodule and a linear map
+   into the ambient Hilbert space; define closedness through its graph.
+2. Construct the adjoint from bounded functionals on the graph/domain and prove
+   density/closedness properties.
+3. Define addition of a bounded operator by restricting it to the same domain;
+   prove graph-norm equivalence for relatively bounded perturbations.
+4. Obtain the real spectrum and spectral projections only for self-adjoint
+   closed operators through the unbounded spectral theorem.
+5. Define `addRelative` and the spectral projection constructor from these
+   verified operations rather than from arbitrary total choices.
+-/
+
 namespace ForMathlib
 namespace DavisKahanExt
 
@@ -44,7 +62,12 @@ def IsSymmetric (A : ClosedOperator (𝕜 := 𝕜) (E := E)) : Prop :=
   ∀ x y : A.domain, ⟪A.toLinearMap x, (y : E)⟫_𝕜 = ⟪(x : E), A.toLinearMap y⟫_𝕜
 
 /-- Adjoint of a densely defined closed operator.  The implementation should
-be reconciled with mathlib's partial-linear-map adjoint API. -/
+be reconciled with mathlib's partial-linear-map adjoint API.
+
+Construction route: define the domain as vectors `y` for which
+`x ↦ ⟪A x, y⟫` is ambient-norm bounded on the dense domain, use Riesz
+representation for the representing vector, and prove the resulting graph is
+closed. -/
 noncomputable def adjoint
     (A : ClosedOperator (𝕜 := 𝕜) (E := E)) :
     ClosedOperator (𝕜 := 𝕜) (E := E) := by
@@ -62,7 +85,11 @@ noncomputable def graphNorm (A : ClosedOperator (𝕜 := 𝕜) (E := E))
     (x : A.domain) : ℝ :=
   Real.sqrt (‖(x : E)‖ ^ 2 + ‖A.toLinearMap x‖ ^ 2)
 
-/-- Sum with a bounded perturbation, on the original domain. -/
+/-- Sum with a bounded perturbation, on the original domain.
+
+Construction route: retain `A.domain`, define the graph map by
+`x ↦ A x + V x`, and prove closedness by showing the new graph norm is
+equivalent to the old one using boundedness of `V`. -/
 noncomputable def addBounded (A : ClosedOperator (𝕜 := 𝕜) (E := E))
     (V : E →L[𝕜] E) : ClosedOperator (𝕜 := 𝕜) (E := E) := by
   sorry
@@ -72,7 +99,12 @@ def RelativelyBounded (A : ClosedOperator (𝕜 := 𝕜) (E := E))
     (V : A.domain →ₗ[𝕜] E) (a b : ℝ) : Prop :=
   ∀ x, ‖V x‖ ≤ a * ‖(x : E)‖ + b * ‖A.toLinearMap x‖
 
-/-- Real spectrum of a self-adjoint closed operator. -/
+/-- Real spectrum of a self-adjoint closed operator.
+
+Construction route: define the resolvent through bijectivity and boundedness of
+`A - z`, obtain the complex spectrum first, and use self-adjointness to prove it
+lies on the real axis.  The permanent API should be tied to the unbounded
+spectral theorem rather than chosen independently. -/
 noncomputable def realSpectrum
     (A : ClosedOperator (𝕜 := 𝕜) (E := E)) : Set ℝ := by
   sorry

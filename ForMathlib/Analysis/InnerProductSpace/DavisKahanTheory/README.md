@@ -48,3 +48,4 @@ corrections made in this pass, and remaining design decisions.
 A timestamped `EXT_SIGNATURE_REVIEW_*.md` file is created here only when the
 finite agent discovers a concrete issue in an Ext theorem signature.  Such a
 file is a handoff for the Ext agent; this directory must not modify Ext source.
+See [`PROOF_STRATEGY_ROADMAP.md`](PROOF_STRATEGY_ROADMAP.md) for the dependency-ordered proof plan and signature safeguards.

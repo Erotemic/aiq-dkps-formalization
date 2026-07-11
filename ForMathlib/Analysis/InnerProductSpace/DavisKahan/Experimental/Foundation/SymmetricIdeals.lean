@@ -16,6 +16,22 @@ Hilbert--Schmidt, and general symmetric ideals.
 Literature writeup: local TeX, Section 9.
 -/
 
+
+/-! ## Construction plan
+
+Build this layer bottom-up from compact operators.
+
+1. Use mathlib's compact continuous-linear maps and prove existence of singular
+   values through the positive compact operator `T⋆T`.
+2. Define the operator norm and Ky Fan gauges directly from the singular-value
+   sequence; prove ideal inequalities and unitary invariance.
+3. Define Schatten classes by summability of powers of singular values, with
+   trace class and Hilbert--Schmidt as special cases.
+4. Package each displayed norm only after completeness and the ideal property
+   are available.  Prove finite-rank density before transferring finite
+   Davis--Kahan estimates by approximation.
+-/
+
 namespace ForMathlib
 namespace DavisKahanExt
 
@@ -57,6 +73,21 @@ structure SymmetricNormIdeal where
       gauge (u n - A) < ε
 
 namespace SymmetricNormIdeal
+
+/-! ### Concrete-ideal construction routes
+
+* `operatorNorm`: take membership to be all bounded operators and discharge the
+  fields with the ordinary operator norm, adjoint isometry, and composition
+  submultiplicativity.
+* `compactOperator`: restrict membership to compact operators and reuse the
+  same gauge; closure under two-sided multiplication and completeness are the
+  substantive seams.
+* Schatten, trace-class, Hilbert--Schmidt, and Ky Fan gauges: construct singular
+  values from the positive compact operator `A⋆A`, prove the ideal inequality
+  and unitary invariance once at the sequence level, then instantiate the
+  corresponding symmetric gauge.  Derive trace class and Hilbert--Schmidt from
+  Schatten `p = 1` and `p = 2` instead of reproving every structure field.
+-/
 
 /-- The operator norm ideal. -/
 noncomputable def operatorNorm : SymmetricNormIdeal (𝕜 := 𝕜) (E := E) := by

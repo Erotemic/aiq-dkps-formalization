@@ -13,6 +13,17 @@ Literature writeup: local TeX, Section 25.  The direct rotation is the
 canonical unitary transporting one acute closed subspace to another.
 -/
 
+
+/-! ## Construction plan
+
+Define `directRotation U V` as the unitary polar factor of
+`Q P + Qperp Pperp` under the acute hypothesis.  First prove the positive
+factor is invertible, then prove the polar factor maps `U` onto `V` and
+intertwines the projections.  The symmetry, square, minimality, and
+trigonometric formulas should be consequences of uniqueness of the acute
+unitary and the operator-angle functional calculus, not separate choices.
+-/
+
 namespace ForMathlib
 namespace DavisKahanExt
 

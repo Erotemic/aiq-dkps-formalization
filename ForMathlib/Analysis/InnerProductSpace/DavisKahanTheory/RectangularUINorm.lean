@@ -27,6 +27,19 @@ property.  Square norms should be recovered without duplicating the existing
 `UnitarilyInvariantNorm` development.
 -/
 
+
+/-! ## Remaining construction plan
+
+Complete this module in the following order: adjoint transport, zero extension,
+singular values of zero extension, square/rectangular conversion, then concrete
+norm objects.  Define rectangular operator, Frobenius, Ky Fan, nuclear, and
+Schatten norms from rectangular singular values (or zero extension) and prove
+unitary invariance and ideal inequalities before using them in residual
+results.  The evaluation lemmas should be definitional or short consequences
+of `singularValues_zeroExtension`, so later concrete wrappers carry no new
+analytic content.
+-/
+
 namespace ForMathlib
 namespace DavisKahanTheory
 

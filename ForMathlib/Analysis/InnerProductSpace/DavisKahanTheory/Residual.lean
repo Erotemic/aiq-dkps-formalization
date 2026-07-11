@@ -25,6 +25,20 @@ Literature map:
   "Minimal supporting lemmas".
 -/
 
+
+/-! ## Remaining construction plan
+
+Define the three angle embeddings from the cosine and sine blocks of `X`.
+Under transversality, `tanThetaEmbedding` is the sine block composed with the
+inverse of the cosine block.  Define `sinTwoThetaEmbedding` by the polynomial
+`2 sinTheta cosTheta`; define `tanTwoThetaEmbedding` from the corresponding
+numerator and the invertible `cos(2 Theta)` block under quarter-turn avoidance.
+Prove their singular-value formulas in principal coordinates before applying
+rectangular UI norms.  Separately, prove Galerkin orthogonality and the residual
+Pythagorean identity; these unlock the Ritz-minimality statements without any
+spectral argument.
+-/
+
 namespace ForMathlib
 namespace DavisKahanTheory
 
@@ -66,6 +80,14 @@ noncomputable def sinThetaEmbedding (U : Submodule 𝕜 E)
 noncomputable def cosThetaEmbedding (U : Submodule 𝕜 E)
     [U.HasOrthogonalProjection] (X : F →ₗᵢ[𝕜] E) : F →ₗ[𝕜] E :=
   projection U ∘ₗ X.toLinearMap
+
+/-! Construction route: build all three remaining coordinate maps from the cosine/sine blocks
+above.  Under transversality, invert `cosThetaEmbedding` on its range and define
+tangent as sine after that inverse.  Define double-angle sine polynomially as
+twice the sine/cosine cross term.  Define double-angle tangent only after
+quarter-turn avoidance makes the corresponding cosine block invertible.  Each
+definition should come with a singular-value identification before it is used
+in a norm theorem. -/
 
 /-- Tangent map in approximate coordinates. -/
 noncomputable def tanThetaEmbedding (U : Submodule 𝕜 E)

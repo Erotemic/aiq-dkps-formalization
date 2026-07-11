@@ -24,6 +24,18 @@ of a double-angle estimate.  These are kept separate from the sharp clean API
 so their conditioning losses are visible in theorem statements.
 -/
 
+
+/-! ## Remaining construction plan
+
+For injective `X`, let `G = X.adjoint * X`.  Prove `G` is positive definite,
+construct its positive inverse square root, and define
+`orthonormalizedEmbedding X = X * G^{-1/2}`.  Verify the isometry identity
+entrywise, prove the whitening factor is invertible, and obtain range equality
+by postcomposition with that equivalence.  All generalized residual estimates
+should then reduce to the isometric theory with explicit condition-number
+bounds from the lower frame hypothesis.
+-/
+
 namespace ForMathlib
 namespace DavisKahanTheory
 
@@ -216,7 +228,7 @@ Lean proof route for a weaker agent:
 
 1. Use `hselected` and `houtside` to obtain one fixed interval/exterior contour with clearance
    `δ` for every `t ∈ [0,1]`.
-2. Specialize `DavisKahanExt.continuous_rieszProjection_path` to the path
+2. Specialize the experimental continuation/Riesz-projection module to the path
    `t ↦ A + t • H` and this fixed contour.
 3. Identify the finite Riesz projection with `spectralProjection` by diagonalizing each
    symmetric operator.
@@ -247,7 +259,7 @@ branch of the `sin 2Θ` conclusion.
 Lean proof route for a weaker agent:
 
 1. Use the strengthened continuation theorem to keep the selected projector in the component of `U`, combine the half-gap perturbation bound with `‖P-Q‖ < 1`, and conclude `IsAcute`.
-2. This should directly specialize the bounded Ext continuation layer.
+2. This should directly specialize the experimental bounded continuation layer.
 -/
 theorem sinTwoTheta_acute_of_small_perturbation
     {A H : E →ₗ[𝕜] E} (hA : A.IsSymmetric) (hH : H.IsSymmetric)

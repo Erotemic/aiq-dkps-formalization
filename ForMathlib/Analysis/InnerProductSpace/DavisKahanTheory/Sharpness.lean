@@ -22,6 +22,18 @@ The constants in all four classic theorems are optimal.  Direct sums of the
 invariant norm.  These facts should be formal theorems, not prose claims.
 -/
 
+
+/-! ## Remaining construction plan
+
+Use a single explicit planar model for every sharpness result.  Define the
+reference and rotated one-dimensional subspaces in `EuclideanSpace R (Fin 2)`,
+use a diagonal gapped operator, and form sine, tangent, and double-angle
+perturbations by rotation/conjugation.  Prove the model projections and
+singular values by extensional matrix calculation.  Each sharpness theorem
+should then be a scalar trigonometric simplification, making failures at right
+angles or quarter turns explicit rather than hidden in abstract geometry.
+-/
+
 namespace ForMathlib
 namespace DavisKahanTheory
 
@@ -40,27 +52,51 @@ noncomputable def modelSubspace : Submodule 𝕜 (Plane 𝕜) := by
 noncomputable def rotatedModelSubspace (θ : ℝ) : Submodule 𝕜 (Plane 𝕜) := by
   sorry
 
-/-- Diagonal gapped operator used by the extremal examples. -/
+/-! Construct the following five operators as explicit `2 × 2` matrices in
+the standard basis.  Start with `diag(a,b)`, conjugate by the planar rotation
+for the `sin Θ` model, use the graph residual for `tan Θ`, and take the
+reflection/off-diagonal parts for the double-angle models.  Matrix ext reduces
+all later norm and equality claims to scalar trigonometric identities. -/
+
+/-- Diagonal gapped operator used by the extremal examples.
+
+Construction route: use the diagonal `2×2` matrix with entries `a,b`; define
+the linear map by matrix multiplication and prove the gap from the two
+coordinate eigenvectors. -/
 noncomputable def modelGappedOperator (a b : ℝ) :
     Plane 𝕜 →ₗ[𝕜] Plane 𝕜 := by
   sorry
 
-/-- Perturbation producing equality in the `sin Θ` model. -/
+/-- Perturbation producing equality in the `sin Θ` model.
+
+Construction route: conjugate the diagonal model by the planar rotation and
+subtract the original matrix; simplify entries with sine and cosine identities. -/
 noncomputable def modelSinThetaPerturbation (a b θ : ℝ) :
     Plane 𝕜 →ₗ[𝕜] Plane 𝕜 := by
   sorry
 
-/-- Perturbation/residual producing equality in the `tan Θ` model. -/
+/-- Perturbation/residual producing equality in the `tan Θ` model.
+
+Construction route: use the graph residual of the rotated one-dimensional
+subspace, with scaling chosen so the ordered Sylvester inequality is an
+equality. -/
 noncomputable def modelTanThetaPerturbation (a b θ : ℝ) :
     Plane 𝕜 →ₗ[𝕜] Plane 𝕜 := by
   sorry
 
-/-- Reflection-compatible perturbation producing equality in `sin (2 Θ)`. -/
+/-- Reflection-compatible perturbation producing equality in `sin (2 Θ)`.
+
+Construction route: take the reflection-compatible off-diagonal block of the
+rotated model and normalize it to realize the double-angle sine equality. -/
 noncomputable def modelSinTwoThetaPerturbation (a b θ : ℝ) :
     Plane 𝕜 →ₗ[𝕜] Plane 𝕜 := by
   sorry
 
-/-- Off-diagonal perturbation used by the `tan (2 Θ)` extremizer. -/
+/-- Off-diagonal perturbation used by the `tan (2 Θ)` extremizer.
+
+Construction route: choose the purely off-diagonal planar perturbation for
+which the Riccati denominator and numerator attain the tangent double-angle
+ratio. -/
 noncomputable def modelTanTwoThetaPerturbation (a b θ : ℝ) :
     Plane 𝕜 →ₗ[𝕜] Plane 𝕜 := by
   sorry

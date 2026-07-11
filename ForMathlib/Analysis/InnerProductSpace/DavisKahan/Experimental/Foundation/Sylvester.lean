@@ -16,6 +16,20 @@ infinite-dimensional `sin Θ` and residual theorems.
 Literature writeup: local TeX, Sections 10--11.
 -/
 
+
+/-! ## Construction plan
+
+* Define the resolvent integral only for complex scalars, a separating contour,
+  and operators whose resolvents are defined along that contour.
+* Replace the unconditional `solveSylvester` choice by either an inverse of the
+  Sylvester operator under separation or an existence-and-uniqueness theorem.
+* Prove the contour formula satisfies `AX-XB=C` by inserting the two resolvent
+  identities and evaluating winding numbers.
+* Derive the ordered constant-one estimate from coercivity; derive the general
+  `pi/2` estimate from the contour/double-operator-integral argument.  These are
+  distinct theorem families and should remain distinct in the API.
+-/
+
 namespace ForMathlib
 namespace DavisKahanExt
 

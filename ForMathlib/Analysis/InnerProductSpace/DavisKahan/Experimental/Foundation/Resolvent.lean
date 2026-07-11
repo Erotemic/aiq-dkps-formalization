@@ -13,6 +13,22 @@ analytic bridge from Banach-algebra resolvents to projection-valued spectral
 subspaces and continuation under perturbation.
 -/
 
+
+/-! ## Construction plan
+
+* Replace the total `resolventOperator` interface by mathlib's actual
+  Banach-algebra resolvent, or by a bundled inverse parameterized by a proof of
+  resolvent-set membership.  Prove inverse uniqueness once and use it in both
+  resolvent identities.
+* Package `ContourSeparatesSpectrum` with piecewise smoothness, closedness,
+  resolvent membership along the path, and the winding-number conditions for
+  selected and complementary spectral components.
+* Define `rieszProjection` as the Bochner integral of the resolvent with the
+  `1/(2*pi*i)` factor.  Prove idempotence by the first resolvent identity and
+  Fubini, then prove agreement with the self-adjoint spectral projection by
+  functional calculus.
+-/
+
 namespace ForMathlib
 namespace DavisKahanExt
 

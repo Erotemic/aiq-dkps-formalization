@@ -16,6 +16,25 @@ valued Borel calculus for arbitrary bounded self-adjoint operators.
 Literature writeup: local TeX, Sections 5--6.
 -/
 
+
+/-! ## Construction plan
+
+This module needs one coherent projection-valued-measure or Borel-functional-
+calculus foundation.
+
+1. Construct `spectralProjection A s` as the indicator functional calculus for
+   a self-adjoint operator and a measurable set.
+2. Define `spectralSubspace` as its range; derive closedness and the orthogonal
+   projection instance from idempotence and self-adjointness.
+3. Define `boundedBorelFunctionalCalculus` by integration against the same
+   projection-valued measure, not independently.
+4. Prove complement, intersection, disjointness, strong countable additivity,
+   commutation, and reduction from the measure laws.
+5. Keep the complex implementation separate from a future real transfer, while
+   stating projection algebra over `RCLike` whenever it no longer depends on
+   the calculus.
+-/
+
 namespace ForMathlib
 namespace DavisKahanExt
 
@@ -27,7 +46,11 @@ variable {E : Type*} [NormedAddCommGroup E] [InnerProductSpace 𝕜 E]
   [CompleteSpace E]
 
 /-- Spectral projection of a bounded self-adjoint operator associated with a
-Borel set. -/
+Borel set.
+
+Construction route: define the indicator function of `s` in a bounded Borel
+functional calculus for the self-adjoint operator `A`; prove idempotence and
+self-adjointness directly from multiplication and conjugation of indicators. -/
 noncomputable def spectralProjection (A : E →L[𝕜] E)
     (s : Set ℝ) : E →L[𝕜] E := by
   sorry
@@ -37,13 +60,22 @@ noncomputable def spectralSubspace (A : E →L[𝕜] E)
     (s : Set ℝ) : Submodule 𝕜 E :=
   LinearMap.range (spectralProjection A s).toLinearMap
 
-/-- Spectral subspaces are closed and admit orthogonal projection. -/
+/-- Spectral subspaces are closed and admit orthogonal projection.
+
+Proof strategy: prove `spectralProjection A s` is a star projection, identify
+its range with `spectralSubspace A s`, and use the generic theorem that the
+range of a star projection is closed and has that orthogonal projector. -/
 noncomputable instance spectralSubspace_hasOrthogonalProjection
     (A : E →L[𝕜] E) (s : Set ℝ) :
     (spectralSubspace A s).HasOrthogonalProjection := by
   sorry
 
-/-- Bounded Borel functional calculus. -/
+/-- Bounded Borel functional calculus.
+
+Construction route: integrate bounded Borel functions against one
+projection-valued measure associated with `A`; do not construct this
+independently from `spectralProjection`, since indicator compatibility is the
+main API invariant. -/
 noncomputable def boundedBorelFunctionalCalculus (A : E →L[𝕜] E)
     (f : ℝ → ℝ) : E →L[𝕜] E := by
   sorry

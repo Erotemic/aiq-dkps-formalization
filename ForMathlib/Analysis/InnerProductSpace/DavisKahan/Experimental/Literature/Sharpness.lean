@@ -13,6 +13,18 @@ Literature writeup: local TeX, Section 35.  Infinite-dimensional sharpness is
 inherited from two-dimensional reducing blocks and their orthogonal sums.
 -/
 
+
+/-! ## Construction plan
+
+Realize every model in a fixed two-dimensional real or complex Euclidean
+space.  Take `P0 = diag(1,0)` and obtain `Ptheta` by conjugating with the planar
+rotation.  Define the model subspaces as their ranges and the gapped operator
+as a two-point diagonal spectrum.  The rotated perturbation is conjugation by
+that same rotation.  Reduce all norm and angle calculations to explicit
+`2 x 2` matrices, then use these models to test constants and the necessity of
+acute, ordered-gap, and rank hypotheses.
+-/
+
 namespace ForMathlib
 namespace DavisKahanExt
 
@@ -39,21 +51,40 @@ noncomputable def modelSubspace0 : Submodule 𝕜 (Plane 𝕜) :=
 noncomputable def modelSubspaceTheta (theta : ℝ) : Submodule 𝕜 (Plane 𝕜) :=
   LinearMap.range (modelProjectionTheta (𝕜 := 𝕜) theta).toLinearMap
 
+/-! The following model objects should all be discharged by one explicit
+`Fin 2` matrix calculation.  Prove both model projections are self-adjoint
+idempotents, identify their ranges, and obtain the orthogonal-projection
+instances from those facts.  Define the gapped operator diagonally and the
+rotated perturbation by conjugation with the planar rotation; matrix ext plus
+trigonometric normalization then supplies every later sharpness identity. -/
+
+/-- Construction strategy: prove `modelProjection0` is a self-adjoint
+idempotent and identify `modelSubspace0` with its range, then invoke the generic
+range-of-star-projection instance. -/
 noncomputable instance modelSubspace0_hasOrthogonalProjection :
     (modelSubspace0 (𝕜 := 𝕜)).HasOrthogonalProjection := by
   sorry
 
+/-- Construction strategy: prove the rotated matrix is a self-adjoint
+idempotent by conjugating the coordinate projection with the planar rotation,
+then identify its range. -/
 noncomputable instance modelSubspaceTheta_hasOrthogonalProjection (theta : ℝ) :
     (modelSubspaceTheta (𝕜 := 𝕜) theta).HasOrthogonalProjection := by
   sorry
 
+/-- Construction route: use the diagonal matrix with eigenvalues separated
+by `d` in the standard planar basis and bundle its matrix norm bound. -/
 noncomputable def modelGappedOperator (d : ℝ) :
     Plane 𝕜 →L[𝕜] Plane 𝕜 := by
   sorry
 
 /-- Difference between the rotated and unrotated two-level operators.
 This is the exact equality model for `sin Θ`; it is generally not off-diagonal
-relative to the unrotated spectral subspace. -/
+relative to the unrotated spectral subspace.
+
+Construction route: conjugate `modelGappedOperator d` by the planar rotation
+and subtract the original operator; retain this exact difference form so later
+norm identities reduce to a `2×2` calculation. -/
 noncomputable def modelRotatedPerturbation (d theta : ℝ) :
     Plane 𝕜 →L[𝕜] Plane 𝕜 := by
   sorry

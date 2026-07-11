@@ -31,6 +31,24 @@ orthonormal bases, the public API.  Family-level results in
 `PrincipalAngles.lean` should become implementation lemmas for this layer.
 -/
 
+
+/-! ## Remaining construction plan
+
+* Define `tanThetaMap U V` on the transverse part as the sine block composed
+  with the inverse of the cosine block; extend by zero on the orthogonal
+  complement.  Its public theorems must carry transversality when boundedness
+  is used.
+* Define `angleOperator` from the eigenvalues of the positive contraction
+  `P_U P_V P_U` on `U`, with canonical values on the common and orthogonal
+  summands.  Derive sine and cosine operators from that one object.
+* Define `tanAngleOperator` only on the pole-free part (or redesign its
+  signature to carry acuteness), and define `tanTwoAngleOperator` only under
+  quarter-turn avoidance.  Avoid arbitrary total values at their poles.
+* Prove principal-angle symmetry through equality of the nonzero singular
+  values of the two cross projections and use the equal-rank hypothesis to
+  match zero multiplicities.
+-/
+
 namespace ForMathlib
 namespace DavisKahanTheory
 
@@ -169,14 +187,24 @@ noncomputable def sinThetaMap (U V : Submodule 𝕜 E)
   complementaryProjection V ∘ₗ projection U
 
 /-- The one-sided tangent cross-map.  On the transverse part it is
-`P_{Vᗮ} P_U (P_V P_U)⁻¹`. -/
+`P_{Vᗮ} P_U (P_V P_U)⁻¹`.
+
+Construction route: restrict the cosine block `P_V P_U` to the transverse
+part of `U`, invert it there, compose with the sine block, and extend by zero
+on the orthogonal complement.  The current total signature is provisional;
+bounded inversion must ultimately require `IsTransverse U V`. -/
 noncomputable def tanThetaMap (U V : Submodule 𝕜 E)
     [U.HasOrthogonalProjection] [V.HasOrthogonalProjection] : E →ₗ[𝕜] E := by
   sorry
 
 /-- The full-space canonical angle operator `Θ(U,V)` of Davis--Kahan.
 Its nonzero eigenvalues are the principal angles, with the multiplicities
-required by the two-projection decomposition. -/
+required by the two-projection decomposition.
+
+Construction route: diagonalize the positive contraction `P_U P_V P_U` on
+`U`, apply `arccos` to the square roots of its eigenvalues, and assign the
+canonical values on the common, orthogonal, and defect summands.  Prove basis
+independence through finite functional calculus. -/
 noncomputable def angleOperator (U V : Submodule 𝕜 E)
     [U.HasOrthogonalProjection] [V.HasOrthogonalProjection] : E →ₗ[𝕜] E := by
   sorry
@@ -196,7 +224,12 @@ noncomputable def sinAngleOperator (U V : Submodule 𝕜 E)
 
 /-- `tan Θ` on the full ambient space.  In non-acute configurations this is
 understood as the Moore--Penrose/graph-operator extension on the transverse
-part, with the pole recorded separately by `IsTransverse`. -/
+part, with the pole recorded separately by `IsTransverse`.
+
+Construction route: use the spectral decomposition of `angleOperator`, map
+finite angles by `tan`, and set the quarter-turn defect summand to zero only as
+a documented Moore--Penrose convention.  Theorems interpreting its norm as a
+principal tangent must assume transversality or acuteness. -/
 noncomputable def tanAngleOperator (U V : Submodule 𝕜 E)
     [U.HasOrthogonalProjection] [V.HasOrthogonalProjection] : E →ₗ[𝕜] E := by
   sorry
@@ -210,7 +243,12 @@ noncomputable def sinTwoAngleOperator (U V : Submodule 𝕜 E)
     [U.HasOrthogonalProjection] [V.HasOrthogonalProjection] : E →ₗ[𝕜] E :=
   (2 : 𝕜) • (complementaryProjection U ∘ₗ projection V ∘ₗ projection U)
 
-/-- `tan (2 Θ)` on the full ambient space. -/
+/-- `tan (2 Θ)` on the full ambient space.
+
+Construction route: apply `tan (2 * ·)` to the finite spectral decomposition
+of `angleOperator`, with a theorem hypothesis excluding quarter turns whenever
+the resulting operator is used analytically.  A future API may instead bundle
+that pole-avoidance proof into the constructor. -/
 noncomputable def tanTwoAngleOperator (U V : Submodule 𝕜 E)
     [U.HasOrthogonalProjection] [V.HasOrthogonalProjection] : E →ₗ[𝕜] E := by
   sorry
@@ -267,7 +305,7 @@ omit [FiniteDimensional 𝕜 E] in
 Lean proof route for a weaker agent:
 
 1. Unfold `IsAcute`; the two projection-kernel clauses are exchanged.
-2. Keep this direct and independent of the Ext hierarchy.
+2. Keep this direct and independent of the experimental hierarchy.
 -/
 theorem IsAcute.symm {U V : Submodule 𝕜 E}
     [U.HasOrthogonalProjection] [V.HasOrthogonalProjection]
@@ -328,7 +366,7 @@ splitting are exchanged.
 Lean proof route for a weaker agent:
 
 1. Unfold `pinch`; exchanging `U` and `Uᗮ` merely swaps the two summands.
-2. The matching infinite lemma should live in `DavisKahanExt.Basic` and the finite proof can later specialize it.
+2. The matching infinite lemma should live in `DavisKahan.Basic` and the finite proof can later specialize it.
 -/
 theorem isOffDiagonal_orthogonal
     (U : Submodule 𝕜 E) [U.HasOrthogonalProjection] (H : E →ₗ[𝕜] E)
@@ -391,7 +429,7 @@ subspace invariant.
 
 Lean proof route for a weaker agent:
 
-1. Preferred route: specialize `DavisKahanExt.reduces_orthogonalComplement` after converting the finite linear map to a continuous linear map.
+1. Preferred route: specialize `ContinuousLinearMap.IsSymmetric.reduces_of_invariant` after converting the finite linear map to a continuous linear map.
 2. Until that bridge exists, the direct inner-product proof is only a few lines.
 -/
 theorem reduces_orthogonal_of_isSymmetric {A : E →ₗ[𝕜] E}
@@ -592,26 +630,27 @@ theorem spectralSubspace_eq_span_eigenvectors (A : E →ₗ[𝕜] E)
       Submodule.span 𝕜 {x | ∃ lam ∈ Ω, IsEigenvectorAt A lam x} :=
   rfl
 
-/-- Principal angles are symmetric in the two subspaces.
+/-- Principal angles are symmetric for equal-dimensional subspaces.
 
-Design note (open obligation).  With the directed-sine convention
-`principalAngles = arcsin ∘ principalSines`, this equality is *false without an
-equal-dimension hypothesis*: when `dim U ≠ dim V` the directed sine map
-`P_{Vᗮ} P_U` records the `π/2` "defect" directions of the larger subspace, which
-have no counterpart in `P_{Uᗮ} P_V`.  Concretely, for `U = span{e₁, e₂}` and
-`V = span{e₁}` in a 3-dimensional space, `principalAngles U V = {π/2, 0, …}` while
-`principalAngles V U = {0, …}`.
+The equal-rank hypothesis is essential for the current directed-sine
+multiplicity convention: without it, `P_{Vᗮ} P_U` and `P_{Uᗮ} P_V` can carry
+different numbers of quarter-turn defect directions.
 
-The symmetric object is the *cosine* spectrum: `principalCosines_comm` proves
-`principalCosines U V = principalCosines V U` unconditionally, since
-`(P_V P_U)⋆ = P_U P_V`.  A fully symmetric `principalAngles` would have to be built
-from those cosines with the min-dimension multiplicity convention (arccos on the
-common `min (dim U) (dim V)` angles), not from the directed sine map.  Completing
-this needs either that redesign of `principalAngles` or an added
-`finrank 𝕜 U = finrank 𝕜 V` hypothesis; left as an open obligation for that
-decision. -/
+Lean proof route:
+
+1. prove that the two directed cross projections have the same nonzero singular
+   values because they are the off-diagonal blocks of the same pair of
+   projections;
+2. use `hrank` to identify the kernel/defect multiplicities, so zero padding and
+   quarter-turn multiplicities also agree;
+3. rewrite `principalAngles` and apply `Finsupp.mapRange_congr` to the equality
+   of `principalSines`.
+
+A later cosine-based redesign may remove `hrank` by storing only the common
+`min (finrank U) (finrank V)` angle list. -/
 theorem principalAngles_comm (U V : Submodule 𝕜 E)
-    [U.HasOrthogonalProjection] [V.HasOrthogonalProjection] :
+    [U.HasOrthogonalProjection] [V.HasOrthogonalProjection]
+    (hrank : finrank 𝕜 U = finrank 𝕜 V) :
     principalAngles U V = principalAngles V U := by
   sorry
 
@@ -692,7 +731,7 @@ cross projection or by the difference of projectors.
 Lean proof route for a weaker agent:
 
 1. Split on whether the cross-projection norm is strictly below one.
-2. In the acute branch, specialize the Ext identities relating the gap norm, `sinAngleOperator`, and the directed cross projection.
+2. In the acute branch, specialize the experimental operator-angle identities relating the gap norm, `sinAngleOperator`, and the directed cross projection.
 3. In the norm-one branch, use equal finite rank to show the reverse directed gap also has norm one, then bound both projector norms from above by one.
 
 Open obligation.  The clean route needs the two-projection (CS) decomposition

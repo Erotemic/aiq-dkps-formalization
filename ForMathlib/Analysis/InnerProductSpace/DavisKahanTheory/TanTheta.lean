@@ -24,6 +24,18 @@ Unlike the present `TanTheta.lean` endpoint, the 1970 theorem is stated for
 singular-value/Ky Fan strengthening as the final target.
 -/
 
+
+/-! ## Remaining construction plan
+
+Construct `graphOperator U X` from the inverse of the cosine coordinate map
+`P_U X` under transversality, followed by the sine coordinate map `P_Uperp X`.
+Prove its singular values are the principal tangents on each principal
+2-plane.  The zero-compression hypothesis then converts graph invariance into
+an ordered Sylvester equation; apply the rectangular residual theorem and
+transport back to the full-space tangent operator.  Concrete operator and
+Frobenius endpoints are only specializations of the all-UI parent statement.
+-/
+
 namespace ForMathlib
 namespace DavisKahanTheory
 
@@ -46,7 +58,7 @@ noncomputable def graphOperator (U : Submodule 𝕜 E)
 
 Lean proof route for a weaker agent:
 
-1. Preferred geometric route: specialize the unique angular-operator construction from `DavisKahanExt.GraphSubspace`, then identify its finite coordinate representation with `P_{Uᗮ}X(P_UX)⁻¹`.
+1. Preferred geometric route: specialize the unique angular-operator construction from the experimental graph-subspace module, then identify its finite coordinate representation with `P_{Uᗮ}X(P_UX)⁻¹`.
 2. Unfold both finite definitions after obtaining the inverse of the cosine block from `htrans`.
 3. Prove equality by extensionality on the coordinate space and simplify the projection identities.
 -/
@@ -80,7 +92,7 @@ one.
 Lean proof route for a weaker agent:
 
 1. Use Galerkin orthogonality to derive the graph Sylvester equation, apply the ordered UI Sylvester theorem, and identify the solution with the tangent map.
-2. The graph existence/invertibility step should specialize `DavisKahanExt.GraphSubspace`.
+2. The graph existence/invertibility step should specialize the experimental graph-subspace module.
 -/
 theorem tanTheta_residual_le
     (N : RectangularUnitarilyInvariantNorm 𝕜 F E)
@@ -119,7 +131,7 @@ theorem isTransverse_of_tanTheta_residual_gap
 Lean proof route for a weaker agent:
 
 1. Convert the reducing subspace of `B` into a graph over `U`, use the zero-compression hypothesis to obtain the tangent Sylvester equation, and apply the residual theorem.
-2. Reuse Ext graph/Riccati geometry for the operator-norm skeleton; keep UI singular values finite.
+2. Reuse the experimental graph/Riccati geometry for the operator-norm skeleton; keep UI singular values finite.
 
 Signature audit: `hacute` now supplies the domain on which the full finite tangent operator
 represents the principal tangents without a `π/2` pole.
@@ -140,7 +152,7 @@ theorem tanTheta_perturbation_le
 Lean proof route for a weaker agent:
 
 1. Convert the reducing subspace of `B` into a graph over `U`, use the zero-compression hypothesis to obtain the tangent Sylvester equation, and apply the residual theorem.
-2. Reuse Ext graph/Riccati geometry for the operator-norm skeleton; keep UI singular values finite.
+2. Reuse the experimental graph/Riccati geometry for the operator-norm skeleton; keep UI singular values finite.
 -/
 theorem tanThetaMap_perturbation_le
     (N : UnitarilyInvariantNorm 𝕜 E)
@@ -158,7 +170,7 @@ theorem tanThetaMap_perturbation_le
 Lean proof route for a weaker agent:
 
 1. Convert the reducing subspace of `B` into a graph over `U`, use the zero-compression hypothesis to obtain the tangent Sylvester equation, and apply the residual theorem.
-2. Reuse Ext graph/Riccati geometry for the operator-norm skeleton; keep UI singular values finite.
+2. Reuse the experimental graph/Riccati geometry for the operator-norm skeleton; keep UI singular values finite.
 
 Signature audit: `hacute` explicitly selects the transverse spectral branch.  A later
 continuation theorem may derive this premise in common applications.
@@ -220,7 +232,8 @@ theorem opNorm_tanTheta_le
     {δ : ℝ} (hδ : 0 < δ) (hgap : OrderedGap A U B Vᗮ δ) :
     δ * ‖(tanAngleOperator U V).toContinuousLinearMap‖ ≤
       ‖(B - A).toContinuousLinearMap‖ := by
-  sorry
+  exact tanTheta_perturbation_le (UnitarilyInvariantNorm.opNorm 𝕜 E)
+    hA hB hU hV hzero hacute hδ hgap
 
 /-- Frobenius `tan Θ` form.
 
@@ -242,7 +255,8 @@ theorem frobenius_tanTheta_le
     {δ : ℝ} (hδ : 0 < δ) (hgap : OrderedGap A U B Vᗮ δ) :
     δ * UnitarilyInvariantNorm.frobenius 𝕜 E (tanAngleOperator U V) ≤
       UnitarilyInvariantNorm.frobenius 𝕜 E (B - A) := by
-  sorry
+  exact tanTheta_perturbation_le (UnitarilyInvariantNorm.frobenius 𝕜 E)
+    hA hB hU hV hzero hacute hδ hgap
 
 /-- Ky Fan `tan Θ` form.
 

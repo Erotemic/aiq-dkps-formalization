@@ -107,7 +107,7 @@ noncomputable def gramBlockDiagonal (A : E →ₗ[𝕜] F) :
 Lean proof route for a weaker agent:
 
 1. Prove directly by block-matrix/adjoint algebra and the operator-norm ideal inequality.
-2. These finite identities are prerequisites for, rather than consequences of, the late Ext compact/singular layer.
+2. These finite identities are prerequisites for, rather than consequences of, the experimental compact/singular layer.
 -/
 theorem isSymmetric_hermitianDilation (A : E →ₗ[𝕜] F) :
     (hermitianDilation A).IsSymmetric := fun x y => by
@@ -119,7 +119,7 @@ theorem isSymmetric_hermitianDilation (A : E →ₗ[𝕜] F) :
 Lean proof route for a weaker agent:
 
 1. Prove directly by block-matrix/adjoint algebra and the operator-norm ideal inequality.
-2. These finite identities are prerequisites for, rather than consequences of, the late Ext compact/singular layer.
+2. These finite identities are prerequisites for, rather than consequences of, the experimental compact/singular layer.
 -/
 theorem hermitianDilation_sq (A : E →ₗ[𝕜] F) :
     hermitianDilation A ∘ₗ hermitianDilation A =
@@ -133,7 +133,7 @@ theorem hermitianDilation_sq (A : E →ₗ[𝕜] F) :
 Lean proof route for a weaker agent:
 
 1. Prove directly by block-matrix/adjoint algebra and the operator-norm ideal inequality.
-2. These finite identities are prerequisites for, rather than consequences of, the late Ext compact/singular layer.
+2. These finite identities are prerequisites for, rather than consequences of, the experimental compact/singular layer.
 -/
 theorem rightGram_sub_rightGram
     (A Â : E →ₗ[𝕜] F) :
@@ -155,7 +155,7 @@ theorem leftGram_sub_leftGram
 Lean proof route for a weaker agent:
 
 1. Prove directly by block-matrix/adjoint algebra and the operator-norm ideal inequality.
-2. These finite identities are prerequisites for, rather than consequences of, the late Ext compact/singular layer.
+2. These finite identities are prerequisites for, rather than consequences of, the experimental compact/singular layer.
 -/
 theorem opNorm_rightGram_sub_le
     (A Â : E →ₗ[𝕜] F) :
@@ -207,7 +207,7 @@ theorem opNorm_leftGram_sub_le
 Lean proof route for a weaker agent:
 
 1. Apply the finite operator-norm `sin Θ` theorem to the appropriate Gram operators, then use `opNorm_rightGram_sub_le` (or its left analogue).
-2. Keep this finite instead of waiting for `DavisKahanExt.CompactAndSingular`.
+2. Keep this finite instead of waiting for the experimental compact/singular-subspace module.
 -/
 theorem rightSingularSubspace_sinTheta_le
     {A Â : E →ₗ[𝕜] F} {a b δ : ℝ} (hδ : 0 < δ)
@@ -232,7 +232,7 @@ theorem rightSingularSubspace_sinTheta_le
 Lean proof route for a weaker agent:
 
 1. Apply the finite operator-norm `sin Θ` theorem to the appropriate Gram operators, then use `opNorm_rightGram_sub_le` (or its left analogue).
-2. Keep this finite instead of waiting for `DavisKahanExt.CompactAndSingular`.
+2. Keep this finite instead of waiting for the experimental compact/singular-subspace module.
 -/
 theorem leftSingularSubspace_sinTheta_le
     {A Â : E →ₗ[𝕜] F} {a b δ : ℝ} (hδ : 0 < δ)

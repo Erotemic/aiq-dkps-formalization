@@ -21,6 +21,17 @@ These declarations provide basis-independent endpoints around the existing
 `RotationBound.lean` and `RotationSharp.lean` proofs.
 -/
 
+
+/-! ## Remaining construction plan
+
+Define `totalRotationEnergy P Q hnd` by choosing an orthonormal basis adapted
+blockwise to `P`, summing `OrthoProjFamily.sqSinAngle hnd`, and proving basis
+independence from the Frobenius norm of the off-diagonal part of the canonical
+intertwining unitary.  Once this bridge is available, specialize the existing
+rank-one overlap theorem in `RotationBound.lean` blockwise and use Frobenius
+orthogonality to prove the family-level Davis 1963 statements.
+-/
+
 namespace ForMathlib
 namespace DavisKahanTheory
 

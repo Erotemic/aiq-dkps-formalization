@@ -12,6 +12,20 @@ Literature writeup: local TeX, Sections 16--17.  This is the geometric bridge
 between projection estimates and operator Riccati equations.
 -/
 
+
+/-! ## Construction plan
+
+* Define the graph subspace as the range of `x |-> (x, X x)` under the
+  orthogonal-sum equivalence; for an ambient decomposition, transport this
+  construction through `U x Uperp ~= E`.
+* Prove the graph projection formula by solving the normal equations.  The
+  diagonal factors are `(1+X⋆X)^{-1}` and `(1+XX⋆)^{-1}` and are positive
+  invertible.
+* Derive the graph/angular correspondence from transversality of the first
+  coordinate projection, then identify the graph norm with tangent of the
+  operator angle.
+-/
+
 namespace ForMathlib
 namespace DavisKahanExt
 

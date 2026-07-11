@@ -12,6 +12,25 @@ Literature writeup: local TeX, Sections 7--8.  This includes the two-projection
 calculus, gap topology, graph representation, and direct-angle functions.
 -/
 
+
+/-! ## Construction plan
+
+Construct the angle family in one functional-calculus pipeline rather than as
+independent choices.
+
+1. Define `operatorAbsoluteValue T` as the positive square root of `T⋆T`.
+2. On the Halmos generic part of two projections, use the positive contraction
+   `P Q P`; define the cosine as its square root, the sine from `1-cos²`, and
+   the angle by `arccos` continuous functional calculus.
+3. Extend by the canonical values on the common and orthogonal summands.
+4. Define tangent only after an acute hypothesis supplies a bounded inverse of
+   the cosine.  Define double-angle sine polynomially from sine and cosine;
+   define double-angle tangent only under the quarter-angle hypothesis.
+5. For real scalars, either prove the required real continuous functional
+   calculus or transfer the complex construction through a norm-preserving
+   complexification.  Keep all projection-algebra lemmas scalar-generic.
+-/
+
 namespace ForMathlib
 namespace DavisKahanExt
 
@@ -21,19 +40,38 @@ variable {𝕜 : Type*} [RCLike 𝕜]
 variable {E : Type*} [NormedAddCommGroup E] [InnerProductSpace 𝕜 E]
   [CompleteSpace E]
 
-/-- Absolute value `(T* T)^(1/2)` of a bounded operator. -/
+/-- Absolute value `(T* T)^(1/2)` of a bounded operator.
+
+Construction route: apply continuous functional calculus square root to the
+positive operator `star T * T`; for real scalars, transfer this construction
+through the real spectral bridge or complexification. -/
 noncomputable def operatorAbsoluteValue (T : E →L[𝕜] E) : E →L[𝕜] E := by
   sorry
 
-/-- Positive operator angle between two closed subspaces. -/
+/-- Positive operator angle between two closed subspaces.
+
+Construction route: use the Halmos two-projection decomposition, define the
+cosine from the positive contraction `P_U P_V P_U`, and apply `arccos` by
+continuous functional calculus on the generic block with canonical endpoint
+values on the common and defect blocks. -/
 noncomputable def angleOperator (U V : Submodule 𝕜 E)
     [U.HasOrthogonalProjection] [V.HasOrthogonalProjection] : E →L[𝕜] E := by
   sorry
 
+/-- Sine of the operator angle.
+
+Construction route: define it as the positive square root of
+`1 - cosAngleOperator U V ^ 2`, or equivalently as the modulus of the
+projector difference after proving the two-projection decomposition. -/
 noncomputable def sinAngleOperator (U V : Submodule 𝕜 E)
     [U.HasOrthogonalProjection] [V.HasOrthogonalProjection] : E →L[𝕜] E := by
   sorry
 
+/-- Cosine of the operator angle.
+
+Construction route: take the positive square root of the compression
+`P_U P_V P_U` on the generic block and extend by the canonical values one and
+zero on the common and orthogonal defect summands. -/
 noncomputable def cosAngleOperator (U V : Submodule 𝕜 E)
     [U.HasOrthogonalProjection] [V.HasOrthogonalProjection] : E →L[𝕜] E := by
   sorry
@@ -41,18 +79,33 @@ noncomputable def cosAngleOperator (U V : Submodule 𝕜 E)
 /-- Bounded tangent of the operator angle in the acute regime.
 
 The proof argument is part of the definition because `tan` is unbounded at
-`π / 2`; there is no canonical bounded operator for a non-acute pair. -/
+`π / 2`; there is no canonical bounded operator for a non-acute pair.
+
+Construction route: use `sinAngleOperator * (cosAngleOperator)⁻¹`; obtain the
+bounded inverse from the acute gap and prove the two factors commute by their
+common functional-calculus origin. -/
 noncomputable def tanAngleOperator (U V : Submodule 𝕜 E)
     [U.HasOrthogonalProjection] [V.HasOrthogonalProjection]
     (hacute : IsAcute U V) : E →L[𝕜] E := by
   sorry
 
+/-- Sine of twice the operator angle.
+
+Construction route: define this polynomially as `2 * sinTheta * cosTheta` on
+the Halmos two-projection decomposition.  This avoids tangent poles and keeps
+the result bounded for every pair of closed subspaces.  Prove agreement with
+the reflection-defect/cross-block formula before exposing functional-calculus
+identities. -/
 noncomputable def sinTwoAngleOperator (U V : Submodule 𝕜 E)
     [U.HasOrthogonalProjection] [V.HasOrthogonalProjection] : E →L[𝕜] E := by
   sorry
 
 /-- Bounded tangent of twice the operator angle below the quarter-angle
-pole. -/
+pole.
+
+Construction route: form `sinTwoAngleOperator * (cosTwoAngleOperator)⁻¹`, with
+invertibility supplied by `hquarter`; alternatively apply `tan (2 * ·)` in the
+same functional calculus used for `angleOperator`. -/
 noncomputable def tanTwoAngleOperator (U V : Submodule 𝕜 E)
     [U.HasOrthogonalProjection] [V.HasOrthogonalProjection]
     (hquarter : IsQuarterAcute U V) : E →L[𝕜] E := by

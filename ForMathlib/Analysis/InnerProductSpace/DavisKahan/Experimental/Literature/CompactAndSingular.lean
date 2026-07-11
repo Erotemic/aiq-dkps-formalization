@@ -13,6 +13,18 @@ Hilbert-space theory to compact covariance operators and Wedin-type singular
 subspace perturbation through Hermitian dilation.
 -/
 
+
+/-! ## Construction plan
+
+* Define `compactSpectralSubspace` from the finite-multiplicity eigenspaces of a
+  compact self-adjoint operator, or as the range of a spectral projection away
+  from zero.  Prove finite dimensionality before importing finite results.
+* Construct `hermitianDilation A` on the Hilbert direct sum by the block matrix
+  `[[0,A⋆],[A,0]]`; prove self-adjointness by block inner-product calculation.
+* Identify its nonzero spectral subspaces with paired left/right singular
+  subspaces, then specialize the self-adjoint Davis--Kahan theorem.
+-/
+
 namespace ForMathlib
 namespace DavisKahanExt
 

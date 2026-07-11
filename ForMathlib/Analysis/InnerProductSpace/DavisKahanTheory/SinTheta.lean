@@ -6,6 +6,7 @@ Authors: Jon Crall, GPT 5.6 High
 import ForMathlib.Analysis.InnerProductSpace.DavisKahanTheory.Sylvester
 import ForMathlib.Analysis.InnerProductSpace.SinThetaUINorm
 import ForMathlib.Analysis.InnerProductSpace.SinThetaOpNorm
+import ForMathlib.Analysis.InnerProductSpace.DavisKahanExt.SinTheta
 
 /-!
 # The complete finite-dimensional `sin Θ` theorem family
@@ -111,10 +112,13 @@ form).**  If `A, B` are symmetric, `U` reduces `A` with `U`-carried spectrum
 `‖P_V ∘ P_U‖ ≤ ε / g`.
 
 `‖P_V P_U‖` is the sine of the directed angle between the high `A`-block `U` and
-the high `B`-block `Vᗮ`.  The analytic core is dimension-free
-(`ForMathlib.norm_starProjection_comp_starProjection_le`); only the spectrum ⟹
-coercivity bridge (`le_re_inner_of_spectrumIn` / `re_inner_le_of_spectrumIn`) is
-finite-dimensional. -/
+the high `B`-block `Vᗮ`.  **The finite result is dispatched from the
+arbitrary-dimension lemma** `DavisKahanExt.sinTheta_directed_coercive`: the finite
+operators are converted to bounded operators, and the *only* finite-dimensional
+ingredient is the eigenbasis spectrum ⟹ coercivity bridge
+(`le_re_inner_of_spectrumIn` / `re_inner_le_of_spectrumIn`).  The whole sin-Θ
+construction and Sylvester estimate are the dimension-free infinite-dimensional
+core. -/
 theorem opNorm_directed_sinTheta_le {A B : E →ₗ[𝕜] E}
     (hA : A.IsSymmetric) (hB : B.IsSymmetric)
     {U V : Submodule 𝕜 E} [U.HasOrthogonalProjection] [V.HasOrthogonalProjection]
@@ -125,10 +129,29 @@ theorem opNorm_directed_sinTheta_le {A B : E →ₗ[𝕜] E}
     (hε0 : 0 ≤ ε) (hε : ∀ x, ‖(B - A) x‖ ≤ ε * ‖x‖) :
     ‖(V.starProjection ∘L U.starProjection : E →L[𝕜] E)‖ ≤ ε / g := by
   haveI : CompleteSpace E := FiniteDimensional.complete 𝕜 E
-  exact ForMathlib.norm_starProjection_comp_starProjection_le hA hB hU hV hg
-    (fun x hx => le_re_inner_of_spectrumIn hA hU hUspec hx)
-    (fun x hx => re_inner_le_of_spectrumIn hB hV hVspec hx)
-    hε0 hε
+  set Ac : E →L[𝕜] E := A.toContinuousLinearMap with hAc
+  set Bc : E →L[𝕜] E := B.toContinuousLinearMap with hBc
+  have hApp : ∀ x, Ac x = A x := fun _ => rfl
+  have hBpp : ∀ x, Bc x = B x := fun _ => rfl
+  have hAself : DavisKahanExt.IsSelfAdjointOperator Ac := fun x y => hA x y
+  have hBself : DavisKahanExt.IsSelfAdjointOperator Bc := fun x y => hB x y
+  have hUperp : Reduces A Uᗮ := reduces_orthogonal_of_isSymmetric hA hU
+  have hVperp : Reduces B Vᗮ := reduces_orthogonal_of_isSymmetric hB hV
+  have hUred : DavisKahanExt.Reduces Ac U := ⟨fun x hx => hU x hx, fun x hx => hUperp x hx⟩
+  have hVred : DavisKahanExt.Reduces Bc V := ⟨fun x hx => hV x hx, fun x hx => hVperp x hx⟩
+  have hUc : ∀ x ∈ U, (c + g) * ‖x‖ ^ 2 ≤ RCLike.re ⟪Ac x, x⟫_𝕜 :=
+    fun x hx => le_re_inner_of_spectrumIn hA hU hUspec hx
+  have hVc : ∀ x ∈ V, RCLike.re ⟪Bc x, x⟫_𝕜 ≤ c * ‖x‖ ^ 2 :=
+    fun x hx => re_inner_le_of_spectrumIn hB hV hVspec hx
+  have hExt := DavisKahanExt.sinTheta_directed_coercive hAself hBself hUred hVred hg hUc hVc
+  have hnorm : ‖(Bc - Ac : E →L[𝕜] E)‖ ≤ ε := by
+    refine ContinuousLinearMap.opNorm_le_bound _ hε0 fun x => ?_
+    have hsub : (Bc - Ac) x = (B - A) x := by
+      simp only [ContinuousLinearMap.sub_apply, LinearMap.sub_apply, hApp, hBpp]
+    rw [hsub]; exact hε x
+  calc ‖(V.starProjection ∘L U.starProjection : E →L[𝕜] E)‖
+      ≤ ‖(Bc - Ac : E →L[𝕜] E)‖ / g := hExt
+    _ ≤ ε / g := by gcongr
 
 /-- **Spectral-projection directed operator-norm `sin Θ` theorem.**  The canonical
 spectral subspaces automatically reduce their operators, so the one-sided bound

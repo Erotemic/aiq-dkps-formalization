@@ -7,6 +7,7 @@ import ForMathlib.Analysis.InnerProductSpace.CourantFischer
 import ForMathlib.Analysis.InnerProductSpace.PrincipalAngles
 import ForMathlib.Analysis.InnerProductSpace.UnitarilyInvariantNorm
 import ForMathlib.Analysis.InnerProductSpace.PolarDecomposition
+import ForMathlib.Analysis.InnerProductSpace.ProjectionGap
 
 /-!
 # Canonical objects for the finite-dimensional Davis--Kahan theory
@@ -728,24 +729,78 @@ theorem sinTwoAngleOperator_eq_two_smul_cross (U V : Submodule 𝕜 E)
 /-- Equal-rank subspaces have the same largest sine whether measured by a
 cross projection or by the difference of projectors.
 
-Lean proof route for a weaker agent:
-
-1. Split on whether the cross-projection norm is strictly below one.
-2. In the acute branch, specialize the experimental operator-angle identities relating the gap norm, `sinAngleOperator`, and the directed cross projection.
-3. In the norm-one branch, use equal finite rank to show the reverse directed gap also has norm one, then bound both projector norms from above by one.
-
-Open obligation.  The clean route needs the two-projection (CS) decomposition
-identity `‖P_U - P_V‖ = ‖P_{Vᗮ} P_U‖` at equal rank, which the flat
-`SinThetaOpNorm` layer does not yet expose in this operator-equality form (it
-provides the one-sided bound and the largest-angle identification, but not the
-projector-difference/directed-map norm coincidence).  Left incomplete pending
-that two-projection norm identity. -/
+The proof combines the arbitrary-dimensional two-projection identity
+`‖P_U - P_V‖ = max ‖P_{Uᗮ}P_V‖ ‖P_{Vᗮ}P_U‖` with finite equal-rank principal-angle
+symmetry.  Finite dimensionality is used only to choose equal-length
+orthonormal bases and identify the two directed cross-projection norms. -/
 theorem opNorm_projection_sub_eq_opNorm_sinThetaMap (U V : Submodule 𝕜 E)
     [U.HasOrthogonalProjection] [V.HasOrthogonalProjection]
     (hrank : finrank 𝕜 U = finrank 𝕜 V) :
     ‖(projection U - projection V).toContinuousLinearMap‖ =
       ‖(sinThetaMap U V).toContinuousLinearMap‖ := by
-  sorry
+  classical
+  letI : CompleteSpace E := FiniteDimensional.complete 𝕜 E
+  change ‖U.starProjection - V.starProjection‖ =
+    ‖Vᗮ.starProjection ∘L U.starProjection‖
+  let d := finrank 𝕜 U
+  by_cases hd0 : d = 0
+  · have hdimU : finrank 𝕜 U = 0 := by simpa [d] using hd0
+    have hdimV : finrank 𝕜 V = 0 := hrank.symm.trans hdimU
+    have hU0 : U = ⊥ := by
+      symm
+      exact Submodule.eq_of_le_of_finrank_eq bot_le (by simpa using hdimU.symm)
+    have hV0 : V = ⊥ := by
+      symm
+      exact Submodule.eq_of_le_of_finrank_eq bot_le (by simpa using hdimV.symm)
+    subst U
+    subst V
+    simp
+  have hd : 0 < d := Nat.pos_of_ne_zero hd0
+  let bU := stdOrthonormalBasis 𝕜 U
+  let bV := stdOrthonormalBasis 𝕜 V
+  have hdV : d = finrank 𝕜 V := by simpa [d] using hrank
+  let u : Fin d → E := fun i => ((bU i : U) : E)
+  let v : Fin d → E := fun i => ((bV (Fin.cast hdV i) : V) : E)
+  have hu : Orthonormal 𝕜 u := by
+    rw [orthonormal_iff_ite]
+    intro i j
+    change ⟪bU i, bU j⟫_𝕜 = if i = j then 1 else 0
+    exact orthonormal_iff_ite.mp bU.orthonormal i j
+  have hv : Orthonormal 𝕜 v := by
+    rw [orthonormal_iff_ite]
+    intro i j
+    change ⟪bV (Fin.cast hdV i), bV (Fin.cast hdV j)⟫_𝕜 =
+      if i = j then 1 else 0
+    rw [orthonormal_iff_ite.mp bV.orthonormal]
+    simp only [Fin.cast_inj]
+  have hspanU : Submodule.span 𝕜 (Set.range u) = U := by
+    apply Submodule.eq_of_le_of_finrank_eq
+    · apply Submodule.span_le.mpr
+      rintro _ ⟨i, rfl⟩
+      exact (bU i).2
+    · rw [finrank_span_eq_card hu.linearIndependent, Fintype.card_fin]
+  have hspanV : Submodule.span 𝕜 (Set.range v) = V := by
+    apply Submodule.eq_of_le_of_finrank_eq
+    · apply Submodule.span_le.mpr
+      rintro _ ⟨i, rfl⟩
+      exact (bV (Fin.cast hdV i)).2
+    · rw [finrank_span_eq_card hv.linearIndependent, Fintype.card_fin]
+      exact hdV
+  have hdirSpan :
+      ‖(Submodule.span 𝕜 (Set.range u))ᗮ.starProjection ∘L
+          (Submodule.span 𝕜 (Set.range v)).starProjection‖ =
+        ‖(Submodule.span 𝕜 (Set.range v))ᗮ.starProjection ∘L
+          (Submodule.span 𝕜 (Set.range u)).starProjection‖ := by
+    rw [norm_orthogonal_starProjection_comp_starProjection hv hu hd,
+      norm_orthogonal_starProjection_comp_starProjection hu hv hd,
+      cosPrincipalAngles_comm hu hv]
+  have hdir : ‖Uᗮ.starProjection ∘L V.starProjection‖ =
+      ‖Vᗮ.starProjection ∘L U.starProjection‖ := by
+    simpa only [hspanU, hspanV] using hdirSpan
+  rw [Submodule.norm_starProjection_sub_eq_max,
+    ← Submodule.starProjection_orthogonal' V,
+    ← Submodule.starProjection_orthogonal' U,
+    hdir, max_self]
 
 /-- Orthogonal complements preserve the nontrivial principal angles.
 

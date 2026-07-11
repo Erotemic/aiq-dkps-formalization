@@ -213,6 +213,62 @@ theorem opNorm_le_div_of_comp_add_comp_eq (hA : A.IsSymmetric) (hB : B.IsSymmetr
   rw [le_div_iff₀ (by positivity)]
   linarith
 
+/-- **Polar-absorption Sylvester bound.**  Let `H` be symmetric and
+coercive by `r + g`, let `T` have operator norm at most `r`, and suppose
+
+`H X - Z T = Y`
+
+where `Z` has the same operator norm as `X`.  Then `g ‖X‖ ≤ ‖Y‖`.
+
+This is the dimension-free analytic core of the sharp interval/exterior
+Davis--Kahan theorem.  In the finite spectral specialization, `H = |A-mI|`,
+`Z = U⁻¹X`, and `U` is the unitary polar factor of `A-mI`.  The theorem itself
+uses neither finite dimensionality nor a spectral theorem. -/
+theorem gap_mul_opNorm_le_of_comp_sub_comp_eq
+    {H : E →L[𝕜] E} {T : F →L[𝕜] F} {X Z Y : F →L[𝕜] E}
+    (hH : H.IsSymmetric) {r g : ℝ} (hr : 0 ≤ r) (hg : 0 < g)
+    (hHc : ∀ x, (r + g) * ‖x‖ ^ 2 ≤ RCLike.re ⟪H x, x⟫_𝕜)
+    (hT : ‖T‖ ≤ r) (hZX : ‖Z‖ = ‖X‖)
+    (hEq : H ∘L X - Z ∘L T = Y) :
+    g * ‖X‖ ≤ ‖Y‖ := by
+  rcases eq_or_ne X 0 with rfl | hX
+  · simp
+  obtain ⟨v₀, hv₀⟩ := DFunLike.ne_iff.mp hX
+  simp only [zero_apply] at hv₀
+  have hrgH : r + g ≤ ‖H‖ :=
+    le_opNorm_of_le_re_inner_map_self hHc hv₀
+  have hcorr : ‖(‖H‖ : 𝕜) • (1 : E →L[𝕜] E) - H‖ ≤ ‖H‖ - (r + g) :=
+    norm_opNorm_smul_one_sub_le hH hrgH hHc
+  have habsorb : ((‖H‖ : ℝ) : 𝕜) • X =
+      Y + (((‖H‖ : 𝕜) • (1 : E →L[𝕜] E) - H) ∘L X) + Z ∘L T := by
+    ext v
+    have hv : H (X v) - Z (T v) = Y v := by
+      simpa [sub_apply, ContinuousLinearMap.comp_apply] using
+        congrArg (fun W : F →L[𝕜] E => W v) hEq
+    simp only [add_apply, smul_apply, ContinuousLinearMap.comp_apply,
+      sub_apply, one_apply_eq_self]
+    rw [← hv]
+    module
+  have hmain : ‖H‖ * ‖X‖ ≤
+      ‖Y‖ + (‖H‖ - (r + g)) * ‖X‖ + ‖X‖ * r := by
+    calc
+      ‖H‖ * ‖X‖ = ‖((‖H‖ : ℝ) : 𝕜) • X‖ := by
+        rw [norm_smul, RCLike.norm_ofReal, abs_of_nonneg (norm_nonneg H)]
+      _ = ‖Y + (((‖H‖ : 𝕜) • (1 : E →L[𝕜] E) - H) ∘L X) + Z ∘L T‖ := by
+        rw [habsorb]
+      _ ≤ ‖Y‖ + ‖((‖H‖ : 𝕜) • (1 : E →L[𝕜] E) - H) ∘L X‖ + ‖Z ∘L T‖ :=
+        norm_add₃_le
+      _ ≤ ‖Y‖ + ‖(‖H‖ : 𝕜) • (1 : E →L[𝕜] E) - H‖ * ‖X‖ + ‖Z‖ * ‖T‖ := by
+        gcongr
+        · exact ContinuousLinearMap.opNorm_comp_le _ _
+        · exact ContinuousLinearMap.opNorm_comp_le _ _
+      _ ≤ ‖Y‖ + (‖H‖ - (r + g)) * ‖X‖ + ‖X‖ * r := by
+        rw [hZX]
+        exact add_le_add
+          (add_le_add_right (mul_le_mul_of_nonneg_right hcorr (norm_nonneg X)) ‖Y‖)
+          (mul_le_mul_of_nonneg_left hT (norm_nonneg X))
+  linarith
+
 /-- **Operator-norm bound for the Sylvester equation, separated (Davis–Kahan)
 form.**  If the quadratic form of the symmetric operator `A` is at least
 `(c + g) * ‖·‖ ^ 2` while that of the symmetric operator `B` is at most

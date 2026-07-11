@@ -309,6 +309,204 @@ private theorem le_re_inner_of_le_eigenvalues
           exact Finset.sum_le_sum fun i _ =>
             mul_le_mul_of_nonneg_right (hc i) (sq_nonneg _)
 
+private theorem opNorm_shift_le_of_spectrumIn_Icc
+    {T : E →ₗ[𝕜] E} (hT : T.IsSymmetric) {a b : ℝ} (hab : a ≤ b)
+    (hsp : SpectrumIn T ⊤ (Set.Icc a b)) :
+    ‖(T - (((a + b) / 2 : ℝ) : 𝕜) • LinearMap.id).toContinuousLinearMap‖ ≤
+      (b - a) / 2 := by
+  let m : ℝ := (a + b) / 2
+  let r : ℝ := (b - a) / 2
+  let S : E →ₗ[𝕜] E := T - (m : 𝕜) • LinearMap.id
+  have hS : S.IsSymmetric := hT.sub fun x y => by
+    simp only [LinearMap.smul_apply, LinearMap.id_apply, inner_smul_left,
+      inner_smul_right, RCLike.conj_ofReal]
+  have ha : ∀ x, a * ‖x‖ ^ 2 ≤ RCLike.re ⟪T x, x⟫_𝕜 :=
+    le_re_inner_of_le_eigenvalues hT fun i =>
+      (hsp (eigenvalue_mem_restrictedSpectrum_top hT i)).1
+  have hb : ∀ x, RCLike.re ⟪T x, x⟫_𝕜 ≤ b * ‖x‖ ^ 2 :=
+    re_inner_le_of_eigenvalues_le hT fun i =>
+      (hsp (eigenvalue_mem_restrictedSpectrum_top hT i)).2
+  have hr : 0 ≤ r := by simp only [r]; linarith
+  have hform : ∀ x, |RCLike.re ⟪S x, x⟫_𝕜| ≤ r * ‖x‖ ^ 2 := by
+    intro x
+    have hval : RCLike.re ⟪S x, x⟫_𝕜 =
+        RCLike.re ⟪T x, x⟫_𝕜 - m * ‖x‖ ^ 2 := by
+      simp only [S, LinearMap.sub_apply, LinearMap.smul_apply, LinearMap.id_apply,
+        inner_sub_left, inner_smul_left, RCLike.conj_ofReal, map_sub,
+        RCLike.re_ofReal_mul, inner_self_eq_norm_sq]
+    rw [hval, abs_le]
+    constructor <;> simp only [m, r] <;> nlinarith [ha x, hb x]
+  change ‖S.toContinuousLinearMap‖ ≤ r
+  exact ContinuousLinearMap.norm_le_of_abs_re_inner_map_self_le
+    (fun x y => hS x y) hr hform
+
+private theorem norm_shift_lower_of_spectrumOutside
+    {T : E →ₗ[𝕜] E} (hT : T.IsSymmetric) {a b δ : ℝ}
+    (hab : a ≤ b) (hδ : 0 < δ)
+    (hsp : SpectrumIn T ⊤ {lam | lam ∉ Set.Ioo (a - δ) (b + δ)}) :
+    ∀ x : E, ((b - a) / 2 + δ) * ‖x‖ ≤
+      ‖(T - (((a + b) / 2 : ℝ) : 𝕜) •
+          (LinearMap.id : E →ₗ[𝕜] E)) x‖ := by
+  let m : ℝ := (a + b) / 2
+  let r : ℝ := (b - a) / 2
+  let S : E →ₗ[𝕜] E := T - (m : 𝕜) • LinearMap.id
+  have hS : S.IsSymmetric := hT.sub fun x y => by
+    simp only [LinearMap.smul_apply, LinearMap.id_apply, inner_smul_left,
+      inner_smul_right, RCLike.conj_ofReal]
+  have hr : 0 ≤ r := by simp only [r]; linarith
+  have hk : 0 ≤ r + δ := by linarith
+  have hsep : ∀ i : Fin (Module.finrank 𝕜 E),
+      r + δ ≤ |hT.eigenvalues rfl i - m| := by
+    intro i
+    have hi := hsp (eigenvalue_mem_restrictedSpectrum_top hT i)
+    simp only [Set.mem_setOf_eq, Set.mem_Ioo, not_and_or, not_lt] at hi
+    rcases hi with hi | hi
+    · rw [abs_of_nonpos]
+      · simp only [m, r]
+        linarith
+      · simp only [m]
+        linarith
+    · rw [abs_of_nonneg]
+      · simp only [m, r]
+        linarith
+      · simp only [m]
+        linarith
+  intro x
+  have hsq : (r + δ) ^ 2 * ‖x‖ ^ 2 ≤ ‖S x‖ ^ 2 := by
+    rw [← (hT.eigenvectorBasis rfl).sum_sq_norm_inner_right (S x),
+      ← (hT.eigenvectorBasis rfl).sum_sq_norm_inner_right x, Finset.mul_sum]
+    apply Finset.sum_le_sum
+    intro i _
+    have hinner :
+        ⟪hT.eigenvectorBasis rfl i, S x⟫_𝕜 =
+          (((hT.eigenvalues rfl i - m : ℝ) : 𝕜) *
+            ⟪hT.eigenvectorBasis rfl i, x⟫_𝕜) := by
+      rw [← hS (hT.eigenvectorBasis rfl i) x]
+      simp only [S, LinearMap.sub_apply, hT.apply_eigenvectorBasis,
+        LinearMap.smul_apply, LinearMap.id_apply, inner_sub_left,
+        inner_smul_left, RCLike.conj_ofReal, map_sub, sub_mul]
+    rw [hinner, norm_mul, RCLike.norm_ofReal, mul_pow]
+    gcongr
+    exact hsep i
+  change (r + δ) * ‖x‖ ≤ ‖S x‖
+  rw [← sq_le_sq₀ (mul_nonneg hk (norm_nonneg x)) (norm_nonneg (S x))]
+  simpa [mul_pow] using hsq
+
+/-- Sharp operator-norm interval/exterior Sylvester estimate.
+
+The analytic step is the dimension-free polar-absorption theorem in
+`SylvesterBound`.  Finite dimensionality is used only to turn the interval and
+exterior eigenvalue hypotheses into a strip norm bound for the inner operator
+and a coercive bound for the modulus of the outer operator. -/
+theorem opNorm_sylvester_le_of_intervalGap
+    {A : F →ₗ[𝕜] F} {B : E →ₗ[𝕜] E} {X C : E →ₗ[𝕜] F}
+    (hA : A.IsSymmetric) (hB : B.IsSymmetric)
+    {a b δ : ℝ} (hδ : 0 < δ) (hgap : IntervalSylvesterGap A B a b δ)
+    (hEq : A ∘ₗ X - X ∘ₗ B = C) :
+    δ * ‖X.toContinuousLinearMap‖ ≤ ‖C.toContinuousLinearMap‖ := by
+  rcases subsingleton_or_nontrivial E with _ | _
+  · have hX0 : X = 0 := by
+      ext x
+      have hx : x = 0 := Subsingleton.elim _ _
+      subst x
+      simp
+    rw [hX0]
+    simp
+  rcases subsingleton_or_nontrivial F with _ | _
+  · have hX0 : X = 0 := by
+      ext x
+      exact Subsingleton.elim _ _
+    rw [hX0]
+    simp
+  letI : NeZero (Module.finrank 𝕜 E) :=
+    ⟨Nat.ne_of_gt Module.finrank_pos⟩
+  letI : NeZero (Module.finrank 𝕜 F) :=
+    ⟨Nat.ne_of_gt Module.finrank_pos⟩
+  let j₀ : Fin (Module.finrank 𝕜 E) := ⟨0, Module.finrank_pos⟩
+  have hj₀ := hgap.1 (eigenvalue_mem_restrictedSpectrum_top hB j₀)
+  have hab : a ≤ b := hj₀.1.trans hj₀.2
+  let m : ℝ := (a + b) / 2
+  let r : ℝ := (b - a) / 2
+  let S : F →ₗ[𝕜] F := A - (m : 𝕜) • LinearMap.id
+  let T : E →ₗ[𝕜] E := B - (m : 𝕜) • LinearMap.id
+  let H : F →ₗ[𝕜] F := ForMathlib.abs S
+  let U : F ≃ₗᵢ[𝕜] F := polarUnitary S
+  let Z : E →ₗ[𝕜] F := U.symm.toLinearMap ∘ₗ X
+  let Y : E →ₗ[𝕜] F := U.symm.toLinearMap ∘ₗ C
+  have hr : 0 ≤ r := by simp only [r]; linarith
+  have hTnorm : ‖T.toContinuousLinearMap‖ ≤ r := by
+    simpa [T, m, r] using opNorm_shift_le_of_spectrumIn_Icc hB hab hgap.1
+  have hSlower : ∀ y, (r + δ) * ‖y‖ ≤ ‖S y‖ := by
+    simpa [S, m, r] using
+      norm_shift_lower_of_spectrumOutside hA hab hδ hgap.2
+  have hHsym : H.IsSymmetric := (ForMathlib.isPositive_abs S).isSymmetric
+  have hHeig : ∀ i : Fin (Module.finrank 𝕜 F),
+      r + δ ≤ hHsym.eigenvalues rfl i := by
+    intro i
+    have hi : (r + δ) * ‖hHsym.eigenvectorBasis rfl i‖ ≤
+        ‖H (hHsym.eigenvectorBasis rfl i)‖ := by
+      change (r + δ) * ‖hHsym.eigenvectorBasis rfl i‖ ≤
+        ‖ForMathlib.abs S (hHsym.eigenvectorBasis rfl i)‖
+      rw [ForMathlib.norm_abs_apply]
+      exact hSlower (hHsym.eigenvectorBasis rfl i)
+    have hnonneg := (ForMathlib.isPositive_abs S).nonneg_eigenvalues rfl i
+    rw [hHsym.apply_eigenvectorBasis rfl i, norm_smul, RCLike.norm_ofReal,
+      abs_of_nonneg hnonneg,
+      (hHsym.eigenvectorBasis rfl).orthonormal.norm_eq_one, mul_one, mul_one] at hi
+    exact hi
+  have hHform : ∀ y, (r + δ) * ‖y‖ ^ 2 ≤ RCLike.re ⟪H y, y⟫_𝕜 :=
+    le_re_inner_of_le_eigenvalues hHsym hHeig
+  have hShift : S ∘ₗ X - X ∘ₗ T = C := by
+    ext x
+    have hx := LinearMap.congr_fun hEq x
+    simp only [S, T, LinearMap.comp_apply, LinearMap.sub_apply,
+      LinearMap.smul_apply, LinearMap.id_apply, map_sub, map_smul]
+    simp only [LinearMap.comp_apply, LinearMap.sub_apply] at hx
+    rw [← hx]
+    module
+  have hPolar : H ∘ₗ X - Z ∘ₗ T = Y := by
+    ext x
+    have hx := LinearMap.congr_fun hShift x
+    have hx' : U.symm (S (X x)) - U.symm (X (T x)) = U.symm (C x) := by
+      calc
+        U.symm (S (X x)) - U.symm (X (T x)) =
+            U.symm (S (X x) - X (T x)) := (map_sub U.symm _ _).symm
+        _ = U.symm (C x) := congrArg U.symm hx
+    have hSX : U.symm (S (X x)) = H (X x) := by
+      have hp := LinearMap.congr_fun (polar_decomposition_unitary S) (X x)
+      change S (X x) = U (H (X x)) at hp
+      rw [hp, U.symm_apply_apply]
+    change H (X x) - U.symm (X (T x)) = U.symm (C x)
+    rwa [← hSX]
+  have hZnorm : ‖Z.toContinuousLinearMap‖ = ‖X.toContinuousLinearMap‖ := by
+    apply le_antisymm
+    · refine Z.toContinuousLinearMap.opNorm_le_bound (norm_nonneg _) fun x => ?_
+      change ‖U.symm (X x)‖ ≤ ‖X.toContinuousLinearMap‖ * ‖x‖
+      rw [U.symm.norm_map]
+      exact X.toContinuousLinearMap.le_opNorm x
+    · refine X.toContinuousLinearMap.opNorm_le_bound (norm_nonneg _) fun x => ?_
+      change ‖X x‖ ≤ ‖Z.toContinuousLinearMap‖ * ‖x‖
+      rw [← U.symm.norm_map (X x)]
+      exact Z.toContinuousLinearMap.le_opNorm x
+  have hYnorm : ‖Y.toContinuousLinearMap‖ = ‖C.toContinuousLinearMap‖ := by
+    apply le_antisymm
+    · refine Y.toContinuousLinearMap.opNorm_le_bound (norm_nonneg _) fun x => ?_
+      change ‖U.symm (C x)‖ ≤ ‖C.toContinuousLinearMap‖ * ‖x‖
+      rw [U.symm.norm_map]
+      exact C.toContinuousLinearMap.le_opNorm x
+    · refine C.toContinuousLinearMap.opNorm_le_bound (norm_nonneg _) fun x => ?_
+      change ‖C x‖ ≤ ‖Y.toContinuousLinearMap‖ * ‖x‖
+      rw [← U.symm.norm_map (C x)]
+      exact Y.toContinuousLinearMap.le_opNorm x
+  have hPolar' : H.toContinuousLinearMap ∘L X.toContinuousLinearMap -
+      Z.toContinuousLinearMap ∘L T.toContinuousLinearMap = Y.toContinuousLinearMap := by
+    ext x
+    simpa [ContinuousLinearMap.comp_apply] using LinearMap.congr_fun hPolar x
+  have hbound := ContinuousLinearMap.gap_mul_opNorm_le_of_comp_sub_comp_eq
+    (fun x y => hHsym x y) hr hδ hHform hTnorm
+    hZnorm hPolar'
+  rwa [hYnorm] at hbound
+
 private theorem uiNorm_sylvester_le_of_form_bounds_aux
     (N : RectangularUnitarilyInvariantNorm 𝕜 E F)
     {A : F →ₗ[𝕜] F} {B : E →ₗ[𝕜] E} {X C : E →ₗ[𝕜] F}

@@ -363,6 +363,78 @@ theorem sinTheta_spectralSubspace_le
     (reduces_spectralSubspace B (Set.Icc a b)) hδ
     ⟨hAselected, hBoutside⟩
 
+/-- **Sharp one-sided interval/exterior `sin Θ` bound in operator norm.**
+
+The analytic estimate is delegated to the polar-absorption Sylvester theorem.
+Finite dimensionality enters only through restriction of the two diagonal
+blocks and the finite spectral bridge used by that theorem. -/
+theorem opNorm_sinThetaMap_le_of_intervalGap
+    {A B : E →ₗ[𝕜] E} (hA : A.IsSymmetric) (hB : B.IsSymmetric)
+    {U V : Submodule 𝕜 E} [U.HasOrthogonalProjection]
+    [V.HasOrthogonalProjection] (hU : Reduces A U) (hV : Reduces B V)
+    {a b δ : ℝ} (hδ : 0 < δ)
+    (hgap : IntervalExteriorGap A B U V a b δ) :
+    δ * ‖(sinThetaMap U V).toContinuousLinearMap‖ ≤
+      ‖(B - A).toContinuousLinearMap‖ := by
+  have hVperp : Reduces B Vᗮ := reduces_orthogonal_of_isSymmetric hB hV
+  let AU : U →ₗ[𝕜] U := A.restrict hU
+  let BVperp : Vᗮ →ₗ[𝕜] Vᗮ := B.restrict hVperp
+  let X : U →ₗ[𝕜] Vᗮ :=
+    Vᗮ.orthogonalProjectionOnto.toLinearMap ∘ₗ U.subtype
+  let C : U →ₗ[𝕜] Vᗮ :=
+    Vᗮ.orthogonalProjectionOnto.toLinearMap ∘ₗ ((B - A) ∘ₗ U.subtype)
+  have hAU : AU.IsSymmetric := isSymmetric_restrict hA hU
+  have hBVperp : BVperp.IsSymmetric := isSymmetric_restrict hB hVperp
+  have hgap' : IntervalSylvesterGap BVperp AU a b δ := by
+    constructor
+    · exact (spectrumIn_restrict_iff A hU (Set.Icc a b)).2 hgap.1
+    · exact (spectrumIn_restrict_iff B hVperp
+        {lam | lam ∉ Set.Ioo (a - δ) (b + δ)}).2 hgap.2
+  have hEq : BVperp ∘ₗ X - X ∘ₗ AU = C := by
+    ext x
+    have hcomm := projection_apply_comm_of_reduces hB hVperp (x : E)
+    change Vᗮ.starProjection (B (x : E)) =
+      B (Vᗮ.starProjection (x : E)) at hcomm
+    change B (Vᗮ.starProjection (x : E)) -
+        Vᗮ.starProjection (A (x : E)) =
+      Vᗮ.starProjection ((B - A) (x : E))
+    rw [← hcomm]
+    simp only [LinearMap.sub_apply, map_sub]
+  have hXnorm : ‖X.toContinuousLinearMap‖ =
+      ‖(sinThetaMap U V).toContinuousLinearMap‖ := by
+    apply le_antisymm
+    · refine X.toContinuousLinearMap.opNorm_le_bound
+        (norm_nonneg (sinThetaMap U V).toContinuousLinearMap) fun x => ?_
+      have hxU : U.starProjection (x : E) = (x : E) :=
+        U.starProjection_eq_self_iff.mpr x.2
+      have hfull := (sinThetaMap U V).toContinuousLinearMap.le_opNorm (x : E)
+      change ‖Vᗮ.starProjection (U.starProjection (x : E))‖ ≤
+        ‖(sinThetaMap U V).toContinuousLinearMap‖ * ‖x‖ at hfull
+      rw [hxU] at hfull
+      exact hfull
+    · refine (sinThetaMap U V).toContinuousLinearMap.opNorm_le_bound
+        (norm_nonneg X.toContinuousLinearMap) fun x => ?_
+      let ux : U := ⟨U.starProjection x, U.starProjection_apply_mem x⟩
+      have hXu := X.toContinuousLinearMap.le_opNorm ux
+      change ‖Vᗮ.starProjection (U.starProjection x)‖ ≤
+        ‖X.toContinuousLinearMap‖ * ‖U.starProjection x‖ at hXu
+      change ‖Vᗮ.starProjection (U.starProjection x)‖ ≤
+        ‖X.toContinuousLinearMap‖ * ‖x‖
+      exact hXu.trans (mul_le_mul_of_nonneg_left
+        (U.norm_starProjection_apply_le x) (norm_nonneg X.toContinuousLinearMap))
+  have hCnorm : ‖C.toContinuousLinearMap‖ ≤
+      ‖(B - A).toContinuousLinearMap‖ := by
+    refine C.toContinuousLinearMap.opNorm_le_bound
+      (norm_nonneg (B - A).toContinuousLinearMap) fun x => ?_
+    change ‖Vᗮ.starProjection ((B - A) (x : E))‖ ≤
+      ‖(B - A).toContinuousLinearMap‖ * ‖x‖
+    exact (Vᗮ.norm_starProjection_apply_le ((B - A) (x : E))).trans
+      ((B - A).toContinuousLinearMap.le_opNorm (x : E))
+  have hSylvester := opNorm_sylvester_le_of_intervalGap
+    hBVperp hAU hδ hgap' hEq
+  rw [hXnorm] at hSylvester
+  exact hSylvester.trans hCnorm
+
 /-- Difference-of-projectors operator-norm form.
 
 Lean proof route for a weaker agent:
@@ -379,7 +451,31 @@ theorem opNorm_projection_sub_projection_le
     (hgap : IntervalExteriorGap A B U V a b δ) :
     δ * ‖(projection U - projection V).toContinuousLinearMap‖ ≤
       ‖(B - A).toContinuousLinearMap‖ := by
-  sorry
+  rw [opNorm_projection_sub_eq_opNorm_sinThetaMap U V hrank]
+  exact opNorm_sinThetaMap_le_of_intervalGap hA hB hU hV hδ hgap
+
+/-- **Canonical finite spectral-projector Davis--Kahan theorem.**
+
+This is the standard interval/exterior projector statement with canonical
+spectral subspaces.  The equal-rank hypothesis is exactly what turns the
+one-sided cross-projection estimate into the norm of the full projector
+difference. -/
+theorem opNorm_spectralProjection_sub_spectralProjection_le
+    {A B : E →ₗ[𝕜] E} (hA : A.IsSymmetric) (hB : B.IsSymmetric)
+    {a b δ : ℝ} (hδ : 0 < δ)
+    (hrank : finrank 𝕜 (spectralSubspace A (Set.Icc a b)) =
+      finrank 𝕜 (spectralSubspace B (Set.Icc a b)))
+    (hAselected : SpectrumIn A (spectralSubspace A (Set.Icc a b)) (Set.Icc a b))
+    (hBoutside : SpectrumIn B (spectralSubspace B (Set.Icc a b))ᗮ
+      {lam | lam ∉ Set.Ioo (a - δ) (b + δ)}) :
+    δ * ‖(spectralProjection A (Set.Icc a b) -
+        spectralProjection B (Set.Icc a b)).toContinuousLinearMap‖ ≤
+      ‖(B - A).toContinuousLinearMap‖ := by
+  simpa [spectralProjection, projection] using
+    opNorm_projection_sub_projection_le hA hB
+      (reduces_spectralSubspace A (Set.Icc a b))
+      (reduces_spectralSubspace B (Set.Icc a b))
+      hrank hδ ⟨hAselected, hBoutside⟩
 
 /-- Frobenius form.
 

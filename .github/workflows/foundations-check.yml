@@ -1,0 +1,35 @@
+name: Foundations capstone check
+
+on:
+  push:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out scratch inputs
+        uses: actions/checkout@v4
+
+      - name: Check out DKPS source
+        uses: actions/checkout@v4
+        with:
+          repository: AIQ-Kitware/aiq-dkps-formalization
+          ref: df036cdf8e225f31dcf39871037c2bc0a2e2cb22
+          path: target
+
+      - name: Apply foundations patch
+        run: git -C target apply "$GITHUB_WORKSPACE/foundations-capstones.patch"
+
+      - name: Install pinned Lean toolchain
+        run: |
+          curl --proto '=https' --tlsv1.2 -sSf https://raw.githubusercontent.com/leanprover/elan/master/elan-init.sh | sh -s -- -y
+          echo "$HOME/.elan/bin" >> "$GITHUB_PATH"
+
+      - name: Restore Mathlib cache
+        working-directory: target
+        run: lake exe cache get
+
+      - name: Build Acharyya2024 foundations
+        working-directory: target
+        run: lake build Acharyya2024

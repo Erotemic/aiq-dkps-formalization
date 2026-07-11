@@ -156,7 +156,7 @@ High-probability Acharyya-style finite configuration concentration with a
 deterministic rate tending to zero gives Helm's finite-sample alignment error
 convergence in probability.
 
-The measurability hypothesis is the genuine remaining analytic bridge needed to
+The event-measurability hypothesis is the remaining analytic bridge needed to
 turn event-level high-probability control into convergence in probability.
 
 Formalized by Codex 5.5 High, per user-observed model label.
@@ -282,11 +282,9 @@ theorem alignmentConsistency_of_aligned_spectral
     -- Gram realization (also encodes centring of the latents):
     (hgram : ∀ ω i j, (∑ k, (ω i).1 k * (ω j).1 k)
         = Acharyya2025.Deterministic.classicalMDSMatrix (Dpop ω) i j)
-    -- Vanishing-rate side conditions (`α / 2` smallness, Davis–Kahan polar smallness):
+    -- Vanishing perturbation rate.  The local spectral smallness conditions are
+    -- derived automatically on a sufficiently large tail.
     (rate : Nat → Real) (hrate_nonneg : ∀ u, 0 ≤ rate u)
-    (hsmall : ∀ u, ((n + 1 : ℕ) : ℝ) * rate u ≤ α / 2)
-    (hpolar : ∀ u, (d : ℝ) *
-      (4 * ((n + 1 : ℕ) : ℝ) * (((n + 1 : ℕ) : ℝ) * rate u) ^ 2 / α ^ 2) ≤ 1 / 2)
     (hrate_zero : Tendsto (fun u => ((n + 1 : ℕ) : ℝ) * rate u) atTop (𝓝 0))
     -- measurability of the alignment-error events (implicit, beyond the paper):
     (hgood_meas :
@@ -320,6 +318,8 @@ theorem alignmentConsistency_of_aligned_spectral
         (fun u => Acharyya2025.ConfigPerturbation.configBound (n + 1) d α Λ
           (((n + 1 : ℕ) : ℝ) * rate u)) u ω) := by
   -- Derive the alignment-existence HP event from `hgood` via the deterministic capstone.
+  have hside := Acharyya2025.AlignedPipeline.eventually_spectral_side_conditions
+    (n := n + 1) (d := d) hα_pos hrate_zero
   have halign :
       HighProbAtTop (fun _u : Nat => Measure.pi (fun _ : Fin (n + 1) => P))
         (fun u =>
@@ -328,11 +328,14 @@ theorem alignmentConsistency_of_aligned_spectral
               (fun i : Fin (n + 1) => (ω i).1)
               (fun u => Acharyya2025.ConfigPerturbation.configBound (n + 1) d α Λ
                 (((n + 1 : ℕ) : ℝ) * rate u)) u ω}) := by
-    refine HighProbAtTop.mono hgood (fun u ω hω => ?_)
+    refine HighProbAtTop.mono_eventually hgood ?_
+    filter_upwards [hside] with u hu
+    intro ω hω
     obtain ⟨hclose, hfloor⟩ := hω
     exact Acharyya2025.AlignedPipeline.alignExists_of_entrywiseClose
       hd Dhat (Dpop ω) hsym (hpsd ω) (hrank ω) hα_pos hfloor (fun l => hcap ω l)
-      (fun i : Fin (n + 1) => (ω i).1) (hgram ω) rate hrate_nonneg hsmall hpolar u ω hclose
+      (fun i : Fin (n + 1) => (ω i).1) (hgram ω) rate u (hrate_nonneg u)
+      hu.1 hu.2 ω hclose
   -- Transport to the ConfigError HP event, then apply the identity-alignment bridge.
   have hconfig :
       HighProbAtTop (fun _u : Nat => Measure.pi (fun _ : Fin (n + 1) => P))

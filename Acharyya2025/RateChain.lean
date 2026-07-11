@@ -261,7 +261,7 @@ noncomputable def endToEndRate (n m d : Nat) (α Λ R : Real) (t : Nat → Real)
 (uniform over models) with vanishing Chebyshev ratio `n · σ2 u / (t u)² → 0`,
 and under the spectral hypotheses on the population CMDS matrix
 (PSD, rank ≤ `d`, eigenvalue floor `α` on the top-`d` block, cap `Λ`, Gram
-realization `ψ`, per-`u` smallness and polar conditions, uniform dissimilarity
+realization `ψ`, a vanishing CMDS perturbation rate, and a uniform dissimilarity
 bound `R`), the aligned spectral estimator's `ConfigError` against the
 population configuration `ψ` is high-probability bounded by the EXPLICIT rate
 `endToEndRate n m d α Λ R t u`.
@@ -303,12 +303,11 @@ theorem highProb_aligned_configError_endToEndRate
     (hσ2 : ∀ u (i : Fin n), ∫ ω, ‖Xbar u ω i - μ i‖ ^ 2 ∂(P u) ≤ σ2 u)  -- second-moment bound
     (ht_pos : ∀ u, 0 < t u)
     (hratio : Tendsto (fun u => (n : Real) * σ2 u / (t u) ^ 2) atTop (𝓝 0))  -- vanishing Chebyshev ratio (cf. r = ω(n³))
-    -- Rate / smallness side-conditions (per budget `u`):
+    -- Rate side-conditions.  The local spectral smallness inequalities are
+    -- automatic eventually from the vanishing scaled perturbation rate.
     (hrate_nonneg : ∀ u, 0 ≤ cmdsEntrywiseRate n m R (t u))
-    (hsmall : ∀ u, (n : Real) * cmdsEntrywiseRate n m R (t u) ≤ α / 2)  -- EXTRA: numeric smallness
-    (hpolar : ∀ u, (d : Real) *
-      (4 * (n : Real) * ((n : Real) * cmdsEntrywiseRate n m R (t u))^2 / α^2)
-        ≤ 1/2)  -- EXTRA: numeric polar-factor condition
+    (hrate_zero : Tendsto
+      (fun u => (n : Real) * cmdsEntrywiseRate n m R (t u)) atTop (𝓝 0))
     (hsample_bound : ∀ u ω i j, |responseDist (Xbar u ω) i j| ≤ R)  -- uniform dissimilarity bound (sample)
     (hpopulation_bound : ∀ i j, |responseDist μ i j| ≤ R) :         -- uniform dissimilarity bound (population)
     -- Conclusion (explicit-rate Theorem 2): with high probability the aligned
@@ -329,7 +328,7 @@ theorem highProb_aligned_configError_endToEndRate
   -- `endToEndRate` is definitionally the bound it produces.
   exact Acharyya2025.AlignedPipeline.highProb_aligned_configError_of_response_mean
     P hn hd Xbar μ hB hrank hα_pos hfloor hΛ ψ hψ t (fun _ => R)
-    hrate_nonneg hsmall hpolar hmean hsample_bound
+    hrate_nonneg hrate_zero hmean hsample_bound
     (fun _u i j => hpopulation_bound i j)
 
 /-! ### (4) Consistency corollary -/

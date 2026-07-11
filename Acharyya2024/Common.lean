@@ -114,6 +114,24 @@ theorem HighProbAtTop.mono {Ω : Type} [MeasurableSpace Ω]
   exact ⟨N, fun n hn => (hN n hn).trans (MeasureTheory.measure_mono (h_subset n))⟩
 
 /--
+High-probability events are monotone under event inclusion that holds only for
+all sufficiently large indices.  This is the natural asymptotic variant of
+`HighProbAtTop.mono`; finitely many exceptional indices do not affect a
+high-probability-at-top statement.
+-/
+theorem HighProbAtTop.mono_eventually {Ω : Type} [MeasurableSpace Ω]
+    {P : Nat → Measure Ω} {E F : Nat → Set Ω}
+    (hE : HighProbAtTop P E)
+    (h_subset : ∀ᶠ n in atTop, E n ⊆ F n) :
+    HighProbAtTop P F := by
+  intro δ hδ
+  obtain ⟨N, hN⟩ := hE δ hδ
+  obtain ⟨M, hM⟩ := eventually_atTop.mp h_subset
+  refine ⟨max N M, fun n hn => ?_⟩
+  exact (hN n (lt_of_le_of_lt (le_max_left _ _) hn)).trans
+    (MeasureTheory.measure_mono (hM n (le_of_lt (lt_of_le_of_lt (le_max_right _ _) hn))))
+
+/--
 High-probability metric error bounds with deterministic rate tending to zero
 imply convergence in probability.
 

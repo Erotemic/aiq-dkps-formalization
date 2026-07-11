@@ -70,8 +70,8 @@ Let `Xbar r ω : Fin n → Mat m p` be sample-average response matrices and
 distance between the empirical and population response-dissimilarity matrices
 converges to `0` in probability.
 
-The second-moment bound `hmoment` is the only probabilistic hypothesis; in the
-paper it is established by the iid variance/trace computation `v r = (1/r)·Σγ`.
+The second-moment bound `hmoment`, together with integrability of the squared
+errors, is the only probabilistic hypothesis; in the paper it is established by the iid variance/trace computation `v r = (1/r)·Σγ`.
 We take it as a hypothesis to separate the concentration step from the variance
 algebra.
 
@@ -90,8 +90,6 @@ theorem dissimilarity_convergesInProbability_of_secondMoment
     {n m p : Nat}                               -- n models, response matrices of size m×p
     (Xbar : Nat → Ω → Fin n → Mat m p)          -- empirical sample-mean responses X̄_i (indexed by sample size r)
     (μ : Fin n → Mat m p)                        -- population mean responses μ_i
-    -- extra (implicit) assumptions beyond the paper:
-    (hmeas : ∀ r i, Measurable (fun ω => Xbar r ω i))  -- measurability of each response map
     (v : Nat → Real)                                    -- per-model mean-squared-error rate (paper: γ_ij/r)
     (hint : ∀ r i, Integrable (fun ω => ‖Xbar r ω i - μ i‖ ^ 2) P)  -- finite second moment per model
     -- core hypotheses (the paper's γ condition):

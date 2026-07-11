@@ -132,4 +132,52 @@ theorem exists_config_gram_eq_of_posSemidef_rank_le
   exact Finset.sum_congr rfl fun k _ => by
     rw [Matrix.conjTranspose_apply, star_trivial]
 
+
+/--
+A configuration Gram representation automatically supplies both positive
+semidefiniteness and the ambient-dimension rank bound.  Together with
+`exists_config_gram_eq_of_posSemidef_rank_le`, this identifies the PSD/rank
+package with finite Euclidean Gram realizability.
+-/
+theorem posSemidef_and_rank_le_of_config_gram_eq
+    {n d : Nat} (B : Matrix (Fin n) (Fin n) Real)
+    (ψ : Acharyya2024.Config n d)
+    (hψ : ∀ i j : Fin n, (∑ k : Fin d, ψ i k * ψ j k) = B i j) :
+    B.PosSemidef ∧ B.rank ≤ d := by
+  apply (ForMathlib.Matrix.posSemidef_and_rank_le_iff_exists_conjTranspose_mul_self B).2
+  let A : Matrix (Fin d) (Fin n) Real := fun k i => ψ i k
+  refine ⟨A, ?_⟩
+  ext i j
+  rw [Matrix.mul_apply]
+  simpa [A, Matrix.conjTranspose_apply, star_trivial] using (hψ i j).symm
+
+/-- PSD with rank at most `d` is equivalent to realization as the Gram matrix
+of a configuration in `ℝ^d`. -/
+theorem posSemidef_and_rank_le_iff_exists_config_gram_eq
+    {n d : Nat} (B : Matrix (Fin n) (Fin n) Real) :
+    (B.PosSemidef ∧ B.rank ≤ d) ↔
+      ∃ ψ : Acharyya2024.Config n d,
+        ∀ i j : Fin n, (∑ k : Fin d, ψ i k * ψ j k) = B i j := by
+  constructor
+  · rintro ⟨hB, hrank⟩
+    exact exists_config_gram_eq_of_posSemidef_rank_le B hB hrank
+  · rintro ⟨ψ, hψ⟩
+    exact posSemidef_and_rank_le_of_config_gram_eq B ψ hψ
+
+/-- A fixed choice of Gram realization for a PSD matrix whose rank fits in the
+requested embedding dimension. -/
+noncomputable def configOfPosSemidefRankLe
+    {n d : Nat} (B : Matrix (Fin n) (Fin n) Real)
+    (hB : B.PosSemidef) (hrank : B.rank ≤ d) : Acharyya2024.Config n d :=
+  Classical.choose (exists_config_gram_eq_of_posSemidef_rank_le B hB hrank)
+
+/-- The selected PSD/rank realization has exactly the requested Gram matrix. -/
+theorem configOfPosSemidefRankLe_gram_eq
+    {n d : Nat} (B : Matrix (Fin n) (Fin n) Real)
+    (hB : B.PosSemidef) (hrank : B.rank ≤ d) (i j : Fin n) :
+    (∑ k : Fin d,
+      configOfPosSemidefRankLe B hB hrank i k *
+        configOfPosSemidefRankLe B hB hrank j k) = B i j :=
+  Classical.choose_spec (exists_config_gram_eq_of_posSemidef_rank_le B hB hrank) i j
+
 end Acharyya2025.GramRealization

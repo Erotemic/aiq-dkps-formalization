@@ -430,8 +430,9 @@ theorem highProb_mse_nn_le_of_subevent
   refine ⟨N+1, ?_⟩
   exact hN (N+1) (Nat.lt_succ_self N)
 
-/-- `highProb_queryEfficient_nn` (query efficiency) with a measurable
-high-probability sub-event in place of `h_conc`/`h_conc_meas`. -/
+/-- Query efficiency with a measurable high-probability sub-event in place of
+`h_conc`/`h_conc_meas`.  The paper's cardinality condition `m < M` is absent:
+the proof uses only positivity of the subset-score baseline MSE. -/
 theorem highProb_queryEfficient_nn_of_subevent
   (Pf : Measure (Model Q X)) [IsProbabilityMeasure Pf]
   (μ : ℕ → Measure Ω) (hμ : ∀ n, IsProbabilityMeasure (μ n))
@@ -440,8 +441,6 @@ theorem highProb_queryEfficient_nn_of_subevent
   (f_ref : ∀ n, Ω → Fin n → Model Q X)
   (score : Model Q X → Finset Q → ℝ)
   (Qstar Qsub : Finset Q)
-  -- paper condition m < M (recorded for fidelity; not used by the formal argument)
-  (hm : Qsub.card < Qstar.card)
   -- paper Assumption 1 (Lipschitz score) for this `Qsub`
   (γ : ℝ)
   (h_lipQ : ∀ (f f' : Model Q X),

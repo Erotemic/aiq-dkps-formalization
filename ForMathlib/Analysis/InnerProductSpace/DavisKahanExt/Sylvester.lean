@@ -5,6 +5,7 @@ Authors: Jon Crall, GPT 5.6 High
 -/
 import ForMathlib.Analysis.InnerProductSpace.DavisKahanExt.SymmetricIdeals
 import ForMathlib.Analysis.InnerProductSpace.DavisKahanExt.Resolvent
+import ForMathlib.Analysis.InnerProductSpace.SylvesterBound
 
 /-!
 # Infinite-dimensional Sylvester equations
@@ -166,6 +167,30 @@ theorem norm_sylvester_le_of_orderedSeparation
     (hEq : sylvesterOperator A B X = C) :
     d * ‖X‖ ≤ ‖C‖ := by
   sorry
+
+/-- **The sharp constant-one Sylvester operator-norm bound, quadratic-form
+(coercivity) form — dimension-free and completeness-free.**  If the quadratic
+form of the self-adjoint `A` is at least `(c+g)‖·‖²` while that of `B` is at most
+`c‖·‖²`, and `A X − X B = C`, then `‖X‖ ≤ ‖C‖ / g`.
+
+This is the analytic engine of the infinite-dimensional `sin Θ` theorem, proved
+by the integral-free absorption argument
+`ForMathlib.ContinuousLinearMap.opNorm_le_div_of_comp_sub_comp_eq` (no semigroup
+integral, no spectral measure, no dimension hypothesis).  The
+`OrderedSpectraSeparated` hypothesis of `norm_sylvester_le_of_orderedSeparation`
+reduces to these quadratic-form bounds once a bounded spectral theorem
+(numerical range = closed convex hull of the spectrum) is available to interpret
+`restrictedSpectrum`; that reduction is the only remaining obstruction to the
+spectrum-predicate form. -/
+theorem norm_sylvester_le_of_coercive
+    {A : F →L[𝕜] F} {B : E →L[𝕜] E} {X C : E →L[𝕜] F}
+    (hA : IsSelfAdjointOperator A) (hB : IsSelfAdjointOperator B)
+    {c g : ℝ} (hg : 0 < g)
+    (hAc : ∀ x, (c + g) * ‖x‖ ^ 2 ≤ RCLike.re ⟪A x, x⟫_𝕜)
+    (hBc : ∀ x, RCLike.re ⟪B x, x⟫_𝕜 ≤ c * ‖x‖ ^ 2)
+    (hEq : sylvesterOperator A B X = C) :
+    ‖X‖ ≤ ‖C‖ / g :=
+  ContinuousLinearMap.opNorm_le_div_of_comp_sub_comp_eq hA hB hg hAc hBc hEq
 
 /-- General separated-spectrum estimate with the `π / 2` constant.
 

@@ -5,6 +5,7 @@ Authors: Jon Crall, GPT 5.6 High
 -/
 import ForMathlib.Analysis.InnerProductSpace.DavisKahanTheory.Sylvester
 import ForMathlib.Analysis.InnerProductSpace.SinThetaUINorm
+import ForMathlib.Analysis.InnerProductSpace.SinThetaOpNorm
 
 /-!
 # The complete finite-dimensional `sin Θ` theorem family
@@ -94,6 +95,40 @@ theorem sinTheta_residual_le_of_spectralDistance
     (hgap : SpectraSeparated M ⊤ A Uᗮ δ) :
     δ * N (sinThetaEmbedding U X) ≤ (Real.pi / 2) * N (residual A X M) := by
   sorry
+
+/-! ## Operator-norm one-sided (directed) form
+
+This is the robust first capstone: the one-sided operator-norm `sin Θ` estimate,
+proved by feeding the spectral-gap coercivity bridge into the dimension-free
+operator-norm Sylvester theorem `norm_starProjection_comp_starProjection_le`.
+No principal-angle or equal-rank geometry is needed. -/
+
+/-- **One-sided operator-norm Davis--Kahan `sin Θ` theorem (spectral-hypothesis
+form).**  If `A, B` are symmetric, `U` reduces `A` with `U`-carried spectrum
+`≥ c + g`, `V` reduces `B` with `V`-carried spectrum `≤ c`, and
+`‖(B − A) x‖ ≤ ε ‖x‖`, then
+
+`‖P_V ∘ P_U‖ ≤ ε / g`.
+
+`‖P_V P_U‖` is the sine of the directed angle between the high `A`-block `U` and
+the high `B`-block `Vᗮ`.  The analytic core is dimension-free
+(`ForMathlib.norm_starProjection_comp_starProjection_le`); only the spectrum ⟹
+coercivity bridge (`le_re_inner_of_spectrumIn` / `re_inner_le_of_spectrumIn`) is
+finite-dimensional. -/
+theorem opNorm_directed_sinTheta_le {A B : E →ₗ[𝕜] E}
+    (hA : A.IsSymmetric) (hB : B.IsSymmetric)
+    {U V : Submodule 𝕜 E} [U.HasOrthogonalProjection] [V.HasOrthogonalProjection]
+    (hU : Reduces A U) (hV : Reduces B V)
+    {c g ε : ℝ} (hg : 0 < g)
+    (hUspec : SpectrumIn A U (Set.Ici (c + g)))
+    (hVspec : SpectrumIn B V (Set.Iic c))
+    (hε0 : 0 ≤ ε) (hε : ∀ x, ‖(B - A) x‖ ≤ ε * ‖x‖) :
+    ‖(V.starProjection ∘L U.starProjection : E →L[𝕜] E)‖ ≤ ε / g := by
+  haveI : CompleteSpace E := FiniteDimensional.complete 𝕜 E
+  exact ForMathlib.norm_starProjection_comp_starProjection_le hA hB hU hV hg
+    (fun x hx => le_re_inner_of_spectrumIn hA hU hUspec hx)
+    (fun x hx => re_inner_le_of_spectrumIn hB hV hVspec hx)
+    hε0 hε
 
 /-! ## Perturbation form -/
 

@@ -130,6 +130,22 @@ theorem opNorm_directed_sinTheta_le {A B : E →ₗ[𝕜] E}
     (fun x hx => re_inner_le_of_spectrumIn hB hV hVspec hx)
     hε0 hε
 
+/-- **Spectral-projection directed operator-norm `sin Θ` theorem.**  The canonical
+spectral subspaces automatically reduce their operators, so the one-sided bound
+holds for `‖P_{spec B t} ∘ P_{spec A s}‖` under the corresponding spectral-gap
+hypotheses.  This is the directed operator-norm form of the canonical
+spectral-projector Davis--Kahan theorem. -/
+theorem opNorm_spectralSubspace_directed_sinTheta_le {A B : E →ₗ[𝕜] E}
+    (hA : A.IsSymmetric) (hB : B.IsSymmetric) {s t : Set ℝ}
+    {c g ε : ℝ} (hg : 0 < g)
+    (hUspec : SpectrumIn A (spectralSubspace A s) (Set.Ici (c + g)))
+    (hVspec : SpectrumIn B (spectralSubspace B t) (Set.Iic c))
+    (hε0 : 0 ≤ ε) (hε : ∀ x, ‖(B - A) x‖ ≤ ε * ‖x‖) :
+    ‖((spectralSubspace B t).starProjection ∘L
+        (spectralSubspace A s).starProjection : E →L[𝕜] E)‖ ≤ ε / g :=
+  opNorm_directed_sinTheta_le hA hB (reduces_spectralSubspace A s)
+    (reduces_spectralSubspace B t) hg hUspec hVspec hε0 hε
+
 /-! ## Perturbation form -/
 
 /-- **Davis--Kahan `sin Θ`, perturbation form, every square UI norm.**

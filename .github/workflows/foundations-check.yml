@@ -22,7 +22,10 @@ jobs:
       - name: Apply foundations patch
         run: |
           git -C target apply "$GITHUB_WORKSPACE/foundations-capstones.patch"
-          for patch in "$GITHUB_WORKSPACE"/foundations-fixes*.patch; do
+          if [ -f "$GITHUB_WORKSPACE/foundations-fixes.patch" ]; then
+            git -C target apply "$GITHUB_WORKSPACE/foundations-fixes.patch"
+          fi
+          for patch in "$GITHUB_WORKSPACE"/foundations-fixes-[0-9]*.patch; do
             if [ -f "$patch" ]; then
               git -C target apply "$patch"
             fi

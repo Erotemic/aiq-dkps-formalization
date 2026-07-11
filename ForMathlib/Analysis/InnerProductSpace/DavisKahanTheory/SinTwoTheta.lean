@@ -47,9 +47,10 @@ noncomputable def reflectionDefect (V : Submodule 𝕜 E)
 
 /-- **Davis--Kahan `sin 2Θ`, residual form, every UI norm.**
 
-Proof strategy: Use the reflection to convert the angle expression to a cross-block Sylvester
-equation. Prefer the operator-norm proof from `DavisKahanExt.sinTwoTheta_residual`; obtain every
-finite UI norm through the existing `SinTwoThetaUINorm` majorization theorem.
+Lean proof route for a weaker agent:
+
+1. Use the reflection to convert the angle expression to a cross-block Sylvester equation.
+2. Prefer the operator-norm proof from `DavisKahanExt.sinTwoTheta_residual`; obtain every finite UI norm through the existing `SinTwoThetaUINorm` majorization theorem.
 -/
 theorem sinTwoTheta_residual_le
     (N : RectangularUnitarilyInvariantNorm 𝕜 F E)
@@ -62,9 +63,10 @@ theorem sinTwoTheta_residual_le
 
 /-- **Davis--Kahan `sin 2Θ`, perturbation form, every UI norm.**
 
-Proof strategy: Combine the mirror-defect theorem with
-`reflectionDefect_le_two_mul_perturbation`; instantiate spectral subspaces or zero-padded
-unequal ranks afterward. The operator-norm core should be a direct Ext specialization.
+Lean proof route for a weaker agent:
+
+1. Combine the mirror-defect theorem with `reflectionDefect_le_two_mul_perturbation`; instantiate spectral subspaces or zero-padded unequal ranks afterward.
+2. The operator-norm core should be a direct Ext specialization.
 -/
 theorem sinTwoTheta_perturbation_le
     (N : UnitarilyInvariantNorm 𝕜 E)
@@ -78,8 +80,11 @@ theorem sinTwoTheta_perturbation_le
 /-- One-sided cross-block normalization matching the theorem already proved in
 `SinTwoThetaUINorm.lean`.
 
-Proof strategy: Apply the already proved theorem in `SinTwoThetaUINorm.lean` and reconcile its
-cross-projection notation with the scaffold definitions.
+Lean proof route for a weaker agent:
+
+1. Apply the already proved theorem in `SinTwoThetaUINorm.lean` and reconcile its cross-projection notation with the scaffold definitions.
+2. Rewrite `sinTwoAngleOperator` with `sinTwoAngleOperator_eq_two_smul_cross` if the source theorem uses the normalized map.
+3. Normalize scalar multiplication with `N.smul_eq` and `norm_ofNat`.
 -/
 theorem sinTwoTheta_cross_perturbation_le
     (N : UnitarilyInvariantNorm 𝕜 E)
@@ -93,9 +98,10 @@ theorem sinTwoTheta_cross_perturbation_le
 
 /-- Mirror-defect theorem with no second operator.
 
-Proof strategy: Use the reflection to convert the angle expression to a cross-block Sylvester
-equation. Prefer the operator-norm proof from `DavisKahanExt.sinTwoTheta_residual`; obtain every
-finite UI norm through the existing `SinTwoThetaUINorm` majorization theorem.
+Lean proof route for a weaker agent:
+
+1. Use the reflection to convert the angle expression to a cross-block Sylvester equation.
+2. Prefer the operator-norm proof from `DavisKahanExt.sinTwoTheta_residual`; obtain every finite UI norm through the existing `SinTwoThetaUINorm` majorization theorem.
 -/
 theorem sinTwoTheta_reflectionDefect_le
     (N : UnitarilyInvariantNorm 𝕜 E)
@@ -109,26 +115,28 @@ theorem sinTwoTheta_reflectionDefect_le
 /-- The reflection defect is at most twice the perturbation when `V` reduces
 `B`.
 
-Proof strategy: After adding symmetry of `B`, show its reflection commutes with `B`, rewrite
-`JAJ-A` as two conjugates of `A-B`, and apply UI invariance plus the triangle inequality. This
-is the finite specialization of the same lemma needed by `DavisKahanExt.DoubleAngle`.
+Lean proof route for a weaker agent:
 
-Signature audit: False with only `Reduces B V`, because finite `Reduces` records invariance of
-`V` but not of `Vᗮ`. Add `hB : B.IsSymmetric` (or explicitly assume both blocks reduce) so the
-reflection commutes with `B`.
+1. After adding symmetry of `B`, show its reflection commutes with `B`, rewrite `JAJ-A` as two conjugates of `A-B`, and apply UI invariance plus the triangle inequality.
+2. This is the finite specialization of the same lemma needed by `DavisKahanExt.DoubleAngle`.
+
+Signature audit: The added `hB` hypothesis upgrades invariance of `V` to reduction of both
+orthogonal blocks, so the reflection commutes with `B`.
 -/
 theorem reflectionDefect_le_two_mul_perturbation
     (N : UnitarilyInvariantNorm 𝕜 E)
-    {A B : E →ₗ[𝕜] E} {V : Submodule 𝕜 E}
-    [V.HasOrthogonalProjection] (hV : Reduces B V) :
+    {A B : E →ₗ[𝕜] E} (hB : B.IsSymmetric)
+    {V : Submodule 𝕜 E} [V.HasOrthogonalProjection]
+    (hV : Reduces B V) :
     N (reflectionDefect V A) ≤ 2 * N (B - A) := by
   sorry
 
 /-- Canonical spectral-projector form.
 
-Proof strategy: Combine the mirror-defect theorem with
-`reflectionDefect_le_two_mul_perturbation`; instantiate spectral subspaces or zero-padded
-unequal ranks afterward. The operator-norm core should be a direct Ext specialization.
+Lean proof route for a weaker agent:
+
+1. Combine the mirror-defect theorem with `reflectionDefect_le_two_mul_perturbation`; instantiate spectral subspaces or zero-padded unequal ranks afterward.
+2. The operator-norm core should be a direct Ext specialization.
 -/
 theorem sinTwoTheta_spectralSubspace_le
     (N : UnitarilyInvariantNorm 𝕜 E)
@@ -142,9 +150,10 @@ theorem sinTwoTheta_spectralSubspace_le
 /-- Unequal-dimensional extension: zero padding records the unmatched
 principal directions.
 
-Proof strategy: Combine the mirror-defect theorem with
-`reflectionDefect_le_two_mul_perturbation`; instantiate spectral subspaces or zero-padded
-unequal ranks afterward. The operator-norm core should be a direct Ext specialization.
+Lean proof route for a weaker agent:
+
+1. Combine the mirror-defect theorem with `reflectionDefect_le_two_mul_perturbation`; instantiate spectral subspaces or zero-padded unequal ranks afterward.
+2. The operator-norm core should be a direct Ext specialization.
 -/
 theorem sinTwoTheta_perturbation_le_unequalFinrank
     (N : UnitarilyInvariantNorm 𝕜 E)
@@ -157,9 +166,10 @@ theorem sinTwoTheta_perturbation_le_unequalFinrank
 
 /-- Operator-norm form.
 
-Proof strategy: Instantiate the corrected every-UI perturbation theorem and simplify. The
-op-norm case should eventually be a direct specialization of
-`DavisKahanExt.sinTwoTheta_perturbation`.
+Lean proof route for a weaker agent:
+
+1. Instantiate the corrected every-UI perturbation theorem and simplify.
+2. The op-norm case should eventually be a direct specialization of `DavisKahanExt.sinTwoTheta_perturbation`.
 -/
 theorem opNorm_sinTwoTheta_le
     {A B : E →ₗ[𝕜] E} (hA : A.IsSymmetric) (hB : B.IsSymmetric)
@@ -172,9 +182,10 @@ theorem opNorm_sinTwoTheta_le
 
 /-- Frobenius form.
 
-Proof strategy: Instantiate the corrected every-UI perturbation theorem and simplify. The
-op-norm case should eventually be a direct specialization of
-`DavisKahanExt.sinTwoTheta_perturbation`.
+Lean proof route for a weaker agent:
+
+1. Instantiate the corrected every-UI perturbation theorem and simplify.
+2. The op-norm case should eventually be a direct specialization of `DavisKahanExt.sinTwoTheta_perturbation`.
 -/
 theorem frobenius_sinTwoTheta_le
     {A B : E →ₗ[𝕜] E} (hA : A.IsSymmetric) (hB : B.IsSymmetric)
@@ -187,9 +198,10 @@ theorem frobenius_sinTwoTheta_le
 
 /-- Ky Fan form.
 
-Proof strategy: Instantiate the corrected every-UI perturbation theorem and simplify. The
-op-norm case should eventually be a direct specialization of
-`DavisKahanExt.sinTwoTheta_perturbation`.
+Lean proof route for a weaker agent:
+
+1. Instantiate the corrected every-UI perturbation theorem and simplify.
+2. The op-norm case should eventually be a direct specialization of `DavisKahanExt.sinTwoTheta_perturbation`.
 -/
 theorem kyFan_sinTwoTheta_le
     {A B : E →ₗ[𝕜] E} (hA : A.IsSymmetric) (hB : B.IsSymmetric)

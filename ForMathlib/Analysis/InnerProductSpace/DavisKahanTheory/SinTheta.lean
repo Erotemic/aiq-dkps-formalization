@@ -44,9 +44,10 @@ The spectrum of the approximate coordinate operator `M` lies in `[a,b]`, the
 unwanted spectrum of `A` on `Uᗮ` lies outside `(a-δ,b+δ)`, and `R = AX-XM`.
 Then `δ ‖sin Θ‖ ≤ ‖R‖`.
 
-Proof strategy: Project `AX-XM` into `Uᗮ`; reduction of `U` gives a Sylvester equation between
-`A|Uᗮ` and `M`. Apply the interval/exterior finite UI Sylvester theorem and the projection ideal
-bound.
+Lean proof route for a weaker agent:
+
+1. Project `AX-XM` into `Uᗮ`; reduction of `U` gives a Sylvester equation between `A|Uᗮ` and `M`.
+2. Apply the interval/exterior finite UI Sylvester theorem and the projection ideal bound.
 -/
 theorem sinTheta_residual_le
     (N : RectangularUnitarilyInvariantNorm 𝕜 F E)
@@ -61,9 +62,10 @@ theorem sinTheta_residual_le
 
 /-- Ordered half-line residual form.
 
-Proof strategy: Project the residual onto `Uᗮ`, identify the ordered Sylvester equation, and
-apply `uiNorm_sylvester_le_of_orderedGap`. The operator-norm core should later specialize
-`DavisKahanExt.sinTheta_residual`.
+Lean proof route for a weaker agent:
+
+1. Project the residual onto `Uᗮ`, identify the ordered Sylvester equation, and apply `uiNorm_sylvester_le_of_orderedGap`.
+2. The operator-norm core should later specialize `DavisKahanExt.sinTheta_residual`.
 -/
 theorem sinTheta_residual_le_of_orderedGap
     (N : RectangularUnitarilyInvariantNorm 𝕜 F E)
@@ -77,8 +79,11 @@ theorem sinTheta_residual_le_of_orderedGap
 /-- General disjoint-spectrum residual form.  The `π/2` loss is the
 Bhatia--Davis--McIntosh extension, not the sharp interval/exterior theorem.
 
-Proof strategy: Project the residual onto `Uᗮ`, obtain the rectangular Sylvester equation, apply
-`uiNorm_sylvester_le_of_spectralDistance`, and contract the projected residual.
+Lean proof route for a weaker agent:
+
+1. Project the residual onto `Uᗮ`, obtain the rectangular Sylvester equation, apply `uiNorm_sylvester_le_of_spectralDistance`, and contract the projected residual.
+2. Record the exact Sylvester equation as a named local equality before applying the general estimate.
+3. Use the projection contraction and positivity of `δ` to normalize the final scalar inequality.
 -/
 theorem sinTheta_residual_le_of_spectralDistance
     (N : RectangularUnitarilyInvariantNorm 𝕜 F E)
@@ -94,10 +99,10 @@ theorem sinTheta_residual_le_of_spectralDistance
 
 /-- **Davis--Kahan `sin Θ`, perturbation form, every square UI norm.**
 
-Proof strategy: Represent the perturbed reducing subspace by an isometric embedding, rewrite its
-residual as `(A-B)X`, apply the corresponding residual theorem, and contract composition by the
-embedding. The operator-norm instance should be a thin specialization of
-`DavisKahanExt.SinTheta`.
+Lean proof route for a weaker agent:
+
+1. Represent the perturbed reducing subspace by an isometric embedding, rewrite its residual as `(A-B)X`, apply the corresponding residual theorem, and contract composition by the embedding.
+2. The operator-norm instance should be a thin specialization of `DavisKahanExt.SinTheta`.
 -/
 theorem sinTheta_perturbation_le
     (N : UnitarilyInvariantNorm 𝕜 E)
@@ -115,9 +120,10 @@ requires the reverse mixed gap as well as the forward one; a single mixed gap
 controls only `sinThetaMap U V` (except in the operator norm).  This is
 Davis--Kahan Proposition 6.1.
 
-Proof strategy: Apply the one-sided theorem in both directions, identify the two sine blocks of
-the full angle operator, and use the finite pinching/symmetric-gauge argument. For operator
-norm, this should specialize `DavisKahanExt.sinTheta_symmetric`.
+Lean proof route for a weaker agent:
+
+1. Apply the one-sided theorem in both directions, identify the two sine blocks of the full angle operator, and use the finite pinching/symmetric-gauge argument.
+2. For operator norm, this should specialize `DavisKahanExt.sinTheta_symmetric`.
 -/
 theorem sinAngleOperator_perturbation_le
     (N : UnitarilyInvariantNorm 𝕜 E)
@@ -132,10 +138,10 @@ theorem sinAngleOperator_perturbation_le
 
 /-- Ordered half-line perturbation form.
 
-Proof strategy: Represent the perturbed reducing subspace by an isometric embedding, rewrite its
-residual as `(A-B)X`, apply the corresponding residual theorem, and contract composition by the
-embedding. The operator-norm instance should be a thin specialization of
-`DavisKahanExt.SinTheta`.
+Lean proof route for a weaker agent:
+
+1. Represent the perturbed reducing subspace by an isometric embedding, rewrite its residual as `(A-B)X`, apply the corresponding residual theorem, and contract composition by the embedding.
+2. The operator-norm instance should be a thin specialization of `DavisKahanExt.SinTheta`.
 -/
 theorem sinTheta_perturbation_le_of_orderedGap
     (N : UnitarilyInvariantNorm 𝕜 E)
@@ -149,10 +155,10 @@ theorem sinTheta_perturbation_le_of_orderedGap
 
 /-- Canonical spectral-projector statement with no eigenbasis in the API.
 
-Proof strategy: Represent the perturbed reducing subspace by an isometric embedding, rewrite its
-residual as `(A-B)X`, apply the corresponding residual theorem, and contract composition by the
-embedding. The operator-norm instance should be a thin specialization of
-`DavisKahanExt.SinTheta`.
+Lean proof route for a weaker agent:
+
+1. Represent the perturbed reducing subspace by an isometric embedding, rewrite its residual as `(A-B)X`, apply the corresponding residual theorem, and contract composition by the embedding.
+2. The operator-norm instance should be a thin specialization of `DavisKahanExt.SinTheta`.
 -/
 theorem sinTheta_spectralSubspace_le
     (N : UnitarilyInvariantNorm 𝕜 E)
@@ -167,9 +173,10 @@ theorem sinTheta_spectralSubspace_le
 
 /-- Difference-of-projectors operator-norm form.
 
-Proof strategy: Combine the operator-norm one-sided `sin Θ` theorem with the equal-rank
-projection/cross-gap identity. The analytic bound should specialize Ext; only the finite rank
-bridge remains local.
+Lean proof route for a weaker agent:
+
+1. Combine the operator-norm one-sided `sin Θ` theorem with the equal-rank projection/cross-gap identity.
+2. The analytic bound should specialize Ext; only the finite rank bridge remains local.
 -/
 theorem opNorm_projection_sub_projection_le
     {A B : E →ₗ[𝕜] E} (hA : A.IsSymmetric) (hB : B.IsSymmetric)
@@ -184,8 +191,11 @@ theorem opNorm_projection_sub_projection_le
 
 /-- Frobenius form.
 
-Proof strategy: Instantiate the every-UI perturbation theorem with the existing Frobenius or Ky
-Fan norm and simplify the evaluation theorem.
+Lean proof route for a weaker agent:
+
+1. Instantiate the every-UI perturbation theorem with the existing Frobenius or Ky Fan norm and simplify the evaluation theorem.
+2. Instantiate `sinTheta_perturbation_le` with `UnitarilyInvariantNorm.frobenius`.
+3. Rewrite the norm application with the Frobenius evaluation lemma and close by `simpa`.
 -/
 theorem frobenius_sinTheta_le
     {A B : E →ₗ[𝕜] E} (hA : A.IsSymmetric) (hB : B.IsSymmetric)
@@ -199,8 +209,11 @@ theorem frobenius_sinTheta_le
 
 /-- Ky Fan form, simultaneously controlling every singular-value prefix.
 
-Proof strategy: Instantiate the every-UI perturbation theorem with the existing Frobenius or Ky
-Fan norm and simplify the evaluation theorem.
+Lean proof route for a weaker agent:
+
+1. Instantiate the every-UI perturbation theorem with the existing Frobenius or Ky Fan norm and simplify the evaluation theorem.
+2. Instantiate `sinTheta_perturbation_le` with the finite Ky Fan UI norm.
+3. Rewrite both applications using the Ky Fan evaluation theorem.
 -/
 theorem kyFan_sinTheta_le
     {A B : E →ₗ[𝕜] E} (hA : A.IsSymmetric) (hB : B.IsSymmetric)
@@ -213,9 +226,10 @@ theorem kyFan_sinTheta_le
 
 /-- General two-sided spectral separation with the `π/2` constant.
 
-Proof strategy: Use the residual equation and the general `π/2` Sylvester estimate. Prefer the
-Ext general-separation theorem for operator norm and retain finite Fan dominance for arbitrary
-UI norms.
+Lean proof route for a weaker agent:
+
+1. Use the residual equation and the general `π/2` Sylvester estimate.
+2. Prefer the Ext general-separation theorem for operator norm and retain finite Fan dominance for arbitrary UI norms.
 -/
 theorem sinTheta_perturbation_le_of_spectralDistance
     (N : UnitarilyInvariantNorm 𝕜 E)

@@ -66,9 +66,10 @@ noncomputable def gramBlockDiagonal (A : E →ₗ[𝕜] F) :
 
 /-- The dilation is symmetric.
 
-Proof strategy: Prove directly by block-matrix/adjoint algebra and the operator-norm ideal
-inequality. These finite identities are prerequisites for, rather than consequences of, the late
-Ext compact/singular layer.
+Lean proof route for a weaker agent:
+
+1. Prove directly by block-matrix/adjoint algebra and the operator-norm ideal inequality.
+2. These finite identities are prerequisites for, rather than consequences of, the late Ext compact/singular layer.
 -/
 theorem isSymmetric_hermitianDilation (A : E →ₗ[𝕜] F) :
     (hermitianDilation A).IsSymmetric := by
@@ -76,9 +77,10 @@ theorem isSymmetric_hermitianDilation (A : E →ₗ[𝕜] F) :
 
 /-- Squaring the dilation gives the two Gram operators on the diagonal.
 
-Proof strategy: Prove directly by block-matrix/adjoint algebra and the operator-norm ideal
-inequality. These finite identities are prerequisites for, rather than consequences of, the late
-Ext compact/singular layer.
+Lean proof route for a weaker agent:
+
+1. Prove directly by block-matrix/adjoint algebra and the operator-norm ideal inequality.
+2. These finite identities are prerequisites for, rather than consequences of, the late Ext compact/singular layer.
 -/
 theorem hermitianDilation_sq (A : E →ₗ[𝕜] F) :
     hermitianDilation A ∘ₗ hermitianDilation A =
@@ -87,9 +89,10 @@ theorem hermitianDilation_sq (A : E →ₗ[𝕜] F) :
 
 /-- Gram perturbation identity.
 
-Proof strategy: Prove directly by block-matrix/adjoint algebra and the operator-norm ideal
-inequality. These finite identities are prerequisites for, rather than consequences of, the late
-Ext compact/singular layer.
+Lean proof route for a weaker agent:
+
+1. Prove directly by block-matrix/adjoint algebra and the operator-norm ideal inequality.
+2. These finite identities are prerequisites for, rather than consequences of, the late Ext compact/singular layer.
 -/
 theorem rightGram_sub_rightGram
     (A Â : E →ₗ[𝕜] F) :
@@ -99,9 +102,10 @@ theorem rightGram_sub_rightGram
 
 /-- Operator-norm Gram perturbation bound.
 
-Proof strategy: Prove directly by block-matrix/adjoint algebra and the operator-norm ideal
-inequality. These finite identities are prerequisites for, rather than consequences of, the late
-Ext compact/singular layer.
+Lean proof route for a weaker agent:
+
+1. Prove directly by block-matrix/adjoint algebra and the operator-norm ideal inequality.
+2. These finite identities are prerequisites for, rather than consequences of, the late Ext compact/singular layer.
 -/
 theorem opNorm_rightGram_sub_le
     (A Â : E →ₗ[𝕜] F) :
@@ -112,9 +116,10 @@ theorem opNorm_rightGram_sub_le
 
 /-- Right singular-subspace `sin Θ` theorem obtained from the Gram operators.
 
-Proof strategy: Apply the finite operator-norm `sin Θ` theorem to the appropriate Gram
-operators, then use `opNorm_rightGram_sub_le` (or its left analogue). Keep this finite instead
-of waiting for `DavisKahanExt.CompactAndSingular`.
+Lean proof route for a weaker agent:
+
+1. Apply the finite operator-norm `sin Θ` theorem to the appropriate Gram operators, then use `opNorm_rightGram_sub_le` (or its left analogue).
+2. Keep this finite instead of waiting for `DavisKahanExt.CompactAndSingular`.
 -/
 theorem rightSingularSubspace_sinTheta_le
     {A Â : E →ₗ[𝕜] F} {a b δ : ℝ} (hδ : 0 < δ)
@@ -129,9 +134,10 @@ theorem rightSingularSubspace_sinTheta_le
 
 /-- Left singular-subspace counterpart.
 
-Proof strategy: Apply the finite operator-norm `sin Θ` theorem to the appropriate Gram
-operators, then use `opNorm_rightGram_sub_le` (or its left analogue). Keep this finite instead
-of waiting for `DavisKahanExt.CompactAndSingular`.
+Lean proof route for a weaker agent:
+
+1. Apply the finite operator-norm `sin Θ` theorem to the appropriate Gram operators, then use `opNorm_rightGram_sub_le` (or its left analogue).
+2. Keep this finite instead of waiting for `DavisKahanExt.CompactAndSingular`.
 -/
 theorem leftSingularSubspace_sinTheta_le
     {A Â : E →ₗ[𝕜] F} {a b δ : ℝ} (hδ : 0 < δ)
@@ -147,8 +153,10 @@ theorem leftSingularSubspace_sinTheta_le
 /-- Hermitian-dilation form controlling left and right singular subspaces in a
 single Davis--Kahan application.
 
-Proof strategy: Apply the finite `sin Θ` theorem to the Hermitian dilations and simplify the
-dilation perturbation. This is the finite precursor of the later Ext Wedin theorem.
+Lean proof route for a weaker agent:
+
+1. Apply the finite `sin Θ` theorem to the Hermitian dilations and simplify the dilation perturbation.
+2. This is the finite precursor of the later Ext Wedin theorem.
 -/
 theorem singularSubspace_dilation_sinTheta_le
     {A Â : E →ₗ[𝕜] F} {Ω : Set ℝ} {δ : ℝ} (hδ : 0 < δ)
@@ -164,8 +172,11 @@ theorem singularSubspace_dilation_sinTheta_le
 identification; the aligned-frame theorem in `Statistics.lean` chooses the
 identification minimizing basis discrepancy.
 
-Proof strategy: Use equality of finite dimensions to choose orthonormal bases of the two
-subspaces and map one basis isometrically to the other.
+Lean proof route for a weaker agent:
+
+1. Use equality of finite dimensions to choose orthonormal bases of the two subspaces and map one basis isometrically to the other.
+2. Obtain orthonormal bases indexed by the common finrank.
+3. Use `OrthonormalBasis.equiv` or construct the linear isometry by basis extension, then package it in `Nonempty`.
 -/
 theorem nonempty_rightSingularSubspace_isometry
     {A Â : E →ₗ[𝕜] F} {Ω : Set ℝ}

@@ -103,9 +103,11 @@ def OrderedInternalGap (A : E →ₗ[𝕜] E) (U : Submodule 𝕜 E) (δ : ℝ) 
 
 /-- Ordered block separation implies absolute block separation.
 
-Proof strategy: Use the two orientations in `OrderedInternalGap`, rewrite the absolute value
-with the induced order, and finish by linear arithmetic. This is a finite scalar lemma and
-should remain direct.
+Lean proof route for a weaker agent:
+
+1. Unfold `OrderedInternalGap`, `InternalGap`, and `SpectraSeparated`, then split the disjunction into its two orientations.
+2. In each branch specialize the ordered inequality to the chosen eigenvalues and derive the corresponding real order with `linarith`.
+3. Rewrite the absolute value using `abs_of_nonpos` or `abs_of_nonneg`, and finish the remaining scalar inequality with `linarith`.
 -/
 theorem OrderedInternalGap.internalGap {A : E →ₗ[𝕜] E}
     {U : Submodule 𝕜 E} {δ : ℝ} (hδ : 0 ≤ δ)
@@ -186,10 +188,14 @@ noncomputable def tanAngleOperator (U V : Submodule 𝕜 E)
     [U.HasOrthogonalProjection] [V.HasOrthogonalProjection] : E →ₗ[𝕜] E := by
   sorry
 
-/-- `sin (2 Θ)` on the full ambient space. -/
+/-- The one-sided finite-dimensional `sin (2 Θ)` map supported on `U`.
+
+This normalization matches the classic Davis--Kahan UI-norm theorem:
+`2 P_{Uᗮ} P_V P_U`.  A separate full positive angle operator would duplicate
+nonzero singular values and should not be conflated with this map. -/
 noncomputable def sinTwoAngleOperator (U V : Submodule 𝕜 E)
-    [U.HasOrthogonalProjection] [V.HasOrthogonalProjection] : E →ₗ[𝕜] E := by
-  sorry
+    [U.HasOrthogonalProjection] [V.HasOrthogonalProjection] : E →ₗ[𝕜] E :=
+  (2 : 𝕜) • (complementaryProjection U ∘ₗ projection V ∘ₗ projection U)
 
 /-- `tan (2 Θ)` on the full ambient space. -/
 noncomputable def tanTwoAngleOperator (U V : Submodule 𝕜 E)
@@ -237,8 +243,10 @@ def AvoidsQuarterTurn (U V : Submodule 𝕜 E)
 omit [FiniteDimensional 𝕜 E] in
 /-- Acuteness is symmetric.
 
-Proof strategy: Unfold `IsAcute`; the two projection-kernel clauses are exchanged. Keep this
-direct and independent of the Ext hierarchy.
+Lean proof route for a weaker agent:
+
+1. Unfold `IsAcute`; the two projection-kernel clauses are exchanged.
+2. Keep this direct and independent of the Ext hierarchy.
 -/
 theorem IsAcute.symm {U V : Submodule 𝕜 E}
     [U.HasOrthogonalProjection] [V.HasOrthogonalProjection]
@@ -269,9 +277,11 @@ def HasZeroCompression (U : Submodule 𝕜 E) [U.HasOrthogonalProjection]
 omit [FiniteDimensional 𝕜 E] in
 /-- A vanishing pinch has a vanishing selected diagonal block.
 
-Proof strategy: Unfold the pinch, apply `projection U` to the operator equality, and simplify
-idempotence and orthogonality of the two projections. This is the finite specialization of the
-projection algebra planned in `DavisKahanExt.Basic`.
+Lean proof route for a weaker agent:
+
+1. Unfold `IsOffDiagonal`, `pinch`, and `HasZeroCompression`.
+2. Apply `LinearMap.ext`; for each vector, compose the zero-pinch identity with `projection U` on the left and right.
+3. Simplify projection idempotence and `projection U ∘ complementaryProjection U = 0` to isolate the selected diagonal block.
 -/
 theorem hasZeroCompression_of_isOffDiagonal
     (U : Submodule 𝕜 E) [U.HasOrthogonalProjection] (H : E →ₗ[𝕜] E)
@@ -294,9 +304,10 @@ omit [FiniteDimensional 𝕜 E] in
 /-- A vanishing pinch is unchanged when the two summands of the orthogonal
 splitting are exchanged.
 
-Proof strategy: Unfold `pinch`; exchanging `U` and `Uᗮ` merely swaps the two summands. The
-matching infinite lemma should live in `DavisKahanExt.Basic` and the finite proof can later
-specialize it.
+Lean proof route for a weaker agent:
+
+1. Unfold `pinch`; exchanging `U` and `Uᗮ` merely swaps the two summands.
+2. The matching infinite lemma should live in `DavisKahanExt.Basic` and the finite proof can later specialize it.
 -/
 theorem isOffDiagonal_orthogonal
     (U : Submodule 𝕜 E) [U.HasOrthogonalProjection] (H : E →ₗ[𝕜] E)
@@ -308,8 +319,11 @@ omit [FiniteDimensional 𝕜 E] in
 /-- Operator-form zero compression implies the corresponding sesquilinear
 block vanishes.
 
-Proof strategy: Apply the compression equality to `u′`, use self-adjointness of the orthogonal
-projection to move it across the inner product, and simplify `P_U u = u`.
+Lean proof route for a weaker agent:
+
+1. Apply the compression equality to `u′`, use self-adjointness of the orthogonal projection to move it across the inner product, and simplify `P_U u = u`.
+2. Obtain the projected-vector equality with `LinearMap.congr_fun hzero u'` before entering the inner-product calculation.
+3. Finish with `Submodule.inner_starProjection_left_eq_right` and `inner_zero_right`.
 -/
 theorem inner_map_eq_zero_of_hasZeroCompression
     (U : Submodule 𝕜 E) [U.HasOrthogonalProjection] (H : E →ₗ[𝕜] E)
@@ -328,8 +342,11 @@ theorem inner_map_eq_zero_of_hasZeroCompression
 
 /-- Both diagonal sesquilinear blocks vanish for an off-diagonal map.
 
-Proof strategy: Apply `hasZeroCompression_of_isOffDiagonal` to `U` and `Uᗮ`, then invoke
-`inner_map_eq_zero_of_hasZeroCompression` on each block.
+Lean proof route for a weaker agent:
+
+1. Apply `hasZeroCompression_of_isOffDiagonal` to `U` and `Uᗮ`, then invoke `inner_map_eq_zero_of_hasZeroCompression` on each block.
+2. Use `isOffDiagonal_orthogonal` to obtain the complementary zero-compression premise.
+3. Build the conjunction explicitly so elaboration failures remain localized to one block.
 -/
 theorem inner_blocks_eq_zero_of_isOffDiagonal
     (U : Submodule 𝕜 E) [U.HasOrthogonalProjection] (H : E →ₗ[𝕜] E)
@@ -351,9 +368,10 @@ omit [FiniteDimensional 𝕜 E] in
 /-- A symmetric operator leaves the orthogonal complement of an invariant
 subspace invariant.
 
-Proof strategy: Preferred route: specialize `DavisKahanExt.reduces_orthogonalComplement` after
-converting the finite linear map to a continuous linear map. Until that bridge exists, the
-direct inner-product proof is only a few lines.
+Lean proof route for a weaker agent:
+
+1. Preferred route: specialize `DavisKahanExt.reduces_orthogonalComplement` after converting the finite linear map to a continuous linear map.
+2. Until that bridge exists, the direct inner-product proof is only a few lines.
 -/
 theorem reduces_orthogonal_of_isSymmetric {A : E →ₗ[𝕜] E}
     (hA : A.IsSymmetric) {U : Submodule 𝕜 E} (hU : Reduces A U) :
@@ -369,8 +387,11 @@ omit [FiniteDimensional 𝕜 E] in
 needed for this algebraic fact; it is needed later for orthogonal reduction and
 for completeness of the real eigenvector decomposition.
 
-Proof strategy: Use span induction on eigenvectors and linearity of `A`. This finite
-eigenvector-span theorem is simpler than routing through the infinite spectral projection API.
+Lean proof route for a weaker agent:
+
+1. Unfold `spectralSubspace` and `Reduces`, and fix a vector in the generated span.
+2. Apply `Submodule.span_induction`; for each generator unpack its eigenvalue/eigenvector witness and rewrite `A x` as a scalar multiple of `x`.
+3. Close the zero, addition, and scalar cases by linearity and the submodule closure rules.
 -/
 theorem reduces_spectralSubspace (A : E →ₗ[𝕜] E) (Ω : Set ℝ) :
     Reduces A (spectralSubspace A Ω) := by
@@ -387,8 +408,11 @@ theorem reduces_spectralSubspace (A : E →ₗ[𝕜] E) (Ω : Set ℝ) :
 
 /-- The canonical projector has the expected range.
 
-Proof strategy: Unfold `spectralProjection` and use the standard theorem that the range of
-`Submodule.starProjection` is the submodule.
+Lean proof route for a weaker agent:
+
+1. Unfold `spectralProjection` and use the standard theorem that the range of `Submodule.starProjection` is the submodule.
+2. Check the coercion from continuous linear maps to linear maps before applying `Submodule.range_starProjection`.
+3. Close by exact equality rather than extensionality.
 -/
 theorem range_spectralProjection (A : E →ₗ[𝕜] E) (Ω : Set ℝ) :
     LinearMap.range (spectralProjection A Ω) = spectralSubspace A Ω := by
@@ -397,9 +421,11 @@ theorem range_spectralProjection (A : E →ₗ[𝕜] E) (Ω : Set ℝ) :
 omit [FiniteDimensional 𝕜 E] in
 /-- Spectral selection is independent of the chosen eigenbasis.
 
-Proof strategy: This is definitional with the current finite construction; close it by `rfl`. If
-the implementation later changes to an eigenbasis projector, retain this theorem as the
-basis-independence bridge.
+Lean proof route for a weaker agent:
+
+1. Unfold `spectralSubspace` and `restrictedSpectrum` only enough to expose the defining eigenvector span.
+2. Attempt `rfl`; if reducible wrappers block it, use `simp only` with those definitions rather than extensional set reasoning.
+3. Keep this theorem as the API bridge if `spectralSubspace` is later reimplemented through an eigenbasis or projector.
 -/
 theorem spectralSubspace_eq_span_eigenvectors (A : E →ₗ[𝕜] E)
     (Ω : Set ℝ) :
@@ -409,9 +435,11 @@ theorem spectralSubspace_eq_span_eigenvectors (A : E →ₗ[𝕜] E)
 
 /-- Principal angles are symmetric in the two subspaces.
 
-Proof strategy: Use equality of the nonzero singular values of `P_V P_U` and its adjoint `P_U
-P_V`, then check the finite padding convention. This is inherently finite singular-value
-bookkeeping.
+Lean proof route for a weaker agent:
+
+1. Rewrite `cosThetaMap V U` as the adjoint of `cosThetaMap U V` using self-adjointness of orthogonal projections.
+2. Apply the theorem that a map and its adjoint have the same ordered singular values.
+3. Rewrite both sides with `singularValues_cosThetaMap` and then apply `Real.arccos` pointwise to obtain equality of `principalAngles`.
 -/
 theorem principalAngles_comm (U V : Submodule 𝕜 E)
     [U.HasOrthogonalProjection] [V.HasOrthogonalProjection] :
@@ -420,9 +448,11 @@ theorem principalAngles_comm (U V : Submodule 𝕜 E)
 
 /-- Principal-angle cosines are the singular values of `P_V P_U`.
 
-Proof strategy: Choose orthonormal bases of `U` and `V`, identify the ambient cross projection
-with the overlap matrix plus zero blocks, and reuse
-`PrincipalAngles.singularValues_starProjection_comp_starProjection`.
+Lean proof route for a weaker agent:
+
+1. Choose orthonormal bases of `U` and `V`, identify the ambient cross projection with the overlap matrix plus zero blocks, and reuse `PrincipalAngles.singularValues_starProjection_comp_starProjection`.
+2. Prove a unitary-equivalence lemma between the ambient cross projection and the zero-extended overlap operator.
+3. Rewrite singular values with unitary invariance and the existing family-level cosine dictionary.
 -/
 theorem singularValues_cosThetaMap (U V : Submodule 𝕜 E)
     [U.HasOrthogonalProjection] [V.HasOrthogonalProjection] :
@@ -431,8 +461,11 @@ theorem singularValues_cosThetaMap (U V : Submodule 𝕜 E)
 
 /-- Principal-angle sines are the singular values of `P_{Vᗮ} P_U`.
 
-Proof strategy: Reduce to the Pythagorean relation between the cosine and complementary cross
-projections on each principal plane, then transfer the sorted singular-value list.
+Lean proof route for a weaker agent:
+
+1. Reduce to the Pythagorean relation between the cosine and complementary cross projections on each principal plane, then transfer the sorted singular-value list.
+2. Prove the Gram identity `M⋆M = P_U - P_U P_V P_U` for the sine cross map.
+3. Read the eigenvalues through the cosine dictionary and simplify `sqrt (1-c²)`.
 -/
 theorem singularValues_sinThetaMap (U V : Submodule 𝕜 E)
     [U.HasOrthogonalProjection] [V.HasOrthogonalProjection] :
@@ -441,9 +474,11 @@ theorem singularValues_sinThetaMap (U V : Submodule 𝕜 E)
 
 /-- The singular values of `P_U-P_V` are the full-space `sin Θ` values.
 
-Proof strategy: Preferred operator-level route: specialize
-`DavisKahanExt.sinAngleOperator_eq_abs_projection_sub`; then use that singular values of `|T|`
-are those of `T`. The final list/padding step remains finite.
+Lean proof route for a weaker agent:
+
+1. Specialize the bounded Ext identity `sinAngleOperator = |P_U-P_V|` after converting finite linear maps to continuous linear maps.
+2. Use the finite theorem that `T` and `|T|` have the same singular values, transporting across the coercions.
+3. Rewrite the finite `sinAngleOperator` definition and verify that both singular-value sequences use the same ambient-dimension padding.
 -/
 theorem singularValues_projection_sub_projection (U V : Submodule 𝕜 E)
     [U.HasOrthogonalProjection] [V.HasOrthogonalProjection] :
@@ -451,28 +486,33 @@ theorem singularValues_projection_sub_projection (U V : Submodule 𝕜 E)
       (sinAngleOperator U V).singularValues := by
   sorry
 
-/-- The cross-block model for `sin (2 Θ)`.
+/-- The one-sided double-angle map is exactly twice the cross block.
 
-Proof strategy: Do not start a proof until the signature audit is resolved. The usable theorem
-is expected to compare singular values or every UI norm with twice the one-sided cross block,
-not identify the ambient maps.
+Lean proof route for a weaker agent:
 
-Signature audit: Likely false as an equality of ambient endomorphisms: the full positive `sin (2
-Θ)` operator and the one-sided cross block have different block support. Replace this by a
-singular-value/UI-norm identity, or redefine the left side as the one-sided double-angle map.
+1. Unfold `sinTwoAngleOperator`.
+2. Close the goal with `rfl`.
+3. Keep this theorem as the normalization bridge used by the reflection and
+   UI-norm files; do not replace it by a full positive angle operator without
+   also changing every downstream multiplicity convention.
+
+Signature audit: Valid after defining `sinTwoAngleOperator` as the one-sided
+classic Davis--Kahan map rather than a full-space positive operator.
 -/
 theorem sinTwoAngleOperator_eq_two_smul_cross (U V : Submodule 𝕜 E)
     [U.HasOrthogonalProjection] [V.HasOrthogonalProjection] :
     sinTwoAngleOperator U V =
       (2 : 𝕜) • (complementaryProjection U ∘ₗ projection V ∘ₗ projection U) := by
-  sorry
+  rfl
 
 /-- Equal-rank subspaces have the same largest sine whether measured by a
 cross projection or by the difference of projectors.
 
-Proof strategy: Use the two-projection decomposition. In the acute case this specializes
-`DavisKahanExt.norm_sinAngleOperator` plus `directedGap_eq_subspaceGap_of_acute`; handle the
-norm-one case separately using equal finite rank.
+Lean proof route for a weaker agent:
+
+1. Split on whether the cross-projection norm is strictly below one.
+2. In the acute branch, specialize the Ext identities relating the gap norm, `sinAngleOperator`, and the directed cross projection.
+3. In the norm-one branch, use equal finite rank to show the reverse directed gap also has norm one, then bound both projector norms from above by one.
 -/
 theorem opNorm_projection_sub_eq_opNorm_sinThetaMap (U V : Submodule 𝕜 E)
     [U.HasOrthogonalProjection] [V.HasOrthogonalProjection]
@@ -483,25 +523,29 @@ theorem opNorm_projection_sub_eq_opNorm_sinThetaMap (U V : Submodule 𝕜 E)
 
 /-- Orthogonal complements preserve the nontrivial principal angles.
 
-Proof strategy: First fix the multiplicity convention. After that, use `P_{Vᗮ}P_{Uᗮ}` on the
-generic two-projection blocks; only the common and defect blocks require finite multiplicity
-bookkeeping.
+Lean proof route for a weaker agent:
 
-Signature audit: Potentially false with the current finitely-supported padding convention when
-the subspaces have unequal rank. Orthogonal complements preserve the generic nonzero angles, but
-zero and `π/2` multiplicities require an equal-rank/equal-defect hypothesis or a more precise
-multiset statement.
+1. Choose the canonical two-projection decomposition into common, defect, and generic principal planes.
+2. Show orthogonal complementation swaps the two defect blocks and leaves every generic angle unchanged.
+3. Use `hrank` to identify the defect multiplicities; zero-padding then gives equality of the finitely supported principal-angle sequences.
+
+Signature audit: The equal-rank hypothesis fixes the defect multiplicities.  With the
+finitely-supported convention, additional zero angles disappear automatically, while the
+nonzero and `π/2` multiplicities agree under orthogonal complementation.
 -/
 theorem principalAngles_orthogonal (U V : Submodule 𝕜 E)
-    [U.HasOrthogonalProjection] [V.HasOrthogonalProjection] :
+    [U.HasOrthogonalProjection] [V.HasOrthogonalProjection]
+    (hrank : finrank 𝕜 U = finrank 𝕜 V) :
     principalAngles Uᗮ Vᗮ = principalAngles U V := by
   sorry
 
 /-- Family-level principal angles agree with the canonical submodule API.
 
-Proof strategy: Extend the two orthonormal families to ambient orthonormal bases, identify the
-overlap matrix with the restricted cross projection, and reuse the family-level theorem in
-`PrincipalAngles.lean`.
+Lean proof route for a weaker agent:
+
+1. Extend the two orthonormal families to ambient orthonormal bases, identify the overlap matrix with the restricted cross projection, and reuse the family-level theorem in `PrincipalAngles.lean`.
+2. Rewrite both sides through `singularValues_cosThetaMap` and the overlap-operator theorem.
+3. Verify that the finite-support padding agrees beyond the family dimension.
 -/
 theorem principalCosines_span_eq_cosPrincipalAngles {d : ℕ}
     {u v : Fin d → E} (hu : Orthonormal 𝕜 u) (hv : Orthonormal 𝕜 v) :

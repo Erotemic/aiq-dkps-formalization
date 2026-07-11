@@ -33,3 +33,18 @@ The mathematical proof roadmap and source mapping are in:
 
 The umbrella module is
 `ForMathlib.Analysis.InnerProductSpace.DavisKahanTheory`.
+
+
+## Proof-agent guidance
+
+Every theorem declaration in this directory has a docstring section titled
+`Lean proof route for a weaker agent:` with numbered steps.  These routes are
+part of the roadmap and should be kept synchronized with the actual dependency
+API as proofs close.
+
+See [`SIGNATURE_AUDIT.md`](SIGNATURE_AUDIT.md) for the theorem-surface audit,
+corrections made in this pass, and remaining design decisions.
+
+A timestamped `EXT_SIGNATURE_REVIEW_*.md` file is created here only when the
+finite agent discovers a concrete issue in an Ext theorem signature.  Such a
+file is a handoff for the Ext agent; this directory must not modify Ext source.

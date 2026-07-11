@@ -45,20 +45,33 @@ noncomputable def modelGappedOperator (a b : ℝ) :
     Plane 𝕜 →ₗ[𝕜] Plane 𝕜 := by
   sorry
 
-/-- Perturbation producing the prescribed rotation. -/
-noncomputable def modelPerturbation (a b θ : ℝ) :
+/-- Perturbation producing equality in the `sin Θ` model. -/
+noncomputable def modelSinThetaPerturbation (a b θ : ℝ) :
     Plane 𝕜 →ₗ[𝕜] Plane 𝕜 := by
   sorry
 
-/-- Off-diagonal perturbation used by the tangent extremizers. -/
-noncomputable def modelOffDiagonalPerturbation (ε : ℝ) :
+/-- Perturbation/residual producing equality in the `tan Θ` model. -/
+noncomputable def modelTanThetaPerturbation (a b θ : ℝ) :
+    Plane 𝕜 →ₗ[𝕜] Plane 𝕜 := by
+  sorry
+
+/-- Reflection-compatible perturbation producing equality in `sin (2 Θ)`. -/
+noncomputable def modelSinTwoThetaPerturbation (a b θ : ℝ) :
+    Plane 𝕜 →ₗ[𝕜] Plane 𝕜 := by
+  sorry
+
+/-- Off-diagonal perturbation used by the `tan (2 Θ)` extremizer. -/
+noncomputable def modelTanTwoThetaPerturbation (a b θ : ℝ) :
     Plane 𝕜 →ₗ[𝕜] Plane 𝕜 := by
   sorry
 
 /-- The model subspaces have exactly the prescribed principal angle.
 
-Proof strategy: Write the two normalized spanning vectors explicitly, compute the single overlap
-singular value `|cos θ|`, and use the angle-range hypotheses to simplify `arccos`.
+Lean proof route for a weaker agent:
+
+1. Write the two normalized spanning vectors explicitly, compute the single overlap singular value `|cos θ|`, and use the angle-range hypotheses to simplify `arccos`.
+2. Prove the overlap scalar is nonnegative on `[0,π/2]`, so the absolute value disappears.
+3. Rewrite the first principal angle with `Real.arccos_cos` and the supplied range bounds.
 -/
 theorem principalAngles_model (θ : ℝ) (hθ0 : 0 ≤ θ) (hθ1 : θ ≤ Real.pi / 2) :
     principalAngles (modelSubspace (𝕜 := 𝕜)) (rotatedModelSubspace (𝕜 := 𝕜) θ) 0 = θ := by
@@ -66,92 +79,99 @@ theorem principalAngles_model (θ : ℝ) (hθ0 : 0 ≤ θ) (hθ1 : θ ≤ Real.p
 
 /-- Equality case for the `sin Θ` theorem.
 
-Proof strategy: First separate the correct planar model for this theorem family. Then compute
-the two-by-two matrices, their singular values, the gap, and the relevant angle function
-explicitly; equality should reduce to a scalar trigonometric identity.
+Lean proof route for a weaker agent:
 
-Signature audit: Audit the model definition before proof: the same `modelPerturbation` is also
-used for the tangent and double-angle equalities, but the classic equality models are generally
-different perturbations.
+1. First separate the correct planar model for this theorem family.
+2. Then compute the two-by-two matrices, their singular values, the gap, and the relevant angle function explicitly; equality should reduce to a scalar trigonometric identity.
+
+Signature audit: The theorem now uses a dedicated `sin Θ` perturbation model; do not reuse it
+for the tangent or double-angle families.
 -/
 theorem sinTheta_model_equality
     (N : UnitarilyInvariantNorm 𝕜 (Plane 𝕜))
     {a b θ : ℝ} (hab : a < b) (hθ0 : 0 ≤ θ) (hθ1 : θ < Real.pi / 2) :
     (b - a) * N (sinAngleOperator (modelSubspace (𝕜 := 𝕜))
       (rotatedModelSubspace (𝕜 := 𝕜) θ)) =
-      N (modelPerturbation (𝕜 := 𝕜) a b θ) := by
+      N (modelSinThetaPerturbation (𝕜 := 𝕜) a b θ) := by
   sorry
 
 /-- Equality case for the `tan Θ` theorem.
 
-Proof strategy: First separate the correct planar model for this theorem family. Then compute
-the two-by-two matrices, their singular values, the gap, and the relevant angle function
-explicitly; equality should reduce to a scalar trigonometric identity.
+Lean proof route for a weaker agent:
 
-Signature audit: Likely incompatible with the `sin Θ` equality when both reuse the same
-`modelPerturbation`. Give the tangent theorem its own residual/off-diagonal model and verify the
-zero-compression hypothesis explicitly.
+1. First separate the correct planar model for this theorem family.
+2. Then compute the two-by-two matrices, their singular values, the gap, and the relevant angle function explicitly; equality should reduce to a scalar trigonometric identity.
+
+Signature audit: The dedicated tangent model must include the zero-compression/Galerkin
+hypothesis required by the theorem it saturates.
 -/
 theorem tanTheta_model_equality
     (N : UnitarilyInvariantNorm 𝕜 (Plane 𝕜))
     {a b θ : ℝ} (hab : a < b) (hθ0 : 0 ≤ θ) (hθ1 : θ < Real.pi / 2) :
     (b - a) * N (tanAngleOperator (modelSubspace (𝕜 := 𝕜))
       (rotatedModelSubspace (𝕜 := 𝕜) θ)) =
-      N (modelPerturbation (𝕜 := 𝕜) a b θ) := by
+      N (modelTanThetaPerturbation (𝕜 := 𝕜) a b θ) := by
   sorry
 
 /-- Equality case for the `sin 2Θ` theorem.
 
-Proof strategy: First separate the correct planar model for this theorem family. Then compute
-the two-by-two matrices, their singular values, the gap, and the relevant angle function
-explicitly; equality should reduce to a scalar trigonometric identity.
+Lean proof route for a weaker agent:
 
-Signature audit: Likely incompatible with the single-angle equality under the shared
-`modelPerturbation`. Use the reflection/pinching extremizer specific to the double-angle
-theorem.
+1. First separate the correct planar model for this theorem family.
+2. Then compute the two-by-two matrices, their singular values, the gap, and the relevant angle function explicitly; equality should reduce to a scalar trigonometric identity.
+
+Signature audit: The dedicated double-angle model is reflection-compatible and is independent
+of the single-angle extremizer.
 -/
 theorem sinTwoTheta_model_equality
     (N : UnitarilyInvariantNorm 𝕜 (Plane 𝕜))
     {a b θ : ℝ} (hab : a < b) (hθ0 : 0 ≤ θ) (hθ1 : θ ≤ Real.pi / 2) :
     (b - a) * N (sinTwoAngleOperator (modelSubspace (𝕜 := 𝕜))
       (rotatedModelSubspace (𝕜 := 𝕜) θ)) =
-      2 * N (modelPerturbation (𝕜 := 𝕜) a b θ) := by
+      2 * N (modelSinTwoThetaPerturbation (𝕜 := 𝕜) a b θ) := by
   sorry
 
 /-- Equality case for the `tan 2Θ` theorem.
 
-Proof strategy: First separate the correct planar model for this theorem family. Then compute
-the two-by-two matrices, their singular values, the gap, and the relevant angle function
-explicitly; equality should reduce to a scalar trigonometric identity.
+Lean proof route for a weaker agent:
+
+1. First separate the correct planar model for this theorem family.
+2. Then compute the two-by-two matrices, their singular values, the gap, and the relevant angle function explicitly; equality should reduce to a scalar trigonometric identity.
 -/
 theorem tanTwoTheta_model_equality
     (N : UnitarilyInvariantNorm 𝕜 (Plane 𝕜))
     {a b θ : ℝ} (hab : a < b) (hθ0 : 0 ≤ θ) (hθ1 : θ < Real.pi / 4) :
     (b - a) * N (tanTwoAngleOperator (modelSubspace (𝕜 := 𝕜))
       (rotatedModelSubspace (𝕜 := 𝕜) θ)) =
-      2 * N (modelOffDiagonalPerturbation (𝕜 := 𝕜) ((b - a) * Real.tan (2 * θ) / 2)) := by
+      2 * N (modelTanTwoThetaPerturbation (𝕜 := 𝕜) a b θ) := by
   sorry
 
 /-- The constant one in the single-angle theorems cannot be decreased.
 
-Proof strategy: Instantiate the corrected planar equality model at any nonzero admissible angle
-and use `c < 1` or `c < 2` to obtain the strict counterexample to a smaller universal constant.
+Lean proof route for a weaker agent:
+
+1. Instantiate the corrected planar equality model at any nonzero admissible angle and use `c < 1` or `c < 2` to obtain the strict counterexample to a smaller universal constant.
+2. Choose explicit `a<b` and `0<θ<π/2`, then invoke `sinTheta_model_equality` for the operator norm.
+3. Multiply the strict inequality `c<1` by the positive perturbation norm.
 -/
 theorem sinTheta_constant_optimal :
     ∀ c : ℝ, c < 1 → ∃ (a b θ : ℝ), a < b ∧ 0 < θ ∧
-      c * ‖(modelPerturbation (𝕜 := 𝕜) a b θ).toContinuousLinearMap‖ <
+      c * ‖(modelSinThetaPerturbation (𝕜 := 𝕜) a b θ).toContinuousLinearMap‖ <
         (b - a) * ‖(sinAngleOperator (modelSubspace (𝕜 := 𝕜))
           (rotatedModelSubspace (𝕜 := 𝕜) θ)).toContinuousLinearMap‖ := by
   sorry
 
 /-- The factor two in the double-angle theorems cannot be decreased.
 
-Proof strategy: Instantiate the corrected planar equality model at any nonzero admissible angle
-and use `c < 1` or `c < 2` to obtain the strict counterexample to a smaller universal constant.
+Lean proof route for a weaker agent:
+
+1. Instantiate the corrected planar equality model at any nonzero admissible angle and use `c < 1` or `c < 2` to obtain the strict counterexample to a smaller universal constant.
+2. Choose an angle with nonzero double-angle map and invoke `sinTwoTheta_model_equality` for the operator norm.
+3. Multiply `c<2` by the positive perturbation norm and rewrite the equality.
 -/
 theorem sinTwoTheta_constant_optimal :
     ∀ c : ℝ, c < 2 → ∃ (a b θ : ℝ), a < b ∧ 0 < θ ∧
-      c * ‖(modelPerturbation (𝕜 := 𝕜) a b θ).toContinuousLinearMap‖ <
+      c * ‖(modelSinTwoThetaPerturbation (𝕜 := 𝕜) a b θ).toContinuousLinearMap‖ <
         (b - a) * ‖(sinTwoAngleOperator (modelSubspace (𝕜 := 𝕜))
           (rotatedModelSubspace (𝕜 := 𝕜) θ)).toContinuousLinearMap‖ := by
   sorry
@@ -159,34 +179,37 @@ theorem sinTwoTheta_constant_optimal :
 /-- Direct sums of planar equality models attain equality simultaneously for
 all unitarily invariant norms.
 
-Proof strategy: Strengthen the statement first. For the intended result, take an orthogonal
-direct sum of identical planar extremizers; all singular values occur blockwise, so every
-symmetric gauge preserves equality.
+Lean proof route for a weaker agent:
 
-Signature audit: Too weak to express sharpness: it does not require `A,H,U,V` to satisfy any
-Davis--Kahan hypotheses and can be made tautological by choosing `H`. Include the gap,
-reducing-subspace, perturbation, and equality conclusions for the intended theorem family.
+1. Strengthen the statement first.
+2. For the intended result, take an orthogonal direct sum of identical planar extremizers; all singular values occur blockwise, so every symmetric gauge preserves equality.
+
+Signature audit: The conclusion now includes symmetry, reduction, a positive internal gap, and
+the exact equality for every UI norm, so it genuinely witnesses simultaneous sharpness.
 -/
 theorem directSum_models_simultaneous_equality (m : ℕ) :
     ∃ (A H : EuclideanSpace 𝕜 (Fin (2 * m)) →ₗ[𝕜]
         EuclideanSpace 𝕜 (Fin (2 * m)))
-      (U V : Submodule 𝕜 (EuclideanSpace 𝕜 (Fin (2 * m)))),
+      (U V : Submodule 𝕜 (EuclideanSpace 𝕜 (Fin (2 * m))))
+      (δ : ℝ),
+      A.IsSymmetric ∧ H.IsSymmetric ∧ 0 < δ ∧
+      Reduces A U ∧ Reduces (A + H) V ∧ InternalGap A U δ ∧
       ∀ N : UnitarilyInvariantNorm 𝕜 (EuclideanSpace 𝕜 (Fin (2 * m))),
-        N (sinTwoAngleOperator U V) = 2 * N H := by
+        δ * N (sinTwoAngleOperator U V) = 2 * N H := by
   sorry
 
 /-- To first order in a linear perturbation parameter, all four theorem
 conclusions agree.
 
-Proof strategy: For the current scalar statement, use the standard limits `sin x / x → 1` and
-`tan x / x → 1`. If the theorem retains its name, add the normalized Davis--Kahan expressions
-for all four bounds.
+Lean proof route for a weaker agent:
 
-Signature audit: The statement proves only two scalar sine/tangent ratios, not equivalence of
-all four theorem bounds. Rename it or add the perturbation/gap normalizations and both single-
-and double-angle comparisons.
+1. For the current scalar statement, use the standard limits `sin x / x → 1` and `tan x / x → 1`.
+2. If the theorem retains its name, add the normalized Davis--Kahan expressions for all four bounds.
+
+Signature audit: The theorem has been renamed to match its scalar content.  The operator-level
+first-order comparison should be a separate corollary of the four planar equality theorems.
 -/
-theorem four_bounds_first_order_equivalent :
+theorem single_double_sine_tangent_ratios_tendsto_one :
     Tendsto (fun θ : ℝ => Real.sin θ / Real.tan θ) (nhdsWithin 0 (Set.Ioi 0)) (nhds 1) ∧
     Tendsto (fun θ : ℝ => Real.sin (2 * θ) / Real.tan (2 * θ))
       (nhdsWithin 0 (Set.Ioi 0)) (nhds 1) := by

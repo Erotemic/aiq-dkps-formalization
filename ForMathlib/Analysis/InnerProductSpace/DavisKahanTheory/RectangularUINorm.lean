@@ -69,40 +69,51 @@ instance : CoeFun (RectangularUnitarilyInvariantNorm 𝕜 E F)
 variable (N : RectangularUnitarilyInvariantNorm 𝕜 E F)
 
 /--
-Proof strategy: Use the norm axiom `map_zero`/`toFun.map_zero`; this is a direct structure-field
-simplification and should not depend on the Ext hierarchy.
+Lean proof route for a weaker agent:
+
+1. Derive `N 0 ≤ N 0 + N 0` from `add_le'` and use homogeneity at scalar zero to rewrite the left side.
+2. Use nonnegativity of the codomain real norm value, or the same triangle/homogeneity argument used by the square UI-norm implementation.
+3. Finish with antisymmetry; keep this as a structure-level lemma with no singular-value dependency.
 -/
 @[simp] theorem apply_zero : N (0 : E →ₗ[𝕜] F) = 0 := by
   sorry
 
 /--
-Proof strategy: Unfold the rectangular UI-norm structure and use its corresponding field; derive
-nonnegativity from homogeneity at `-1` and the triangle inequality exactly as in the existing
-square UI-norm API.
+Lean proof route for a weaker agent:
+
+1. For `add_le`, apply `N.add_le' A B` directly; for `smul_eq`, apply `N.smul' a A`; for `invariant`, apply `N.invariant' U V A`.
+2. Use `change` to expose `N.toFun` if coercion prevents field application.
+3. Close by `simpa` after normalizing the coercion from the structure to its function field.
 -/
 theorem nonneg (A : E →ₗ[𝕜] F) : 0 ≤ N A := by
   sorry
 
 /--
-Proof strategy: Unfold the rectangular UI-norm structure and use its corresponding field; derive
-nonnegativity from homogeneity at `-1` and the triangle inequality exactly as in the existing
-square UI-norm API.
+Lean proof route for a weaker agent:
+
+1. For `add_le`, apply `N.add_le' A B` directly; for `smul_eq`, apply `N.smul' a A`; for `invariant`, apply `N.invariant' U V A`.
+2. Use `change` to expose `N.toFun` if coercion prevents field application.
+3. Close by `simpa` after normalizing the coercion from the structure to its function field.
 -/
 theorem add_le (A B : E →ₗ[𝕜] F) : N (A + B) ≤ N A + N B := by
   sorry
 
 /--
-Proof strategy: Unfold the rectangular UI-norm structure and use its corresponding field; derive
-nonnegativity from homogeneity at `-1` and the triangle inequality exactly as in the existing
-square UI-norm API.
+Lean proof route for a weaker agent:
+
+1. For `add_le`, apply `N.add_le' A B` directly; for `smul_eq`, apply `N.smul' a A`; for `invariant`, apply `N.invariant' U V A`.
+2. Use `change` to expose `N.toFun` if coercion prevents field application.
+3. Close by `simpa` after normalizing the coercion from the structure to its function field.
 -/
 theorem smul_eq (a : 𝕜) (A : E →ₗ[𝕜] F) : N (a • A) = ‖a‖ * N A := by
   sorry
 
 /--
-Proof strategy: Unfold the rectangular UI-norm structure and use its corresponding field; derive
-nonnegativity from homogeneity at `-1` and the triangle inequality exactly as in the existing
-square UI-norm API.
+Lean proof route for a weaker agent:
+
+1. For `add_le`, apply `N.add_le' A B` directly; for `smul_eq`, apply `N.smul' a A`; for `invariant`, apply `N.invariant' U V A`.
+2. Use `change` to expose `N.toFun` if coercion prevents field application.
+3. Close by `simpa` after normalizing the coercion from the structure to its function field.
 -/
 theorem invariant (U : F ≃ₗᵢ[𝕜] F) (V : E ≃ₗᵢ[𝕜] E)
     (A : E →ₗ[𝕜] F) :
@@ -111,9 +122,11 @@ theorem invariant (U : F ≃ₗᵢ[𝕜] F) (V : E ≃ₗᵢ[𝕜] E)
 
 /-- Left ideal property.
 
-Proof strategy: Use singular-value domination under left/right multiplication and finite Fan
-dominance. This should remain finite rather than depend on the infinite symmetric-ideal
-scaffold.
+Lean proof route for a weaker agent:
+
+1. Prove the Ky Fan prefix inequalities for the singular values of the composition using the finite ideal inequality `s_j(CA) ≤ ‖C‖ s_j(A)` (or its right-handed form).
+2. Sum the prefix inequalities and invoke finite Fan dominance for the symmetric gauge defining `N`.
+3. Rewrite scalar multiplication through `smul_eq` and normalize the operator norm coercions.
 -/
 theorem comp_le_opNorm_mul (C : F →ₗ[𝕜] F) (A : E →ₗ[𝕜] F) :
     N (C ∘ₗ A) ≤ ‖C.toContinuousLinearMap‖ * N A := by
@@ -121,9 +134,11 @@ theorem comp_le_opNorm_mul (C : F →ₗ[𝕜] F) (A : E →ₗ[𝕜] F) :
 
 /-- Right ideal property.
 
-Proof strategy: Use singular-value domination under left/right multiplication and finite Fan
-dominance. This should remain finite rather than depend on the infinite symmetric-ideal
-scaffold.
+Lean proof route for a weaker agent:
+
+1. Prove the Ky Fan prefix inequalities for the singular values of the composition using the finite ideal inequality `s_j(CA) ≤ ‖C‖ s_j(A)` (or its right-handed form).
+2. Sum the prefix inequalities and invoke finite Fan dominance for the symmetric gauge defining `N`.
+3. Rewrite scalar multiplication through `smul_eq` and normalize the operator norm coercions.
 -/
 theorem comp_le_mul_opNorm (A : E →ₗ[𝕜] F) (C : E →ₗ[𝕜] E) :
     N (A ∘ₗ C) ≤ N A * ‖C.toContinuousLinearMap‖ := by
@@ -131,8 +146,11 @@ theorem comp_le_mul_opNorm (A : E →ₗ[𝕜] F) (C : E →ₗ[𝕜] E) :
 
 /-- Fan dominance in rectangular form.
 
-Proof strategy: Transfer `N` to its finite symmetric gauge on singular values and apply the Ky
-Fan dominance theorem already developed in `KyFan.lean`.
+Lean proof route for a weaker agent:
+
+1. Transfer `N` to its finite symmetric gauge on singular values and apply the Ky Fan dominance theorem already developed in `KyFan.lean`.
+2. Translate `rectangularKyFanSum` to the square zero-extension convention.
+3. Apply the existing square Fan-dominance theorem and simplify `ofSquareFamily`.
 -/
 theorem apply_le_of_kyFanSum_le {A B : E →ₗ[𝕜] F}
     (h : ∀ k, rectangularKyFanSum k A ≤ rectangularKyFanSum k B) : N A ≤ N B := by
@@ -140,8 +158,11 @@ theorem apply_le_of_kyFanSum_le {A B : E →ₗ[𝕜] F}
 
 /-- Pointwise singular-value dominance implies norm dominance.
 
-Proof strategy: Sum the pointwise inequalities to obtain all Ky Fan prefix inequalities, then
-apply `apply_le_of_kyFanSum_le`.
+Lean proof route for a weaker agent:
+
+1. Sum the pointwise inequalities to obtain all Ky Fan prefix inequalities, then apply `apply_le_of_kyFanSum_le`.
+2. Sum the pointwise inequalities over each finite prefix using `Finset.sum_le_sum`.
+3. Invoke `apply_le_of_kyFanSum_le` with the resulting prefix inequalities.
 -/
 theorem apply_le_of_singularValues_le {A B : E →ₗ[𝕜] F}
     (h : ∀ i, A.singularValues i ≤ B.singularValues i) : N A ≤ N B := by
@@ -154,9 +175,10 @@ noncomputable def adjointTransport
   sorry
 
 /--
-Proof strategy: Unfold `adjointTransport`; the theorem is the defining equation of the
-transported rectangular UI norm. Prove it by `rfl` after the constructor is implemented, or by
-the constructor simp lemma.
+Lean proof route for a weaker agent:
+
+1. Unfold `adjointTransport`; the theorem is the defining equation of the transported rectangular UI norm.
+2. Prove it by `rfl` after the constructor is implemented, or by the constructor simp lemma.
 -/
 @[simp] theorem adjointTransport_apply (A : E →ₗ[𝕜] F) :
     (adjointTransport N).toFun A.adjoint = N.toFun A := by
@@ -169,9 +191,10 @@ noncomputable def zeroExtension (A : E →ₗ[𝕜] F) :
 
 /-- Singular values are unchanged by zero extension, apart from zero padding.
 
-Proof strategy: Choose orthonormal bases of `E` and `F`; the zero extension is the block matrix
-with `A` in one off-diagonal block, so its Gram operator is `A⋆A` plus a zero block. Compare
-sorted eigenvalues with zero padding.
+Lean proof route for a weaker agent:
+
+1. Choose orthonormal bases of `E` and `F`; the zero extension is the block matrix with `A` in one off-diagonal block, so its Gram operator is `A⋆A` plus a zero block.
+2. Compare sorted eigenvalues with zero padding.
 -/
 theorem singularValues_zeroExtension (A : E →ₗ[𝕜] F) :
     (zeroExtension A).singularValues = A.singularValues := by
@@ -209,8 +232,11 @@ noncomputable def schatten (p : ℝ) (hp : 1 ≤ p) :
 /-- The rectangular Frobenius norm is the square root of the sum of squared
 column norms in any orthonormal basis of the domain.
 
-Proof strategy: Unfold the rectangular Frobenius norm through zero extension or its singular
-values and reuse Parseval/the existing square Frobenius basis formula.
+Lean proof route for a weaker agent:
+
+1. Unfold the rectangular Frobenius norm through zero extension or its singular values and reuse Parseval/the existing square Frobenius basis formula.
+2. Rewrite the zero extension on the canonical L² direct-sum basis and eliminate the codomain-only basis vectors.
+3. Use `Real.sqrt_eq_iff_sq_eq` only after proving nonnegativity of the finite sum.
 -/
 theorem frobenius_apply (A : E →ₗ[𝕜] F)
     (b : OrthonormalBasis (Fin (finrank 𝕜 E)) 𝕜 E) :
@@ -219,8 +245,10 @@ theorem frobenius_apply (A : E →ₗ[𝕜] F)
 
 /-- The Ky Fan norm evaluates to the prefix sum of singular values.
 
-Proof strategy: This should be definitional once `kyFan` is constructed from
-`rectangularKyFanSum`; otherwise reduce through the zero-extension square norm.
+Lean proof route for a weaker agent:
+
+1. This should be definitional once `kyFan` is constructed from `rectangularKyFanSum`
+2. otherwise reduce through the zero-extension square norm.
 -/
 theorem kyFan_apply (k : ℕ) (A : E →ₗ[𝕜] F) :
     kyFan k A = rectangularKyFanSum k A := by
@@ -251,8 +279,10 @@ noncomputable def toRectangular
   sorry
 
 /--
-Proof strategy: Unfold `UnitarilyInvariantNorm.toRectangular` and the zero-extension bridge. The
-proof should be definitional once the square-to-rectangular constructor is implemented.
+Lean proof route for a weaker agent:
+
+1. Unfold `UnitarilyInvariantNorm.toRectangular` and the zero-extension bridge.
+2. The proof should be definitional once the square-to-rectangular constructor is implemented.
 -/
 @[simp] theorem toRectangular_apply
     (N : UnitarilyInvariantNorm 𝕜 E) (A : E →ₗ[𝕜] E) :

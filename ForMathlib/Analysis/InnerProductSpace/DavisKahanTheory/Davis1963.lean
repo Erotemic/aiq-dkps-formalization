@@ -54,9 +54,11 @@ noncomputable def familyOffDiagonal {m : ℕ} (P : OrthoProjFamily 𝕜 E m)
 /-- Davis 1963, Theorem 3.2: sharpened total-rotation bound with eigenvalue
 motion subtracted from the available perturbation energy.
 
-Proof strategy: Expand the Frobenius norm of `B-A` in the matched projection families, apply the
-scalar separation inequality to every off-diagonal block, and sum. This is finite family
-combinatorics, not an infinite specialization.
+Lean proof route for a weaker agent:
+
+1. Expand `B-A` into the rectangular blocks `Q_j (B-A) P_i` and use Frobenius orthogonality of distinct blocks.
+2. Rewrite each block with the scalar eigenvalue relations from `hblocks`; isolate the matched term `lam i - μ i` and the off-diagonal rotation coefficients.
+3. Apply `hsep` termwise, sum over `i,j`, and identify the resulting sums with `totalRotationEnergy` and `eigenvalueMotionEnergy`.
 -/
 theorem totalRotation_add_eigenvalueMotion_le
     {A B : E →ₗ[𝕜] E} (hA : A.IsSymmetric) (hB : B.IsSymmetric)
@@ -74,18 +76,25 @@ theorem totalRotation_add_eigenvalueMotion_le
 off-diagonal hypothesis, eigenvalue motion is bounded **below** by the
 diagonal perturbation energy minus the off-diagonal energy.
 
-Proof strategy: After connecting `μ` to the perturbed spectral blocks, reproduce Davis 1963
-Theorem 4.1 by expanding diagonal/off-diagonal Frobenius energies and using the smallness
-hypothesis to control the quadratic remainder.
+Lean proof route for a weaker agent:
 
-Signature audit: Likely false as stated because `μ` is not connected to `B` or to a perturbed
-spectral family. Add a `Q` family and `SpectrumIn B (range (Q.proj i)) {μ i}`, or state the
-exact ordered-eigenvalue hypothesis from Davis 1963.
+1. Use `hAblocks` and `hBblocks` to turn each diagonal block of `A` and `B` into scalar
+   multiplication by `lam i` and `μ i`.
+2. Expand the Frobenius square of the diagonal and off-diagonal parts of `B-A` in the `P`
+   decomposition.
+3. Use `hnd` to express the change-of-resolution coefficients between `P` and `Q` and apply
+   the separation bound `hsepB` to the quadratic remainder.
+4. Apply `hoffSmall` to absorb the remainder and sum over `i`.
+
+Signature audit: `μ` is now tied to the perturbed spectral family `Q`; the previous free
+parameter made the lower bound vacuous or false.
 -/
 theorem diagonalPerturbation_sub_offDiagonal_le_eigenvalueMotion
     {A B : E →ₗ[𝕜] E} (hA : A.IsSymmetric) (hB : B.IsSymmetric)
-    {m : ℕ} (P : OrthoProjFamily 𝕜 E m) (lam μ : Fin m → ℝ)
-    (hblocks : ∀ i, SpectrumIn A (LinearMap.range (P.proj i)) {lam i})
+    {m : ℕ} (P Q : OrthoProjFamily 𝕜 E m) (hnd : P.NonDegenerate Q)
+    (lam μ : Fin m → ℝ)
+    (hAblocks : ∀ i, SpectrumIn A (LinearMap.range (P.proj i)) {lam i})
+    (hBblocks : ∀ i, SpectrumIn B (LinearMap.range (Q.proj i)) {μ i})
     {γ : ℝ} (hγ : 0 < γ)
     (hsepB : ∀ i j, i ≠ j → γ ≤ |μ i - μ j|)
     (hoffSmall : UnitarilyInvariantNorm.frobenius 𝕜 E
@@ -99,8 +108,11 @@ theorem diagonalPerturbation_sub_offDiagonal_le_eigenvalueMotion
 /-- Davis's off-diagonal corollary for total rotation.  This combines the
 rotation/eigenvalue budget with the lower bound on eigenvalue motion.
 
-Proof strategy: Combine `totalRotation_add_eigenvalueMotion_le` with the corrected
-eigenvalue-motion lower bound and cancel the diagonal energy algebraically.
+Lean proof route for a weaker agent:
+
+1. Combine `totalRotation_add_eigenvalueMotion_le` with the corrected eigenvalue-motion lower bound and cancel the diagonal energy algebraically.
+2. Substitute the eigenvalue-motion lower bound and the Frobenius pinch/off-diagonal Pythagorean decomposition.
+3. Use `nlinarith` only after all norm squares have been named and nonnegativity facts supplied.
 -/
 theorem totalRotation_le_two_mul_offDiagonal
     {A B : E →ₗ[𝕜] E} (hA : A.IsSymmetric) (hB : B.IsSymmetric)
@@ -120,9 +132,11 @@ theorem totalRotation_le_two_mul_offDiagonal
 
 /-- Sharp two-subspace product estimate, the 1963 ancestor of `sin 2Θ`.
 
-Proof strategy: Decompose the perturbed eigenvector into `U` and `Uᗮ`, test the eigen-equation
-against both components, subtract the resulting Rayleigh inequalities, and use the perturbation
-norm; for the tangent version use vanishing pinch to retain the cosine-difference factor.
+Lean proof route for a weaker agent:
+
+1. Set `y := projection U x` and `z := complementaryProjection U x`; prove `x=y+z` and `⟪y,z⟫=0`.
+2. Project the eigen-equation to both blocks, pair with `y` and `z`, and subtract the real parts so the eigenvalue term cancels.
+3. Apply `hlower`, `hupper`, and Cauchy--Schwarz to the perturbation cross term; use `hx` only at the final normalization step.
 -/
 theorem sinTwoTheta_eigenvector_product_le
     {A H : E →ₗ[𝕜] E} (hA : A.IsSymmetric) (hH : H.IsSymmetric)
@@ -137,9 +151,11 @@ theorem sinTwoTheta_eigenvector_product_le
 
 /-- Vanishing-pinch product estimate, the 1963 ancestor of `tan 2Θ`.
 
-Proof strategy: Decompose the perturbed eigenvector into `U` and `Uᗮ`, test the eigen-equation
-against both components, subtract the resulting Rayleigh inequalities, and use the perturbation
-norm; for the tangent version use vanishing pinch to retain the cosine-difference factor.
+Lean proof route for a weaker agent:
+
+1. Set `y := projection U x` and `z := complementaryProjection U x`; prove `x=y+z` and `⟪y,z⟫=0`.
+2. Project the eigen-equation to both blocks, pair with `y` and `z`, and subtract the real parts so the eigenvalue term cancels.
+3. Apply `hlower`, `hupper`, and Cauchy--Schwarz to the perturbation cross term; use `hx` only at the final normalization step.
 -/
 theorem tanTwoTheta_eigenvector_product_le
     {A H : E →ₗ[𝕜] E} (hA : A.IsSymmetric) (hH : H.IsSymmetric)

@@ -6,13 +6,14 @@ Authors: Jon Crall, GPT 5.6 High
 import ForMathlib.Analysis.InnerProductSpace.CourantFischer
 import ForMathlib.Analysis.InnerProductSpace.PrincipalAngles
 import ForMathlib.Analysis.InnerProductSpace.UnitarilyInvariantNorm
+import ForMathlib.Analysis.InnerProductSpace.PolarDecomposition
 
 /-!
 # Canonical objects for the finite-dimensional Davis--Kahan theory
 
 This file is the common statement layer for the complete finite-dimensional
-Davis--Kahan programme.  The declarations are intentionally scaffolded with
-`sorry`: they record the basis-independent objects and exact theorem shapes
+Davis--Kahan programme.  Some declarations are intentionally scaffolded as open
+obligations: they record the basis-independent objects and exact theorem shapes
 that the completed development should expose.
 
 Literature map:
@@ -41,6 +42,15 @@ variable {E : Type*} [NormedAddCommGroup E] [InnerProductSpace 𝕜 E]
   [FiniteDimensional 𝕜 E]
 variable {F : Type*} [NormedAddCommGroup F] [InnerProductSpace 𝕜 F]
   [FiniteDimensional 𝕜 F]
+
+/-- The modulus `|A| = (A⋆A)^{1/2}` has the same singular values as `A`: both
+Gram operators coincide, `|A|⋆|A| = |A|² = A⋆A`.  This is the finite-dimensional
+`σ(|A|) = σ(A)` used to identify difference-of-projector singular values with the
+`sin Θ` operator's. -/
+theorem singularValues_abs (A : E →ₗ[𝕜] E) :
+    (ForMathlib.abs A).singularValues = A.singularValues := by
+  refine ForMathlib.singularValues_eq_of_gram_eq ?_
+  rw [(ForMathlib.isPositive_abs A).adjoint_eq, ForMathlib.abs_mul_self]
 
 /-- A subspace reduces an operator when it is invariant.  For a symmetric
 operator, invariance of `U` implies invariance of `Uᗮ`, so this is the right
@@ -171,15 +181,18 @@ noncomputable def angleOperator (U V : Submodule 𝕜 E)
     [U.HasOrthogonalProjection] [V.HasOrthogonalProjection] : E →ₗ[𝕜] E := by
   sorry
 
-/-- `cos Θ` on the full ambient space. -/
+/-- `cos Θ` on the full ambient space, `|P_V P_U|`.  Its singular values are the
+principal-angle cosines (`singularValues_abs` and `singularValues_cosThetaMap`). -/
 noncomputable def cosAngleOperator (U V : Submodule 𝕜 E)
-    [U.HasOrthogonalProjection] [V.HasOrthogonalProjection] : E →ₗ[𝕜] E := by
-  sorry
+    [U.HasOrthogonalProjection] [V.HasOrthogonalProjection] : E →ₗ[𝕜] E :=
+  ForMathlib.abs (cosThetaMap U V)
 
-/-- `sin Θ` on the full ambient space. -/
+/-- `sin Θ` on the full ambient space, the modulus `|P_U - P_V|` of the projector
+difference.  This is the symmetric full-space sine operator; its singular values
+are those of `P_U - P_V` (`singularValues_projection_sub_projection`). -/
 noncomputable def sinAngleOperator (U V : Submodule 𝕜 E)
-    [U.HasOrthogonalProjection] [V.HasOrthogonalProjection] : E →ₗ[𝕜] E := by
-  sorry
+    [U.HasOrthogonalProjection] [V.HasOrthogonalProjection] : E →ₗ[𝕜] E :=
+  ForMathlib.abs (projection U - projection V)
 
 /-- `tan Θ` on the full ambient space.  In non-acute configurations this is
 understood as the Moore--Penrose/graph-operator extension on the transverse
@@ -202,25 +215,33 @@ noncomputable def tanTwoAngleOperator (U V : Submodule 𝕜 E)
     [U.HasOrthogonalProjection] [V.HasOrthogonalProjection] : E →ₗ[𝕜] E := by
   sorry
 
-/-- Principal angles as a sorted finitely supported sequence. -/
-noncomputable def principalAngles (U V : Submodule 𝕜 E)
-    [U.HasOrthogonalProjection] [V.HasOrthogonalProjection] : ℕ →₀ ℝ := by
-  sorry
-
-/-- Principal-angle cosines, padded by zeros beyond the relevant finite rank. -/
+/-- Principal-angle cosines: the singular values of the cross projection
+`P_V P_U`, sorted decreasingly and padded by zeros beyond the finite rank.  These
+are symmetric in `U, V` because `(P_V P_U)⋆ = P_U P_V` (`principalCosines_comm`). -/
 noncomputable def principalCosines (U V : Submodule 𝕜 E)
-    [U.HasOrthogonalProjection] [V.HasOrthogonalProjection] : ℕ →₀ ℝ := by
-  sorry
+    [U.HasOrthogonalProjection] [V.HasOrthogonalProjection] : ℕ →₀ ℝ :=
+  (cosThetaMap U V).singularValues
 
-/-- Principal-angle sines. -/
+/-- Principal-angle sines: the singular values of the directed cross projection
+`P_{Vᗮ} P_U`.  In equal-dimension configurations these are the sines of the
+principal angles; when `dim U ≠ dim V` the directed map also records the
+`π/2` "defect" directions, so this is not symmetric in `U, V` in general. -/
 noncomputable def principalSines (U V : Submodule 𝕜 E)
-    [U.HasOrthogonalProjection] [V.HasOrthogonalProjection] : ℕ →₀ ℝ := by
-  sorry
+    [U.HasOrthogonalProjection] [V.HasOrthogonalProjection] : ℕ →₀ ℝ :=
+  (sinThetaMap U V).singularValues
 
-/-- Principal-angle tangents. -/
+/-- Principal angles as a sorted finitely supported sequence: `arcsin` applied to
+the principal sines.  `arcsin 0 = 0` keeps the support finite. -/
+noncomputable def principalAngles (U V : Submodule 𝕜 E)
+    [U.HasOrthogonalProjection] [V.HasOrthogonalProjection] : ℕ →₀ ℝ :=
+  (principalSines U V).mapRange Real.arcsin Real.arcsin_zero
+
+/-- Principal-angle tangents: `tan` applied to the principal angles.  `tan 0 = 0`
+keeps the support finite (poles at `π/2` are only reached in the non-acute
+configuration, excluded by the tangent theorems' hypotheses). -/
 noncomputable def principalTangents (U V : Submodule 𝕜 E)
-    [U.HasOrthogonalProjection] [V.HasOrthogonalProjection] : ℕ →₀ ℝ := by
-  sorry
+    [U.HasOrthogonalProjection] [V.HasOrthogonalProjection] : ℕ →₀ ℝ :=
+  (principalAngles U V).mapRange Real.tan Real.tan_zero
 
 /-- The pair has no angle `π/2`; equivalently, `P_V` is injective on `U`. -/
 def IsTransverse (U V : Submodule 𝕜 E) [V.HasOrthogonalProjection] : Prop :=
@@ -435,56 +456,61 @@ theorem spectralSubspace_eq_span_eigenvectors (A : E →ₗ[𝕜] E)
 
 /-- Principal angles are symmetric in the two subspaces.
 
-Lean proof route for a weaker agent:
+Design note (open obligation).  With the directed-sine convention
+`principalAngles = arcsin ∘ principalSines`, this equality is *false without an
+equal-dimension hypothesis*: when `dim U ≠ dim V` the directed sine map
+`P_{Vᗮ} P_U` records the `π/2` "defect" directions of the larger subspace, which
+have no counterpart in `P_{Uᗮ} P_V`.  Concretely, for `U = span{e₁, e₂}` and
+`V = span{e₁}` in a 3-dimensional space, `principalAngles U V = {π/2, 0, …}` while
+`principalAngles V U = {0, …}`.
 
-1. Rewrite `cosThetaMap V U` as the adjoint of `cosThetaMap U V` using self-adjointness of orthogonal projections.
-2. Apply the theorem that a map and its adjoint have the same ordered singular values.
-3. Rewrite both sides with `singularValues_cosThetaMap` and then apply `Real.arccos` pointwise to obtain equality of `principalAngles`.
--/
+The symmetric object is the *cosine* spectrum: `principalCosines_comm` proves
+`principalCosines U V = principalCosines V U` unconditionally, since
+`(P_V P_U)⋆ = P_U P_V`.  A fully symmetric `principalAngles` would have to be built
+from those cosines with the min-dimension multiplicity convention (arccos on the
+common `min (dim U) (dim V)` angles), not from the directed sine map.  Completing
+this needs either that redesign of `principalAngles` or an added
+`finrank 𝕜 U = finrank 𝕜 V` hypothesis; left as an open obligation for that
+decision. -/
 theorem principalAngles_comm (U V : Submodule 𝕜 E)
     [U.HasOrthogonalProjection] [V.HasOrthogonalProjection] :
     principalAngles U V = principalAngles V U := by
   sorry
 
-/-- Principal-angle cosines are the singular values of `P_V P_U`.
-
-Lean proof route for a weaker agent:
-
-1. Choose orthonormal bases of `U` and `V`, identify the ambient cross projection with the overlap matrix plus zero blocks, and reuse `PrincipalAngles.singularValues_starProjection_comp_starProjection`.
-2. Prove a unitary-equivalence lemma between the ambient cross projection and the zero-extended overlap operator.
-3. Rewrite singular values with unitary invariance and the existing family-level cosine dictionary.
--/
+/-- Principal-angle cosines are the singular values of `P_V P_U` (definitional:
+`principalCosines` is defined as those singular values). -/
 theorem singularValues_cosThetaMap (U V : Submodule 𝕜 E)
     [U.HasOrthogonalProjection] [V.HasOrthogonalProjection] :
-    (cosThetaMap U V).singularValues = principalCosines U V := by
-  sorry
+    (cosThetaMap U V).singularValues = principalCosines U V :=
+  rfl
 
-/-- Principal-angle sines are the singular values of `P_{Vᗮ} P_U`.
-
-Lean proof route for a weaker agent:
-
-1. Reduce to the Pythagorean relation between the cosine and complementary cross projections on each principal plane, then transfer the sorted singular-value list.
-2. Prove the Gram identity `M⋆M = P_U - P_U P_V P_U` for the sine cross map.
-3. Read the eigenvalues through the cosine dictionary and simplify `sqrt (1-c²)`.
--/
+/-- Principal-angle sines are the singular values of `P_{Vᗮ} P_U` (definitional:
+`principalSines` is defined as those singular values). -/
 theorem singularValues_sinThetaMap (U V : Submodule 𝕜 E)
     [U.HasOrthogonalProjection] [V.HasOrthogonalProjection] :
-    (sinThetaMap U V).singularValues = principalSines U V := by
-  sorry
+    (sinThetaMap U V).singularValues = principalSines U V :=
+  rfl
 
-/-- The singular values of `P_U-P_V` are the full-space `sin Θ` values.
+/-- Principal-angle cosines are symmetric in the two subspaces, since
+`(P_V P_U)⋆ = P_U P_V` and adjoints share singular values.  (The sines are *not*
+symmetric when `dim U ≠ dim V`; see `principalSines`.) -/
+theorem principalCosines_comm (U V : Submodule 𝕜 E)
+    [U.HasOrthogonalProjection] [V.HasOrthogonalProjection] :
+    principalCosines U V = principalCosines V U := by
+  have hadj : (cosThetaMap V U).adjoint = cosThetaMap U V := by
+    rw [eq_comm, LinearMap.eq_adjoint_iff]
+    intro x y
+    simp only [cosThetaMap, projection, LinearMap.comp_apply, ContinuousLinearMap.coe_coe]
+    rw [V.inner_starProjection_left_eq_right, U.inner_starProjection_left_eq_right]
+  rw [principalCosines, principalCosines, ← hadj, ForMathlib.singularValues_adjoint]
 
-Lean proof route for a weaker agent:
-
-1. Specialize the bounded Ext identity `sinAngleOperator = |P_U-P_V|` after converting finite linear maps to continuous linear maps.
-2. Use the finite theorem that `T` and `|T|` have the same singular values, transporting across the coercions.
-3. Rewrite the finite `sinAngleOperator` definition and verify that both singular-value sequences use the same ambient-dimension padding.
--/
+/-- The singular values of `P_U-P_V` are the full-space `sin Θ` values: with
+`sinAngleOperator = |P_U - P_V|` and `σ(|T|) = σ(T)` (`singularValues_abs`). -/
 theorem singularValues_projection_sub_projection (U V : Submodule 𝕜 E)
     [U.HasOrthogonalProjection] [V.HasOrthogonalProjection] :
     (projection U - projection V).singularValues =
       (sinAngleOperator U V).singularValues := by
-  sorry
+  rw [sinAngleOperator, singularValues_abs]
 
 /-- The one-sided double-angle map is exactly twice the cross block.
 
@@ -513,7 +539,13 @@ Lean proof route for a weaker agent:
 1. Split on whether the cross-projection norm is strictly below one.
 2. In the acute branch, specialize the Ext identities relating the gap norm, `sinAngleOperator`, and the directed cross projection.
 3. In the norm-one branch, use equal finite rank to show the reverse directed gap also has norm one, then bound both projector norms from above by one.
--/
+
+Open obligation.  The clean route needs the two-projection (CS) decomposition
+identity `‖P_U - P_V‖ = ‖P_{Vᗮ} P_U‖` at equal rank, which the flat
+`SinThetaOpNorm` layer does not yet expose in this operator-equality form (it
+provides the one-sided bound and the largest-angle identification, but not the
+projector-difference/directed-map norm coincidence).  Left incomplete pending
+that two-projection norm identity. -/
 theorem opNorm_projection_sub_eq_opNorm_sinThetaMap (U V : Submodule 𝕜 E)
     [U.HasOrthogonalProjection] [V.HasOrthogonalProjection]
     (hrank : finrank 𝕜 U = finrank 𝕜 V) :
@@ -532,27 +564,36 @@ Lean proof route for a weaker agent:
 Signature audit: The equal-rank hypothesis fixes the defect multiplicities.  With the
 finitely-supported convention, additional zero angles disappear automatically, while the
 nonzero and `π/2` multiplicities agree under orthogonal complementation.
--/
+
+Open obligation.  With the directed-sine `principalAngles`, this reduces to
+`singularValues (P_{Vᗮ} P_U) = singularValues (P_V P_{Uᗮ})` at equal rank, i.e.
+the two-projection statement that complementation preserves the sine spectrum.
+That decomposition lemma is not yet available in the flat layer; left incomplete
+pending it (or a redesign of `principalAngles` through the symmetric cosine
+spectrum, cf. `principalAngles_comm`). -/
 theorem principalAngles_orthogonal (U V : Submodule 𝕜 E)
     [U.HasOrthogonalProjection] [V.HasOrthogonalProjection]
     (hrank : finrank 𝕜 U = finrank 𝕜 V) :
     principalAngles Uᗮ Vᗮ = principalAngles U V := by
   sorry
 
-/-- Family-level principal angles agree with the canonical submodule API.
-
-Lean proof route for a weaker agent:
-
-1. Extend the two orthonormal families to ambient orthonormal bases, identify the overlap matrix with the restricted cross projection, and reuse the family-level theorem in `PrincipalAngles.lean`.
-2. Rewrite both sides through `singularValues_cosThetaMap` and the overlap-operator theorem.
-3. Verify that the finite-support padding agrees beyond the family dimension.
--/
+/-- Family-level principal angles agree with the canonical submodule API: the
+subspace cosine spectrum of `span u, span v` is the family-level
+`cosPrincipalAngles`.  Both are singular values of the same cross projection
+`P_{span v} P_{span u}`, via the flat cosine dictionary
+`singularValues_starProjection_comp_starProjection`. -/
 theorem principalCosines_span_eq_cosPrincipalAngles {d : ℕ}
     {u v : Fin d → E} (hu : Orthonormal 𝕜 u) (hv : Orthonormal 𝕜 v) :
     principalCosines (Submodule.span 𝕜 (Set.range u))
         (Submodule.span 𝕜 (Set.range v)) =
       cosPrincipalAngles hu hv := by
-  sorry
+  have hcomp : cosThetaMap (Submodule.span 𝕜 (Set.range u)) (Submodule.span 𝕜 (Set.range v))
+      = (((Submodule.span 𝕜 (Set.range v)).starProjection ∘L
+          (Submodule.span 𝕜 (Set.range u)).starProjection : E →L[𝕜] E) : E →ₗ[𝕜] E) :=
+    rfl
+  rw [principalCosines, hcomp,
+    ForMathlib.singularValues_starProjection_comp_starProjection hu hv,
+    cosPrincipalAngles_comm hv hu]
 
 end DavisKahanTheory
 end ForMathlib

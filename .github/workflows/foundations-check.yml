@@ -22,9 +22,11 @@ jobs:
       - name: Apply foundations patch
         run: |
           git -C target apply "$GITHUB_WORKSPACE/foundations-capstones.patch"
-          if [ -f "$GITHUB_WORKSPACE/foundations-fixes.patch" ]; then
-            git -C target apply "$GITHUB_WORKSPACE/foundations-fixes.patch"
-          fi
+          for patch in "$GITHUB_WORKSPACE"/foundations-fixes*.patch; do
+            if [ -f "$patch" ]; then
+              git -C target apply "$patch"
+            fi
+          done
 
       - name: Install pinned Lean toolchain
         run: |

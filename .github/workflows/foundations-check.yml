@@ -33,4 +33,19 @@ jobs:
 
       - name: Build Acharyya2024 foundations
         working-directory: target
-        run: lake build Acharyya2024
+        run: |
+          set +e
+          lake build Acharyya2024 > foundations-build.log 2>&1
+          status=$?
+          if [ "$status" -ne 0 ]; then
+            grep -n -B 2 -A 8 -E 'error:|unsolved goals|failed' foundations-build.log | tail -n 240 || tail -n 240 foundations-build.log
+          fi
+          exit "$status"
+
+      - name: Upload build diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: foundations-build-log
+          path: target/foundations-build.log
+          if-no-files-found: ignore

@@ -57,7 +57,11 @@ noncomputable def generalizedCompression (A : E →ₗ[𝕜] E)
     (X : F →ₗ[𝕜] E) (hX : Function.Injective X) : F →ₗ[𝕜] F := by
   sorry
 
-/-- The range is unchanged by orthonormalization. -/
+/-- The range is unchanged by orthonormalization.
+
+Proof strategy: Expand the polar/whitening factor of `X`; its positive Gram factor is invertible
+under injectivity, so postcomposition by that automorphism does not change the range.
+-/
 theorem range_orthonormalizedEmbedding (X : F →ₗ[𝕜] E)
     (hX : Function.Injective X) :
     LinearMap.range (orthonormalizedEmbedding X hX).toLinearMap =
@@ -65,14 +69,28 @@ theorem range_orthonormalizedEmbedding (X : F →ₗ[𝕜] E)
   sorry
 
 /-- The generalized compression is symmetric for a symmetric ambient
-operator. -/
+operator.
+
+Proof strategy: Do not prove the current statement. Replace it by Gram-self-adjointness or by
+symmetry of the whitened compression, then prove it by moving adjoints through the Gram square
+root.
+
+Signature audit: False for `(X⋆X)⁻¹ X⋆ A X` in the ordinary inner product unless the Gram matrix
+commutes with `X⋆AX`. The correct target is Gram-self-adjointness, or ordinary symmetry of the
+whitened compression `(X⋆X)⁻¹/² X⋆ A X (X⋆X)⁻¹/²`.
+-/
 theorem isSymmetric_generalizedCompression {A : E →ₗ[𝕜] E}
     (hA : A.IsSymmetric) (X : F →ₗ[𝕜] E) (hX : Function.Injective X) :
     (generalizedCompression A X hX).IsSymmetric := by
   sorry
 
 /-- Davis--Kahan Theorem 6.1: generalized `sin Θ` for non-orthonormal trial
-vectors and unequal dimensions. -/
+vectors and unequal dimensions.
+
+Proof strategy: Whiten `X = Q G^{1/2}`, convert the residual to the isometric embedding `Q`,
+apply the finite `sinTheta_residual_le`, and use the lower frame bound to control multiplication
+by `G^{1/2}`.
+-/
 theorem generalizedSinTheta_residual_le
     (N : RectangularUnitarilyInvariantNorm 𝕜 F E)
     {A : E →ₗ[𝕜] E} (hA : A.IsSymmetric)
@@ -88,7 +106,12 @@ theorem generalizedSinTheta_residual_le
   sorry
 
 /-- Davis--Kahan Theorem 6.2: under arbitrary spectral separation the sharp
-all-UI conclusion is replaced by the Hilbert--Schmidt/square-norm estimate. -/
+all-UI conclusion is replaced by the Hilbert--Schmidt/square-norm estimate.
+
+Proof strategy: Whiten the trial map, apply the entrywise/Frobenius Sylvester estimate under
+absolute separation, and use the lower frame bound. This is finite and should not wait for
+infinite symmetric ideals.
+-/
 theorem generalizedSinTheta_frobenius_le_of_spectralDistance
     {A : E →ₗ[𝕜] E} (hA : A.IsSymmetric)
     {V : Submodule 𝕜 E} [V.HasOrthogonalProjection] (hV : Reduces A V)
@@ -103,7 +126,11 @@ theorem generalizedSinTheta_frobenius_le_of_spectralDistance
         (generalResidual A X M) := by
   sorry
 
-/-- Trace/nuclear fallback obtained from the square-norm estimate and rank. -/
+/-- Trace/nuclear fallback obtained from the square-norm estimate and rank.
+
+Proof strategy: Combine the preceding Frobenius theorem with `‖T‖₁ ≤ sqrt(rank T) ‖T‖₂`; bound
+the rank by `finrank F`.
+-/
 theorem generalizedSinTheta_nuclear_le_of_spectralDistance
     {A : E →ₗ[𝕜] E} (hA : A.IsSymmetric)
     {V : Submodule 𝕜 E} [V.HasOrthogonalProjection] (hV : Reduces A V)
@@ -120,7 +147,16 @@ theorem generalizedSinTheta_nuclear_le_of_spectralDistance
   sorry
 
 /-- Davis--Kahan Theorem 6.3: generalized `tan Θ`, allowing the exact target
-subspace to have larger dimension than the trial space. -/
+subspace to have larger dimension than the trial space.
+
+Proof strategy: After correcting the compression, whiten the trial map and specialize the
+bounded graph/Riccati geometry from `DavisKahanExt.GraphSubspace`; finish the arbitrary-UI
+estimate with the finite Sylvester/Ky Fan theorem.
+
+Signature audit: Depends on the preceding false ordinary-symmetry model. Restate using the
+whitened compression and whitened residual, or formulate the Sylvester equation in the Gram
+inner product.
+-/
 theorem generalizedTanTheta_residual_le
     (N : RectangularUnitarilyInvariantNorm 𝕜 F E)
     {A : E →ₗ[𝕜] E} (hA : A.IsSymmetric)
@@ -133,7 +169,12 @@ theorem generalizedTanTheta_residual_le
       N (generalResidual A X (generalizedCompression A X hX)) := by
   sorry
 
-/-- The unequal-dimensional `sin 2Θ` extension mentioned after Theorem 8.2. -/
+/-- The unequal-dimensional `sin 2Θ` extension mentioned after Theorem 8.2.
+
+Proof strategy: Apply the residual reflection theorem to the isometric embedding `X`; the
+operator-norm core can specialize `DavisKahanExt.sinTwoTheta_residual`, while zero padding and
+arbitrary UI norms remain finite.
+-/
 theorem generalizedSinTwoTheta_unequalFinrank
     (N : RectangularUnitarilyInvariantNorm 𝕜 F E)
     {A : E →ₗ[𝕜] E} (hA : A.IsSymmetric)
@@ -143,7 +184,16 @@ theorem generalizedSinTwoTheta_unequalFinrank
     δ * N (sinTwoThetaEmbedding U X) ≤ 2 * N (residual A X M) := by
   sorry
 
-/-- Spectral projectors along the homotopy `A+tH` stay on one isolated branch. -/
+/-- Spectral projectors along the homotopy `A+tH` stay on one isolated branch.
+
+Proof strategy: After strengthening the hypothesis to a uniform contour/gap, specialize
+`DavisKahanExt.continuous_rieszProjection_path` and `rieszProjection_eq_spectralProjection`
+through the finite bridge.
+
+Signature audit: False/underdetermined: the current `hisolated` hypothesis is essentially
+tautological and gives no uniform gap. Require a fixed separating contour or a positive uniform
+distance from `Ω` to the complementary spectrum, and usually constant rank.
+-/
 theorem spectralSubspace_path_continuous
     {A H : E →ₗ[𝕜] E} (hA : A.IsSymmetric) (hH : H.IsSymmetric)
     (Ω : Set ℝ)
@@ -155,7 +205,12 @@ theorem spectralSubspace_path_continuous
   sorry
 
 /-- Davis--Kahan Theorem 8.2: a quantitative half-gap bound selects the acute
-branch of the `sin 2Θ` conclusion. -/
+branch of the `sin 2Θ` conclusion.
+
+Proof strategy: Use the strengthened continuation theorem to keep the selected projector in the
+component of `U`, combine the half-gap perturbation bound with `‖P-Q‖ < 1`, and conclude
+`IsAcute`. This should directly specialize the bounded Ext continuation layer.
+-/
 theorem sinTwoTheta_acute_of_small_perturbation
     {A H : E →ₗ[𝕜] E} (hA : A.IsSymmetric) (hH : H.IsSymmetric)
     {U : Submodule 𝕜 E} [U.HasOrthogonalProjection] (hU : Reduces A U)

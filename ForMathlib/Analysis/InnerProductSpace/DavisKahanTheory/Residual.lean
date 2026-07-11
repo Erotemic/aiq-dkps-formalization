@@ -87,26 +87,42 @@ def AvoidsQuarterTurnEmbedding (U : Submodule 𝕜 E)
     [U.HasOrthogonalProjection] (X : F →ₗᵢ[𝕜] E) : Prop :=
   AvoidsQuarterTurn U (approximateSubspace X)
 
-/-- Compression of a symmetric operator is symmetric. -/
+/-- Compression of a symmetric operator is symmetric.
+
+Proof strategy: Expand `X⋆ A X`, use symmetry of `A`, and move the adjoint/isometry through the
+inner product. This remains a direct finite algebra lemma.
+-/
 theorem isSymmetric_compression {A : E →ₗ[𝕜] E} (hA : A.IsSymmetric)
     (X : F →ₗᵢ[𝕜] E) : (compression A X).IsSymmetric := by
   sorry
 
-/-- The Ritz residual is orthogonal to the trial subspace. -/
+/-- The Ritz residual is orthogonal to the trial subspace.
+
+Proof strategy: Unfold the Ritz residual and compression, then simplify `X⋆X = I` for a linear
+isometry.
+-/
 theorem adjoint_comp_ritzResidual_eq_zero (A : E →ₗ[𝕜] E)
     (X : F →ₗᵢ[𝕜] E) :
     X.toLinearMap.adjoint ∘ₗ ritzResidual A X = 0 := by
   sorry
 
 /-- Vanishing Ritz residual is equivalent to invariance of the represented
-subspace. -/
+subspace.
+
+Proof strategy: For the forward direction write every vector in `range X` as `X y`; for the
+reverse direction use invariance to define coordinates by `X⋆` and show `AX = X(X⋆AX)`.
+-/
 theorem ritzResidual_eq_zero_iff_reduces {A : E →ₗ[𝕜] E}
     (X : F →ₗᵢ[𝕜] E) :
     ritzResidual A X = 0 ↔ Reduces A (approximateSubspace X) := by
   sorry
 
 /-- Residuals transform naturally under a unitary change of approximate
-coordinates. -/
+coordinates.
+
+Proof strategy: Unfold `residual`, reassociate compositions, and cancel `V ∘ V⋆ = I`. This is
+coordinate covariance and should remain direct.
+-/
 theorem residual_comp_unitary (A : E →ₗ[𝕜] E) (X : F →ₗᵢ[𝕜] E)
     (M : F →ₗ[𝕜] F) (V : F ≃ₗᵢ[𝕜] F) :
     residual A (X.comp V.toLinearIsometry)
@@ -115,7 +131,11 @@ theorem residual_comp_unitary (A : E →ₗ[𝕜] E) (X : F →ₗᵢ[𝕜] E)
   sorry
 
 /-- If `(X,M)` is invariant for `B`, its residual for `A` is exactly the
-perturbation applied to `X`. -/
+perturbation applied to `X`.
+
+Proof strategy: Substitute the invariant-pair equation for `B X`, expand `A-B`, and use
+linear-map extensionality.
+-/
 theorem residual_eq_perturbation_comp {A B : E →ₗ[𝕜] E}
     (X : F →ₗᵢ[𝕜] E) (M : F →ₗ[𝕜] F)
     (hBX : B ∘ₗ X.toLinearMap = X.toLinearMap ∘ₗ M) :
@@ -123,7 +143,11 @@ theorem residual_eq_perturbation_comp {A B : E →ₗ[𝕜] E}
   sorry
 
 /-- A unitarily invariant norm of the invariant-pair residual is bounded by
-that of the ambient perturbation. -/
+that of the ambient perturbation.
+
+Proof strategy: Rewrite with `residual_eq_perturbation_comp`, then use the operator-norm ideal
+inequality and that the isometric embedding has norm one.
+-/
 theorem opNorm_residual_le_perturbation
     {A B : E →ₗ[𝕜] E} (X : F →ₗᵢ[𝕜] E) (M : F →ₗ[𝕜] F)
     (hBX : B ∘ₗ X.toLinearMap = X.toLinearMap ∘ₗ M) :
@@ -132,7 +156,11 @@ theorem opNorm_residual_le_perturbation
   sorry
 
 /-- The Ritz compression minimizes the Frobenius residual over all coordinate
-operators. -/
+operators.
+
+Proof strategy: Prove the Pythagorean identity below first and drop the nonnegative
+compression-error term.
+-/
 theorem ritzResidual_frobenius_minimal (A : E →ₗ[𝕜] E)
     (X : F →ₗᵢ[𝕜] E) (M : F →ₗ[𝕜] F) :
     RectangularUnitarilyInvariantNorm.frobenius (ritzResidual A X) ≤
@@ -140,7 +168,12 @@ theorem ritzResidual_frobenius_minimal (A : E →ₗ[𝕜] E)
   sorry
 
 /-- Orthogonal decomposition of a general residual into the Ritz residual and
-compression error. -/
+compression error.
+
+Proof strategy: Decompose `AX-XM` as the Ritz residual plus `X(compression-M)`; Galerkin
+orthogonality makes the two rectangular maps Hilbert--Schmidt orthogonal. Expand the Frobenius
+square in an orthonormal basis.
+-/
 theorem residual_frobenius_pythagoras (A : E →ₗ[𝕜] E)
     (X : F →ₗᵢ[𝕜] E) (M : F →ₗ[𝕜] F) :
     RectangularUnitarilyInvariantNorm.frobenius (residual A X M) ^ 2 =
@@ -149,7 +182,11 @@ theorem residual_frobenius_pythagoras (A : E →ₗ[𝕜] E)
   sorry
 
 /-- The singular values of `sinThetaEmbedding` are the sines of the principal
-angles between `U` and `range X`. -/
+angles between `U` and `range X`.
+
+Proof strategy: Choose an orthonormal basis of the coordinate space, identify `range X`, and
+reduce to the canonical cross-projection singular-value theorem in `Basic.lean`.
+-/
 theorem singularValues_sinThetaEmbedding (U : Submodule 𝕜 E)
     [U.HasOrthogonalProjection] (X : F →ₗᵢ[𝕜] E) :
     (sinThetaEmbedding U X).singularValues =
@@ -157,7 +194,15 @@ theorem singularValues_sinThetaEmbedding (U : Submodule 𝕜 E)
   sorry
 
 /-- The tangent map is finite exactly when the represented subspace is
-transverse to `U`. -/
+transverse to `U`.
+
+Proof strategy: Resolve the signature first. For the one-sided statement, identify the cosine
+map with the restricted projection `P_U : range X → U`; its kernel is exactly `range X ∩ Uᗮ`.
+
+Signature audit: False without a dimension/equal-defect hypothesis if `IsTransverse` is the
+symmetric two-sided predicate: trivial kernel of `P_U ∘ X` gives only one direction of
+transversality. Either use a one-sided predicate or assume `finrank F = finrank U`.
+-/
 theorem tanThetaEmbedding_defined_iff (U : Submodule 𝕜 E)
     [U.HasOrthogonalProjection] (X : F →ₗᵢ[𝕜] E) :
     IsTransverse (approximateSubspace X) U ↔

@@ -40,7 +40,16 @@ noncomputable def sinThetaFrobenius (U V : Submodule 𝕜 E)
     [U.HasOrthogonalProjection] [V.HasOrthogonalProjection] : ℝ :=
   UnitarilyInvariantNorm.frobenius 𝕜 E (sinThetaMap U V)
 
-/-- Exact Yu--Wang--Samworth population-gap theorem. -/
+/-- Exact Yu--Wang--Samworth population-gap theorem.
+
+Proof strategy: After replacing arbitrary `V` by the corresponding ordered eigenblock of `B`,
+reuse the existing `YuWangSamworth.lean` theorem and bridge its eigenbasis/block notation to
+`sinThetaFrobenius`.
+
+Signature audit: False for an arbitrary reducing `V` of `B`: with `B = A`, choose a different
+reducing subspace and the right side is zero. `V` must be the corresponding ordered eigenblock
+(or a uniquely gap-selected branch).
+-/
 theorem yuWangSamworth_sinTheta_le
     {A B : E →ₗ[𝕜] E} (hA : A.IsSymmetric) (hB : B.IsSymmetric)
     {U V : Submodule 𝕜 E} [U.HasOrthogonalProjection]
@@ -52,7 +61,16 @@ theorem yuWangSamworth_sinTheta_le
         (UnitarilyInvariantNorm.frobenius 𝕜 E (B - A)) / Δ := by
   sorry
 
-/-- Arbitrary contiguous population eigenblock. -/
+/-- Arbitrary contiguous population eigenblock.
+
+Proof strategy: Restate using contiguous eigenvalue indices (or a continued contour-selected
+branch), then apply the preceding YWS theorem with the population gap formed by the adjacent
+eigenvalues.
+
+Signature audit: Using the same numerical interval for `B` does not in general select the
+corresponding population eigenblock, and its dimension may change. Use ordered eigenvalue
+indices, or add a perturbation-smallness/contour continuation hypothesis that fixes the branch.
+-/
 theorem yuWangSamworth_intervalBlock_le
     {A B : E →ₗ[𝕜] E} (hA : A.IsSymmetric) (hB : B.IsSymmetric)
     {a b Δ : ℝ} (hΔ : 0 < Δ)
@@ -64,7 +82,11 @@ theorem yuWangSamworth_intervalBlock_le
         (UnitarilyInvariantNorm.frobenius 𝕜 E (B - A)) / Δ := by
   sorry
 
-/-- Procrustes-aligned orthonormal bases. -/
+/-- Procrustes-aligned orthonormal bases.
+
+Proof strategy: Choose principal vector bases and the polar/Procrustes alignment of the overlap
+matrix; sum `‖v_i-u_i‖² = 2(1-cos θ_i)` and use `1-cos θ ≤ sin² θ`.
+-/
 theorem exists_aligned_orthonormalBasis
     {U V : Submodule 𝕜 E} [U.HasOrthogonalProjection]
     [V.HasOrthogonalProjection] {d : ℕ}
@@ -75,7 +97,15 @@ theorem exists_aligned_orthonormalBasis
       ∑ i, ‖v i - u i‖ ^ 2 ≤ 2 * sinThetaFrobenius U V ^ 2 := by
   sorry
 
-/-- YWS aligned-basis perturbation bound. -/
+/-- YWS aligned-basis perturbation bound.
+
+Proof strategy: Combine the corrected YWS sine bound with `exists_aligned_orthonormalBasis`,
+take square roots, and simplify constants.
+
+Signature audit: False for an arbitrary reducing `V` of `B`; inherit the corrected
+corresponding-eigenblock selection from `yuWangSamworth_sinTheta_le` before applying Procrustes
+alignment.
+-/
 theorem yuWangSamworth_alignedBasis_le
     {A B : E →ₗ[𝕜] E} (hA : A.IsSymmetric) (hB : B.IsSymmetric)
     {U V : Submodule 𝕜 E} [U.HasOrthogonalProjection]
@@ -91,7 +121,16 @@ theorem yuWangSamworth_alignedBasis_le
             (UnitarilyInvariantNorm.frobenius 𝕜 E (B - A)) / Δ := by
   sorry
 
-/-- Rank-one/sign-aligned eigenvector corollary. -/
+/-- Rank-one/sign-aligned eigenvector corollary.
+
+Proof strategy: After selecting the corresponding isolated eigenvector branch, specialize the
+aligned-basis theorem to rank one and take the unit scalar supplied by complex/real Procrustes
+alignment.
+
+Signature audit: False for an arbitrary eigenvector `v` of `B`: with `B = A`, choose a different
+eigenvector. Require the corresponding ordered eigenvalue/eigenvector branch or a hypothesis
+locating `μ` in the isolated population cluster.
+-/
 theorem yuWangSamworth_eigenvector_le
     {A B : E →ₗ[𝕜] E} (hA : A.IsSymmetric) (hB : B.IsSymmetric)
     {u v : E} (hu : ‖u‖ = 1) (hv : ‖v‖ = 1)

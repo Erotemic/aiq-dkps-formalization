@@ -53,7 +53,12 @@ def IntervalSylvesterGap (A : F →ₗ[𝕜] F) (B : E →ₗ[𝕜] E)
   SpectrumIn B ⊤ (Set.Icc a b) ∧
     SpectrumIn A ⊤ {lam | lam ∉ Set.Ioo (a - δ) (b + δ)}
 
-/-- The Sylvester operator is injective under positive spectral separation. -/
+/-- The Sylvester operator is injective under positive spectral separation.
+
+Proof strategy: Preferred route: specialize uniqueness from `DavisKahanExt.sylvester_unique`
+through the finite continuous-linear-map bridge. A direct eigenbasis proof is also immediate
+from nonzero scalar denominators.
+-/
 theorem sylvesterOperator_injective {A : F →ₗ[𝕜] F} {B : E →ₗ[𝕜] E}
     (hA : A.IsSymmetric) (hB : B.IsSymmetric) {δ : ℝ} (hδ : 0 < δ)
     (hgap : SpectraSeparated A ⊤ B ⊤ δ) :
@@ -65,7 +70,12 @@ noncomputable def solveSylvester (A : F →ₗ[𝕜] F) (B : E →ₗ[𝕜] E)
     (C : E →ₗ[𝕜] F) : E →ₗ[𝕜] F := by
   sorry
 
-/-- The chosen solution satisfies the Sylvester equation under separation. -/
+/-- The chosen solution satisfies the Sylvester equation under separation.
+
+Proof strategy: Preferred route: specialize `DavisKahanExt.sylvester_solve`. If the finite
+`solveSylvester` remains an eigenbasis definition, prove this entrywise and use separation to
+divide by every eigenvalue difference.
+-/
 theorem sylvesterOperator_solveSylvester {A : F →ₗ[𝕜] F}
     {B : E →ₗ[𝕜] E} (hA : A.IsSymmetric) (hB : B.IsSymmetric)
     {δ : ℝ} (hδ : 0 < δ) (hgap : SpectraSeparated A ⊤ B ⊤ δ)
@@ -74,7 +84,12 @@ theorem sylvesterOperator_solveSylvester {A : F →ₗ[𝕜] F}
   sorry
 
 /-- Sharp constant-one ordered Sylvester estimate in every rectangular UI
-norm. -/
+norm.
+
+Proof strategy: Use the existing finite `SylvesterBound` coercive theorem or specialize the Ext
+ordered operator-norm theorem for the op-norm case. For arbitrary UI norms, prove Ky Fan
+domination and invoke finite Fan dominance.
+-/
 theorem uiNorm_sylvester_le_of_orderedGap
     (N : RectangularUnitarilyInvariantNorm 𝕜 E F)
     {A : F →ₗ[𝕜] F} {B : E →ₗ[𝕜] E} {X C : E →ₗ[𝕜] F}
@@ -85,7 +100,12 @@ theorem uiNorm_sylvester_le_of_orderedGap
   sorry
 
 /-- Sharp constant-one interval/exterior Sylvester estimate in every
-rectangular UI norm. -/
+rectangular UI norm.
+
+Proof strategy: Split the exterior spectrum into the lower and upper ordered pieces, solve on
+the corresponding spectral blocks, establish Ky Fan domination with constant one, and combine by
+pinching. The operator-norm skeleton may reuse `DavisKahanExt.SinTheta`/`Sylvester`.
+-/
 theorem uiNorm_sylvester_le_of_intervalGap
     (N : RectangularUnitarilyInvariantNorm 𝕜 E F)
     {A : F →ₗ[𝕜] F} {B : E →ₗ[𝕜] E} {X C : E →ₗ[𝕜] F}
@@ -96,7 +116,12 @@ theorem uiNorm_sylvester_le_of_intervalGap
   sorry
 
 /-- Singular-value/Ky Fan form from which Fan dominance yields the preceding
-UI-norm theorem. -/
+UI-norm theorem.
+
+Proof strategy: Diagonalize `A` and `B`, express the solution as a Schur multiplier with
+denominators at least `δ`, and apply the finite singular-value/majorization lemma used in
+Davis--Kahan Section 5.
+-/
 theorem kyFan_sylvester_le_of_intervalGap
     {A : F →ₗ[𝕜] F} {B : E →ₗ[𝕜] E} {X C : E →ₗ[𝕜] F}
     (hA : A.IsSymmetric) (hB : B.IsSymmetric)
@@ -107,7 +132,12 @@ theorem kyFan_sylvester_le_of_intervalGap
   sorry
 
 /-- Ordered positivity/coercivity form used by the existing integral-free
-proof. -/
+proof.
+
+Proof strategy: Dispatch through the already proved `ForMathlib.SylvesterBound` theorem after
+converting its norm abstraction to the rectangular UI API. This is the fastest direct finite
+route.
+-/
 theorem uiNorm_sylvester_le_of_form_bounds
     (N : RectangularUnitarilyInvariantNorm 𝕜 E F)
     {A : F →ₗ[𝕜] F} {B : E →ₗ[𝕜] E} {X C : E →ₗ[𝕜] F}
@@ -120,7 +150,12 @@ theorem uiNorm_sylvester_le_of_form_bounds
 
 /-- General disjoint-spectrum extension with the Bhatia--Davis--McIntosh
 constant `π/2`.  This is beyond the sharp interval/exterior classic theorem
-but belongs in the complete finite-dimensional roadmap. -/
+but belongs in the complete finite-dimensional roadmap.
+
+Proof strategy: Prefer specialization of `DavisKahanExt.ideal_sylvester_le` once the Ext ideal
+signature is corrected; alternatively formalize the finite Bhatia--Davis--McIntosh multiplier
+and finish by Fan dominance.
+-/
 theorem uiNorm_sylvester_le_of_spectralDistance
     (N : RectangularUnitarilyInvariantNorm 𝕜 E F)
     {A : F →ₗ[𝕜] F} {B : E →ₗ[𝕜] E} {X C : E →ₗ[𝕜] F}

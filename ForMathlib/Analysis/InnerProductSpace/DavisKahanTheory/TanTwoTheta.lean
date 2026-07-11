@@ -41,7 +41,13 @@ variable {F : Type*} [NormedAddCommGroup F] [InnerProductSpace 𝕜 F]
 Here `X` spans a reducing subspace of the perturbed operator `B`, while the
 perturbation `B-A` is fully off diagonal relative to the unperturbed splitting
 `U ⊕ Uᗮ`.  The theorem itself excludes quarter-turn angles; acuteness is not a
-hypothesis for the raw double-angle theorem. -/
+hypothesis for the raw double-angle theorem.
+
+Proof strategy: Use the off-diagonal block equation and the graph/Riccati representation to
+identify `tan (2Θ)`; apply the ordered internal-gap Sylvester estimate. Prefer the operator-norm
+skeleton from `DavisKahanExt.Riccati` and `OffDiagonal`, then prove finite UI domination
+separately.
+-/
 theorem tanTwoTheta_residual_le
     (N : RectangularUnitarilyInvariantNorm 𝕜 F E)
     {A B : E →ₗ[𝕜] E} (hA : A.IsSymmetric) (hB : B.IsSymmetric)
@@ -58,7 +64,13 @@ theorem tanTwoTheta_residual_le
 
 For an arbitrary reducing subspace `V`, angles may lie on either side of
 `π/4`.  The theorem proves that no angle equals `π/4` and bounds the norm of
-`tan (2Θ)`; the later spectral-selection theorem chooses the acute branch. -/
+`tan (2Θ)`; the later spectral-selection theorem chooses the acute branch.
+
+Proof strategy: Use the off-diagonal block equation and the graph/Riccati representation to
+identify `tan (2Θ)`; apply the ordered internal-gap Sylvester estimate. Prefer the operator-norm
+skeleton from `DavisKahanExt.Riccati` and `OffDiagonal`, then prove finite UI domination
+separately.
+-/
 theorem tanTwoTheta_perturbation_le
     (N : UnitarilyInvariantNorm 𝕜 E)
     {A B : E →ₗ[𝕜] E} (hA : A.IsSymmetric) (hB : B.IsSymmetric)
@@ -72,7 +84,12 @@ theorem tanTwoTheta_perturbation_le
 
 /-- The off-diagonal hypotheses and the canonical same-cut spectral choice
 imply the acute-angle condition.  This is the branch selection in
-Davis--Kahan Theorem 8.1. -/
+Davis--Kahan Theorem 8.1.
+
+Proof strategy: Specialize the continuation and off-diagonal branch-selection results from
+`DavisKahanExt.Continuation` and `OffDiagonal`; identify the finite spectral projector with the
+eigenvector-span projector, then apply the graph-angle theorem.
+-/
 theorem isAcute_canonical_tanTwoTheta
     {A H : E →ₗ[𝕜] E} (hA : A.IsSymmetric) (hH : H.IsSymmetric)
     {U : Submodule 𝕜 E} [U.HasOrthogonalProjection]
@@ -84,7 +101,12 @@ theorem isAcute_canonical_tanTwoTheta
   sorry
 
 /-- Canonical spectral-subspace `tan 2Θ` theorem, with the acute conclusion
-built in and the same spectral cut used for `A` and `A+H`. -/
+built in and the same spectral cut used for `A` and `A+H`.
+
+Proof strategy: Specialize the continuation and off-diagonal branch-selection results from
+`DavisKahanExt.Continuation` and `OffDiagonal`; identify the finite spectral projector with the
+eigenvector-span projector, then apply the graph-angle theorem.
+-/
 theorem tanTwoTheta_spectralSubspace_le
     (N : UnitarilyInvariantNorm 𝕜 E)
     {A H : E →ₗ[𝕜] E} (hA : A.IsSymmetric) (hH : H.IsSymmetric)
@@ -101,7 +123,12 @@ theorem tanTwoTheta_spectralSubspace_le
 /-! ## Davis--Kahan Theorem 8.1: spectral selection and repulsion -/
 
 /-- Existence and uniqueness of the reducing projector on the correct side of
-an off-diagonal gap. -/
+an off-diagonal gap.
+
+Proof strategy: Specialize the continuation and off-diagonal branch-selection results from
+`DavisKahanExt.Continuation` and `OffDiagonal`; identify the finite spectral projector with the
+eigenvector-span projector, then apply the graph-angle theorem.
+-/
 theorem existsUnique_reducingSubspace_preserving_gap
     {A H : E →ₗ[𝕜] E} (hA : A.IsSymmetric) (hH : H.IsSymmetric)
     {U : Submodule 𝕜 E} [U.HasOrthogonalProjection]
@@ -116,7 +143,17 @@ theorem existsUnique_reducingSubspace_preserving_gap
       IsAcute U V := by
   sorry
 
-/-- Theorem 8.1(i): compression comparison through the cosine block. -/
+/-- Theorem 8.1(i): compression comparison through the cosine block.
+
+Proof strategy: First add the missing ordered orientation. Then use the cosine-block
+intertwining/compression formula from the selected graph subspace; derive eigenvalue
+monotonicity by min--max and the UI statement by singular-value majorization.
+
+Signature audit: False without an orientation hypothesis identifying `U` as the lower or upper
+block. Reversing the ordered blocks reverses the claimed eigenvalue inequality. Add
+half-line/ordered spectral bounds such as `SpectrumIn A U (Iic a)` and `SpectrumIn A Uᗮ (Ici
+b)`.
+-/
 theorem spectral_repulsion_compression
     {A H : E →ₗ[𝕜] E} (hA : A.IsSymmetric) (hH : H.IsSymmetric)
     {U V : Submodule 𝕜 E} [U.HasOrthogonalProjection]
@@ -127,7 +164,15 @@ theorem spectral_repulsion_compression
       {lam | ∃ μ ∈ restrictedSpectrum A Uᗮ, μ ≤ lam} := by
   sorry
 
-/-- Theorem 8.1(ii): ordered eigenvalues move away from the gap. -/
+/-- Theorem 8.1(ii): ordered eigenvalues move away from the gap.
+
+Proof strategy: First add the missing ordered orientation. Then use the cosine-block
+intertwining/compression formula from the selected graph subspace; derive eigenvalue
+monotonicity by min--max and the UI statement by singular-value majorization.
+
+Signature audit: False without the same ordered-block orientation required by the compression
+form. Add the lower/upper spectral enclosure hypotheses.
+-/
 theorem spectral_repulsion_eigenvalues
     {A H : E →ₗ[𝕜] E} (hA : A.IsSymmetric) (hH : H.IsSymmetric)
     {U V : Submodule 𝕜 E} [U.HasOrthogonalProjection]
@@ -138,7 +183,16 @@ theorem spectral_repulsion_eigenvalues
       ∃ μ ∈ restrictedSpectrum A Uᗮ, μ ≤ lam := by
   sorry
 
-/-- Theorem 8.1(iii): symmetric-gauge/UI-norm spectral repulsion. -/
+/-- Theorem 8.1(iii): symmetric-gauge/UI-norm spectral repulsion.
+
+Proof strategy: First add the missing ordered orientation. Then use the cosine-block
+intertwining/compression formula from the selected graph subspace; derive eigenvalue
+monotonicity by min--max and the UI statement by singular-value majorization.
+
+Signature audit: Underdetermined without an ordered-block orientation and a precise compression
+identification. The direction of the UI-norm comparison changes when the two diagonal blocks are
+exchanged.
+-/
 theorem spectral_repulsion_uiNorm
     (N : UnitarilyInvariantNorm 𝕜 E)
     {A H : E →ₗ[𝕜] E} (hA : A.IsSymmetric) (hH : H.IsSymmetric)
@@ -152,7 +206,12 @@ theorem spectral_repulsion_uiNorm
   sorry
 
 /-- Largest-angle consequence: the selected subspaces differ by less than
-`π/4`. -/
+`π/4`.
+
+Proof strategy: Specialize the continuation and off-diagonal branch-selection results from
+`DavisKahanExt.Continuation` and `OffDiagonal`; identify the finite spectral projector with the
+eigenvector-span projector, then apply the graph-angle theorem.
+-/
 theorem largestPrincipalAngle_lt_pi_div_four
     {A H : E →ₗ[𝕜] E} (hA : A.IsSymmetric) (hH : H.IsSymmetric)
     {U : Submodule 𝕜 E} [U.HasOrthogonalProjection]
@@ -164,7 +223,11 @@ theorem largestPrincipalAngle_lt_pi_div_four
       Real.pi / 4 := by
   sorry
 
-/-- Operator-norm endpoint already represented by `TanTwoTheta.lean`. -/
+/-- Operator-norm endpoint already represented by `TanTwoTheta.lean`.
+
+Proof strategy: Instantiate the corrected every-UI `tan 2Θ` theorem. The op-norm branch/graph
+part should specialize Ext; Frobenius and Ky Fan remain finite singular-value corollaries.
+-/
 theorem opNorm_tanTwoTheta_le
     {A B : E →ₗ[𝕜] E} (hA : A.IsSymmetric) (hB : B.IsSymmetric)
     {U V : Submodule 𝕜 E} [U.HasOrthogonalProjection]
@@ -176,7 +239,11 @@ theorem opNorm_tanTwoTheta_le
         2 * ‖(B - A).toContinuousLinearMap‖ := by
   sorry
 
-/-- Frobenius endpoint. -/
+/-- Frobenius endpoint.
+
+Proof strategy: Instantiate the corrected every-UI `tan 2Θ` theorem. The op-norm branch/graph
+part should specialize Ext; Frobenius and Ky Fan remain finite singular-value corollaries.
+-/
 theorem frobenius_tanTwoTheta_le
     {A B : E →ₗ[𝕜] E} (hA : A.IsSymmetric) (hB : B.IsSymmetric)
     {U V : Submodule 𝕜 E} [U.HasOrthogonalProjection]
@@ -188,7 +255,11 @@ theorem frobenius_tanTwoTheta_le
         2 * UnitarilyInvariantNorm.frobenius 𝕜 E (B - A) := by
   sorry
 
-/-- Ky Fan endpoint. -/
+/-- Ky Fan endpoint.
+
+Proof strategy: Instantiate the corrected every-UI `tan 2Θ` theorem. The op-norm branch/graph
+part should specialize Ext; Frobenius and Ky Fan remain finite singular-value corollaries.
+-/
 theorem kyFan_tanTwoTheta_le
     {A B : E →ₗ[𝕜] E} (hA : A.IsSymmetric) (hB : B.IsSymmetric)
     {U V : Submodule 𝕜 E} [U.HasOrthogonalProjection]

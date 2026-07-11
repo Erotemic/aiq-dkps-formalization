@@ -64,25 +64,45 @@ noncomputable def gramBlockDiagonal (A : E →ₗ[𝕜] F) :
     WithLp 2 (E × F) →ₗ[𝕜] WithLp 2 (E × F) := by
   sorry
 
-/-- The dilation is symmetric. -/
+/-- The dilation is symmetric.
+
+Proof strategy: Prove directly by block-matrix/adjoint algebra and the operator-norm ideal
+inequality. These finite identities are prerequisites for, rather than consequences of, the late
+Ext compact/singular layer.
+-/
 theorem isSymmetric_hermitianDilation (A : E →ₗ[𝕜] F) :
     (hermitianDilation A).IsSymmetric := by
   sorry
 
-/-- Squaring the dilation gives the two Gram operators on the diagonal. -/
+/-- Squaring the dilation gives the two Gram operators on the diagonal.
+
+Proof strategy: Prove directly by block-matrix/adjoint algebra and the operator-norm ideal
+inequality. These finite identities are prerequisites for, rather than consequences of, the late
+Ext compact/singular layer.
+-/
 theorem hermitianDilation_sq (A : E →ₗ[𝕜] F) :
     hermitianDilation A ∘ₗ hermitianDilation A =
       gramBlockDiagonal A := by
   sorry
 
-/-- Gram perturbation identity. -/
+/-- Gram perturbation identity.
+
+Proof strategy: Prove directly by block-matrix/adjoint algebra and the operator-norm ideal
+inequality. These finite identities are prerequisites for, rather than consequences of, the late
+Ext compact/singular layer.
+-/
 theorem rightGram_sub_rightGram
     (A Â : E →ₗ[𝕜] F) :
     rightGram Â - rightGram A =
       Â.adjoint ∘ₗ (Â - A) + (Â - A).adjoint ∘ₗ A := by
   sorry
 
-/-- Operator-norm Gram perturbation bound. -/
+/-- Operator-norm Gram perturbation bound.
+
+Proof strategy: Prove directly by block-matrix/adjoint algebra and the operator-norm ideal
+inequality. These finite identities are prerequisites for, rather than consequences of, the late
+Ext compact/singular layer.
+-/
 theorem opNorm_rightGram_sub_le
     (A Â : E →ₗ[𝕜] F) :
     ‖(rightGram Â - rightGram A).toContinuousLinearMap‖ ≤
@@ -90,7 +110,12 @@ theorem opNorm_rightGram_sub_le
         ‖(Â - A).toContinuousLinearMap‖ := by
   sorry
 
-/-- Right singular-subspace `sin Θ` theorem obtained from the Gram operators. -/
+/-- Right singular-subspace `sin Θ` theorem obtained from the Gram operators.
+
+Proof strategy: Apply the finite operator-norm `sin Θ` theorem to the appropriate Gram
+operators, then use `opNorm_rightGram_sub_le` (or its left analogue). Keep this finite instead
+of waiting for `DavisKahanExt.CompactAndSingular`.
+-/
 theorem rightSingularSubspace_sinTheta_le
     {A Â : E →ₗ[𝕜] F} {a b δ : ℝ} (hδ : 0 < δ)
     (hgap : IntervalExteriorGap (rightGram A) (rightGram Â)
@@ -102,7 +127,12 @@ theorem rightSingularSubspace_sinTheta_le
         ‖(Â - A).toContinuousLinearMap‖ := by
   sorry
 
-/-- Left singular-subspace counterpart. -/
+/-- Left singular-subspace counterpart.
+
+Proof strategy: Apply the finite operator-norm `sin Θ` theorem to the appropriate Gram
+operators, then use `opNorm_rightGram_sub_le` (or its left analogue). Keep this finite instead
+of waiting for `DavisKahanExt.CompactAndSingular`.
+-/
 theorem leftSingularSubspace_sinTheta_le
     {A Â : E →ₗ[𝕜] F} {a b δ : ℝ} (hδ : 0 < δ)
     (hgap : IntervalExteriorGap (leftGram A) (leftGram Â)
@@ -115,7 +145,11 @@ theorem leftSingularSubspace_sinTheta_le
   sorry
 
 /-- Hermitian-dilation form controlling left and right singular subspaces in a
-single Davis--Kahan application. -/
+single Davis--Kahan application.
+
+Proof strategy: Apply the finite `sin Θ` theorem to the Hermitian dilations and simplify the
+dilation perturbation. This is the finite precursor of the later Ext Wedin theorem.
+-/
 theorem singularSubspace_dilation_sinTheta_le
     {A Â : E →ₗ[𝕜] F} {Ω : Set ℝ} {δ : ℝ} (hδ : 0 < δ)
     (hgap : HybridGap (hermitianDilation A) (hermitianDilation Â)
@@ -128,7 +162,11 @@ theorem singularSubspace_dilation_sinTheta_le
 
 /-- Equal-dimensional right singular subspaces admit an isometric
 identification; the aligned-frame theorem in `Statistics.lean` chooses the
-identification minimizing basis discrepancy. -/
+identification minimizing basis discrepancy.
+
+Proof strategy: Use equality of finite dimensions to choose orthonormal bases of the two
+subspaces and map one basis isometrically to the other.
+-/
 theorem nonempty_rightSingularSubspace_isometry
     {A Â : E →ₗ[𝕜] F} {Ω : Set ℝ}
     (hrank : finrank 𝕜 (rightSingularSubspace A Ω) =

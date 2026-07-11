@@ -52,7 +52,12 @@ noncomputable def familyOffDiagonal {m : ℕ} (P : OrthoProjFamily 𝕜 E m)
   H - familyPinch P H
 
 /-- Davis 1963, Theorem 3.2: sharpened total-rotation bound with eigenvalue
-motion subtracted from the available perturbation energy. -/
+motion subtracted from the available perturbation energy.
+
+Proof strategy: Expand the Frobenius norm of `B-A` in the matched projection families, apply the
+scalar separation inequality to every off-diagonal block, and sum. This is finite family
+combinatorics, not an infinite specialization.
+-/
 theorem totalRotation_add_eigenvalueMotion_le
     {A B : E →ₗ[𝕜] E} (hA : A.IsSymmetric) (hB : B.IsSymmetric)
     {m : ℕ} (P Q : OrthoProjFamily 𝕜 E m) (hnd : P.NonDegenerate Q)
@@ -67,7 +72,16 @@ theorem totalRotation_add_eigenvalueMotion_le
 
 /-- Davis 1963, Theorem 4.1: under spectral separation and the small
 off-diagonal hypothesis, eigenvalue motion is bounded **below** by the
-diagonal perturbation energy minus the off-diagonal energy. -/
+diagonal perturbation energy minus the off-diagonal energy.
+
+Proof strategy: After connecting `μ` to the perturbed spectral blocks, reproduce Davis 1963
+Theorem 4.1 by expanding diagonal/off-diagonal Frobenius energies and using the smallness
+hypothesis to control the quadratic remainder.
+
+Signature audit: Likely false as stated because `μ` is not connected to `B` or to a perturbed
+spectral family. Add a `Q` family and `SpectrumIn B (range (Q.proj i)) {μ i}`, or state the
+exact ordered-eigenvalue hypothesis from Davis 1963.
+-/
 theorem diagonalPerturbation_sub_offDiagonal_le_eigenvalueMotion
     {A B : E →ₗ[𝕜] E} (hA : A.IsSymmetric) (hB : B.IsSymmetric)
     {m : ℕ} (P : OrthoProjFamily 𝕜 E m) (lam μ : Fin m → ℝ)
@@ -83,7 +97,11 @@ theorem diagonalPerturbation_sub_offDiagonal_le_eigenvalueMotion
   sorry
 
 /-- Davis's off-diagonal corollary for total rotation.  This combines the
-rotation/eigenvalue budget with the lower bound on eigenvalue motion. -/
+rotation/eigenvalue budget with the lower bound on eigenvalue motion.
+
+Proof strategy: Combine `totalRotation_add_eigenvalueMotion_le` with the corrected
+eigenvalue-motion lower bound and cancel the diagonal energy algebraically.
+-/
 theorem totalRotation_le_two_mul_offDiagonal
     {A B : E →ₗ[𝕜] E} (hA : A.IsSymmetric) (hB : B.IsSymmetric)
     {m : ℕ} (P Q : OrthoProjFamily 𝕜 E m) (hnd : P.NonDegenerate Q)
@@ -100,7 +118,12 @@ theorem totalRotation_le_two_mul_offDiagonal
         (familyOffDiagonal P (B - A)) ^ 2 := by
   sorry
 
-/-- Sharp two-subspace product estimate, the 1963 ancestor of `sin 2Θ`. -/
+/-- Sharp two-subspace product estimate, the 1963 ancestor of `sin 2Θ`.
+
+Proof strategy: Decompose the perturbed eigenvector into `U` and `Uᗮ`, test the eigen-equation
+against both components, subtract the resulting Rayleigh inequalities, and use the perturbation
+norm; for the tangent version use vanishing pinch to retain the cosine-difference factor.
+-/
 theorem sinTwoTheta_eigenvector_product_le
     {A H : E →ₗ[𝕜] E} (hA : A.IsSymmetric) (hH : H.IsSymmetric)
     {U : Submodule 𝕜 E} [U.HasOrthogonalProjection]
@@ -112,7 +135,12 @@ theorem sinTwoTheta_eigenvector_product_le
     (b - a) * ‖projection U x‖ * ‖complementaryProjection U x‖ ≤ ε := by
   sorry
 
-/-- Vanishing-pinch product estimate, the 1963 ancestor of `tan 2Θ`. -/
+/-- Vanishing-pinch product estimate, the 1963 ancestor of `tan 2Θ`.
+
+Proof strategy: Decompose the perturbed eigenvector into `U` and `Uᗮ`, test the eigen-equation
+against both components, subtract the resulting Rayleigh inequalities, and use the perturbation
+norm; for the tangent version use vanishing pinch to retain the cosine-difference factor.
+-/
 theorem tanTwoTheta_eigenvector_product_le
     {A H : E →ₗ[𝕜] E} (hA : A.IsSymmetric) (hH : H.IsSymmetric)
     {U : Submodule 𝕜 E} [U.HasOrthogonalProjection]

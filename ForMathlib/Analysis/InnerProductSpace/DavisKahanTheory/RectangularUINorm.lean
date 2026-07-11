@@ -68,39 +68,81 @@ instance : CoeFun (RectangularUnitarilyInvariantNorm 𝕜 E F)
 
 variable (N : RectangularUnitarilyInvariantNorm 𝕜 E F)
 
+/--
+Proof strategy: Use the norm axiom `map_zero`/`toFun.map_zero`; this is a direct structure-field
+simplification and should not depend on the Ext hierarchy.
+-/
 @[simp] theorem apply_zero : N (0 : E →ₗ[𝕜] F) = 0 := by
   sorry
 
+/--
+Proof strategy: Unfold the rectangular UI-norm structure and use its corresponding field; derive
+nonnegativity from homogeneity at `-1` and the triangle inequality exactly as in the existing
+square UI-norm API.
+-/
 theorem nonneg (A : E →ₗ[𝕜] F) : 0 ≤ N A := by
   sorry
 
+/--
+Proof strategy: Unfold the rectangular UI-norm structure and use its corresponding field; derive
+nonnegativity from homogeneity at `-1` and the triangle inequality exactly as in the existing
+square UI-norm API.
+-/
 theorem add_le (A B : E →ₗ[𝕜] F) : N (A + B) ≤ N A + N B := by
   sorry
 
+/--
+Proof strategy: Unfold the rectangular UI-norm structure and use its corresponding field; derive
+nonnegativity from homogeneity at `-1` and the triangle inequality exactly as in the existing
+square UI-norm API.
+-/
 theorem smul_eq (a : 𝕜) (A : E →ₗ[𝕜] F) : N (a • A) = ‖a‖ * N A := by
   sorry
 
+/--
+Proof strategy: Unfold the rectangular UI-norm structure and use its corresponding field; derive
+nonnegativity from homogeneity at `-1` and the triangle inequality exactly as in the existing
+square UI-norm API.
+-/
 theorem invariant (U : F ≃ₗᵢ[𝕜] F) (V : E ≃ₗᵢ[𝕜] E)
     (A : E →ₗ[𝕜] F) :
     N (U.toLinearMap ∘ₗ A ∘ₗ V.toLinearMap) = N A := by
   sorry
 
-/-- Left ideal property. -/
+/-- Left ideal property.
+
+Proof strategy: Use singular-value domination under left/right multiplication and finite Fan
+dominance. This should remain finite rather than depend on the infinite symmetric-ideal
+scaffold.
+-/
 theorem comp_le_opNorm_mul (C : F →ₗ[𝕜] F) (A : E →ₗ[𝕜] F) :
     N (C ∘ₗ A) ≤ ‖C.toContinuousLinearMap‖ * N A := by
   sorry
 
-/-- Right ideal property. -/
+/-- Right ideal property.
+
+Proof strategy: Use singular-value domination under left/right multiplication and finite Fan
+dominance. This should remain finite rather than depend on the infinite symmetric-ideal
+scaffold.
+-/
 theorem comp_le_mul_opNorm (A : E →ₗ[𝕜] F) (C : E →ₗ[𝕜] E) :
     N (A ∘ₗ C) ≤ N A * ‖C.toContinuousLinearMap‖ := by
   sorry
 
-/-- Fan dominance in rectangular form. -/
+/-- Fan dominance in rectangular form.
+
+Proof strategy: Transfer `N` to its finite symmetric gauge on singular values and apply the Ky
+Fan dominance theorem already developed in `KyFan.lean`.
+-/
 theorem apply_le_of_kyFanSum_le {A B : E →ₗ[𝕜] F}
     (h : ∀ k, rectangularKyFanSum k A ≤ rectangularKyFanSum k B) : N A ≤ N B := by
   sorry
 
-/-- Pointwise singular-value dominance implies norm dominance. -/
+/-- Pointwise singular-value dominance implies norm dominance.
+
+Proof strategy: Sum the pointwise inequalities to obtain all Ky Fan prefix inequalities, then
+apply `apply_le_of_kyFanSum_le`.
+-/
 theorem apply_le_of_singularValues_le {A B : E →ₗ[𝕜] F}
     (h : ∀ i, A.singularValues i ≤ B.singularValues i) : N A ≤ N B := by
   sorry
@@ -111,6 +153,11 @@ noncomputable def adjointTransport
     RectangularUnitarilyInvariantNorm 𝕜 F E := by
   sorry
 
+/--
+Proof strategy: Unfold `adjointTransport`; the theorem is the defining equation of the
+transported rectangular UI norm. Prove it by `rfl` after the constructor is implemented, or by
+the constructor simp lemma.
+-/
 @[simp] theorem adjointTransport_apply (A : E →ₗ[𝕜] F) :
     (adjointTransport N).toFun A.adjoint = N.toFun A := by
   sorry
@@ -120,7 +167,12 @@ noncomputable def zeroExtension (A : E →ₗ[𝕜] F) :
     WithLp 2 (E × F) →ₗ[𝕜] WithLp 2 (E × F) := by
   sorry
 
-/-- Singular values are unchanged by zero extension, apart from zero padding. -/
+/-- Singular values are unchanged by zero extension, apart from zero padding.
+
+Proof strategy: Choose orthonormal bases of `E` and `F`; the zero extension is the block matrix
+with `A` in one off-diagonal block, so its Gram operator is `A⋆A` plus a zero block. Compare
+sorted eigenvalues with zero padding.
+-/
 theorem singularValues_zeroExtension (A : E →ₗ[𝕜] F) :
     (zeroExtension A).singularValues = A.singularValues := by
   sorry
@@ -155,13 +207,21 @@ noncomputable def schatten (p : ℝ) (hp : 1 ≤ p) :
   sorry
 
 /-- The rectangular Frobenius norm is the square root of the sum of squared
-column norms in any orthonormal basis of the domain. -/
+column norms in any orthonormal basis of the domain.
+
+Proof strategy: Unfold the rectangular Frobenius norm through zero extension or its singular
+values and reuse Parseval/the existing square Frobenius basis formula.
+-/
 theorem frobenius_apply (A : E →ₗ[𝕜] F)
     (b : OrthonormalBasis (Fin (finrank 𝕜 E)) 𝕜 E) :
     frobenius A = Real.sqrt (∑ i, ‖A (b i)‖ ^ 2) := by
   sorry
 
-/-- The Ky Fan norm evaluates to the prefix sum of singular values. -/
+/-- The Ky Fan norm evaluates to the prefix sum of singular values.
+
+Proof strategy: This should be definitional once `kyFan` is constructed from
+`rectangularKyFanSum`; otherwise reduce through the zero-extension square norm.
+-/
 theorem kyFan_apply (k : ℕ) (A : E →ₗ[𝕜] F) :
     kyFan k A = rectangularKyFanSum k A := by
   sorry
@@ -190,6 +250,10 @@ noncomputable def toRectangular
     RectangularUnitarilyInvariantNorm 𝕜 E E := by
   sorry
 
+/--
+Proof strategy: Unfold `UnitarilyInvariantNorm.toRectangular` and the zero-extension bridge. The
+proof should be definitional once the square-to-rectangular constructor is implemented.
+-/
 @[simp] theorem toRectangular_apply
     (N : UnitarilyInvariantNorm 𝕜 E) (A : E →ₗ[𝕜] E) :
     N.toRectangular A = N A := by

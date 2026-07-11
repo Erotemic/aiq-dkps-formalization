@@ -75,7 +75,11 @@ def SpectraSeparated (A : E →ₗ[𝕜] E) (U : Submodule 𝕜 E)
 def HybridGap (A B : E →ₗ[𝕜] E) (U V : Submodule 𝕜 E) (δ : ℝ) : Prop :=
   SpectraSeparated A U B Vᗮ δ
 
-/-- The internal gap used by the double-angle theorems. -/
+/-- Absolute separation between the two diagonal blocks of `A`.
+
+This is the internal-gap hypothesis used by the structured double-angle
+Davis--Kahan theorems.  For a general unstructured Sylvester equation,
+absolute separation alone instead leads to the separate `π/2` estimate. -/
 def InternalGap (A : E →ₗ[𝕜] E) (U : Submodule 𝕜 E) (δ : ℝ) : Prop :=
   SpectraSeparated A U A Uᗮ δ
 
@@ -91,19 +95,40 @@ def OrderedGap (A : E →ₗ[𝕜] E) (U : Submodule 𝕜 E)
   ∀ lam μ, lam ∈ restrictedSpectrum A U → μ ∈ restrictedSpectrum B V →
     lam + δ ≤ μ
 
+/-- Ordered separation of the two diagonal blocks of `A`, in either
+orientation.  This stronger predicate is useful when reducing a double-angle
+argument to the elementary ordered Sylvester theorem. -/
+def OrderedInternalGap (A : E →ₗ[𝕜] E) (U : Submodule 𝕜 E) (δ : ℝ) : Prop :=
+  OrderedGap A U A Uᗮ δ ∨ OrderedGap A Uᗮ A U δ
+
+/-- Ordered block separation implies absolute block separation. -/
+theorem OrderedInternalGap.internalGap {A : E →ₗ[𝕜] E}
+    {U : Submodule 𝕜 E} {δ : ℝ} (hδ : 0 ≤ δ)
+    (h : OrderedInternalGap A U δ) : InternalGap A U δ := by
+  intro lam μ hlam hμ
+  rcases h with hlow | hhigh
+  · have hle := hlow lam μ hlam hμ
+    have hlam_le : lam ≤ μ := by linarith
+    rw [abs_of_nonpos (sub_nonpos.mpr hlam_le)]
+    linarith
+  · have hle := hhigh μ lam hμ hlam
+    have hμ_le : μ ≤ lam := by linarith
+    rw [abs_of_nonneg (sub_nonneg.mpr hμ_le)]
+    linarith
+
 /-- Canonical finite-dimensional spectral subspace selected by a real set.
 
 The eventual implementation should be basis-independent, but may be proved by
 choosing `LinearMap.IsSymmetric.eigenvectorBasis` and showing independence of
 that choice. -/
 noncomputable def spectralSubspace (A : E →ₗ[𝕜] E) (Ω : Set ℝ) :
-    Submodule 𝕜 E := by
-  sorry
+    Submodule 𝕜 E :=
+  Submodule.span 𝕜 {x | ∃ lam ∈ Ω, IsEigenvectorAt A lam x}
 
 /-- Canonical orthogonal spectral projector. -/
 noncomputable def spectralProjection (A : E →ₗ[𝕜] E) (Ω : Set ℝ) :
-    E →ₗ[𝕜] E := by
-  sorry
+    E →ₗ[𝕜] E :=
+  ((spectralSubspace A Ω).starProjection : E →L[𝕜] E)
 
 /-- The orthogonal projector onto a finite-dimensional subspace, as a linear
 map. -/
@@ -204,11 +229,12 @@ def AvoidsQuarterTurn (U V : Submodule 𝕜 E)
     [U.HasOrthogonalProjection] [V.HasOrthogonalProjection] : Prop :=
   ∀ i, principalAngles U V i ≠ Real.pi / 4
 
+omit [FiniteDimensional 𝕜 E] in
 /-- Acuteness is symmetric. -/
 theorem IsAcute.symm {U V : Submodule 𝕜 E}
     [U.HasOrthogonalProjection] [V.HasOrthogonalProjection]
-    (h : IsAcute U V) : IsAcute V U := by
-  sorry
+    (h : IsAcute U V) : IsAcute V U :=
+  ⟨h.2, h.1⟩
 
 /-- The diagonal part (pinch) of an operator relative to `U ⊕ Uᗮ`. -/
 noncomputable def pinch (U : Submodule 𝕜 E) [U.HasOrthogonalProjection]
@@ -231,31 +257,110 @@ def HasZeroCompression (U : Submodule 𝕜 E) [U.HasOrthogonalProjection]
     (H : E →ₗ[𝕜] E) : Prop :=
   projection U ∘ₗ H ∘ₗ projection U = 0
 
+omit [FiniteDimensional 𝕜 E] in
+/-- A vanishing pinch has a vanishing selected diagonal block. -/
+theorem hasZeroCompression_of_isOffDiagonal
+    (U : Submodule 𝕜 E) [U.HasOrthogonalProjection] (H : E →ₗ[𝕜] E)
+    (hoff : IsOffDiagonal U H) : HasZeroCompression U H := by
+  unfold IsOffDiagonal at hoff
+  unfold HasZeroCompression
+  apply LinearMap.ext
+  intro x
+  have hP_idem (y : E) : projection U (projection U y) = projection U y := by
+    change U.starProjection (U.starProjection y) = U.starProjection y
+    exact Submodule.starProjection_eq_self_iff.mpr (U.starProjection_apply_mem y)
+  have hP_comp (y : E) : projection U (complementaryProjection U y) = 0 := by
+    change U.starProjection (Uᗮ.starProjection y) = 0
+    rw [Submodule.starProjection_apply_eq_zero_iff]
+    exact Uᗮ.starProjection_apply_mem y
+  have h := congrArg (projection U) (LinearMap.congr_fun hoff x)
+  simpa [pinch, LinearMap.comp_apply, hP_idem, hP_comp] using h
+
+omit [FiniteDimensional 𝕜 E] in
+/-- A vanishing pinch is unchanged when the two summands of the orthogonal
+splitting are exchanged. -/
+theorem isOffDiagonal_orthogonal
+    (U : Submodule 𝕜 E) [U.HasOrthogonalProjection] (H : E →ₗ[𝕜] E)
+    (hoff : IsOffDiagonal U H) : IsOffDiagonal Uᗮ H := by
+  unfold IsOffDiagonal at hoff ⊢
+  simpa [pinch, projection, complementaryProjection, add_comm] using hoff
+
+omit [FiniteDimensional 𝕜 E] in
+/-- Operator-form zero compression implies the corresponding sesquilinear
+block vanishes. -/
+theorem inner_map_eq_zero_of_hasZeroCompression
+    (U : Submodule 𝕜 E) [U.HasOrthogonalProjection] (H : E →ₗ[𝕜] E)
+    (hzero : HasZeroCompression U H)
+    {u u' : E} (hu : u ∈ U) (hu' : u' ∈ U) : ⟪u, H u'⟫_𝕜 = 0 := by
+  have hblock := LinearMap.congr_fun hzero u'
+  have hproj : U.starProjection (H u') = 0 := by
+    simpa [HasZeroCompression, projection,
+      Submodule.starProjection_eq_self_iff.mpr hu'] using hblock
+  calc
+    ⟪u, H u'⟫_𝕜 = ⟪U.starProjection u, H u'⟫_𝕜 := by
+      rw [Submodule.starProjection_eq_self_iff.mpr hu]
+    _ = ⟪u, U.starProjection (H u')⟫_𝕜 :=
+      U.inner_starProjection_left_eq_right u (H u')
+    _ = 0 := by rw [hproj, inner_zero_right]
+
+/-- Both diagonal sesquilinear blocks vanish for an off-diagonal map. -/
+theorem inner_blocks_eq_zero_of_isOffDiagonal
+    (U : Submodule 𝕜 E) [U.HasOrthogonalProjection] (H : E →ₗ[𝕜] E)
+    (hoff : IsOffDiagonal U H) :
+    (∀ u ∈ U, ∀ u' ∈ U, ⟪u, H u'⟫_𝕜 = 0) ∧
+      (∀ w ∈ Uᗮ, ∀ w' ∈ Uᗮ, ⟪w, H w'⟫_𝕜 = 0) := by
+  constructor
+  · intro u hu u' hu'
+    exact inner_map_eq_zero_of_hasZeroCompression U H
+      (hasZeroCompression_of_isOffDiagonal U H hoff) hu hu'
+  · intro w hw w' hw'
+    exact inner_map_eq_zero_of_hasZeroCompression Uᗮ H
+      (hasZeroCompression_of_isOffDiagonal Uᗮ H
+        (isOffDiagonal_orthogonal U H hoff)) hw hw'
+
 /-! ## Basis independence and elementary geometry -/
 
+omit [FiniteDimensional 𝕜 E] in
 /-- A symmetric operator leaves the orthogonal complement of an invariant
 subspace invariant. -/
 theorem reduces_orthogonal_of_isSymmetric {A : E →ₗ[𝕜] E}
     (hA : A.IsSymmetric) {U : Submodule 𝕜 E} (hU : Reduces A U) :
     Reduces A Uᗮ := by
-  sorry
+  intro x hx
+  rw [Submodule.mem_orthogonal]
+  intro u hu
+  rw [← hA u x]
+  exact Submodule.inner_right_of_mem_orthogonal (hU u hu) hx
 
-/-- The canonical spectral subspace reduces a symmetric operator. -/
-theorem reduces_spectralSubspace {A : E →ₗ[𝕜] E} (hA : A.IsSymmetric)
-    (Ω : Set ℝ) : Reduces A (spectralSubspace A Ω) := by
-  sorry
+omit [FiniteDimensional 𝕜 E] in
+/-- The canonical spectral subspace reduces its operator.  Symmetry is not
+needed for this algebraic fact; it is needed later for orthogonal reduction and
+for completeness of the real eigenvector decomposition. -/
+theorem reduces_spectralSubspace (A : E →ₗ[𝕜] E) (Ω : Set ℝ) :
+    Reduces A (spectralSubspace A Ω) := by
+  intro x hx
+  refine Submodule.span_induction ?_ ?_ ?_ ?_ hx
+  · rintro y ⟨lam, hlam, hy⟩
+    rw [hy.2]
+    exact Submodule.smul_mem _ _ (Submodule.subset_span ⟨lam, hlam, hy⟩)
+  · simp
+  · intro x y _ _ hx hy
+    simpa only [map_add] using (spectralSubspace A Ω).add_mem hx hy
+  · intro c x _ hx
+    simpa only [map_smul] using (spectralSubspace A Ω).smul_mem c hx
 
 /-- The canonical projector has the expected range. -/
-theorem range_spectralProjection {A : E →ₗ[𝕜] E} (hA : A.IsSymmetric)
-    (Ω : Set ℝ) : LinearMap.range (spectralProjection A Ω) = spectralSubspace A Ω := by
-  sorry
+theorem range_spectralProjection (A : E →ₗ[𝕜] E) (Ω : Set ℝ) :
+    LinearMap.range (spectralProjection A Ω) = spectralSubspace A Ω := by
+  exact Submodule.range_starProjection (spectralSubspace A Ω)
 
+omit [FiniteDimensional 𝕜 E] in
 /-- Spectral selection is independent of the chosen eigenbasis. -/
-theorem spectralSubspace_eq_span_eigenvectors {A : E →ₗ[𝕜] E}
-    (hA : A.IsSymmetric) (Ω : Set ℝ) :
+theorem spectralSubspace_eq_span_eigenvectors (A : E →ₗ[𝕜] E)
+    (Ω : Set ℝ) :
     spectralSubspace A Ω =
-      Submodule.span 𝕜 {x | ∃ lam ∈ Ω, IsEigenvectorAt A lam x} := by
-  sorry
+      Submodule.span 𝕜 {x | ∃ lam ∈ Ω, IsEigenvectorAt A lam x} :=
+  rfl
 
 /-- Principal angles are symmetric in the two subspaces. -/
 theorem principalAngles_comm (U V : Submodule 𝕜 E)

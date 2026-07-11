@@ -206,7 +206,7 @@ theorem sum_sq_norm_aligned_le {u v : Fin d → E} (hu : Orthonormal 𝕜 u) (hv
           ((polarUnitary (overlapOp hu hv)).symm (EuclideanSpace.single j 1))⟫_𝕜 := by
     intro j
     rw [norm_sub_sq (𝕜 := 𝕜), (familyIsometry hv).norm_map,
-      (polarUnitary (overlapOp hu hv)).symm.norm_map, EuclideanSpace.norm_single, norm_one,
+      (polarUnitary (overlapOp hu hv)).symm.norm_map, PiLp.norm_single 2, norm_one,
       hu.1 j, inner_re_symm]
     ring
   rw [Finset.sum_congr rfl fun j _ => hexp j, Finset.sum_sub_distrib, ← Finset.mul_sum,

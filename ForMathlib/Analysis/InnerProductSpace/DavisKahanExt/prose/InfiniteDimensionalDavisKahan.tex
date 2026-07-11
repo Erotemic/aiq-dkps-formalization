@@ -1,0 +1,252 @@
+% Copyright (c) 2026 Kitware, Inc.
+% Author/provenance: Jon Crall, GPT 5.6 High
+% Independent formalization-oriented literature distillation; not a transcription.
+\documentclass{article}
+\usepackage{amsmath,amssymb,mathtools}
+\newcommand{\Hh}{\mathcal H}
+\newcommand{\spec}{\operatorname{spec}}
+\newcommand{\dist}{\operatorname{dist}}
+\newcommand{\Ran}{\operatorname{Ran}}
+\newcommand{\Graph}{\operatorname{Graph}}
+\title{Infinite-dimensional Davis--Kahan theory: formalization distillation}
+\author{Jon Crall and GPT 5.6 High}
+\begin{document}
+\maketitle
+
+\section{Purpose and source discipline}
+This document is an independent, formalization-oriented distillation of the
+operator-theoretic arguments needed beyond the repository's finite-dimensional
+Davis--Kahan development.  It records theorem interfaces, hidden analytic
+lemmas, and proof decompositions.  It intentionally does not reproduce source
+text.
+
+Primary sources guiding the scaffold are Davis--Kahan (1970),
+Kostrykin--Makarov--Motovilov on Riccati equations and generalized
+$\tan 2\Theta$, Albeverio--Motovilov on the a priori $\tan\Theta$ theorem,
+Seelmann on generic $\sin 2\Theta$ estimates, and the standard Kato theory of
+closed operators and quadratic forms.
+
+\section{Bounded Hilbert-space setup}
+Let $A$ and $B$ be bounded self-adjoint operators on a Hilbert space $\Hh$.
+A closed subspace $U$ reduces $A$ when both $U$ and $U^\perp$ are invariant.
+Write $P_U$ for its orthogonal projection.  The gap metric is
+$\|P_U-P_V\|$, while the directed gap is $\|P_{V^\perp}P_U\|$.
+
+\section{Spectral separation}
+The finite eigenvalue lists must be replaced by the spectrum of restrictions
+to reducing subspaces.  The basic hypothesis is
+\[
+  \dist(\spec(A|_U),\spec(B|_{V^\perp}))\ge d>0.
+\]
+Convex-hull or interval/exterior separation gives the sharp Sylvester constant
+one; arbitrary separated real spectra give the universal $\pi/2$ constant.
+
+\section{Projection-valued spectral calculus}
+For a bounded self-adjoint operator, the roadmap needs a Borel projection
+$E_A(\Delta)$ satisfying orthogonality, multiplicativity, complementation,
+strong countable additivity, commutation with $A$, and support on
+$\spec(A)$.  Indicator functions in the bounded Borel calculus recover these
+projections.  This is the main infrastructure gap between elementary compact
+spectral theory and the general Hilbert-space theorem.
+
+\section{Strong operator additivity}
+Countable disjoint unions are represented by strong, not operator-norm,
+convergence:
+\[
+  \sum_{j<n}E_A(\Delta_j)x\longrightarrow E_A(\cup_j\Delta_j)x.
+\]
+Lean therefore needs strong-operator convergence lemmas for projection sums,
+orthogonal ranges, and passage through bounded operators.
+
+\section{Functional calculus proof obligations}
+The Borel calculus must be linear, multiplicative, star preserving, norm
+controlled on the spectrum, and compatible with continuous functional
+calculus.  Monotone approximation of indicators is the bridge to spectral
+projections.
+
+\section{Two-projection calculus}
+The operator angle $\Theta(U,V)$ is recovered from the positive contraction
+built from $P_U$ and $P_V$.  Its sine has norm $\|P_U-P_V\|$.  The acute case
+$\|P_U-P_V\|<1$ is equivalent to bounded graph representability.
+
+\section{Graph representation}
+If $V$ is acute with respect to $U$, there is a unique bounded angular
+operator $X:U\to U^\perp$ with $V=\Graph(X)$.  The identities
+$\|X\|=\tan\|\Theta\|$ and the explicit block formula for $P_V$ provide the
+bridge from subspace geometry to Riccati equations.
+
+\section{Symmetric norm ideals}
+In infinite dimension, general unitarily invariant norms are defined on
+compact operator ideals.  The formal API must support two-sided ideal bounds,
+pinching, unitary invariance, direct sums, singular-value gauges, and concrete
+Schatten, trace-class, Hilbert--Schmidt, and Ky Fan instances.
+
+\section{Sylvester equation}
+For self-adjoint $A$ and $B$, solve
+\[
+  AX-XB=C.
+\]
+Under spectral separation the solution is unique.  Ordered or gap separation
+yields $d\|X\|\le\|C\|$; arbitrary separated spectra yield
+$d\|X\|\le(\pi/2)\|C\|$.  The proof uses a resolvent contour or Fourier/semigroup
+integral and requires Bochner integration in operator spaces.
+
+\section{Resolvent integral infrastructure}
+Formalization requires resolvent existence away from the spectrum, norm
+bounds by inverse spectral distance, measurability and integrability of the
+operator-valued integrand, differentiation under the integral, and evaluation
+of the Sylvester defect.
+
+\section{Residual $\sin\Theta$ theorem}
+For an isometric embedding $X$, a coordinate operator $M$, and residual
+$R=AX-XM$, the cross block $P_{U^\perp}X$ satisfies a Sylvester equation.
+Spectral separation gives
+\[
+ d\|P_{U^\perp}X\|\le\|R\|.
+\]
+This is the natural infinite-dimensional numerical-analysis interface.
+
+\section{Perturbation $\sin\Theta$ theorem}
+Taking $X$ to parametrize a reducing spectral subspace of $B$ converts the
+residual to $(A-B)X$.  One mixed gap controls a directed angle.  Two mixed gaps
+control the symmetric projector difference.  General spectral separation
+inherits the $\pi/2$ Sylvester constant.
+
+\section{$\sin 2\Theta$ theorem}
+Reflection in a reducing subspace transforms the subspace problem into a
+Sylvester equation for the off-diagonal projection block.  The reflection
+defect is bounded by twice the perturbation, producing
+\[
+ d\|\sin(2\Theta)\|\le2\|A-B\|.
+\]
+
+\section{Generic double-angle bounds}
+Without interval/exterior geometry, one combines the general Sylvester bound
+with the two-projection calculus.  The resulting arcsine bounds must track the
+branch of the maximal angle and the continuity path of spectral projections.
+
+\section{Graph projections}
+The projection onto $\Graph(X)$ is expressed using
+$(I+X^*X)^{-1}$ and $(I+XX^*)^{-1}$.  Formalization needs positivity,
+invertibility, square roots, and block multiplication identities.
+
+\section{Riccati equation}
+For the block operator
+\[
+ L=\begin{pmatrix}A_0&B\\B^*&A_1\end{pmatrix},
+\]
+$\Graph(X)$ is reducing exactly when
+\[
+ A_1X-XA_0-XBX+B^*=0.
+\]
+This equivalence is the central algebraic seam.
+
+\section{Existence and uniqueness}
+If $\spec(A_0)$ lies in a gap of $\spec(A_1)$ and the coupling is sufficiently
+small, the Riccati equation has a bounded solution.  Contractive solutions
+associated with the target spectral graph are unique.  Fixed-point,
+continuation, and spectral-projection constructions should all be related.
+
+\section{Block diagonalization}
+A bounded Riccati solution gives a graph transform that block diagonalizes the
+operator.  For self-adjoint data, the normalized graph transform is unitary.
+This yields spectral enclosures and identifies the perturbed components.
+
+\section{Off-diagonal gap preservation}
+For an off-diagonal bounded self-adjoint perturbation $V$, the original gap
+persists when $\|V\|<\sqrt2d$.  The proof combines spectral enclosure with
+Riccati solvability and continuation of the spectral projection.
+
+\section{Generalized $\tan 2\Theta$}
+The angular operator of the perturbed reducing graph satisfies a sharp
+quadratic inequality.  Translating its norm gives a two-sided estimate for
+$\|P-Q\|$ and the classical $\tan 2\Theta$ upper bound.
+
+\section{A priori $\tan\Theta$ theorem}
+When one spectral component lies in a finite gap of the other, the sharp bound
+is
+\[
+ \|P-Q\|\le \sin\!\left(\arctan\frac{\|V\|}{d}\right),
+ \qquad \|V\|<\sqrt2d.
+\]
+The proof uses the Riccati solution and a refined spectral enclosure; the
+threshold and bound are both sharp.
+
+\section{Spectral repulsion}
+Off-diagonal perturbations push the continued spectral components away from
+the original gap.  The formal statement should be expressed both as set
+inclusions and as lower bounds on the distance between restricted spectra.
+
+\section{Direct rotation}
+For acute subspaces there is a canonical unitary direct rotation intertwining
+the projections.  Its square is the product of reflections.  The extremal
+properties require careful angle hypotheses and should not be generalized to
+all ideal gauges without proof.
+
+\section{Closed operators}
+Unbounded extensions require densely defined closed operators, graph norms,
+extension relations, adjoints, resolvents, and spectral projections.  The
+local Lean scaffold uses an explicit `ClosedOperator` structure while marking
+reconciliation with `LinearPMap` as a foundational task.
+
+\section{Kato--Rellich perturbations}
+A bounded self-adjoint perturbation preserves self-adjointness on the original
+domain.  More generally, a symmetric relatively bounded perturbation with
+relative bound below one does so.  These results justify applying spectral
+projection perturbation theory to unbounded operators.
+
+\section{Unbounded spectral subspaces}
+For self-adjoint closed operators, Borel spectral projections remain bounded
+orthogonal projections.  If the operator difference is bounded, the bounded
+Davis--Kahan arguments can often be recovered through resolvent identities.
+
+\section{Unbounded Riccati equations}
+Diagonal entries may be unbounded while off-diagonal blocks are bounded or
+relatively bounded.  Strong solutions must preserve domains.  Reducing graph
+subspaces are equivalent to strong Riccati solutions under explicit domain
+regularity assumptions.
+
+\section{Quadratic forms}
+Form sums cover perturbations that are not operator bounded.  The KLMN theorem
+constructs the perturbed self-adjoint operator.  A form-level Davis--Kahan
+bound must measure the perturbation in a relative form norm and track how the
+spectral gap changes.
+
+\section{Form-domain geometry}
+Proofs require Hilbert structures on form domains, bounded embeddings into the
+ambient space, representation theorems, and resolvent estimates derived from
+coercive forms.
+
+\section{Compact spectral subspaces}
+For compact self-adjoint operators, isolated nonzero spectral subspaces are
+finite dimensional, but the ambient space need not be.  This is the first
+practical bridge from the current repository to the full theory.
+
+\section{Schatten consequences}
+If the perturbation lies in a Schatten ideal, then under a gap hypothesis the
+sine-angle operator and often the projector difference lie in the same ideal,
+with the corresponding ideal-norm estimate.
+
+\section{Hermitian dilation and Wedin}
+For $T:\Hh_0\to\Hh_1$, the Hermitian dilation
+$\begin{psmallmatrix}0&T^*\\T&0\end{psmallmatrix}$ converts singular subspaces
+to spectral subspaces.  Applying the self-adjoint theory yields
+infinite-dimensional Wedin bounds for isolated singular spectral sets.
+
+\section{Sharpness}
+All universal constants are tested on two-dimensional invariant blocks,
+embedded into an arbitrary Hilbert space.  Orthogonal direct sums yield
+simultaneous ideal-norm extremizers when the resulting operator belongs to the
+chosen ideal.
+
+\section{References}
+\begin{itemize}
+\item C. Davis and W. M. Kahan, ``The rotation of eigenvectors by a perturbation. III,'' SIAM J. Numer. Anal. 7 (1970), DOI 10.1137/0707001.
+\item V. Kostrykin, K. A. Makarov, and A. K. Motovilov, ``On the existence of solutions to the operator Riccati equation and the $\tan\Theta$ theorem,'' arXiv:math/0210032.
+\item V. Kostrykin, K. A. Makarov, and A. K. Motovilov, ``A generalization of the $\tan 2\Theta$ theorem,'' arXiv:math/0302020.
+\item S. Albeverio and A. K. Motovilov, ``The a priori $\tan\Theta$ theorem for spectral subspaces,'' arXiv:1012.1569.
+\item A. Seelmann, ``Notes on the $\sin 2\Theta$ theorem,'' Integral Equations Operator Theory (2014), DOI 10.1007/s00020-014-2127-z, arXiv:1310.2036.
+\item K. A. Makarov, S. Schmitz, and A. Seelmann, ``Reducing graph subspaces and strong solutions to operator Riccati equations,'' arXiv:1307.6439.
+\item T. Kato, Perturbation Theory for Linear Operators.
+\end{itemize}
+\end{document}

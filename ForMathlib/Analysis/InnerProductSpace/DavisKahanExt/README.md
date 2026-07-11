@@ -1,115 +1,74 @@
-# DavisKahanExt
+# DavisKahanExt compatibility tree
 
-A literature-indexed scaffold for extending the repository's finite-dimensional
-Davis--Kahan development to complete Hilbert spaces.
+`DavisKahanExt` was the original workspace for the infinite-dimensional
+formalization.  Its mature bounded results have been promoted into a supported
+`RCLike` core, while its ambitious foundations and literature-indexed targets
+have been moved under an explicit experimental tree.
 
-The directory is intentionally self-contained and is **not** imported from
-`ForMathlib.lean`. This lets the infinite-dimensional API evolve without
-blocking the finite-dimensional build.
+## Build targets
 
-## Building the folder
+Supported bounded theory:
 
-Use Lake to build the module dependency graph:
+```bash
+lake build ForMathlib.Analysis.InnerProductSpace.DavisKahan.All
+```
+
+All retained foundations and literature targets:
+
+```bash
+lake build ForMathlib.Analysis.InnerProductSpace.DavisKahan.Experimental.All
+```
+
+Compatibility targets:
 
 ```bash
 lake build ForMathlib.Analysis.InnerProductSpace.DavisKahanExt.All
+lake build ForMathlib.Analysis.InnerProductSpace.DavisKahanExt.ExperimentalAll
 ```
 
-Do not use a fresh direct Lean invocation as the bootstrap command:
+`DavisKahanExt.All` intentionally imports only the supported theory.  It no
+longer pulls Borel calculus, Riesz projections, operator ideals, graph
+subspaces, Riccati theory, unbounded operators, or form perturbations into the
+main dependency graph.
 
-```bash
-lake env lean ForMathlib/Analysis/InnerProductSpace/DavisKahanExt/All.lean
-```
+## New layout
 
-Lean loads imports from compiled `.olean` files and does not recursively build
-local source imports. The direct command works only after Lake has built the
-imported modules.
+General reusable infrastructure:
 
-`All.lean` imports the entire scaffold. Individual milestones can be built by
-module name, for example:
+- `../ReducingSubspace.lean`;
+- `../QuadraticFormBounds.lean`;
+- `../ProjectionBlocks.lean`;
+- `../ProjectionGap.lean`;
+- `../SylvesterOperator.lean`;
+- `../SpectralOrder/Complex.lean`.
 
-```bash
-lake build ForMathlib.Analysis.InnerProductSpace.DavisKahanExt.OperatorAngle
-```
+Supported perturbation theory:
 
-## Proof and reuse strategy
+- `../DavisKahan/Basic.lean`;
+- `../DavisKahan/SinTheta.lean`;
+- `../DavisKahan/Projector.lean`;
+- `../DavisKahan/ReflectionDefect.lean`;
+- `../DavisKahan/Spectral/Complex.lean`.
 
-See [`PROOF_PLAN.md`](PROOF_PLAN.md) for the detailed roadmap. The central
-strategy is to prove a lightweight, basis-free bounded Hilbert-space core and
-specialize it to finite dimensions:
+Sequestered development:
 
-1. projection algebra and operator angles;
-2. graph subspaces and direct rotations;
-3. ordered operator-norm Sylvester bounds;
-4. ordered `sin Theta` and reflection `sin 2 Theta`;
-5. a finite bridge for operator-norm results;
-6. gap-selected spectral projections and continuation;
-7. Riccati/off-diagonal tangent theory;
-8. only later, general `pi/2` separation, symmetric ideals, Borel calculus,
-   unbounded operators, and forms.
+- `../DavisKahan/Experimental/Foundation/`;
+- `../DavisKahan/Experimental/Literature/`.
 
-Finite singular-value lists, arbitrary finite unitarily invariant norms,
-Frobenius identities, eigenvalue combinatorics, and Yu--Wang--Samworth bounds
-should remain in the finite theory rather than waiting for infinite-dimensional
-operator-ideal infrastructure.
+The old individual `.lean` files in this directory are compatibility imports.
+New work should use the new paths.
 
-## Current module inventory
+## Scalar policy
 
-1. `Basic.lean`
-2. `SpectralProjection.lean`
-3. `Resolvent.lean`
-4. `OperatorAngle.lean`
-5. `SymmetricIdeals.lean`
-6. `Sylvester.lean`
-7. `SinTheta.lean`
-8. `ComplexSpectral.lean`
-9. `DoubleAngle.lean`
-10. `Continuation.lean`
-11. `GraphSubspace.lean`
-12. `Riccati.lean`
-13. `OffDiagonal.lean`
-14. `DirectRotation.lean`
-15. `Unbounded.lean`
-16. `UnboundedRiccati.lean`
-17. `Forms.lean`
-18. `CompactAndSingular.lean`
-19. `Sharpness.lean`
+The supported analytical core is generic over `RCLike`.  The complex spectral
+module is a leaf bridge from actual restriction spectra to generic form-bound
+hypotheses.  The corresponding real bridge is retained as a concrete
+foundation target in
+`DavisKahan/Experimental/Foundation/RealSpectralBridge.lean`.
 
-The current import graph is a scaffold, not the desired final proof order.
-Early proof work should progressively decouple the lightweight bounded core
-from `SpectralProjection`, `SymmetricIdeals`, and the unbounded layers.
+## Roadmap documents
 
-## Completed bounded complex spectral slice
-
-`ComplexSpectral.lean` is part of the umbrella build and now provides:
-
-- spectral upper/lower bounds converted to quadratic-form bounds;
-- the sharp two-projection norm identity;
-- concrete restriction-spectrum bridges for reducing subspaces;
-- the sharp factor-one projector theorem from spectra of the actual restricted
-  operators.
-
-This slice is independent of the unfinished Borel spectral-projection scaffold.
-The latter remains necessary for set-selected canonical spectral subspaces, but
-is no longer a prerequisite for the bounded complex operator-norm theorem.
-
-## Major infrastructure frontiers
-
-- clopen-spectrum and Riesz spectral projections;
-- full Borel spectral projections and strong countable additivity;
-- ordered and general-separated Sylvester solvers;
-- graph subspaces and bounded/unbounded Riccati equations;
-- symmetric/Schatten operator ideals;
-- closed operators, graph norms, relative bounds, and form sums;
-- Hermitian dilation and infinite-dimensional singular-subspace theory.
-
-Every Lean module points to the local proof distillation in
-`prose/InfiniteDimensionalDavisKahan.tex`.
-
-## Agent audit documents
-
-- `SIGNATURE_AUDIT.md` records theorem-surface corrections and remaining Ext
-  design decisions.
-- `NON_EXT_AGENT_HANDOFF.md` records finite-tree issues and specialization
-  opportunities for the separate non-Ext agent.  This Ext overlay does not
-  modify the finite tree.
+- `PROOF_PLAN.md` remains the literature proof roadmap;
+- `SIGNATURE_AUDIT.md` records theorem-surface issues;
+- `NON_EXT_AGENT_HANDOFF.md` records finite-tree specialization opportunities;
+- `../DavisKahan/RESTRUCTURE_2026-07-11.md` records the new architecture.

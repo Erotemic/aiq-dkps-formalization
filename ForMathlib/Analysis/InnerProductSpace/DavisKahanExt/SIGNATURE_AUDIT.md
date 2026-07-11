@@ -1,5 +1,8 @@
 # DavisKahanExt theorem-signature audit
 
+> **Path migration:** supported bounded results now live under `DavisKahan/`; foundational and literature-facing targets live under `DavisKahan/Experimental/`. The old module paths remain compatibility imports.
+
+
 Author/provenance: Jon Crall and GPT 5.6 High.
 
 This audit covers

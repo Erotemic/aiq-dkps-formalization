@@ -1,5 +1,8 @@
 # DavisKahanExt proof and reuse plan
 
+> **Path migration:** supported bounded results now live under `DavisKahan/`; foundational and literature-facing targets live under `DavisKahan/Experimental/`. The old module paths remain compatibility imports.
+
+
 This document records the intended proof order for the infinite-dimensional
 Davis--Kahan scaffold and, in particular, which bounded Hilbert-space results
 should become shared foundations for the finite-dimensional development.
@@ -11,10 +14,11 @@ The governing principle is:
 > arbitrary finite unitarily invariant norms, Frobenius identities, and
 > eigenvalue-index combinatorics in the finite theory.
 
-The folder remains independent of `ForMathlib.lean`.  Build it explicitly with:
+The supported bounded theory is now imported by `ForMathlib.lean`.  Build the
+sequestered foundational and literature developments explicitly with:
 
 ```bash
-lake build ForMathlib.Analysis.InnerProductSpace.DavisKahanExt.All
+lake build ForMathlib.Analysis.InnerProductSpace.DavisKahan.Experimental.All
 ```
 
 A direct invocation such as

@@ -10,6 +10,7 @@ import ForMathlib.Analysis.InnerProductSpace.AlignedBasis
 import ForMathlib.Analysis.InnerProductSpace.CourantFischer
 import ForMathlib.Analysis.InnerProductSpace.DavisKahan
 import ForMathlib.Analysis.InnerProductSpace.DavisKahanTheory
+import ForMathlib.Analysis.InnerProductSpace.DavisKahan.All
 import ForMathlib.Analysis.InnerProductSpace.EigenvalueChange
 import ForMathlib.Analysis.InnerProductSpace.GramMatrix
 import ForMathlib.Analysis.InnerProductSpace.HoffmanWielandt

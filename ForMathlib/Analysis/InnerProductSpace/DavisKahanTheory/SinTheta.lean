@@ -6,7 +6,7 @@ Authors: Jon Crall, GPT 5.6 High
 import ForMathlib.Analysis.InnerProductSpace.DavisKahanTheory.Sylvester
 import ForMathlib.Analysis.InnerProductSpace.SinThetaUINorm
 import ForMathlib.Analysis.InnerProductSpace.SinThetaOpNorm
-import ForMathlib.Analysis.InnerProductSpace.DavisKahanExt.SinTheta
+import ForMathlib.Analysis.InnerProductSpace.DavisKahan.SinTheta
 
 /-!
 # The complete finite-dimensional `sin Θ` theorem family
@@ -113,7 +113,7 @@ form).**  If `A, B` are symmetric, `U` reduces `A` with `U`-carried spectrum
 
 `‖P_V P_U‖` is the sine of the directed angle between the high `A`-block `U` and
 the high `B`-block `Vᗮ`.  **The finite result is dispatched from the
-arbitrary-dimension lemma** `DavisKahanExt.sinTheta_directed_coercive`: the finite
+arbitrary-dimension lemma** `DavisKahan.sinTheta_directed_coercive`: the finite
 operators are converted to bounded operators, and the *only* finite-dimensional
 ingredient is the eigenbasis spectrum ⟹ coercivity bridge
 (`le_re_inner_of_spectrumIn` / `re_inner_le_of_spectrumIn`).  The whole sin-Θ
@@ -133,17 +133,17 @@ theorem opNorm_directed_sinTheta_le {A B : E →ₗ[𝕜] E}
   set Bc : E →L[𝕜] E := B.toContinuousLinearMap with hBc
   have hApp : ∀ x, Ac x = A x := fun _ => rfl
   have hBpp : ∀ x, Bc x = B x := fun _ => rfl
-  have hAself : DavisKahanExt.IsSelfAdjointOperator Ac := fun x y => hA x y
-  have hBself : DavisKahanExt.IsSelfAdjointOperator Bc := fun x y => hB x y
+  have hAself : DavisKahan.IsSelfAdjointOperator Ac := fun x y => hA x y
+  have hBself : DavisKahan.IsSelfAdjointOperator Bc := fun x y => hB x y
   have hUperp : Reduces A Uᗮ := reduces_orthogonal_of_isSymmetric hA hU
   have hVperp : Reduces B Vᗮ := reduces_orthogonal_of_isSymmetric hB hV
-  have hUred : DavisKahanExt.Reduces Ac U := ⟨fun x hx => hU x hx, fun x hx => hUperp x hx⟩
-  have hVred : DavisKahanExt.Reduces Bc V := ⟨fun x hx => hV x hx, fun x hx => hVperp x hx⟩
+  have hUred : DavisKahan.Reduces Ac U := ⟨fun x hx => hU x hx, fun x hx => hUperp x hx⟩
+  have hVred : DavisKahan.Reduces Bc V := ⟨fun x hx => hV x hx, fun x hx => hVperp x hx⟩
   have hUc : ∀ x ∈ U, (c + g) * ‖x‖ ^ 2 ≤ RCLike.re ⟪Ac x, x⟫_𝕜 :=
     fun x hx => le_re_inner_of_spectrumIn hA hU hUspec hx
   have hVc : ∀ x ∈ V, RCLike.re ⟪Bc x, x⟫_𝕜 ≤ c * ‖x‖ ^ 2 :=
     fun x hx => re_inner_le_of_spectrumIn hB hV hVspec hx
-  have hExt := DavisKahanExt.sinTheta_directed_coercive hAself hBself hUred hVred hg hUc hVc
+  have hExt := DavisKahan.sinTheta_directed_coercive hAself hBself hUred hVred hg hUc hVc
   have hnorm : ‖(Bc - Ac : E →L[𝕜] E)‖ ≤ ε := by
     refine ContinuousLinearMap.opNorm_le_bound _ hε0 fun x => ?_
     have hsub : (Bc - Ac) x = (B - A) x := by

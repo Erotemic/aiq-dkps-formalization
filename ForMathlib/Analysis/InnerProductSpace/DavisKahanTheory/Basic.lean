@@ -427,6 +427,47 @@ theorem reduces_spectralSubspace (A : E →ₗ[𝕜] E) (Ω : Set ℝ) :
   · intro c x _ hx
     simpa only [map_smul] using (spectralSubspace A Ω).smul_mem c hx
 
+/-! ### Restriction to an invariant subspace and the restricted-spectrum bridge
+
+These give the concrete restriction `A.restrict hU : U →ₗ[𝕜] U` of an operator to
+an invariant subspace and identify its full point spectrum with the `U`-carried
+point spectrum of `A`.  This is the bridge used to discharge the spectral
+hypotheses of the residual/perturbation `sin Θ` theorems on the subtype. -/
+
+/-- The restriction of a symmetric operator to an invariant subspace is
+symmetric (mathlib's `LinearMap.IsSymmetric.restrict_invariant`, restated for the
+`Reduces` predicate). -/
+theorem isSymmetric_restrict {A : E →ₗ[𝕜] E} (hA : A.IsSymmetric)
+    {U : Submodule 𝕜 E} (hU : Reduces A U) :
+    (A.restrict hU).IsSymmetric :=
+  hA.restrict_invariant hU
+
+/-- **The restricted-spectrum bridge.**  The point spectrum of the restriction
+`A.restrict hU : U →ₗ[𝕜] U` (over the whole `⊤`) equals the `U`-carried point
+spectrum of `A`.  Eigenvectors transport across the subtype coercion. -/
+theorem restrictedSpectrum_restrict (A : E →ₗ[𝕜] E)
+    {U : Submodule 𝕜 E} (hU : Reduces A U) :
+    restrictedSpectrum (A.restrict hU) ⊤ = restrictedSpectrum A U := by
+  ext lam
+  constructor
+  · rintro ⟨x, -, hx0, hxEig⟩
+    refine ⟨(x : E), x.2, fun hx => hx0 (Subtype.ext hx), ?_⟩
+    have h := congrArg (Subtype.val) hxEig
+    rwa [LinearMap.restrict_coe_apply, Submodule.coe_smul] at h
+  · rintro ⟨x, hxU, hx0, hxEig⟩
+    refine ⟨⟨x, hxU⟩, Submodule.mem_top, fun hxu => hx0 (congrArg Subtype.val hxu), ?_⟩
+    apply Subtype.ext
+    rw [LinearMap.restrict_coe_apply, Submodule.coe_smul]
+    exact hxEig
+
+/-- The containment form of the restricted-spectrum bridge: `A.restrict hU` has
+spectrum in `s` iff `A` carries spectrum in `s` on `U`. -/
+theorem spectrumIn_restrict_iff (A : E →ₗ[𝕜] E)
+    {U : Submodule 𝕜 E} (hU : Reduces A U) (s : Set ℝ) :
+    SpectrumIn (A.restrict hU) ⊤ s ↔ SpectrumIn A U s := by
+  unfold SpectrumIn
+  rw [restrictedSpectrum_restrict]
+
 /-- The canonical projector has the expected range.
 
 Lean proof route for a weaker agent:

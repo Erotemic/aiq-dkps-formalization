@@ -1,0 +1,29 @@
+diff --git a/Acharyya2024/Common.lean b/Acharyya2024/Common.lean
+--- a/Acharyya2024/Common.lean
++++ b/Acharyya2024/Common.lean
+@@ -227,8 +227,7 @@ theorem frobSub_triangle {n : Nat} (A B C : DisMat n) :
+       WithLp.toLp 2 (fun p : Fin n × Fin n => A p.1 p.2 - C p.1 p.2) := by
+     apply (WithLp.linearEquiv 2 ℝ _).injective
+     ext p
+     simp [x, y]
+-    ring
+   rw [← norm_flattened_sub_eq_frobSub A C,
+     ← norm_flattened_sub_eq_frobSub A B,
+     ← norm_flattened_sub_eq_frobSub B C, ← hxy]
+@@ -247,14 +246,17 @@ theorem tendsto_frobSub_zero_of_entrywise {n : Nat}
+   have hsq : ∀ i j : Fin n,
+       Tendsto (fun r => (A r i j - B i j) ^ 2) atTop (𝓝 0) := by
+     intro i j
+-    simpa using ((h i j).sub tendsto_const_nhds).pow 2
++    have hsub : Tendsto (fun r => A r i j - B i j) atTop
++        (𝓝 (B i j - B i j)) :=
++      (h i j).sub tendsto_const_nhds
++    simpa using hsub.pow 2
+   have hsum : Tendsto
+       (fun r => ∑ i : Fin n, ∑ j : Fin n, (A r i j - B i j) ^ 2)
+       atTop (𝓝 0) := by
+     simpa using tendsto_finset_sum Finset.univ fun i _ =>
+       tendsto_finset_sum Finset.univ fun j _ => hsq i j
+-  simpa [frobSub, frob, frobSq] using
++  simpa [Function.comp_apply, frobSub, frob, frobSq] using
+     (Real.continuous_sqrt.tendsto 0).comp hsum

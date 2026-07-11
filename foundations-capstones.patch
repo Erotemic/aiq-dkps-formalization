@@ -1,0 +1,293 @@
+diff --git a/Acharyya2024/Common.lean b/Acharyya2024/Common.lean
+index e36e401..ac3e536 100644
+--- a/Acharyya2024/Common.lean
++++ b/Acharyya2024/Common.lean
+@@ -189,6 +189,78 @@ theorem abs_entry_sub_le_frobSub {n : Nat} (A B : DisMat n) (i j : Fin n) :
+     |A i j - B i j| ≤ frobSub A B := by
+   simpa [frobSub] using abs_entry_le_frob (fun i j => A i j - B i j) i j
+ 
++/--
++The Frobenius distance is the Euclidean norm of the flattened entrywise
++residual family.
++
++This is the common norm bridge used by triangle inequalities and convergence
++arguments for finite dissimilarity matrices.
++-/
++theorem norm_flattened_sub_eq_frobSub {n : Nat} (A B : DisMat n) :
++    ‖(WithLp.toLp 2 (fun p : Fin n × Fin n => A p.1 p.2 - B p.1 p.2) :
++        EuclideanSpace ℝ (Fin n × Fin n))‖ = frobSub A B := by
++  rw [EuclideanSpace.norm_eq, frobSub, frob, frobSq]
++  congr 1
++  rw [Fintype.sum_prod_type]
++  refine Finset.sum_congr rfl fun i _ => Finset.sum_congr rfl fun j _ => ?_
++  simp [Real.norm_eq_abs, sq_abs]
++
++/-- The Frobenius distance is nonnegative. -/
++theorem frobSub_nonneg {n : Nat} (A B : DisMat n) :
++    0 ≤ frobSub A B := by
++  rw [← norm_flattened_sub_eq_frobSub]
++  exact norm_nonneg _
++
++/-- The Frobenius distance from a dissimilarity matrix to itself is zero. -/
++theorem frobSub_self {n : Nat} (A : DisMat n) :
++    frobSub A A = 0 := by
++  simp [frobSub, frob, frobSq]
++
++/-- Triangle inequality for the Frobenius distance on dissimilarity matrices. -/
++theorem frobSub_triangle {n : Nat} (A B C : DisMat n) :
++    frobSub A C ≤ frobSub A B + frobSub B C := by
++  let x : EuclideanSpace ℝ (Fin n × Fin n) :=
++    WithLp.toLp 2 (fun p : Fin n × Fin n => A p.1 p.2 - B p.1 p.2)
++  let y : EuclideanSpace ℝ (Fin n × Fin n) :=
++    WithLp.toLp 2 (fun p : Fin n × Fin n => B p.1 p.2 - C p.1 p.2)
++  have hxy : x + y =
++      WithLp.toLp 2 (fun p : Fin n × Fin n => A p.1 p.2 - C p.1 p.2) := by
++    apply (WithLp.linearEquiv 2 ℝ _).injective
++    ext p
++    simp [x, y]
++    ring
++  rw [← norm_flattened_sub_eq_frobSub A C,
++    ← norm_flattened_sub_eq_frobSub A B,
++    ← norm_flattened_sub_eq_frobSub B C, ← hxy]
++  exact norm_add_le x y
++
++/--
++For a fixed finite matrix shape, entrywise convergence implies convergence in
++Frobenius distance.
++
++This packages the finite-sum argument needed to discharge deterministic
++matrix-limit assumptions from pointwise limits of dissimilarity entries.
++-/
++theorem tendsto_frobSub_zero_of_entrywise {n : Nat}
++    (A : Nat → DisMat n) (B : DisMat n)
++    (h : ∀ i j : Fin n, Tendsto (fun r => A r i j) atTop (𝓝 (B i j))) :
++    Tendsto (fun r => frobSub (A r) B) atTop (𝓝 0) := by
++  have hsq : ∀ i j : Fin n,
++      Tendsto (fun r => (A r i j - B i j) ^ 2) atTop (𝓝 0) := by
++    intro i j
++    simpa using ((h i j).sub tendsto_const_nhds).pow 2
++  have hsum : Tendsto
++      (fun r => ∑ i : Fin n, ∑ j : Fin n, (A r i j - B i j) ^ 2)
++      atTop (𝓝 0) := by
++    simpa using tendsto_finset_sum Finset.univ fun i _ =>
++      tendsto_finset_sum Finset.univ fun j _ => hsq i j
++  simpa [frobSub, frob, frobSq] using
++    (Real.continuous_sqrt.tendsto 0).comp hsum
++
++/-- A configuration exactly realizes a target dissimilarity matrix. -/
++def RealizesDissimilarity {n d : Nat} (z : Config n d) (Δ : DisMat n) : Prop :=
++  ∀ i j : Fin n, pairDist z i j = Δ i j
++
+ /-! ## Response-matrix dissimilarities -/
+ 
+ /--
+diff --git a/Acharyya2024/Consistency.lean b/Acharyya2024/Consistency.lean
+index c42ad05..ca4984e 100644
+--- a/Acharyya2024/Consistency.lean
++++ b/Acharyya2024/Consistency.lean
+@@ -161,6 +161,32 @@ theorem fixed_models_fixed_queries_consistency_of_uniqueProfile
+         ConvergesInProbability P (fun t ω => pairDistErr (ψhat (u t) ω) ψ i j) 0 := by
+   exact rawStress_mds_stability P Dseq DeltaInf ψhat hψhat huniq hD
+ 
++/--
++Fixed-model consistency when the limiting dissimilarities are exactly
++realizable in the chosen embedding dimension.
++
++Exact realizability supplies the distance-profile uniqueness premise required
++by the repaired fixed-limit theorem, so callers need not prove that technical
++condition separately.
++-/
++theorem fixed_models_fixed_queries_consistency_of_exactRealization
++  (P : Measure Ω)
++  {n d : Nat}
++  (Dseq : Nat → Ω → DisMat n)
++  (DeltaInf : DisMat n)
++  (ψhat : Nat → Ω → Config n d)
++  (hψhat : ∀ r ω, ψhat r ω ∈ MDS n d (Dseq r ω))
++  (hexact : ∃ ψ : Config n d, RealizesDissimilarity ψ DeltaInf)
++  (hD : ConvergesInProbabilityZero P (fun r ω => frobSub (Dseq r ω) DeltaInf)) :
++  ∃ u : Nat → Nat,
++    Subseq u ∧
++    ∃ ψ : Config n d,
++      ψ ∈ MDS n d DeltaInf ∧
++      ∀ i j : Fin n,
++        ConvergesInProbability P (fun t ω => pairDistErr (ψhat (u t) ω) ψ i j) 0 := by
++  exact fixed_models_fixed_queries_consistency_of_uniqueProfile P Dseq DeltaInf ψhat hψhat
++    (RawStress.uniquePairProfile_of_exists_realizes hexact) hD
++
+ /-! ## Paper layer 2: fixed model set, growing query set -/
+ 
+ /--
+@@ -289,6 +315,28 @@ theorem growing_queries_dissimilarity_converges
+   have := (abs_le.mp htri).2
+   linarith
+ 
++/--
++The growing-query dissimilarity conclusion with the deterministic limit
++assumption reduced to entrywise convergence.
++
++Because the model set is fixed and finite, pointwise convergence of every
++population dissimilarity entry automatically gives the required Frobenius
++convergence.
++-/
++theorem growing_queries_dissimilarity_converges_of_entrywise
++  (P : Measure Ω)
++  {n : Nat}
++  (Dseq : Nat → Ω → DisMat n)
++  (Delta : Nat → DisMat n)
++  (DeltaInf : DisMat n)
++  (hsample :
++    ConvergesInProbabilityZero P (fun r ω => frobSub (Dseq r ω) (Delta r)))
++  (hentry : ∀ i j : Fin n,
++    Tendsto (fun r => Delta r i j) atTop (𝓝 (DeltaInf i j))) :
++  ConvergesInProbabilityZero P (fun r ω => frobSub (Dseq r ω) DeltaInf) := by
++  exact growing_queries_dissimilarity_converges P Dseq Delta DeltaInf hsample
++    (tendsto_frobSub_zero_of_entrywise Delta DeltaInf hentry)
++
+ /--
+ Fixed `n`, growing-query consistency: paper Theorem 3 shape, with the repaired
+ probability-step hypotheses threaded through.
+@@ -329,6 +377,34 @@ theorem fixed_models_growing_queries_consistency_of_uniqueProfile
+   exact fixed_models_fixed_queries_consistency_of_uniqueProfile P Dseq DeltaInf ψhat hψhat huniq
+     (growing_queries_dissimilarity_converges P Dseq Delta DeltaInf hsample hlimit)
+ 
++/--
++Fixed-model, growing-query consistency with both technical limit assumptions
++dispatched by natural structural hypotheses: exact realizability of the limit
++and entrywise convergence of the population dissimilarities.
++-/
++theorem fixed_models_growing_queries_consistency_of_exactRealization_entrywise
++  (P : Measure Ω)
++  {n d : Nat}
++  (Dseq : Nat → Ω → DisMat n)
++  (Delta : Nat → DisMat n)
++  (DeltaInf : DisMat n)
++  (ψhat : Nat → Ω → Config n d)
++  (hψhat : ∀ r ω, ψhat r ω ∈ MDS n d (Dseq r ω))
++  (hexact : ∃ ψ : Config n d, RealizesDissimilarity ψ DeltaInf)
++  (hsample :
++    ConvergesInProbabilityZero P (fun r ω => frobSub (Dseq r ω) (Delta r)))
++  (hentry : ∀ i j : Fin n,
++    Tendsto (fun r => Delta r i j) atTop (𝓝 (DeltaInf i j))) :
++  ∃ u : Nat → Nat,
++    Subseq u ∧
++    ∃ ψ : Config n d,
++      ψ ∈ MDS n d DeltaInf ∧
++      ∀ i j : Fin n,
++        ConvergesInProbability P (fun t ω => pairDistErr (ψhat (u t) ω) ψ i j) 0 := by
++  exact fixed_models_fixed_queries_consistency_of_exactRealization P Dseq DeltaInf ψhat
++    hψhat hexact
++    (growing_queries_dissimilarity_converges_of_entrywise P Dseq Delta DeltaInf hsample hentry)
++
+ /-! ## Paper layer 3: growing model set and growing query set -/
+ 
+ /--
+@@ -401,6 +477,34 @@ theorem growing_models_growing_queries_perStage_consistency_of_uniqueProfile
+       (fun r ω => hψhat r ω k) (huniq k) (hD k)
+   exact ⟨ψ, hψ_mem, fun i j => hψ_conv i j⟩
+ 
++/--
++Per-stage growing-model consistency when every stage limit is exactly
++realizable in the common embedding dimension.
++-/
++theorem growing_models_growing_queries_perStage_consistency_of_exactRealization
++  (P : Measure Ω)
++  (d : Nat)
++  (nOf : Nat → Nat)
++  (Dseq : Nat → Ω → (k : Nat) → DisMat (nOf k))
++  (DeltaInf : (k : Nat) → DisMat (nOf k))
++  (ψhat : Nat → Ω → (k : Nat) → Config (nOf k) d)
++  (hψhat : ∀ r ω k, ψhat r ω k ∈ MDS (nOf k) d (Dseq r ω k))
++  (hexact : ∀ k, ∃ ψ : Config (nOf k) d,
++    RealizesDissimilarity ψ (DeltaInf k))
++  (hD : ∀ k, ConvergesInProbabilityZero P
++    (fun r ω => frobSub (Dseq r ω k) (DeltaInf k))) :
++  ∃ u : Nat → Nat,
++    Subseq u ∧
++    ∀ k : Nat,
++      ∃ ψ : Config (nOf k) d,
++        ψ ∈ MDS (nOf k) d (DeltaInf k) ∧
++        ∀ i j : Fin (nOf k),
++          ConvergesInProbability P
++            (fun t ω => pairDistErr (ψhat (u t) ω k) ψ i j) 0 := by
++  exact growing_models_growing_queries_perStage_consistency_of_uniqueProfile P d nOf Dseq
++    DeltaInf ψhat hψhat
++    (fun k => RawStress.uniquePairProfile_of_exists_realizes (hexact k)) hD
++
+ /--
+ Triangular-array consistency in the paper's Theorem-5 *shape*: the per-stage
+ dissimilarity convergence is split into a per-stage sampling error against a
+diff --git a/Acharyya2024/RawStress.lean b/Acharyya2024/RawStress.lean
+index 8fd060d..ed07512 100644
+--- a/Acharyya2024/RawStress.lean
++++ b/Acharyya2024/RawStress.lean
+@@ -173,6 +173,49 @@ private theorem term_le_rawStress (Δ : DisMat n) (z : Config n d) (i j : Fin n)
+   exact Finset.single_le_sum (f := fun i' => ∑ j', (‖z i' - z j'‖ - Δ i' j')^2)
+     (fun i' _ => Finset.sum_nonneg (fun j' _ => sq_nonneg _)) (Finset.mem_univ i)
+ 
++/-- An exact realization has zero raw stress. -/
++theorem rawStress_eq_zero_of_realizes {Δ : DisMat n} {z : Config n d}
++    (hz : RealizesDissimilarity z Δ) :
++    rawStress n d Δ z = 0 := by
++  unfold rawStress
++  apply Finset.sum_eq_zero
++  intro i _
++  apply Finset.sum_eq_zero
++  intro j _
++  rw [← hz i j]
++  simp [pairDist]
++
++/-- Every exact realization is a raw-stress minimizer. -/
++theorem mem_MDS_of_realizes {Δ : DisMat n} {z : Config n d}
++    (hz : RealizesDissimilarity z Δ) :
++    z ∈ MDS n d Δ := by
++  intro z'
++  rw [rawStress_eq_zero_of_realizes hz]
++  exact rawStress_nonneg Δ z'
++
++/--
++If the target dissimilarities admit one exact realization, every raw-stress
++minimizer exactly realizes the same dissimilarities.
++-/
++theorem realizes_of_mem_MDS_of_exists_realizes {Δ : DisMat n} {z : Config n d}
++    (hexact : ∃ z₀ : Config n d, RealizesDissimilarity z₀ Δ)
++    (hz : z ∈ MDS n d Δ) :
++    RealizesDissimilarity z Δ := by
++  obtain ⟨z₀, hz₀⟩ := hexact
++  have hz_le_zero : rawStress n d Δ z ≤ 0 := by
++    calc
++      rawStress n d Δ z ≤ rawStress n d Δ z₀ := hz z₀
++      _ = 0 := rawStress_eq_zero_of_realizes hz₀
++  have hz_zero : rawStress n d Δ z = 0 :=
++    le_antisymm hz_le_zero (rawStress_nonneg Δ z)
++  intro i j
++  have hterm : (‖z i - z j‖ - Δ i j) ^ 2 ≤ 0 := by
++    simpa [hz_zero] using term_le_rawStress Δ z i j
++  have hresidual : ‖z i - z j‖ - Δ i j = 0 := by
++    nlinarith [sq_nonneg (‖z i - z j‖ - Δ i j)]
++  change ‖z i - z j‖ = Δ i j
++  linarith
++
+ /-- Continuity of raw stress in the configuration (a finite sum of continuous
+ maps in the Pi type `Config n d`). Internal helper / step of the proof: supplies
+ the continuity needed to extract minimizers from compact sets.
+@@ -820,6 +863,19 @@ Formalized by Claude Fable 5 (claude-fable-5[1m]).
+ def UniquePairProfile (n d : Nat) (Δ : DisMat n) : Prop :=
+   ∀ ψ₁ ∈ MDS n d Δ, ∀ ψ₂ ∈ MDS n d Δ, ∀ i j : Fin n, pairDist ψ₁ i j = pairDist ψ₂ i j
+ 
++/--
++Exact realizability dispatches the distance-profile uniqueness assumption:
++when one configuration realizes every target dissimilarity, every minimizer has
++zero stress and therefore realizes that same pairwise-distance profile.
++-/
++theorem uniquePairProfile_of_exists_realizes {Δ : DisMat n}
++    (hexact : ∃ z : Config n d, RealizesDissimilarity z Δ) :
++    UniquePairProfile n d Δ := by
++  intro ψ₁ hψ₁ ψ₂ hψ₂ i j
++  have h₁ := realizes_of_mem_MDS_of_exists_realizes hexact hψ₁
++  have h₂ := realizes_of_mem_MDS_of_exists_realizes hexact hψ₂
++  exact (h₁ i j).trans (h₂ i j).symm
++
+ /--
+ **Probabilistic raw-stress MDS stability with a fixed limit configuration**
+ (full sequence, no subsequence) — the repaired Theorem-1 shape of Acharyya et

@@ -96,6 +96,10 @@ def SpectrumIn (A : E →L[𝕜] E) (U : Submodule 𝕜 E)
     (s : Set ℝ) : Prop :=
   restrictedSpectrum A U ⊆ s
 
+/-- A scalar function is uniformly bounded on the real spectrum of `A`. -/
+def BoundedOnSpectrum (A : E →L[𝕜] E) (f : ℝ → ℝ) : Prop :=
+  ∃ C : ℝ, 0 ≤ C ∧ ∀ x ∈ realSpectrum A, |f x| ≤ C
+
 /-- Distance between two real spectral sets. -/
 noncomputable def spectralDistance (s t : Set ℝ) : ℝ :=
   sInf {r | ∃ x ∈ s, ∃ y ∈ t, r = |x - y|}
@@ -158,6 +162,12 @@ def IsAcute (U V : Submodule 𝕜 E)
     [U.HasOrthogonalProjection] [V.HasOrthogonalProjection] : Prop :=
   subspaceGap U V < 1
 
+/-- The projection gap lies below the quarter-angle threshold.  This is the
+operator-level hypothesis under which `tan (2 Θ)` is bounded. -/
+def IsQuarterAcute (U V : Submodule 𝕜 E)
+    [U.HasOrthogonalProjection] [V.HasOrthogonalProjection] : Prop :=
+  subspaceGap U V < Real.sqrt 2 / 2
+
 /-- Isometric embedding used in residual formulations. -/
 def IsometricEmbedding (X : F →L[𝕜] E) : Prop :=
   ∀ x, ‖X x‖ = ‖x‖
@@ -173,19 +183,41 @@ noncomputable def sinThetaEmbedding (U : Submodule 𝕜 E)
   complementaryProjection U ∘L X
 
 /-- A reducing subspace for a self-adjoint operator has a reducing orthogonal
-complement. -/
+complement. 
+
+Lean proof route for a weaker agent:
+
+1. Retain the supplied invariance of `U` as the first conjunct.
+2. For `x∈Uᗮ` and `u∈U`, use self-adjointness to rewrite `⟪Ax,u⟫=⟪x,Au⟫`.
+3. Apply `hU` and orthogonality to show the inner product vanishes for every `u`.
+4. Conclude `Ax∈Uᗮ` and package both conjuncts.
+-/
 theorem reduces_orthogonalComplement {A : E →L[𝕜] E}
     (hA : IsSelfAdjointOperator A) {U : Submodule 𝕜 E}
     (hU : ∀ x ∈ U, A x ∈ U) : Reduces A U := by
   sorry
 
-/-- The gap metric is symmetric. -/
+/-- The gap metric is symmetric. 
+
+Lean proof route for a weaker agent:
+
+1. Rewrite `projection V - projection U = -(projection U - projection V)`.
+2. Use norm invariance under negation.
+3. Unfold `subspaceGap`.
+-/
 theorem subspaceGap_comm (U V : Submodule 𝕜 E)
     [U.HasOrthogonalProjection] [V.HasOrthogonalProjection] :
     subspaceGap U V = subspaceGap V U := by
   sorry
 
-/-- The directed gap is bounded by the symmetric gap. -/
+/-- The directed gap is bounded by the symmetric gap. 
+
+Lean proof route for a weaker agent:
+
+1. Expand `(I-Q)P = (P-Q)P` using projection idempotence.
+2. Apply submultiplicativity and `‖P‖≤1` for an orthogonal projection.
+3. Rewrite the two norms as `directedGap` and `subspaceGap`.
+-/
 theorem directedGap_le_subspaceGap (U V : Submodule 𝕜 E)
     [U.HasOrthogonalProjection] [V.HasOrthogonalProjection] :
     directedGap U V ≤ subspaceGap U V := by

@@ -37,21 +37,44 @@ noncomputable def directRotation (U V : Submodule 𝕜 E)
     (hacute : IsAcute U V) : E →L[𝕜] E := by
   sorry
 
-/-- The direct rotation is unitary. -/
+/-- The direct rotation is unitary. 
+
+Lean proof route for a weaker agent:
+
+1. For `S = QP+(I-Q)(I-P)`, show acuteness makes `S*S` bounded below and invertible.
+2. Define the polar factor `W=S(S*S)^{-1/2}` and compute `W*W=I`.
+3. Prove surjectivity from invertibility or similarly compute `WW*=I`.
+4. Translate those identities to `IsUnitaryOperator`.
+-/
 theorem directRotation_unitary
     (U V : Submodule 𝕜 E) [U.HasOrthogonalProjection]
     [V.HasOrthogonalProjection] (hacute : IsAcute U V) :
     IsUnitaryOperator (directRotation U V hacute) := by
   sorry
 
-/-- The direct rotation maps one subspace onto the other. -/
+/-- The direct rotation maps one subspace onto the other. 
+
+Lean proof route for a weaker agent:
+
+1. Convert the intertwining identity into inclusion of `U.map W` in `V`.
+2. Use unitarity/surjectivity to compare orthogonal complements or apply the inverse rotation for the reverse inclusion.
+3. Conclude equality of submodules by antisymmetry.
+-/
 theorem directRotation_maps_subspace
     (U V : Submodule 𝕜 E) [U.HasOrthogonalProjection]
     [V.HasOrthogonalProjection] (hacute : IsAcute U V) :
     U.map (directRotation U V hacute).toLinearMap = V := by
   sorry
 
-/-- Intertwining of orthogonal projections. -/
+/-- Intertwining of orthogonal projections. 
+
+Lean proof route for a weaker agent:
+
+1. Unfold the polar-factor construction of `directRotation`.
+2. Prove the pre-polar operator `S = QP+(I-Q)(I-P)` satisfies `S P = Q S`.
+3. Show `S*S` commutes with `P`; functional calculus then gives commutation of its inverse square root.
+4. Reassemble to obtain `W P = Q W`.
+-/
 theorem directRotation_intertwines
     (U V : Submodule 𝕜 E) [U.HasOrthogonalProjection]
     [V.HasOrthogonalProjection] (hacute : IsAcute U V) :
@@ -59,7 +82,14 @@ theorem directRotation_intertwines
       projection V ∘L directRotation U V hacute := by
   sorry
 
-/-- Square of the direct rotation is the product of reflections. -/
+/-- Square of the direct rotation is the product of reflections. 
+
+Lean proof route for a weaker agent:
+
+1. Use the polar/trigonometric formula for the direct rotation on the two-projection decomposition.
+2. Verify the scalar `2×2` identity that two equal angle rotations compose to the product of reflections.
+3. Extend the identity over the trivial reducing summands and close by operator extensionality.
+-/
 theorem directRotation_sq
     (U V : Submodule 𝕜 E) [U.HasOrthogonalProjection]
     [V.HasOrthogonalProjection] (hacute : IsAcute U V) :
@@ -74,7 +104,15 @@ Proof strategy: reduce by the two-projection decomposition to scalar
 line to the second has displacement at least that of the shorter rotation.
 Take the supremum over the angle spectrum.  State and prove any necessary
 angle restriction explicitly; do not infer an unrestricted extremal theorem
-for arbitrary symmetric ideal gauges from the operator-norm result. -/
+for arbitrary symmetric ideal gauges from the operator-norm result. 
+
+Lean proof route for a weaker agent:
+
+1. Reduce the pair of projections to the Halmos two-projection decomposition.
+2. On each generic two-dimensional angle fiber, prove the shorter rotation minimizes `‖W-I‖` among unitaries sending the first line to the second.
+3. Take the essential supremum over the angle spectrum and handle common/orthogonal summands separately.
+4. Check that the stated acuteness hypothesis excludes the ambiguous `π/2` branch.
+-/
 theorem directRotation_minimal
     (U V : Submodule 𝕜 E) [U.HasOrthogonalProjection]
     [V.HasOrthogonalProjection] (hacute : IsAcute U V)

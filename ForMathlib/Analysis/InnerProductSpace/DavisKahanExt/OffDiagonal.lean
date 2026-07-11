@@ -41,7 +41,15 @@ Proof strategy: first obtain enclosure of each perturbed spectral component
 from the Schur complement or Riccati block diagonalization.  Show the two
 enclosures remain disjoint under the scalar inequality `‖H‖ < sqrt 2 * d`.
 Use norm-continuity of the Riesz projection along `A+tH` to rule out branch
-switching, then identify the endpoint with the continued spectral subspace. -/
+switching, then identify the endpoint with the continued spectral subspace. 
+
+Lean proof route for a weaker agent:
+
+1. Use off-diagonal spectral enclosure to bound the two perturbed components on opposite sides of the original gap.
+2. Check the scalar `sqrt 2` inequality leaves a positive distance between the enclosures.
+3. Continue the Riesz projection along `A+tH` to select the correct component.
+4. Prove reduction, acuteness, and positive endpoint spectral distance in that order.
+-/
 theorem gap_preserved_of_offDiagonal
     {A H : E →L[𝕜] E}
     (hA : IsSelfAdjointOperator A) (hH : IsSelfAdjointOperator H)
@@ -50,10 +58,21 @@ theorem gap_preserved_of_offDiagonal
     {d : ℝ} (hd : 0 < d) (hgap : InternalGap A U d)
     (hfinite : FiniteGapConfiguration A U d)
     (hsmall : ‖H‖ < Real.sqrt 2 * d) :
-    ∃ V : Submodule 𝕜 E, Reduces (A + H) V := by
+    let V := continuedSpectralSubspace A H (restrictedSpectrum A U)
+    Reduces (A + H) V ∧ IsAcute U V ∧
+      0 < spectralDistance (restrictedSpectrum (A + H) V)
+        (restrictedSpectrum (A + H) Vᗮ) := by
   sorry
 
-/-- Generalized `tan 2Θ` theorem. -/
+/-- Generalized `tan 2Θ` theorem. 
+
+Lean proof route for a weaker agent:
+
+1. Represent `V` as a graph over `U`; `hquarter` ensures the double-angle tangent is bounded.
+2. Derive the Riccati equation from reduction of `A+H` and the off-diagonal form of `H`.
+3. Apply the ordered gap to the linear Sylvester term and estimate the quadratic terms.
+4. Translate the resulting bound on the angular operator to `tanTwoAngleOperator`.
+-/
 theorem tanTwoTheta_offDiagonal
     {A H : E →L[𝕜] E}
     (hA : IsSelfAdjointOperator A) (hH : IsSelfAdjointOperator H)
@@ -61,7 +80,8 @@ theorem tanTwoTheta_offDiagonal
     [U.HasOrthogonalProjection] [V.HasOrthogonalProjection]
     (hU : Reduces A U) (hV : Reduces (A + H) V)
     (hoff : IsOffDiagonal U H)
-    {d : ℝ} (hd : 0 < d) (hgap : OrderedInternalGap A U d) :
+    {d : ℝ} (hd : 0 < d) (hgap : OrderedInternalGap A U d)
+    (hquarter : IsQuarterAcute U V) :
     ‖tanTwoAngleOperator U V‖ ≤ 2 * ‖H‖ / d := by
   sorry
 
@@ -77,7 +97,15 @@ contractive branch and translate through
 
 The sharp `sqrt 2 * d` threshold is where the selected scalar branch ceases to
 remain uniformly acute.  Keep the scalar optimization and trigonometric
-identity in separate lemmas so the operator proof is mostly monotonicity. -/
+identity in separate lemmas so the operator proof is mostly monotonicity. 
+
+Lean proof route for a weaker agent:
+
+1. Use `gap_preserved_of_offDiagonal` to obtain the continued reducing subspace and acuteness.
+2. Apply `existsUnique_angularOperator` to represent that subspace as `graphSubspace U X`.
+3. Derive the Riccati equation from graph invariance and use the finite-gap enclosure to obtain the scalar majorant for `‖X‖`.
+4. Solve the scalar inequality on the contractive branch, then rewrite the projector gap with `tan_maximalAngle_eq_norm_angularOperator`.
+-/
 theorem aPrioriTanTheta
     {A H : E →L[𝕜] E}
     (hA : IsSelfAdjointOperator A) (hH : IsSelfAdjointOperator H)
@@ -90,22 +118,24 @@ theorem aPrioriTanTheta
     subspaceGap U V ≤ Real.sin (Real.arctan (‖H‖ / d)) := by
   sorry
 
-/-- The a priori bound is sharp. -/
-theorem aPrioriTanTheta_constant_sharp :
-    ∀ c : ℝ, c < Real.sqrt 2 →
-      ∃ (A H P : E →L[𝕜] E),
-        IsSelfAdjointOperator A ∧ IsSelfAdjointOperator H ∧
-        IsOrthogonalProjection P ∧ IsOffDiagonalRelativeToProjection P H := by
-  sorry
-
 /-- Spectral repulsion: off-diagonal perturbations move the two components
-away from the original gap. -/
+away from the original gap. 
+
+Lean proof route for a weaker agent:
+
+1. Use the Riccati block diagonalization of the continued spectral subspace.
+2. Express the effective diagonal blocks as the original blocks plus positive/negative Schur-complement corrections.
+3. Apply spectral monotonicity to show the selected components move away from the original gap.
+4. Convert the two enclosure inequalities into the stated spectral-distance comparison.
+-/
 theorem spectral_repulsion_offDiagonal
     {A H : E →L[𝕜] E}
     (hA : IsSelfAdjointOperator A) (hH : IsSelfAdjointOperator H)
     {U : Submodule 𝕜 E} [U.HasOrthogonalProjection]
     (hU : Reduces A U) (hoff : IsOffDiagonal U H)
-    {d : ℝ} (hordered : OrderedInternalGap A U d) :
+    {d : ℝ} (hd : 0 < d) (hordered : OrderedInternalGap A U d)
+    (hfinite : FiniteGapConfiguration A U d)
+    (hsmall : ‖H‖ < Real.sqrt 2 * d) :
     spectralDistance (restrictedSpectrum (A + H)
       (continuedSpectralSubspace A H (restrictedSpectrum A U)))
       (restrictedSpectrum (A + H)

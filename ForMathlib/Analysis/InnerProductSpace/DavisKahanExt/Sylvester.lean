@@ -52,13 +52,29 @@ Prove strong measurability of the operator-valued integrand, dominate its norm
 by `exp(-d t) ‖C‖`, and obtain Bochner integrability.  Evaluate finite-interval
 integrals using the derivative of the exponential product, then pass to the
 limit.  Keep the contour/Fourier representation as a separate implementation
-for arbitrary separated spectra; it is responsible for the `pi/2` constant. -/
+for arbitrary separated spectra; it is responsible for the `pi/2` constant. 
+
+Lean proof route for a weaker agent:
+
+1. Unfold `solveSylvester`; if it is defined by uniqueness, show the integral candidate solves the equation.
+2. Justify Bochner integrability using the separated-spectrum resolvent or semigroup bounds.
+3. Differentiate/integrate the truncated formula and pass to the limit.
+4. Invoke `sylvester_unique` to identify the canonical solution with the integral.
+-/
 theorem solveSylvester_eq_resolventIntegral
     (A : F →L[𝕜] F) (B : E →L[𝕜] E) (C : E →L[𝕜] F) :
     solveSylvester A B C = sylvesterResolventIntegral A B C := by
   sorry
 
-/-- The resolvent solution satisfies the equation under separated spectra. -/
+/-- The resolvent solution satisfies the equation under separated spectra. 
+
+Lean proof route for a weaker agent:
+
+1. Use `solveSylvester_eq_resolventIntegral`.
+2. Evaluate the Sylvester operator on truncated contour/semigroup integrals.
+3. Show the boundary terms converge to zero from spectral separation.
+4. Pass the bounded linear Sylvester operator through the integral and obtain `C`.
+-/
 theorem sylvester_solve
     {A : F →L[𝕜] F} {B : E →L[𝕜] E}
     (hA : IsSelfAdjointOperator A) (hB : IsSelfAdjointOperator B)
@@ -68,7 +84,14 @@ theorem sylvester_solve
     sylvesterOperator A B (solveSylvester A B C) = C := by
   sorry
 
-/-- Uniqueness of the bounded Sylvester solution. -/
+/-- Uniqueness of the bounded Sylvester solution. 
+
+Lean proof route for a weaker agent:
+
+1. Apply the general separated-spectrum norm estimate to `X-Y` with right-hand side zero.
+2. Use linearity of `sylvesterOperator` and `hX` to prove its defect is zero.
+3. Since `d>0`, conclude `‖X-Y‖=0`, then extensionality gives `X=Y`.
+-/
 theorem sylvester_unique
     {A : F →L[𝕜] F} {B : E →L[𝕜] E}
     (hA : IsSelfAdjointOperator A) (hB : IsSelfAdjointOperator B)
@@ -92,7 +115,15 @@ bounds
 Integrating gives `‖X‖ <= ‖C‖ / (a-b)`.  For interval/exterior separation,
 solve the two orthogonal spectral pieces separately and recombine them using
 orthogonality.  This is the first analytic theorem to prove because its finite
-specialization immediately replaces duplicated operator-norm arguments. -/
+specialization immediately replaces duplicated operator-norm arguments. 
+
+Lean proof route for a weaker agent:
+
+1. Shift `A,B` so the spectral bounds become `A≥d/2` and `B≤-d/2`.
+2. Represent `X` by the semigroup integral `∫₀∞ exp(-tA) C exp(tB) dt`.
+3. Bound the integrand by `exp(-dt)‖C‖` using functional calculus.
+4. Integrate, use uniqueness, and multiply by `d`.
+-/
 theorem norm_sylvester_le_of_orderedSeparation
     {A : F →L[𝕜] F} {B : E →L[𝕜] E} {X C : E →L[𝕜] F}
     (hA : IsSelfAdjointOperator A) (hB : IsSelfAdjointOperator B)
@@ -116,7 +147,15 @@ should isolate:
 3. evaluation of the Sylvester defect;
 4. the final `L1` estimate.
 
-This theorem belongs after the constant-one ordered theory. -/
+This theorem belongs after the constant-one ordered theory. 
+
+Lean proof route for a weaker agent:
+
+1. Use the scalar Fourier multiplier for `1/(a-b)` on pairs separated by `d`.
+2. Represent `X` as an integral of `exp(itA) C exp(-itB)` against that measure.
+3. Bound every unitary orbit term by `‖C‖` and integrate total variation `π/(2d)`.
+4. Use uniqueness of the Sylvester solution to identify the integral with the given `X`.
+-/
 theorem norm_sylvester_le_of_generalSeparation
     {A : F →L[𝕜] F} {B : E →L[𝕜] E} {X C : E →L[𝕜] F}
     (hA : IsSelfAdjointOperator A) (hB : IsSelfAdjointOperator B)
@@ -126,15 +165,23 @@ theorem norm_sylvester_le_of_generalSeparation
     d * ‖X‖ ≤ (Real.pi / 2) * ‖C‖ := by
   sorry
 
-/-- Symmetric-ideal Sylvester estimate. -/
+/-- Symmetric-ideal Sylvester estimate. 
+
+Lean proof route for a weaker agent:
+
+1. Represent the inverse Sylvester map by the same Fourier/resolvent integral used for the operator norm theorem.
+2. Use the ideal bound to estimate each left/right unitary translate without changing the gauge.
+3. Integrate the scalar total variation to get `π/(2d)`.
+4. Approximate the integral by finite sums to prove the solution remains in the complete ideal, then return membership and the bound.
+-/
 theorem ideal_sylvester_le
     (I : SymmetricNormIdeal (𝕜 := 𝕜) (E := E))
     {A B X C : E →L[𝕜] E}
     (hA : IsSelfAdjointOperator A) (hB : IsSelfAdjointOperator B)
     {d : ℝ} (hd : 0 < d)
     (hsep : SpectraSeparated A ⊤ B ⊤ d)
-    (hEq : sylvesterOperator A B X = C) :
-    d * I.gauge X ≤ (Real.pi / 2) * I.gauge C := by
+    (hEq : sylvesterOperator A B X = C) (hCmem : I.mem C) :
+    I.mem X ∧ d * I.gauge X ≤ (Real.pi / 2) * I.gauge C := by
   sorry
 
 end DavisKahanExt

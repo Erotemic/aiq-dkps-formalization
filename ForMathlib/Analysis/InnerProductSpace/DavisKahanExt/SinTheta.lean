@@ -24,7 +24,15 @@ variable {E : Type*} [NormedAddCommGroup E] [InnerProductSpace 𝕜 E]
 variable {F : Type*} [NormedAddCommGroup F] [InnerProductSpace 𝕜 F]
   [CompleteSpace F]
 
-/-- Residual `sin Θ` theorem for an isometric trial map. -/
+/-- Residual `sin Θ` theorem for an isometric trial map. 
+
+Lean proof route for a weaker agent:
+
+1. Set `Y=(I-P_U)X` and derive `A|_{Uᗮ} Y - Y M = (I-P_U) residual A X M`.
+2. Apply the ordered constant-one Sylvester theorem using `hsep`.
+3. Bound the projected residual by the full residual norm.
+4. Identify `Y` with `sinThetaEmbedding U X`.
+-/
 theorem sinTheta_residual
     {A : E →L[𝕜] E} (hA : IsSelfAdjointOperator A)
     {U : Submodule 𝕜 E} [U.HasOrthogonalProjection]
@@ -36,7 +44,15 @@ theorem sinTheta_residual
     d * ‖sinThetaEmbedding U X‖ ≤ ‖residual A X M‖ := by
   sorry
 
-/-- One-sided perturbation theorem for spectral subspaces. -/
+/-- One-sided perturbation theorem for spectral subspaces. 
+
+Lean proof route for a weaker agent:
+
+1. Derive the off-diagonal Sylvester equation for `X=(I-P_V)P_U`.
+2. Use the interval/exterior decomposition to apply the constant-one ordered Sylvester estimate to the lower and upper pieces.
+3. Bound the right-hand residual by `‖B-A‖`.
+4. Rewrite `‖X‖` as the directed gap.
+-/
 theorem sinTheta_perturbation
     {A B : E →L[𝕜] E}
     (hA : IsSelfAdjointOperator A) (hB : IsSelfAdjointOperator B)
@@ -48,7 +64,14 @@ theorem sinTheta_perturbation
     d * directedGap U V ≤ ‖B - A‖ := by
   sorry
 
-/-- Symmetric projector-difference form requiring both mixed gaps. -/
+/-- Symmetric projector-difference form requiring both mixed gaps. 
+
+Lean proof route for a weaker agent:
+
+1. Apply `sinTheta_perturbation` to `(U,V)` and again to `(V,U)` using the reverse gap.
+2. Use the two-projection norm identity that the full gap is the maximum of the two directed gaps.
+3. Combine the two inequalities with `max_le` and simplify the perturbation sign.
+-/
 theorem sinTheta_symmetric
     {A B : E →L[𝕜] E}
     (hA : IsSelfAdjointOperator A) (hB : IsSelfAdjointOperator B)
@@ -62,7 +85,15 @@ theorem sinTheta_symmetric
   sorry
 
 /-- General separated-spectrum form with the optimal universal `π / 2`
-Sylvester constant. -/
+Sylvester constant. 
+
+Lean proof route for a weaker agent:
+
+1. Derive the Sylvester equation for `(I-P_V)P_U` from the two reducing relations.
+2. Apply `norm_sylvester_le_of_generalSeparation` with the hybrid spectral gap.
+3. Bound the residual block by `‖B-A‖` using projection contractions.
+4. Rewrite the block norm as `directedGap U V`.
+-/
 theorem sinTheta_generalSeparation
     {A B : E →L[𝕜] E}
     (hA : IsSelfAdjointOperator A) (hB : IsSelfAdjointOperator B)
@@ -73,19 +104,38 @@ theorem sinTheta_generalSeparation
     d * directedGap U V ≤ (Real.pi / 2) * ‖B - A‖ := by
   sorry
 
-/-- Canonical spectral-projection form. -/
+/-- Canonical spectral-projection form. 
+
+Lean proof route for a weaker agent:
+
+1. Convert the four spectral-containment hypotheses into the two `IntervalExteriorSeparated` predicates.
+2. Apply `sinTheta_symmetric` to the canonical spectral subspaces, using `reduces_spectralSubspace`.
+3. Rewrite the subspace gap as the norm of the two spectral projections.
+-/
 theorem spectralProjection_sinTheta
     {A B : E →L[𝕜] E}
     (hA : IsSelfAdjointOperator A) (hB : IsSelfAdjointOperator B)
-    (s t : Set ℝ) {left right d : ℝ} (hd : 0 < d)
+    (s t : Set ℝ)
+    {left right left' right' d : ℝ} (hd : 0 < d)
     (hAs : SpectrumIn A (spectralSubspace A s) (Set.Icc left right))
     (hBt : SpectrumIn B (spectralSubspace B t)ᗮ
-      {x | x ≤ left - d ∨ right + d ≤ x}) :
+      {x | x ≤ left - d ∨ right + d ≤ x})
+    (hBs : SpectrumIn B (spectralSubspace B t) (Set.Icc left' right'))
+    (hAt : SpectrumIn A (spectralSubspace A s)ᗮ
+      {x | x ≤ left' - d ∨ right' + d ≤ x}) :
     d * ‖spectralProjection A s - spectralProjection B t‖ ≤
       ‖B - A‖ := by
   sorry
 
-/-- Symmetric-ideal form. -/
+/-- Symmetric-ideal form. 
+
+Lean proof route for a weaker agent:
+
+1. Decompose the full sine operator into the two directed off-diagonal blocks.
+2. Apply the interval/exterior ideal-valued Sylvester estimate to each block, using `hmem` for the perturbation.
+3. Recombine the blocks through the two-projection decomposition or the symmetric-angle identity.
+4. Return both ideal membership and the gauge inequality.
+-/
 theorem ideal_sinTheta
     (I : SymmetricNormIdeal (𝕜 := 𝕜) (E := E))
     {A B : E →L[𝕜] E}
@@ -95,8 +145,10 @@ theorem ideal_sinTheta
     (hU : Reduces A U) (hV : Reduces B V)
     {left right left' right' d : ℝ} (hd : 0 < d)
     (hUV : IntervalExteriorSeparated A U B Vᗮ left right d)
-    (hVU : IntervalExteriorSeparated B V A Uᗮ left' right' d) :
-    d * I.gauge (sinAngleOperator U V) ≤ I.gauge (B - A) := by
+    (hVU : IntervalExteriorSeparated B V A Uᗮ left' right' d)
+    (hmem : I.mem (B - A)) :
+    I.mem (sinAngleOperator U V) ∧
+      d * I.gauge (sinAngleOperator U V) ≤ I.gauge (B - A) := by
   sorry
 
 end DavisKahanExt

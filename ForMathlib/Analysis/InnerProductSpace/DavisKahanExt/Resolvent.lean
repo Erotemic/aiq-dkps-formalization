@@ -33,7 +33,14 @@ def InResolventSet (A : E →L[𝕜] E) (z : 𝕜) : Prop :=
     R ∘L (A - z • ContinuousLinearMap.id 𝕜 E) = ContinuousLinearMap.id 𝕜 E ∧
     (A - z • ContinuousLinearMap.id 𝕜 E) ∘L R = ContinuousLinearMap.id 𝕜 E
 
-/-- First resolvent identity. -/
+/-- First resolvent identity. 
+
+Lean proof route for a weaker agent:
+
+1. Obtain the two inverse identities for `A-zI` and `A-wI` from `hz,hw`.
+2. Expand `Rz-Rw = Rz((A-wI)-(A-zI))Rw`.
+3. Simplify the middle difference to `(z-w)I` and reassociate compositions.
+-/
 theorem resolvent_identity
     (A : E →L[𝕜] E) {z w : 𝕜}
     (hz : InResolventSet A z) (hw : InResolventSet A w) :
@@ -41,7 +48,14 @@ theorem resolvent_identity
       (z - w) • (resolventOperator A z ∘L resolventOperator A w) := by
   sorry
 
-/-- Second resolvent identity. -/
+/-- Second resolvent identity. 
+
+Lean proof route for a weaker agent:
+
+1. Use the algebraic inverse-difference formula `Y⁻¹-X⁻¹=Y⁻¹(X-Y)X⁻¹`.
+2. Instantiate `X=A-zI` and `Y=B-zI` with the inverses supplied by `hA,hB`.
+3. Simplify the scalar identity terms and reassociate compositions.
+-/
 theorem resolvent_perturbation_identity
     (A B : E →L[𝕜] E) {z : 𝕜}
     (hA : InResolventSet A z) (hB : InResolventSet B z) :
@@ -49,7 +63,15 @@ theorem resolvent_perturbation_identity
       resolventOperator B z ∘L (A - B) ∘L resolventOperator A z := by
   sorry
 
-/-- Self-adjoint resolvent norm bound by spectral distance. -/
+/-- Self-adjoint resolvent norm bound by spectral distance. 
+
+Lean proof route for a weaker agent:
+
+1. Apply the self-adjoint continuous functional calculus to `f(lam)=1/(lam-z)`.
+2. Use `hsep` to bound `|f(lam)|≤delta⁻¹` on the spectrum.
+3. Identify the functional-calculus operator with `resolventOperator A z`.
+4. Invoke the functional-calculus norm estimate and simplify using `hdelta`.
+-/
 theorem norm_resolvent_le_inv_distance
     (A : E →L[𝕜] E) (hA : IsSelfAdjointOperator A)
     (z : 𝕜) (delta : ℝ) (hdelta : 0 < delta)
@@ -69,7 +91,15 @@ noncomputable def rieszProjection (A : E →L[𝕜] E)
   sorry
 
 /-- Riesz and Borel spectral projections agree for self-adjoint operators and
-separating contours. -/
+separating contours. 
+
+Lean proof route for a weaker agent:
+
+1. Express both operators through the continuous/Borel functional calculus.
+2. Use the holomorphic contour formula to show the contour integral equals the indicator of the enclosed spectral component on `realSpectrum A`.
+3. Apply functional-calculus extensionality on the spectrum.
+4. Use `hcontour` for winding number and resolvent-set obligations.
+-/
 theorem rieszProjection_eq_spectralProjection
     (A : E →L[𝕜] E) (hA : IsSelfAdjointOperator A)
     (s : Set ℝ) (contour : ℝ → 𝕜)
@@ -77,7 +107,15 @@ theorem rieszProjection_eq_spectralProjection
     rieszProjection A contour = spectralProjection A s := by
   sorry
 
-/-- Neumann-series stability of the resolvent set. -/
+/-- Neumann-series stability of the resolvent set. 
+
+Lean proof route for a weaker agent:
+
+1. Factor `A+H-zI = (I + H R_A(z))(A-zI)`.
+2. Use the norm hypothesis to invert `I+H R_A(z)` by a Neumann series.
+3. Write down the candidate two-sided inverse and verify both compositions by associativity.
+4. Package it as an `InResolventSet` witness.
+-/
 theorem inResolventSet_add_of_norm_lt
     (A H : E →L[𝕜] E) {z : 𝕜}
     (hz : InResolventSet A z)
@@ -85,7 +123,15 @@ theorem inResolventSet_add_of_norm_lt
     InResolventSet (A + H) z := by
   sorry
 
-/-- Norm continuity of Riesz projections along a uniformly separating path. -/
+/-- Norm continuity of Riesz projections along a uniformly separating path. 
+
+Lean proof route for a weaker agent:
+
+1. Prove local norm continuity of the resolvent with the second resolvent identity and a uniform contour bound.
+2. Show the contour integrand is jointly continuous in path parameter and contour parameter.
+3. Pass continuity through the Bochner contour integral using a uniform integrable domination.
+4. Identify the integral with `rieszProjection`.
+-/
 theorem continuous_rieszProjection_path
     (A H : E →L[𝕜] E) (s : Set ℝ) (contour : ℝ → 𝕜)
     (hsep : ∀ t : ℝ,

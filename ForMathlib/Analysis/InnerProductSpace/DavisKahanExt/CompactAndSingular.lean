@@ -30,31 +30,50 @@ noncomputable def compactSpectralSubspace (A : E →L[𝕜] E)
   sorry
 
 /-- Compact perturbations produce compact differences of isolated spectral
-projections. -/
+projections. 
+
+Lean proof route for a weaker agent:
+
+1. Apply the two mixed-gap `sinTheta_symmetric` argument at the operator level.
+2. Express the projector difference as the image of `B-A` under the inverse Sylvester map on the off-diagonal blocks.
+3. Use the compact ideal property and closure under sums/adjoints to prove compactness of both blocks and hence of the full difference.
+-/
 theorem compact_projection_difference
     {A B : E →L[𝕜] E}
     (hA : IsSelfAdjointOperator A) (hB : IsSelfAdjointOperator B)
     (s t : Set ℝ) {d : ℝ} (hd : 0 < d)
-    (hsep : SpectraSeparated A (spectralSubspace A s)
+    (hsepAB : SpectraSeparated A (spectralSubspace A s)
       B (spectralSubspace B t)ᗮ d)
+    (hsepBA : SpectraSeparated B (spectralSubspace B t)
+      A (spectralSubspace A s)ᗮ d)
     (hcompact : (SymmetricNormIdeal.compactOperator (𝕜 := 𝕜) (E := E)).mem (B - A)) :
     (SymmetricNormIdeal.compactOperator (𝕜 := 𝕜) (E := E)).mem
       (spectralProjection A s - spectralProjection B t) := by
   sorry
 
-/-- Schatten-class perturbation implies Schatten-class angle operator. -/
+/-- Schatten-class perturbation implies Schatten-class angle operator. 
+
+Lean proof route for a weaker agent:
+
+1. Instantiate `ideal_sinTheta` with the Schatten ideal at `p` and `hp`.
+2. Supply `hmem` and the two mixed interval/exterior gaps.
+3. Extract the membership and numerical components; normalize the factor `d` to the displayed form.
+-/
 theorem schatten_sinTheta
-    (p : ℝ) {A B : E →L[𝕜] E}
+    (p : ℝ) (hp : 1 ≤ p) {A B : E →L[𝕜] E}
     (hA : IsSelfAdjointOperator A) (hB : IsSelfAdjointOperator B)
     {U V : Submodule 𝕜 E}
     [U.HasOrthogonalProjection] [V.HasOrthogonalProjection]
     (hU : Reduces A U) (hV : Reduces B V)
     {left right left' right' d : ℝ} (hd : 0 < d)
     (hUV : IntervalExteriorSeparated A U B Vᗮ left right d)
-    (hVU : IntervalExteriorSeparated B V A Uᗮ left' right' d) :
-    (SymmetricNormIdeal.schatten (𝕜 := 𝕜) (E := E) p).gauge
-      (sinAngleOperator U V) ≤
-    (SymmetricNormIdeal.schatten (𝕜 := 𝕜) (E := E) p).gauge (B - A) / d := by
+    (hVU : IntervalExteriorSeparated B V A Uᗮ left' right' d)
+    (hmem : (SymmetricNormIdeal.schatten (𝕜 := 𝕜) (E := E) p hp).mem (B - A)) :
+    (SymmetricNormIdeal.schatten (𝕜 := 𝕜) (E := E) p hp).mem
+        (sinAngleOperator U V) ∧
+      d * (SymmetricNormIdeal.schatten (𝕜 := 𝕜) (E := E) p hp).gauge
+        (sinAngleOperator U V) ≤
+      (SymmetricNormIdeal.schatten (𝕜 := 𝕜) (E := E) p hp).gauge (B - A) := by
   sorry
 
 /-- Hermitian dilation of a rectangular bounded operator. -/
@@ -62,7 +81,15 @@ noncomputable def hermitianDilation (T : E →L[𝕜] F) :
     WithLp 2 (E × F) →L[𝕜] WithLp 2 (E × F) := by
   sorry
 
-/-- The Hermitian dilation is self-adjoint. -/
+/-- The Hermitian dilation is self-adjoint. 
+
+Lean proof route for a weaker agent:
+
+1. Expand the `2×2` block definition of `hermitianDilation`.
+2. Compute the inner product of `D(T)(x,y)` with `(x',y')`.
+3. Move `T` across the inner product using its continuous adjoint and rearrange terms.
+4. Finish by extensionality of the product inner product.
+-/
 theorem hermitianDilation_selfAdjoint (T : E →L[𝕜] F) :
     IsSelfAdjointOperator (hermitianDilation T) := by
   sorry
@@ -74,26 +101,48 @@ Proof strategy: construct the Hermitian dilation
 negative spectral subspaces with the left/right singular subspaces of `T`.
 Observe `D(T)-D(S)=D(T-S)` and prove `‖D(T-S)‖=‖T-S‖`.  Apply the self-adjoint
 `sin Theta` theorem to the isolated spectral sets and project the resulting
-block estimate back to the desired left or right singular subspace. -/
+block estimate back to the desired left or right singular subspace. 
+
+Lean proof route for a weaker agent:
+
+1. Prove the Hermitian dilations are self-adjoint and their difference is the dilation of `T-S`.
+2. Apply the symmetric spectral-projection `sinTheta` theorem using both mixed gaps.
+3. Prove `‖hermitianDilation (T-S)‖=‖T-S‖` if a rectangular statement is desired.
+4. Project the dilation subspace estimate to left/right singular subspaces in later corollaries.
+-/
 theorem wedin_singularSubspace
     {S T : E →L[𝕜] F} (s t : Set ℝ)
     {d : ℝ} (hd : 0 < d)
-    (hsep : SpectraSeparated (hermitianDilation S)
+    (hsepST : SpectraSeparated (hermitianDilation S)
       (spectralSubspace (hermitianDilation S) s)
       (hermitianDilation T)
-      (spectralSubspace (hermitianDilation T) t)ᗮ d) :
+      (spectralSubspace (hermitianDilation T) t)ᗮ d)
+    (hsepTS : SpectraSeparated (hermitianDilation T)
+      (spectralSubspace (hermitianDilation T) t)
+      (hermitianDilation S)
+      (spectralSubspace (hermitianDilation S) s)ᗮ d) :
     d * ‖spectralProjection (hermitianDilation S) s -
       spectralProjection (hermitianDilation T) t‖ ≤
       ‖hermitianDilation (T - S)‖ := by
   sorry
 
-/-- Covariance-operator principal-subspace perturbation. -/
+/-- Covariance-operator principal-subspace perturbation. 
+
+Lean proof route for a weaker agent:
+
+1. Instantiate `spectralProjection_sinTheta` with the two supplied interval/exterior gaps.
+2. Rewrite the abstract spectral subspaces and projections to the covariance-operator notation.
+3. Finish by ring normalization of the factor `d`.
+-/
 theorem covariance_subspace_sinTheta
     {A B : E →L[𝕜] E}
     (hA : IsSelfAdjointOperator A) (hB : IsSelfAdjointOperator B)
-    (s t : Set ℝ) {left right d : ℝ} (hd : 0 < d)
-    (hsep : IntervalExteriorSeparated A (spectralSubspace A s)
-      B (spectralSubspace B t)ᗮ left right d) :
+    (s t : Set ℝ)
+    {left right left' right' d : ℝ} (hd : 0 < d)
+    (hsepAB : IntervalExteriorSeparated A (spectralSubspace A s)
+      B (spectralSubspace B t)ᗮ left right d)
+    (hsepBA : IntervalExteriorSeparated B (spectralSubspace B t)
+      A (spectralSubspace A s)ᗮ left' right' d) :
     d * ‖spectralProjection A s - spectralProjection B t‖ ≤ ‖B - A‖ := by
   sorry
 

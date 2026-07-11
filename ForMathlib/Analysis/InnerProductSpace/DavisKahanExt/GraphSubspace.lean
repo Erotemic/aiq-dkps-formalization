@@ -51,7 +51,14 @@ Proof strategy:
   representation.
 
 The finite-dimensional theorem should later be a specialization of this
-result, not an independent basis calculation. -/
+result, not an independent basis calculation. 
+
+Lean proof route for a weaker agent:
+
+1. Obtain an angular operator from `acute_iff_exists_bounded_angularOperator`.
+2. Show its range description agrees with `graphSubspace` by unfolding the latter.
+3. For uniqueness, apply `P_U` and `P_{Uᗮ}` to equal graph vectors and use injectivity of the graph parametrization.
+-/
 theorem existsUnique_angularOperator
     (U V : Submodule 𝕜 E) [U.HasOrthogonalProjection]
     [V.HasOrthogonalProjection] (hacute : IsAcute U V) :
@@ -66,21 +73,43 @@ Proof strategy: define the isometry from `U` into the graph by normalizing
 Expand this product in the decomposition `U ⊕ Uᗮ`, commute the functional
 calculus terms through `X` using the polar decomposition, and identify the
 four blocks with `graphProjectionFormula`.  Prove positivity and invertibility
-of `I + X*X` before performing block algebra. -/
+of `I + X*X` before performing block algebra. 
+
+Lean proof route for a weaker agent:
+
+1. Define the normalized graph embedding `J u=(u,Xu)(I+X*X)^{-1/2}`.
+2. Prove `J` is an isometry onto `graphSubspace U X`.
+3. Compute the orthogonal projection as `J J*` and expand its four blocks.
+4. Match the expanded expression with `graphProjectionFormula U X`.
+-/
 theorem projection_graphSubspace_formula
     (U : Submodule 𝕜 E) [U.HasOrthogonalProjection]
     (X : E →L[𝕜] E) (hX : IsAngularOperator U X) :
     projection (graphSubspace U X) = graphProjectionFormula U X := by
   sorry
 
-/-- Tangent of the maximal angle is the angular-operator norm. -/
+/-- Tangent of the maximal angle is the angular-operator norm. 
+
+Lean proof route for a weaker agent:
+
+1. Use `projection_graphSubspace_formula` to compute the gap between `U` and the graph.
+2. Show the gap is `‖X‖/sqrt(1+‖X‖²)` by functional calculus and spectral mapping.
+3. Apply the scalar identity `tan(arcsin(x/sqrt(1+x²)))=x` for `x≥0`.
+-/
 theorem tan_maximalAngle_eq_norm_angularOperator
     (U : Submodule 𝕜 E) [U.HasOrthogonalProjection]
     (X : E →L[𝕜] E) (hX : IsAngularOperator U X) :
     Real.tan (maximalAngle U (graphSubspace U X)) = ‖X‖ := by
   sorry
 
-/-- Contractive angular operators correspond to angles below `π / 4`. -/
+/-- Contractive angular operators correspond to angles below `π / 4`. 
+
+Lean proof route for a weaker agent:
+
+1. Rewrite the angle with `tan_maximalAngle_eq_norm_angularOperator`.
+2. Establish `0≤maximalAngle<π/2` for a graph subspace.
+3. Use strict monotonicity of `tan` and `tan(π/4)=1` to prove both implications.
+-/
 theorem norm_angularOperator_lt_one_iff
     (U : Submodule 𝕜 E) [U.HasOrthogonalProjection]
     (X : E →L[𝕜] E) (hX : IsAngularOperator U X) :

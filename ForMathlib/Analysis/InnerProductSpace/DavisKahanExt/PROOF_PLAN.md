@@ -272,3 +272,11 @@ Treat these as later waves:
 
 This order maximizes early reuse and prevents the Borel, ideal, and unbounded
 frontiers from blocking the finite-dimensional programme.
+
+## Per-theorem agent instructions
+
+Every theorem declaration in this directory now has a `Lean proof route for a
+weaker agent` in its docstring.  Before starting a proof, also read
+`SIGNATURE_AUDIT.md`; it records which declarations were strengthened and
+which foundational APIs still require redesign.  Cross-directory observations
+for the finite agent are isolated in `NON_EXT_AGENT_HANDOFF.md`.

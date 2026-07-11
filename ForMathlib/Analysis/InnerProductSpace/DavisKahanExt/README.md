@@ -90,3 +90,11 @@ from `SpectralProjection`, `SymmetricIdeals`, and the unbounded layers.
 
 Every Lean module points to the local proof distillation in
 `prose/InfiniteDimensionalDavisKahan.tex`.
+
+## Agent audit documents
+
+- `SIGNATURE_AUDIT.md` records theorem-surface corrections and remaining Ext
+  design decisions.
+- `NON_EXT_AGENT_HANDOFF.md` records finite-tree issues and specialization
+  opportunities for the separate non-Ext agent.  This Ext overlay does not
+  modify the finite tree.

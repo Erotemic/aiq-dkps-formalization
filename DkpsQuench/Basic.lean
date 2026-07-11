@@ -155,21 +155,71 @@ measures `μ n` and events `E n`, it asserts: for every tolerance `δ > 0` there
 is an `N` such that for all `n > N` the event `E n` has probability at least
 `1 - δ`. This is the formal meaning of the paper's recurring phrase "with high
 probability". -/
-def HighProbAtTop {Ω : Type} [MeasurableSpace Ω]
+def HighProbAtTop {Ω : Type*} [MeasurableSpace Ω]
     (μ : ℕ → Measure Ω) (hμ : ∀ n, IsProbabilityMeasure (μ n)) (E : ℕ → Set Ω) : Prop :=
   ∀ δ : ENNReal, 0 < δ → ∃ N : ℕ, ∀ n > N, (μ n) (E n) ≥ 1 - δ
+
+/-- High-probability query efficiency for a fixed query subset.  Unlike
+`QQueryEfficient`, the estimator may depend on an auxiliary random sample
+`ω`, and the eventual risk comparison is required with probability tending to
+one. -/
+def HighProbQQueryEfficient {Ω : Type*} [MeasurableSpace Ω]
+    (μ : ℕ → Measure Ω) (hμ : ∀ n, IsProbabilityMeasure (μ n))
+    (Pf : Measure (Model Q X)) [IsProbabilityMeasure Pf]
+    (ℓ : ℝ → ℝ → ℝ)
+    (y : Model Q X → ℝ)
+    (h h' : ℕ → Ω → Model Q X → ℝ) : Prop :=
+  HighProbAtTop μ hμ (fun n => {ω |
+    Risk (Q := Q) (X := X) Pf ℓ y (h n ω) ≤
+      Risk (Q := Q) (X := X) Pf ℓ y (h' n ω)})
+
+/-- High-probability `m`-query efficiency relative to a full benchmark
+`Qstar`: every subset `Qsub ⊆ Qstar` of cardinality `m` satisfies the
+fixed-subset high-probability comparison.  Each subset may have its own
+eventual threshold, matching the quantifier order in the paper's definition. -/
+def HighProbMQueryEfficient {Ω : Type*} [MeasurableSpace Ω]
+    (μ : ℕ → Measure Ω) (hμ : ∀ n, IsProbabilityMeasure (μ n))
+    (Pf : Measure (Model Q X)) [IsProbabilityMeasure Pf]
+    (ℓ : ℝ → ℝ → ℝ) (Qstar : Finset Q) (m : ℕ)
+    (y : Model Q X → ℝ)
+    (h h' : Finset Q → ℕ → Ω → Model Q X → ℝ) : Prop :=
+  ∀ Qsub : Finset Q, Qsub ⊆ Qstar → Qsub.card = m →
+    HighProbQQueryEfficient (Q := Q) (X := X) μ hμ Pf ℓ y
+      (h Qsub) (h' Qsub)
+
+/-- High-probability query efficiency for every query budget below `M`, with
+all query subsets required to lie inside the full benchmark `Qstar`. -/
+def HighProbQueryEfficientBelow {Ω : Type*} [MeasurableSpace Ω]
+    (μ : ℕ → Measure Ω) (hμ : ∀ n, IsProbabilityMeasure (μ n))
+    (Pf : Measure (Model Q X)) [IsProbabilityMeasure Pf]
+    (ℓ : ℝ → ℝ → ℝ) (Qstar : Finset Q) (M : ℕ)
+    (y : Model Q X → ℝ)
+    (h h' : Finset Q → ℕ → Ω → Model Q X → ℝ) : Prop :=
+  ∀ m < M,
+    HighProbMQueryEfficient (Q := Q) (X := X) μ hμ Pf ℓ Qstar m y h h'
+
+/-- The paper's complete high-probability query-efficiency predicate: every
+strict query budget below the full benchmark cardinality is efficient. -/
+def HighProbQueryEfficient {Ω : Type*} [MeasurableSpace Ω]
+    (μ : ℕ → Measure Ω) (hμ : ∀ n, IsProbabilityMeasure (μ n))
+    (Pf : Measure (Model Q X)) [IsProbabilityMeasure Pf]
+    (ℓ : ℝ → ℝ → ℝ) (Qstar : Finset Q)
+    (y : Model Q X → ℝ)
+    (h h' : Finset Q → ℕ → Ω → Model Q X → ℝ) : Prop :=
+  HighProbQueryEfficientBelow (Q := Q) (X := X) μ hμ Pf ℓ
+    Qstar Qstar.card y h h'
 
 /-- Dependent-type variant of `HighProbAtTop`, where the sample space `Ω n` may
 itself vary with `n`. Internal generalization; not used by the paper-facing
 statements. -/
-def HighProbAtTopDep (Ω : ℕ → Type) (instΩ : ∀ n, MeasurableSpace (Ω n))
+def HighProbAtTopDep (Ω : ℕ → Type*) (instΩ : ∀ n, MeasurableSpace (Ω n))
     (μ : ∀ n, Measure (Ω n)) (hμ : ∀ n, IsProbabilityMeasure (μ n))
     (E : ∀ n, Set (Ω n)) : Prop :=
   ∀ δ : ENNReal, 0 < δ → ∃ N : ℕ, ∀ n > N, (μ n) (E n) ≥ 1 - δ
 
 /-- Single-`n` ("non-asymptotic") version: event `E` has probability at least
 `1 - δ`. Internal convenience predicate. -/
-def HighProb {Ω : Type} [MeasurableSpace Ω]
+def HighProb {Ω : Type*} [MeasurableSpace Ω]
     (μ : Measure Ω) [IsProbabilityMeasure μ] (E : Set Ω) (δ : ENNReal) : Prop :=
   μ E ≥ 1 - δ
 
@@ -237,5 +287,24 @@ noncomputable def hNN_estimator {n : ℕ} (hn : n > 0)
     (ψHat_target : Vec d)
     (y_ref : Fin n → ℝ) : ℝ :=
   y_ref (nnIndex hn ψHat_ref ψHat_target)
+
+
+/-- The finite set of all reference indices minimizing estimated distance to
+`ψHat_target`.  This exposes ties rather than resolving them by an arbitrary
+choice. -/
+noncomputable def nnMinimizers {n : ℕ} (hn : n > 0)
+    (ψHat_ref : Fin n → Vec d)
+    (ψHat_target : Vec d) : Finset (Fin n) :=
+  Finset.univ.filter fun i =>
+    IsArgmin (fun j => ‖ψHat_ref j - ψHat_target‖) i
+
+/-- Average the reference scores over every tied estimated nearest neighbor.
+This is the estimator described literally in the Quench paper. -/
+noncomputable def hNNTieAverage {n : ℕ} (hn : n > 0)
+    (ψHat_ref : Fin n → Vec d)
+    (ψHat_target : Vec d)
+    (y_ref : Fin n → ℝ) : ℝ :=
+  let S := nnMinimizers hn ψHat_ref ψHat_target
+  (∑ i ∈ S, y_ref i) / (S.card : ℝ)
 
 end NN_Definitions

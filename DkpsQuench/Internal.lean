@@ -84,7 +84,7 @@ end Theorem2_Proof_Steps
 
 section HighProb_Lemmas
 
-variable {Ω : Type} [MeasurableSpace Ω]
+variable {Ω : Type*} [MeasurableSpace Ω]
 
 /-- Monotonicity of `HighProbAtTop`: if a smaller event sequence `E` holds with
 high probability and `E n ⊆ F n` for every `n`, then `F` also holds with high
@@ -104,6 +104,7 @@ lemma HighProbAtTop.mono
   refine le_trans (hN n hn) ?_
   apply MeasureTheory.measure_mono
   exact h_subset n
+
 
 end HighProb_Lemmas
 
@@ -136,7 +137,7 @@ lemma ennreal_inter_bound {δ p q : ENNReal}
 
 section HighProb_Lemmas
 
-variable {Ω : Type} [MeasurableSpace Ω]
+variable {Ω : Type*} [MeasurableSpace Ω]
 
 /-- Intersection of high-probability events: if `E` and `F` each hold with high
 probability, so does their intersection `E ∩ F` (a union-bound argument).
@@ -186,6 +187,70 @@ lemma HighProbAtTop.inter
         refine le_trans ?_ h3;
         exact ennreal_inter_bound h1 h2
       exact h3
+
+/-- A finite conjunction of measurable events is measurable.  This avoids
+introducing countability requirements on the ambient index type: only the
+explicit finite set of indices is intersected. -/
+lemma measurableSet_finset_all
+    {ι : Type*} (s : Finset ι) (E : ι → Set Ω)
+    (hE : ∀ i ∈ s, MeasurableSet (E i)) :
+    MeasurableSet {ω | ∀ i ∈ s, ω ∈ E i} := by
+  classical
+  induction s using Finset.induction_on with
+  | empty => simp
+  | @insert a s ha ih =>
+      have ha_meas : MeasurableSet (E a) :=
+        hE a (Finset.mem_insert_self a s)
+      have hs_meas : MeasurableSet {ω | ∀ i ∈ s, ω ∈ E i} := by
+        apply ih
+        intro i hi
+        exact hE i (Finset.mem_insert_of_mem hi)
+      have heq : {ω | ∀ i ∈ insert a s, ω ∈ E i} =
+          E a ∩ {ω | ∀ i ∈ s, ω ∈ E i} := by
+        ext ω
+        simp
+      rw [heq]
+      exact ha_meas.inter hs_meas
+
+/-- A finite conjunction of measurable high-probability event sequences is
+again high probability. -/
+lemma HighProbAtTop.finset_all
+    {ι : Type*} {μ : ℕ → Measure Ω} {hμ : ∀ n, IsProbabilityMeasure (μ n)}
+    (s : Finset ι) (E : ι → ℕ → Set Ω)
+    (hE : ∀ i ∈ s, HighProbAtTop μ hμ (E i))
+    (hE_meas : ∀ i ∈ s, ∀ n, MeasurableSet (E i n)) :
+    HighProbAtTop μ hμ (fun n => {ω | ∀ i ∈ s, ω ∈ E i n}) := by
+  classical
+  induction s using Finset.induction_on with
+  | empty =>
+      intro δ hδ
+      refine ⟨0, ?_⟩
+      intro n hn
+      simp
+  | @insert a s ha ih =>
+      have ha_hp : HighProbAtTop μ hμ (E a) :=
+        hE a (Finset.mem_insert_self a s)
+      have hs_hp : HighProbAtTop μ hμ
+          (fun n => {ω | ∀ i ∈ s, ω ∈ E i n}) := by
+        apply ih
+        · intro i hi
+          exact hE i (Finset.mem_insert_of_mem hi)
+        · intro i hi n
+          exact hE_meas i (Finset.mem_insert_of_mem hi) n
+      have hs_meas : ∀ n,
+          MeasurableSet {ω | ∀ i ∈ s, ω ∈ E i n} := by
+        intro n
+        exact measurableSet_finset_all s (fun i => E i n)
+          (fun i hi => hE_meas i (Finset.mem_insert_of_mem hi) n)
+      have hinter := HighProbAtTop.inter ha_hp hs_hp
+        (fun n => hE_meas a (Finset.mem_insert_self a s) n) hs_meas
+      have heq : (fun n => {ω | ∀ i ∈ insert a s, ω ∈ E i n}) =
+          (fun n => E a n ∩ {ω | ∀ i ∈ s, ω ∈ E i n}) := by
+        funext n
+        ext ω
+        simp
+      rw [heq]
+      exact hinter
 
 end HighProb_Lemmas
 
@@ -354,7 +419,7 @@ end Theorem2_Proof_Steps
 
 section HighProb_Lemmas
 
-variable {Ω : Type} [MeasurableSpace Ω]
+variable {Ω : Type*} [MeasurableSpace Ω]
 
 /-- "Eventual" monotonicity of `HighProbAtTop`: it suffices that `E n ⊆ F n`
 holds *eventually* (for all large `n`), rather than for every `n`, to transfer
@@ -400,14 +465,114 @@ lemma nnIndex_isArgmin {n : ℕ} (hn : n > 0)
   unfold nnIndex
   apply Classical.choose_spec
 
+
+@[simp] lemma mem_nnMinimizers_iff {n : ℕ} (hn : n > 0)
+    (ψHat_ref : Fin n → Vec d) (ψHat_target : Vec d) (i : Fin n) :
+    i ∈ nnMinimizers hn ψHat_ref ψHat_target ↔
+      IsArgmin (fun j => ‖ψHat_ref j - ψHat_target‖) i := by
+  simp [nnMinimizers]
+
+lemma nnIndex_mem_nnMinimizers {n : ℕ} (hn : n > 0)
+    (ψHat_ref : Fin n → Vec d) (ψHat_target : Vec d) :
+    nnIndex hn ψHat_ref ψHat_target ∈ nnMinimizers hn ψHat_ref ψHat_target := by
+  rw [mem_nnMinimizers_iff]
+  exact nnIndex_isArgmin hn ψHat_ref ψHat_target
+
+lemma nnMinimizers_nonempty {n : ℕ} (hn : n > 0)
+    (ψHat_ref : Fin n → Vec d) (ψHat_target : Vec d) :
+    (nnMinimizers hn ψHat_ref ψHat_target).Nonempty :=
+  ⟨nnIndex hn ψHat_ref ψHat_target,
+    nnIndex_mem_nnMinimizers hn ψHat_ref ψHat_target⟩
+
+/-- An average of tied-nearest-neighbor scores inherits any common absolute
+error bound satisfied by every tied minimizer. -/
+lemma abs_hNNTieAverage_sub_le {n : ℕ} (hn : n > 0)
+    (ψHat_ref : Fin n → Vec d) (ψHat_target : Vec d)
+    (y_ref : Fin n → ℝ) (y_target B : ℝ)
+    (hB : 0 ≤ B)
+    (hbound : ∀ i ∈ nnMinimizers hn ψHat_ref ψHat_target,
+      |y_ref i - y_target| ≤ B) :
+    |hNNTieAverage hn ψHat_ref ψHat_target y_ref - y_target| ≤ B := by
+  let S := nnMinimizers hn ψHat_ref ψHat_target
+  have hS : S.Nonempty := by
+    simpa [S] using nnMinimizers_nonempty hn ψHat_ref ψHat_target
+  have hcard_nat : 0 < S.card := Finset.card_pos.mpr hS
+  have hcard : 0 < (S.card : ℝ) := by exact_mod_cast hcard_nat
+  have hsum :
+      |∑ i ∈ S, (y_ref i - y_target)| ≤ (S.card : ℝ) * B := by
+    calc
+      |∑ i ∈ S, (y_ref i - y_target)|
+          ≤ ∑ i ∈ S, |y_ref i - y_target| :=
+            Finset.abs_sum_le_sum_abs _ _
+      _ ≤ ∑ _i ∈ S, B :=
+        Finset.sum_le_sum fun i hi => hbound i (by simpa [S] using hi)
+      _ = (S.card : ℝ) * B := by simp [mul_comm]
+  have havg_rewrite :
+      (∑ i ∈ S, y_ref i) / (S.card : ℝ) - y_target =
+        (∑ i ∈ S, (y_ref i - y_target)) / (S.card : ℝ) := by
+    field_simp [ne_of_gt hcard]
+    simp [Finset.sum_sub_distrib]
+  rw [hNNTieAverage]
+  change |(∑ i ∈ S, y_ref i) / (S.card : ℝ) - y_target| ≤ B
+  rw [havg_rewrite, abs_div, abs_of_pos hcard]
+  exact (div_le_iff₀ hcard).2 (by simpa [mul_comm] using hsum)
+
+/-- Every tied estimated nearest neighbor satisfies the same deterministic
+score-error bound, so their average satisfies it as well. -/
+lemma step5_tieAverage_pointwise_error
+    {n : ℕ} (hn : n > 0)
+    (ψ ψHat : Fin n → Vec d)
+    (ψ_target ψHat_target : Vec d)
+    (c ρ γ : ℝ)
+    (h_conc_ref : ∀ i, ‖ψHat i - ψ i‖ ≤ c)
+    (h_conc_target : ‖ψHat_target - ψ_target‖ ≤ c)
+    (h_supp : ∃ j : Fin n, ‖ψ j - ψ_target‖ ≤ ρ)
+    (y_ref : Fin n → ℝ) (y_target : ℝ)
+    (h_lip : ∀ i, |y_ref i - y_target| ≤ γ * ‖ψ i - ψ_target‖)
+    (h_gamma_nonneg : 0 ≤ γ) (h_rho_nonneg : 0 ≤ ρ)
+    (h_c_nonneg : 0 ≤ c) :
+    |hNNTieAverage hn ψHat ψHat_target y_ref - y_target| ≤
+      γ * (ρ + 4 * c) := by
+  apply abs_hNNTieAverage_sub_le hn ψHat ψHat_target y_ref y_target
+    (γ * (ρ + 4 * c))
+  · positivity
+  · intro i hi
+    apply step5_pointwise_error n ψ ψHat ψ_target ψHat_target i
+      ((mem_nnMinimizers_iff hn ψHat ψHat_target i).1 hi)
+      c ρ γ h_conc_ref h_conc_target h_supp y_ref y_target
+      h_lip h_gamma_nonneg h_rho_nonneg h_c_nonneg
+
 end NN_Definitions_Properties
+
+section MSE_Properties
+
+variable {Q : Type u} [DecidableEq Q]
+variable {X : Type v} [MeasurableSpace X]
+
+/-- A uniform pointwise squared-error bound integrates to the same MSE bound
+under a probability measure. -/
+lemma mse_le_of_pointwise_sq_error_le
+    (Pf : Measure (Model Q X)) [IsProbabilityMeasure Pf]
+    (y yHat : Model Q X → ℝ) (ε : ℝ)
+    (hε : 0 ≤ ε)
+    (hbound : ∀ f, (yHat f - y f) ^ 2 ≤ ε) :
+    MSE Pf y yHat ≤ ε := by
+  have hint : ∫ f, (yHat f - y f) ^ 2 ∂Pf ≤ ∫ _f, ε ∂Pf := by
+    refine MeasureTheory.integral_mono_of_nonneg ?_ ?_ ?_
+    · exact Filter.Eventually.of_forall fun f => sq_nonneg _
+    · norm_num
+    · exact Filter.Eventually.of_forall hbound
+  change (∫ f, (yHat f - y f) ^ 2 ∂Pf) ≤ ε
+  exact hint.trans_eq (by simp)
+
+end MSE_Properties
 
 section Theorem2_Part1_Proof
 
 variable {Q : Type u} [DecidableEq Q]
 variable {X : Type v} [MeasurableSpace X]
 variable {d : ℕ}
-variable {Ω : Type} [MeasurableSpace Ω]
+variable {Ω : Type*} [MeasurableSpace Ω]
 
 /-- **Abstract engine theorem — Theorem 2, Part 1 (MSE ≤ ε with high
 probability).** This is the abstract (arbitrary-embedding) form of the paper's
@@ -489,7 +654,7 @@ section Theorem2_Part2_Proof
 variable {Q : Type u} [DecidableEq Q]
 variable {X : Type v} [MeasurableSpace X]
 variable {d : ℕ}
-variable {Ω : Type} [MeasurableSpace Ω]
+variable {Ω : Type*} [MeasurableSpace Ω]
 
 /-- **Abstract engine theorem — Theorem 2, Part 2 (query-efficiency).** This is
 the abstract (arbitrary-embedding) form of the paper's query-efficiency

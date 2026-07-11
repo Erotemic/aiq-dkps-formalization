@@ -1,7 +1,7 @@
 /-
 Gram realization of a positive-semidefinite, low-rank real matrix.
 
-This file proves the true linear-algebra theorem underlying the `sorry`'d
+This file proves the true linear-algebra theorem underlying the unproved
 population CMDS realization seam in `Acharyya2025.SpectralPipeline`:
 
   a real symmetric positive-semidefinite matrix `B` of rank at most `d` is the

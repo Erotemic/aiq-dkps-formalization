@@ -1,5 +1,5 @@
 /-
-# Vector-valued sample-mean MSE (pending: confirm novelty vs scalar variance) -- solution / axiom audit
+# Vector-valued sample-mean MSE (pending: confirm novelty vs scalar variance) -- solution / dependency audit
 -/
 import ForMathlib.Probability.Moments.SampleMean
 

@@ -1,5 +1,5 @@
 /-
-# CFC-in-element + compact-existential measurability (pending: destination unsettled) -- solution / axiom audit
+# CFC-in-element + compact-existential measurability (pending: destination unsettled) -- solution / dependency audit
 -/
 import ForMathlib.MeasureTheory.CfcMeasurable
 import ForMathlib.MeasureTheory.CompactExists

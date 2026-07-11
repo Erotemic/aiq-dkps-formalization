@@ -1,5 +1,5 @@
 /-
-# Matrix rank factorization (pending: relate to abstract rank_le_iff_exists_linearMap) -- solution / axiom audit
+# Matrix rank factorization (pending: relate to abstract rank_le_iff_exists_linearMap) -- solution / dependency audit
 -/
 import ForMathlib.LinearAlgebra.Matrix.RankFactorization
 

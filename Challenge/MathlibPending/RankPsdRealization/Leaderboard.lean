@@ -1,5 +1,5 @@
 /-
-# Rank-controlled PSD Gram realization (pending: only the rank-control is novel) -- solution / axiom audit
+# Rank-controlled PSD Gram realization (pending: only the rank-control is novel) -- solution / dependency audit
 -/
 import ForMathlib.Analysis.Matrix.Spectrum
 import ForMathlib.LinearAlgebra.Matrix.PosDef

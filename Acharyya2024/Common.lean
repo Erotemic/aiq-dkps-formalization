@@ -2,10 +2,10 @@
 Shared finite-dimensional definitions for the Acharyya DKPS foundation scaffolds.
 
 This file intentionally contains definitions only. The two paper-specific libraries
-use `sorry` for unfinished proof obligations rather than declaration-level
+leave open obligations for unfinished proofs rather than declaration-level
 assumptions, so `#print axioms` on scaffold theorems exposes only the usual
-trusted Lean/Mathlib basis plus any completed dependencies, while `grep sorry`
-shows the open work directly.
+trusted Lean/Mathlib basis plus any completed dependencies, while dependency
+scanning shows the open work directly.
 -/
 
 import Mathlib

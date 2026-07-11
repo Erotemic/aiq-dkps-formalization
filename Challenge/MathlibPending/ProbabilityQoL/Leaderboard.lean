@@ -1,5 +1,5 @@
 /-
-# Probability QoL micro-lemmas (pending: too small to stand alone) -- solution / axiom audit
+# Probability QoL micro-lemmas (pending: too small to stand alone) -- solution / dependency audit
 -/
 import ForMathlib.MeasureTheory.Measure.Typeclasses.Probability
 import ForMathlib.Probability.Moments.Variance

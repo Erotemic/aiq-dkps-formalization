@@ -1,7 +1,7 @@
 /-
 # CFC-in-element + compact-existential measurability (pending: destination unsettled)
 
-`Conformance.lean` imports only Mathlib and states the leaf theorem(s) as `sorry`;
+`Conformance.lean` imports only Mathlib and states the leaf theorem(s) as open obligations;
 `Leaderboard.lean` imports the project and supplies the proofs. Only the leaf
 (top-level) theorems are listed -- `#print axioms` on a leaf transitively certifies its
 whole proof tree.

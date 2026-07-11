@@ -1,5 +1,5 @@
 /-
-# Courant-Fischer min-max + Weyl perturbation (Mathlib candidate 02) -- solution / axiom audit
+# Courant-Fischer min-max + Weyl perturbation (Mathlib candidate 02) -- solution / dependency audit
 -/
 import ForMathlib.Analysis.InnerProductSpace.CourantFischer
 

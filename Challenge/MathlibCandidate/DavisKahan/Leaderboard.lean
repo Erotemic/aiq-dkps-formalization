@@ -1,5 +1,5 @@
 /-
-# Davis-Kahan cross-block / sin-Theta (Mathlib candidate 03) -- solution / axiom audit
+# Davis-Kahan cross-block / sin-Theta (Mathlib candidate 03) -- solution / dependency audit
 -/
 import ForMathlib.Analysis.InnerProductSpace.DavisKahan
 

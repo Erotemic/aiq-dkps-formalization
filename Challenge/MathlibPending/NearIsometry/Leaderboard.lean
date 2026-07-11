@@ -1,5 +1,5 @@
 /-
-# Quantitative polar factor / near-isometry (pending: niche) -- solution / axiom audit
+# Quantitative polar factor / near-isometry (pending: niche) -- solution / dependency audit
 -/
 import ForMathlib.Analysis.InnerProductSpace.NearIsometry
 

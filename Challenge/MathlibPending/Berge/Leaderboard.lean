@@ -1,5 +1,5 @@
 /-
-# Berge maximum theorem fragments (pending: likely too narrow) -- solution / axiom audit
+# Berge maximum theorem fragments (pending: likely too narrow) -- solution / dependency audit
 -/
 import ForMathlib.Topology.Berge
 

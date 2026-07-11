@@ -5,7 +5,7 @@ The surfaced leaf is Weyl's perturbation inequality; the discrete Courant-Fische
 min-max characterization is the proof vehicle (developed in
 `ForMathlib.Analysis.InnerProductSpace.CourantFischer`), not a separately listed leaf.
 
-`Conformance.lean` imports only Mathlib and states the leaf theorem(s) as `sorry`;
+`Conformance.lean` imports only Mathlib and states the leaf theorem(s) as open obligations;
 `Leaderboard.lean` imports the project and supplies the proofs. Only the leaf
 (top-level) theorems are listed -- `#print axioms` on a leaf transitively certifies its
 whole proof tree.

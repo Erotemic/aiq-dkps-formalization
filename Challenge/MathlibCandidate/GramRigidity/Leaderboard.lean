@@ -1,5 +1,5 @@
 /-
-# Gram rigidity (Mathlib candidate 01) -- solution / axiom audit
+# Gram rigidity (Mathlib candidate 01) -- solution / dependency audit
 -/
 import ForMathlib.Analysis.InnerProductSpace.GramMatrix
 

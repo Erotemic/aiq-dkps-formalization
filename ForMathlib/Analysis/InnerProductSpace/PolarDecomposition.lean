@@ -1,7 +1,7 @@
 /-
 Staged for Mathlib: a new `Mathlib/Analysis/InnerProductSpace/PolarDecomposition.lean`.
 
-Sub-dev III of the operator polar decomposition project — COMPLETE (sorry-free, axiom-clean:
+Sub-dev III of the operator polar decomposition project — COMPLETE (proof-complete; reduction uses only:
 `propext, Classical.choice, Quot.sound`). Tickets PD-08..PD-12.
 -/
 

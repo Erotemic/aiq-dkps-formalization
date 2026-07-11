@@ -1,5 +1,5 @@
 /-
-# Countable restrict-cover measurability (pending: minor) -- solution / axiom audit
+# Countable restrict-cover measurability (pending: minor) -- solution / dependency audit
 -/
 import ForMathlib.MeasureTheory.CfcMeasurable
 

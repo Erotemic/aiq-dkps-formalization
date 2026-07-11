@@ -19,3 +19,15 @@ Tokens/model are MEASURED from your session transcript (deduped by message id �
 hand-count). The ledger `.llm_resource_tally/ledger/` (at this repo's root) is append-only,
 per-session, concurrency-safe, and stores measurements only.
 <!-- END llm_resource_tally -->
+
+## Lean source conventions
+
+- **Never write the words `sorry` or `axiom` in comments or docstrings.** A genuine
+  incomplete proof may use the `sorry` term in tactic/term position (that is code, not a
+  comment), but the literal word must not appear in any `--` line, `/- … -/` block, or
+  `/-- … -/` docstring. This keeps `grep`/CI sorry- and axiom-detection free of false
+  positives. When documenting an unfinished obligation or a dead end, describe it without
+  naming the tactic — e.g. "left incomplete", "not yet discharged", "open obligation",
+  "unproved below" — and refer to `#print axioms` as "the axiom audit" only outside Lean
+  sources. To flag work for a stronger agent, write the explanation in the docstring using
+  such wording, never the banned words.

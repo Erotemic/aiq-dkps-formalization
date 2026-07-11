@@ -2,7 +2,7 @@
 Staged for Mathlib: additions to `Mathlib/Analysis/InnerProductSpace/Positive.lean`
 (and a new `Mathlib/Analysis/InnerProductSpace/PositiveSqrt.lean`).
 
-Sub-dev I of the operator polar decomposition project — COMPLETE (sorry-free, axiom-clean:
+Sub-dev I of the operator polar decomposition project — COMPLETE (proof-complete; reduction uses only:
 `propext, Classical.choice, Quot.sound`). Tickets PD-01..PD-04.
 -/
 

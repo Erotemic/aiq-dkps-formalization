@@ -20,7 +20,7 @@ The proof chains:
   * the deterministic Appendix A.2 reduction
     `frobSub_responseDist_le_of_uniform_errors` from `Acharyya2024.Common`.
 
-No `axiom`, no `sorry`.
+No added axioms, no open proof obligations.
 -/
 
 import Acharyya2024.Common

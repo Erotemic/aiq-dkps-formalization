@@ -1,7 +1,7 @@
 /-
 Staged for Mathlib: a new `Mathlib/Analysis/InnerProductSpace/IntertwiningUnitary.lean`.
 
-Milestone 2 of the operator polar decomposition project — COMPLETE (sorry-free, axiom-clean:
+Milestone 2 of the operator polar decomposition project — COMPLETE (proof-complete; reduction uses only:
 `propext, Classical.choice, Quot.sound`). Tickets PD-13..PD-17.
 -/
 

@@ -1,5 +1,5 @@
 /-
-# TendstoInMeasure from a vanishing rate (pending: verify substantive) -- solution / axiom audit
+# TendstoInMeasure from a vanishing rate (pending: verify substantive) -- solution / dependency audit
 -/
 import ForMathlib.MeasureTheory.Function.ConvergenceInMeasure
 

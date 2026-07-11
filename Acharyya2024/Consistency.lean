@@ -5,7 +5,7 @@ Acharyya, Trosset, Priebe, Helm.
 "Consistent estimation of generative model representations in the data kernel perspective space"
 arXiv:2409.17308.
 
-Status (2026-06-11): COMPLETE — no `sorry` remains in this file.
+Status (2026-06-11): COMPLETE — no open obligations remain in this file.
 
 - The probabilistic Trosset–Priebe raw-stress stability is proved in
   `Acharyya2024.RawStress`: deterministic core (minimizer existence, √-stress

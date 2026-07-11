@@ -1,3 +1,3 @@
 Isolated compilation check for the foundations-capstone overlay.
 
-Diagnostics harness revision 4.
+Diagnostics harness revision 5.

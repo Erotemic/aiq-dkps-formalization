@@ -1,7 +1,7 @@
 /-
 Copyright (c) 2026 Kitware, Inc. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
-Authors: Jon Crall, Claude Opus 4.8
+Authors: Jon Crall, Claude Opus 4.8, GPT 5.6 High
 -/
 import ForMathlib.Analysis.InnerProductSpace.DavisKahanExt.SinTheta
 
@@ -47,15 +47,15 @@ theorem re_inner_le_of_spectrum_subset_Iic
   have hcx : RCLike.re ⟪c • x, x⟫_ℂ = c * ‖x‖ ^ 2 := by
     rw [RCLike.real_smul_eq_coe_smul (K := ℂ), inner_smul_left, RCLike.conj_ofReal,
       RCLike.re_ofReal_mul, inner_self_eq_norm_sq]
-  simp only [ContinuousLinearMap.sub_apply, Algebra.algebraMap_eq_smul_one,
-    ContinuousLinearMap.smul_apply, ContinuousLinearMap.one_apply,
+  simp only [sub_apply, Algebra.algebraMap_eq_smul_one,
+    smul_apply, one_apply_eq_self,
     inner_sub_left, map_sub] at hx
   rw [hcx] at hx
   linarith
 
 /-- **Spectral lower bound ⟹ quadratic-form lower bound.**  If the real spectrum
 of a self-adjoint `T` lies in `[c, ∞)`, then `c ‖x‖² ≤ re ⟪T x, x⟫`. -/
-theorem le_re_inner_of_Ici_subset_spectrum
+theorem le_re_inner_of_spectrum_subset_Ici
     (T : H →L[ℂ] H) (hT : IsSelfAdjoint T) {c : ℝ}
     (hσ : spectrum ℝ T ⊆ Set.Ici c) (x : H) :
     c * ‖x‖ ^ 2 ≤ RCLike.re ⟪T x, x⟫_ℂ := by
@@ -67,11 +67,104 @@ theorem le_re_inner_of_Ici_subset_spectrum
   have hcx : RCLike.re ⟪c • x, x⟫_ℂ = c * ‖x‖ ^ 2 := by
     rw [RCLike.real_smul_eq_coe_smul (K := ℂ), inner_smul_left, RCLike.conj_ofReal,
       RCLike.re_ofReal_mul, inner_self_eq_norm_sq]
-  simp only [ContinuousLinearMap.sub_apply, Algebra.algebraMap_eq_smul_one,
-    ContinuousLinearMap.smul_apply, ContinuousLinearMap.one_apply,
+  simp only [sub_apply, Algebra.algebraMap_eq_smul_one,
+    smul_apply, one_apply_eq_self,
     inner_sub_left, map_sub] at hx
   rw [hcx] at hx
   linarith
+
+
+@[deprecated le_re_inner_of_spectrum_subset_Ici (since := "2026-07-11")]
+alias le_re_inner_of_Ici_subset_spectrum := le_re_inner_of_spectrum_subset_Ici
+
+/-! ### Concrete restriction-spectrum bridges
+
+The older `restrictedSpectrum` predicate in `Basic.lean` is intentionally an
+abstract roadmap interface.  The results below use mathlib's actual restriction
+`A.restrict hU` and therefore provide a fully concrete bridge from spectral
+containment on a reducing block to the quadratic-form hypotheses consumed by
+the dimension-free Sylvester and `sin Θ` core.
+-/
+
+/-- A subspace admitting an orthogonal projection is complete when the ambient
+Hilbert space is complete.
+
+Lean proof route for a weaker agent:
+
+1. Use `U.orthogonal_orthogonal` to identify `U` with `Uᗮᗮ`.
+2. Orthogonal complements are closed, hence complete in a complete metric space.
+3. Rewrite the resulting completeness statement along the identification.
+-/
+theorem isComplete_coe_of_hasOrthogonalProjection
+    (U : Submodule ℂ H) [U.HasOrthogonalProjection] :
+    IsComplete (U : Set H) := by
+  have hclosed : IsClosed ((Uᗮ)ᗮ : Set H) := Uᗮ.isClosed_orthogonal
+  simpa using hclosed.isComplete
+
+/-- A spectral upper bound for the actual restriction of a self-adjoint
+operator to a reducing subspace gives the corresponding quadratic-form upper
+bound on that subspace.
+
+Lean proof route for a weaker agent:
+
+1. Install `CompleteSpace U` from
+   `isComplete_coe_of_hasOrthogonalProjection`.
+2. Show `A.restrict hU` is self-adjoint by restricting the inner-product
+   identity `hA` to subtype vectors.
+3. Apply `re_inner_le_of_spectrum_subset_Iic` on the subtype Hilbert space.
+4. Coerce the subtype vector back to `H`; the restricted map, norm, and inner
+   product reduce definitionally to their ambient counterparts.
+-/
+theorem re_inner_le_on_subspace_of_restriction_spectrum_subset_Iic
+    {A : H →L[ℂ] H} (hA : IsSelfAdjointOperator A)
+    {U : Submodule ℂ H} [U.HasOrthogonalProjection]
+    (hU : ∀ x ∈ U, A x ∈ U) {c : ℝ}
+    (hσ : spectrum ℝ (A.restrict hU) ⊆ Set.Iic c)
+    {x : H} (hx : x ∈ U) :
+    RCLike.re ⟪A x, x⟫_ℂ ≤ c * ‖x‖ ^ 2 := by
+  letI : CompleteSpace U :=
+    completeSpace_coe_iff_isComplete.mpr
+      (isComplete_coe_of_hasOrthogonalProjection U)
+  have hres : IsSelfAdjoint (A.restrict hU) := by
+    rw [ContinuousLinearMap.isSelfAdjoint_iff_isSymmetric]
+    intro y z
+    change ⟪A (y : H), (z : H)⟫_ℂ = ⟪(y : H), A (z : H)⟫_ℂ
+    exact hA y z
+  have h := re_inner_le_of_spectrum_subset_Iic
+    (A.restrict hU) hres hσ (⟨x, hx⟩ : U)
+  change RCLike.re ⟪A x, x⟫_ℂ ≤ c * ‖x‖ ^ 2 at h
+  exact h
+
+/-- A spectral lower bound for the actual restriction of a self-adjoint
+operator to a reducing subspace gives the corresponding quadratic-form lower
+bound on that subspace.
+
+Lean proof route for a weaker agent:
+
+1. Install completeness of the subtype from the orthogonal projection.
+2. Restrict self-adjointness to `A.restrict hU`.
+3. Apply `le_re_inner_of_spectrum_subset_Ici` to the subtype vector.
+4. Reduce the subtype coercions definitionally.
+-/
+theorem le_re_inner_on_subspace_of_restriction_spectrum_subset_Ici
+    {A : H →L[ℂ] H} (hA : IsSelfAdjointOperator A)
+    {U : Submodule ℂ H} [U.HasOrthogonalProjection]
+    (hU : ∀ x ∈ U, A x ∈ U) {c : ℝ}
+    (hσ : spectrum ℝ (A.restrict hU) ⊆ Set.Ici c)
+    {x : H} (hx : x ∈ U) :
+    c * ‖x‖ ^ 2 ≤ RCLike.re ⟪A x, x⟫_ℂ := by
+  letI : CompleteSpace U :=
+    completeSpace_coe_iff_isComplete.mpr
+      (isComplete_coe_of_hasOrthogonalProjection U)
+  have hres : IsSelfAdjoint (A.restrict hU) := by
+    rw [ContinuousLinearMap.isSelfAdjoint_iff_isSymmetric]
+    intro y z
+    change ⟪A (y : H), (z : H)⟫_ℂ = ⟪(y : H), A (z : H)⟫_ℂ
+    exact hA y z
+  have h := le_re_inner_of_spectrum_subset_Ici
+    (A.restrict hU) hres hσ (⟨x, hx⟩ : U)
+  change c * ‖x‖ ^ 2 ≤ RCLike.re ⟪A x, x⟫_ℂ at h
+  exact h
 
 /-! ### The sharp projector-difference norm identity
 
@@ -108,7 +201,7 @@ theorem norm_add_eq_max_of_block {P A B : H →L[ℂ] H}
     have horth : ⟪P x, (1 - P) x⟫_ℂ = 0 := by rw [hPsymC x ((1 - P) x), hPcx, inner_zero_right]
     have h := norm_add_sq (𝕜 := ℂ) (P x) ((1 - P) x)
     rw [show P x + (1 - P) x = x by
-      rw [ContinuousLinearMap.sub_apply, ContinuousLinearMap.one_apply]; abel] at h
+      rw [sub_apply, one_apply_eq_self]; abel] at h
     simp only [horth, map_zero, mul_zero, add_zero, zero_add] at h
     linarith
   refine le_antisymm ?_ ?_
@@ -118,7 +211,7 @@ theorem norm_add_eq_max_of_block {P A B : H →L[ℂ] H}
     have hnormsq : ‖(A + B) x‖ ^ 2 = ‖A x‖ ^ 2 + ‖B x‖ ^ 2 := by
       have h := norm_add_sq (𝕜 := ℂ) (A x) (B x)
       simp only [horthAB, map_zero, mul_zero, add_zero, zero_add] at h
-      simp only [ContinuousLinearMap.add_apply]; linarith
+      simp only [add_apply]; linarith
     have hAxle : ‖A x‖ ≤ max ‖A‖ ‖B‖ * ‖P x‖ := by
       rw [← hAppx x]; exact (ContinuousLinearMap.le_opNorm _ _).trans (by gcongr; exact le_max_left _ _)
     have hBxle : ‖B x‖ ≤ max ‖A‖ ‖B‖ * ‖(1 - P) x‖ := by
@@ -139,11 +232,11 @@ theorem norm_add_eq_max_of_block {P A B : H →L[ℂ] H}
   · refine max_le ?_ ?_
     · refine ContinuousLinearMap.opNorm_le_bound _ (norm_nonneg _) fun x => ?_
       have hval : A x = (A + B) (P x) := by
-        rw [ContinuousLinearMap.add_apply, hBPx, add_zero, hAppx]
+        rw [add_apply, hBPx, add_zero, hAppx]
       rw [hval]; exact (ContinuousLinearMap.le_opNorm _ _).trans (by gcongr; exact hPnorm x)
     · refine ContinuousLinearMap.opNorm_le_bound _ (norm_nonneg _) fun x => ?_
       have hval : B x = (A + B) ((1 - P) x) := by
-        rw [ContinuousLinearMap.add_apply, hApx, zero_add, hBcpx]
+        rw [add_apply, hApx, zero_add, hBcpx]
       rw [hval]; exact (ContinuousLinearMap.le_opNorm _ _).trans (by gcongr; exact hcompnorm x)
 
 theorem norm_starProjection_sub_eq_max (U V : Submodule ℂ H)
@@ -243,6 +336,61 @@ theorem opNorm_starProjection_sub_le_of_coercive
       (Submodule.starProjection_orthogonal' U).symm]
     have h := sinTheta_directed_coercive hB hA hW (reduces_orthogonalComplement hA hU.2) hg hWc hUlo
     rwa [show ‖A - B‖ = ‖B - A‖ from by rw [← neg_sub, norm_neg]] at h
+
+
+/-- **Sharp complex Davis--Kahan theorem from concrete restriction spectra.**
+Let `U` reduce `A` and `W` reduce `B`.  Suppose the spectra of the actual
+restricted operators satisfy
+
+* `spectrum ℝ (A|U) ⊆ [c+g,∞)` and `spectrum ℝ (A|Uᗮ) ⊆ (-∞,c]`,
+* `spectrum ℝ (B|W) ⊆ [c+g,∞)` and `spectrum ℝ (B|Wᗮ) ⊆ (-∞,c]`.
+
+Then, on an arbitrary complex Hilbert space,
+
+`‖P_U - P_W‖ ≤ ‖B - A‖ / g`.
+
+This is the canonical completed bounded spectral slice: the restriction-spectrum
+bridges discharge the four coercivity hypotheses, and
+`opNorm_starProjection_sub_le_of_coercive` supplies the sharp constant one.
+No finite-dimensional, equal-rank, compactness, or Borel-calculus assumption is
+used.
+
+Lean proof route for a weaker agent:
+
+1. Apply `opNorm_starProjection_sub_le_of_coercive`.
+2. For the lower bounds on `U` and `W`, invoke
+   `le_re_inner_on_subspace_of_restriction_spectrum_subset_Ici`.
+3. For the upper bounds on `Uᗮ` and `Wᗮ`, invoke
+   `re_inner_le_on_subspace_of_restriction_spectrum_subset_Iic` using the second
+   conjunct of each reducing hypothesis.
+4. The resulting conclusion is exactly the desired projector bound.
+-/
+theorem opNorm_starProjection_sub_le_of_restriction_spectra
+    {A B : H →L[ℂ] H} (hA : IsSelfAdjointOperator A)
+    (hB : IsSelfAdjointOperator B)
+    {U W : Submodule ℂ H} [U.HasOrthogonalProjection]
+    [W.HasOrthogonalProjection]
+    (hU : Reduces A U) (hW : Reduces B W)
+    {c g : ℝ} (hg : 0 < g)
+    (hUhi : spectrum ℝ (A.restrict hU.1) ⊆ Set.Ici (c + g))
+    (hUlo : spectrum ℝ (A.restrict hU.2) ⊆ Set.Iic c)
+    (hWhi : spectrum ℝ (B.restrict hW.1) ⊆ Set.Ici (c + g))
+    (hWlo : spectrum ℝ (B.restrict hW.2) ⊆ Set.Iic c) :
+    ‖(U.starProjection - W.starProjection : H →L[ℂ] H)‖ ≤
+      ‖B - A‖ / g := by
+  apply opNorm_starProjection_sub_le_of_coercive hA hB hU hW hg
+  · intro x hx
+    exact le_re_inner_on_subspace_of_restriction_spectrum_subset_Ici
+      hA hU.1 hUhi hx
+  · intro x hx
+    exact re_inner_le_on_subspace_of_restriction_spectrum_subset_Iic
+      hA hU.2 hUlo hx
+  · intro x hx
+    exact le_re_inner_on_subspace_of_restriction_spectrum_subset_Ici
+      hB hW.1 hWhi hx
+  · intro x hx
+    exact re_inner_le_on_subspace_of_restriction_spectrum_subset_Iic
+      hB hW.2 hWlo hx
 
 end DavisKahanExt
 end ForMathlib

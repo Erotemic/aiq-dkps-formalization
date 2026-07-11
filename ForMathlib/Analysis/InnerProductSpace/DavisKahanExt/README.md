@@ -62,21 +62,36 @@ operator-ideal infrastructure.
 5. `SymmetricIdeals.lean`
 6. `Sylvester.lean`
 7. `SinTheta.lean`
-8. `DoubleAngle.lean`
-9. `Continuation.lean`
-10. `GraphSubspace.lean`
-11. `Riccati.lean`
-12. `OffDiagonal.lean`
-13. `DirectRotation.lean`
-14. `Unbounded.lean`
-15. `UnboundedRiccati.lean`
-16. `Forms.lean`
-17. `CompactAndSingular.lean`
-18. `Sharpness.lean`
+8. `ComplexSpectral.lean`
+9. `DoubleAngle.lean`
+10. `Continuation.lean`
+11. `GraphSubspace.lean`
+12. `Riccati.lean`
+13. `OffDiagonal.lean`
+14. `DirectRotation.lean`
+15. `Unbounded.lean`
+16. `UnboundedRiccati.lean`
+17. `Forms.lean`
+18. `CompactAndSingular.lean`
+19. `Sharpness.lean`
 
 The current import graph is a scaffold, not the desired final proof order.
 Early proof work should progressively decouple the lightweight bounded core
 from `SpectralProjection`, `SymmetricIdeals`, and the unbounded layers.
+
+## Completed bounded complex spectral slice
+
+`ComplexSpectral.lean` is part of the umbrella build and now provides:
+
+- spectral upper/lower bounds converted to quadratic-form bounds;
+- the sharp two-projection norm identity;
+- concrete restriction-spectrum bridges for reducing subspaces;
+- the sharp factor-one projector theorem from spectra of the actual restricted
+  operators.
+
+This slice is independent of the unfinished Borel spectral-projection scaffold.
+The latter remains necessary for set-selected canonical spectral subspaces, but
+is no longer a prerequisite for the bounded complex operator-norm theorem.
 
 ## Major infrastructure frontiers
 

@@ -10,6 +10,7 @@ import ForMathlib.Analysis.InnerProductSpace.DavisKahanExt.OperatorAngle
 import ForMathlib.Analysis.InnerProductSpace.DavisKahanExt.SymmetricIdeals
 import ForMathlib.Analysis.InnerProductSpace.DavisKahanExt.Sylvester
 import ForMathlib.Analysis.InnerProductSpace.DavisKahanExt.SinTheta
+import ForMathlib.Analysis.InnerProductSpace.DavisKahanExt.ComplexSpectral
 import ForMathlib.Analysis.InnerProductSpace.DavisKahanExt.DoubleAngle
 import ForMathlib.Analysis.InnerProductSpace.DavisKahanExt.Continuation
 import ForMathlib.Analysis.InnerProductSpace.DavisKahanExt.GraphSubspace

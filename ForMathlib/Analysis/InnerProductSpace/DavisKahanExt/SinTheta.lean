@@ -144,8 +144,8 @@ theorem sinTheta_directed_coercive
     have hpx : P x ∈ U := U.starProjection_apply_mem x
     have hrest : x - P x ∈ Uᗮ := U.sub_starProjection_mem_orthogonal x
     have hAxeq : A' x = A (P x) + ((c + g : ℝ) : 𝕜) • (x - P x) := by
-      simp only [hA', ContinuousLinearMap.add_apply, ContinuousLinearMap.comp_apply,
-        ContinuousLinearMap.smul_apply, ContinuousLinearMap.sub_apply, ContinuousLinearMap.one_apply]
+      simp only [hA', add_apply, ContinuousLinearMap.comp_apply,
+        smul_apply, sub_apply, one_apply_eq_self]
     have hre : RCLike.re ⟪A' x, x⟫_𝕜
         = RCLike.re ⟪A (P x), x⟫_𝕜 + (c + g) * RCLike.re ⟪x - P x, x⟫_𝕜 := by
       rw [hAxeq, inner_add_left, inner_smul_left, RCLike.conj_ofReal, map_add, RCLike.re_ofReal_mul]
@@ -176,8 +176,8 @@ theorem sinTheta_directed_coercive
     have hqx : Q x ∈ V := V.starProjection_apply_mem x
     have hrest : x - Q x ∈ Vᗮ := V.sub_starProjection_mem_orthogonal x
     have hBxeq : B' x = B (Q x) + ((c : ℝ) : 𝕜) • (x - Q x) := by
-      simp only [hB', ContinuousLinearMap.add_apply, ContinuousLinearMap.comp_apply,
-        ContinuousLinearMap.smul_apply, ContinuousLinearMap.sub_apply, ContinuousLinearMap.one_apply]
+      simp only [hB', add_apply, ContinuousLinearMap.comp_apply,
+        smul_apply, sub_apply, one_apply_eq_self]
     have hre : RCLike.re ⟪B' x, x⟫_𝕜
         = RCLike.re ⟪B (Q x), x⟫_𝕜 + c * RCLike.re ⟪x - Q x, x⟫_𝕜 := by
       rw [hBxeq, inner_add_left, inner_smul_left, RCLike.conj_ofReal, map_add, RCLike.re_ofReal_mul]
@@ -216,16 +216,16 @@ theorem sinTheta_directed_coercive
     have hAP : A (P (Q x)) = P (A (Q x)) :=
       (projection_apply_comm_of_reduces A U hU (Q x)).symm
     have hAX : (A' ∘L X) x = A (P (Q x)) := by
-      simp only [ContinuousLinearMap.comp_apply, hX, hA', ContinuousLinearMap.add_apply,
-        ContinuousLinearMap.smul_apply, ContinuousLinearMap.sub_apply,
-        ContinuousLinearMap.one_apply, hPP, sub_self, smul_zero, add_zero]
+      simp only [ContinuousLinearMap.comp_apply, hX, hA', add_apply,
+        smul_apply, sub_apply,
+        one_apply_eq_self, hPP, sub_self, smul_zero, add_zero]
     have hXB : (X ∘L B') x = P (B (Q x)) := by
-      simp only [ContinuousLinearMap.comp_apply, hX, hB', ContinuousLinearMap.add_apply,
-        ContinuousLinearMap.smul_apply, ContinuousLinearMap.sub_apply,
-        ContinuousLinearMap.one_apply, map_add, map_smul, hQBQ, hQrest, map_zero, smul_zero, add_zero]
+      simp only [ContinuousLinearMap.comp_apply, hX, hB', add_apply,
+        smul_apply, sub_apply,
+        one_apply_eq_self, map_add, map_smul, hQBQ, hQrest, map_zero, smul_zero, add_zero]
     have hYx : Y x = P (A (Q x)) - P (B (Q x)) := by
-      simp only [hY, ContinuousLinearMap.comp_apply, ContinuousLinearMap.sub_apply, map_sub]
-    rw [ContinuousLinearMap.sub_apply, hAX, hXB, hYx, hAP]
+      simp only [hY, ContinuousLinearMap.comp_apply, sub_apply, map_sub]
+    rw [sub_apply, hAX, hXB, hYx, hAP]
   -- norm bound
   have hYnorm : ‖Y‖ ≤ ‖B - A‖ := by
     refine ContinuousLinearMap.opNorm_le_bound _ (norm_nonneg _) fun x => ?_
@@ -233,7 +233,7 @@ theorem sinTheta_directed_coercive
       rw [hP]; exact U.norm_starProjection_apply_le _
     calc ‖Y x‖ = ‖P ((A - B) (Q x))‖ := by simp only [hY, ContinuousLinearMap.comp_apply]
       _ ≤ ‖(A - B) (Q x)‖ := hc
-      _ = ‖(B - A) (Q x)‖ := by rw [show A - B = -(B - A) by abel, ContinuousLinearMap.neg_apply, norm_neg]
+      _ = ‖(B - A) (Q x)‖ := by rw [show A - B = -(B - A) by abel, neg_apply, norm_neg]
       _ ≤ ‖B - A‖ * ‖Q x‖ := ContinuousLinearMap.le_opNorm _ _
       _ ≤ ‖B - A‖ * ‖x‖ := by
           refine mul_le_mul_of_nonneg_left ?_ (norm_nonneg _)

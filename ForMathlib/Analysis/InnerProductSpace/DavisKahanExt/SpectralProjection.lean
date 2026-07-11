@@ -65,6 +65,15 @@ Lean proof route for a weaker agent:
 1. Rewrite the empty-set indicator as the zero function.
 2. Apply the zero law of the Borel functional calculus.
 3. The self-adjointness hypothesis selects the valid spectral calculus instance.
+
+
+Ext-agent signature audit (GPT 5.6 High): Correct on the self-adjoint domain of the
+roadmap spectral calculus. The total definition outside that domain must not be used to
+weaken the hypothesis.
+
+Preferred dependency route: Implement the bounded self-adjoint spectral measure/Borel
+calculus first, then discharge this as a calculus law. Do not route through finite
+diagonalization.
 -/
 @[simp] theorem spectralProjection_empty (A : E →L[𝕜] E)
     (hA : IsSelfAdjointOperator A) :
@@ -79,6 +88,15 @@ Lean proof route for a weaker agent:
 1. Rewrite the universal-set indicator as the constant-one function.
 2. Apply the unital law of the Borel functional calculus.
 3. Simplify the image of `1` to the identity operator.
+
+
+Ext-agent signature audit (GPT 5.6 High): Correct for a unital spectral calculus. Keep
+self-adjointness explicit until the definition itself is bundled with a self-adjoint
+operator.
+
+Preferred dependency route: Implement the bounded self-adjoint spectral measure/Borel
+calculus first, then discharge this as a calculus law. Do not route through finite
+diagonalization.
 -/
 @[simp] theorem spectralProjection_univ (A : E →L[𝕜] E)
     (hA : IsSelfAdjointOperator A) :
@@ -92,6 +110,14 @@ Lean proof route for a weaker agent:
 1. Rewrite both projections as indicator functions in the Borel calculus.
 2. Apply multiplicativity.
 3. Simplify the pointwise product of indicators to the indicator of `s∩t` using `hs,ht`.
+
+
+Ext-agent signature audit (GPT 5.6 High): Correct only for measurable sets; the added
+measurability hypotheses are essential for the Borel PVM interface.
+
+Preferred dependency route: Implement the bounded self-adjoint spectral measure/Borel
+calculus first, then discharge this as a calculus law. Do not route through finite
+diagonalization.
 -/
 theorem spectralProjection_comp (A : E →L[𝕜] E)
     (hA : IsSelfAdjointOperator A) (s t : Set ℝ)
@@ -107,6 +133,15 @@ Lean proof route for a weaker agent:
 1. Use `spectralProjection_comp` with `s=t` for idempotence.
 2. Prove self-adjointness because the indicator is real-valued in the self-adjoint functional calculus.
 3. Package the two facts as `IsOrthogonalProjection`.
+
+
+Ext-agent signature audit (GPT 5.6 High): Correct for measurable sets and self-adjoint
+`A`. This should become a direct field theorem of the eventual projection-valued measure
+package.
+
+Preferred dependency route: Implement the bounded self-adjoint spectral measure/Borel
+calculus first, then discharge this as a calculus law. Do not route through finite
+diagonalization.
 -/
 theorem spectralProjection_isOrthogonalProjection
     (A : E →L[𝕜] E) (hA : IsSelfAdjointOperator A)
@@ -121,6 +156,15 @@ Lean proof route for a weaker agent:
 1. Express `A` and `spectralProjection A s` as Borel functions of the same self-adjoint operator.
 2. Apply multiplicativity/commutativity of the functional calculus.
 3. Use measurability of `s` for the indicator function.
+
+
+Ext-agent signature audit (GPT 5.6 High): Correct: the identity function is bounded on
+the spectrum of a bounded operator, even though it is not globally bounded. The
+implementation must use spectrum-restricted boundedness.
+
+Preferred dependency route: Implement the bounded self-adjoint spectral measure/Borel
+calculus first, then discharge this as a calculus law. Do not route through finite
+diagonalization.
 -/
 theorem spectralProjection_comm (A : E →L[𝕜] E)
     (hA : IsSelfAdjointOperator A) (s : Set ℝ) (hs : MeasurableSet s) :
@@ -132,8 +176,17 @@ theorem spectralProjection_comm (A : E →L[𝕜] E)
 Lean proof route for a weaker agent:
 
 1. Use `spectralProjection_comm` to show the range of the projection is invariant.
-2. Use `spectralProjection_compl` to identify the orthogonal complement with the complementary spectral range.
-3. Apply the same commutation argument to that range and package `Reduces`.
+2. Use orthogonality of the projection and the same commutation identity to show its kernel is invariant.
+3. Identify the kernel with the orthogonal complement of the range and package `Reduces`, avoiding dependence on the later complement theorem.
+
+
+Ext-agent signature audit (GPT 5.6 High): Correct. Prove both range and kernel
+invariance directly from projection commutation; do not depend on the later complement
+theorem and create a declaration-order cycle.
+
+Preferred dependency route: Implement the bounded self-adjoint spectral measure/Borel
+calculus first, then discharge this as a calculus law. Do not route through finite
+diagonalization.
 -/
 theorem reduces_spectralSubspace (A : E →L[𝕜] E)
     (hA : IsSelfAdjointOperator A) (s : Set ℝ) (hs : MeasurableSet s) :
@@ -146,6 +199,15 @@ Lean proof route for a weaker agent:
 
 1. Unfold `spectralSubspace`.
 2. Close the goal by reflexivity; keep this named theorem as the public rewrite lemma.
+
+
+Ext-agent signature audit (GPT 5.6 High): Definitionally true with the current
+`spectralSubspace`; retain it as a public simp/rewrite theorem rather than spending
+spectral-theorem effort here.
+
+Preferred dependency route: Implement the bounded self-adjoint spectral measure/Borel
+calculus first, then discharge this as a calculus law. Do not route through finite
+diagonalization.
 -/
 theorem range_spectralProjection (A : E →L[𝕜] E) (s : Set ℝ) :
     LinearMap.range (spectralProjection A s).toLinearMap =
@@ -159,6 +221,14 @@ Lean proof route for a weaker agent:
 1. Use the pointwise identity `1_{sᶜ}=1-1_s` for a measurable set.
 2. Apply linearity of the Borel functional calculus.
 3. Rewrite the constant-one calculus as the identity operator.
+
+
+Ext-agent signature audit (GPT 5.6 High): Correct only for measurable `s`; complement
+measurability and the identity `1_{sᶜ}=1-1_s` are the complete analytic content.
+
+Preferred dependency route: Implement the bounded self-adjoint spectral measure/Borel
+calculus first, then discharge this as a calculus law. Do not route through finite
+diagonalization.
 -/
 theorem spectralProjection_compl (A : E →L[𝕜] E)
     (hA : IsSelfAdjointOperator A) (s : Set ℝ) (hs : MeasurableSet s) :
@@ -187,6 +257,15 @@ Lean proof route for a weaker agent:
 2. For a fixed vector, use orthogonality to show partial sums are Cauchy via the Pythagorean identity.
 3. Identify the limit by testing inner products and scalar measure countable additivity.
 4. Verify the measurable-set premise in `StronglyCountablyAdditive`.
+
+
+Ext-agent signature audit (GPT 5.6 High): Mathematically correct, but intentionally not
+on the first Davis--Kahan critical path. It requires a genuine PVM construction, not
+merely a continuous functional calculus on gap-selected clopen sets.
+
+Preferred dependency route: Implement the bounded self-adjoint spectral measure/Borel
+calculus first, then discharge this as a calculus law. Do not route through finite
+diagonalization.
 -/
 theorem spectralProjection_stronglyCountablyAdditive (A : E →L[𝕜] E)
     (hA : IsSelfAdjointOperator A) :
@@ -200,6 +279,14 @@ Lean proof route for a weaker agent:
 1. The indicator of `s` vanishes on `realSpectrum A` by `h`.
 2. Apply functional-calculus extensionality on the spectrum against the zero function.
 3. Rewrite the indicator calculus as `spectralProjection A s`.
+
+
+Ext-agent signature audit (GPT 5.6 High): Correct with measurability. The support
+argument should use equality of Borel functions on the spectrum, not global equality.
+
+Preferred dependency route: Implement the bounded self-adjoint spectral measure/Borel
+calculus first, then discharge this as a calculus law. Do not route through finite
+diagonalization.
 -/
 theorem spectralProjection_eq_zero_of_disjoint_spectrum
     (A : E →L[𝕜] E) (hA : IsSelfAdjointOperator A)
@@ -215,6 +302,14 @@ Lean proof route for a weaker agent:
 1. Unfold the Borel functional calculus as integration against the spectral measure.
 2. Use the integral of an indicator to identify the result with the spectral projection of the measurable set.
 3. Discharge the real-to-scalar coercion and normalization at `1` by `simp`.
+
+
+Ext-agent signature audit (GPT 5.6 High): Correct and should eventually be definitional
+if spectral projections are defined as indicator calculus.
+
+Preferred dependency route: Implement the bounded self-adjoint spectral measure/Borel
+calculus first, then discharge this as a calculus law. Do not route through finite
+diagonalization.
 -/
 theorem boundedBorelFunctionalCalculus_indicator
     (A : E →L[𝕜] E) (hA : IsSelfAdjointOperator A)
@@ -230,6 +325,15 @@ Lean proof route for a weaker agent:
 1. Approximate the bounded measurable functions by bounded simple functions on the spectrum.
 2. Prove multiplicativity for indicators using `spectralProjection_comp`, then for simple functions by finite algebra.
 3. Pass to bounded pointwise limits using the norm bound and the monotone-class/dominated-convergence extension used to construct the calculus.
+
+
+Ext-agent signature audit (GPT 5.6 High): Correct for measurable functions bounded on
+the spectrum. The product is automatically bounded on the spectrum, so no separate
+product hypothesis is needed.
+
+Preferred dependency route: Implement the bounded self-adjoint spectral measure/Borel
+calculus first, then discharge this as a calculus law. Do not route through finite
+diagonalization.
 -/
 theorem boundedBorelFunctionalCalculus_mul
     (A : E →L[𝕜] E) (hA : IsSelfAdjointOperator A)
@@ -248,6 +352,15 @@ Lean proof route for a weaker agent:
 2. For each vector, bound the squared norm integral by `C²‖x‖²` using `hC` and support on the spectrum.
 3. Take square roots and then the operator norm supremum.
 4. Use `hf` only to justify the spectral integral construction.
+
+
+Ext-agent signature audit (GPT 5.6 High): Correct. This is a uniform-supremum bound, not
+an essential-supremum statement unless scalar spectral measures are explicitly
+introduced.
+
+Preferred dependency route: Implement the bounded self-adjoint spectral measure/Borel
+calculus first, then discharge this as a calculus law. Do not route through finite
+diagonalization.
 -/
 theorem norm_boundedBorelFunctionalCalculus_le
     (A : E →L[𝕜] E) (hA : IsSelfAdjointOperator A)

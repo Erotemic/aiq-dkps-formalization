@@ -43,21 +43,29 @@ margin is quantitative.
 
 Lean proof route for a weaker agent:
 
-1. Reduce to `continuous_rieszProjection_path` after unfolding `continuedProjection` and `operatorPath`.
-2. If the existing path theorem is stated for `A+tH`, close the goal by definitional equality.
-3. Keep all contour regularity and uniform resolvent-margin obligations inside `ContourSeparatesSpectrum`.
+1. Unfold `continuedProjection` and `operatorPath` and reuse the local resolvent estimates from `continuous_rieszProjection_path`.
+2. At each `t∈[0,1]`, obtain a neighborhood on which the fixed contour remains in the resolvent set; this suffices for `ContinuousWithinAt`.
+3. Pass the local resolvent continuity through the contour integral and assemble the pointwise statements into `ContinuousOn`.
+
+
+Ext-agent signature audit (GPT 5.6 High): The corrected `ContinuousOn [0,1]` signature
+asks only for separation on the path segment actually used. A global continuity theorem
+remains available in the resolvent module.
+
+Preferred dependency route: Use a uniformly separating Riesz contour on `[0,1]`,
+norm-continuity of resolvents, and local equivalences of close projection ranges.
 -/
 theorem continuous_continuedProjection
     (A H : E →L[𝕜] E) (s : Set ℝ) (contour : ℝ → 𝕜)
-    (hsep : ∀ t : ℝ,
+    (hsep : ∀ t ∈ Set.Icc (0 : ℝ) 1,
       ContourSeparatesSpectrum (operatorPath A H t) s contour) :
-    Continuous (continuedProjection A H contour) := by
+    ContinuousOn (continuedProjection A H contour) (Set.Icc (0 : ℝ) 1) := by
   sorry
 
 /-- Two orthogonal projections belong to the same norm-continuous component. -/
 def SameProjectionComponent (P Q : E →L[𝕜] E) : Prop :=
   ∃ path : ℝ → E →L[𝕜] E,
-    Continuous path ∧ path 0 = P ∧ path 1 = Q ∧
+    ContinuousOn path (Set.Icc (0 : ℝ) 1) ∧ path 0 = P ∧ path 1 = Q ∧
       ∀ t ∈ Set.Icc (0 : ℝ) 1, IsOrthogonalProjection (path t)
 
 /-- The continued projection remains in the component selected at `t = 0`. 
@@ -67,10 +75,19 @@ Lean proof route for a weaker agent:
 1. Use the supplied continued projection path restricted to `[0,1]` as the witness.
 2. Reuse `hcontinuous` for path continuity and `hproj` for projection-valuedness.
 3. Normalize the endpoints with `rfl`; no spectral argument is needed in this lemma.
+
+
+Ext-agent signature audit (GPT 5.6 High): Correct after `SameProjectionComponent` was
+localized to continuity on `[0,1]`; global continuity would be unnecessary
+overstrengthening.
+
+Preferred dependency route: Use a uniformly separating Riesz contour on `[0,1]`,
+norm-continuity of resolvents, and local equivalences of close projection ranges.
 -/
 theorem continuedProjection_same_component
     (A H : E →L[𝕜] E) (contour : ℝ → 𝕜)
-    (hcontinuous : Continuous (continuedProjection A H contour))
+    (hcontinuous : ContinuousOn (continuedProjection A H contour)
+      (Set.Icc (0 : ℝ) 1))
     (hproj : ∀ t ∈ Set.Icc (0 : ℝ) 1,
       IsOrthogonalProjection (continuedProjection A H contour t)) :
     SameProjectionComponent
@@ -83,13 +100,21 @@ initial component.
 
 Lean proof route for a weaker agent:
 
-1. Use `rieszProjection_eq_spectralProjection` at `t=1`.
+1. Use `rieszProjection_eq_spectralProjection` at `t=1`, passing `hs`.
 2. Verify that `operatorPath A H 1 = A+H` by `simp [operatorPath]`.
 3. Specialize the uniformly separating-contour hypothesis at `1 ∈ [0,1]`.
+
+
+Ext-agent signature audit (GPT 5.6 High): Correct with the explicit measurability
+premise if the fixed contour encloses the same Borel spectral component throughout the
+path. At `t=1`, self-adjointness follows from `hA` and `hH`.
+
+Preferred dependency route: Use a uniformly separating Riesz contour on `[0,1]`,
+norm-continuity of resolvents, and local equivalences of close projection ranges.
 -/
 theorem continuedProjection_eq_spectralProjection
     (A H : E →L[𝕜] E) (hA : IsSelfAdjointOperator A)
-    (hH : IsSelfAdjointOperator H) (s : Set ℝ)
+    (hH : IsSelfAdjointOperator H) (s : Set ℝ) (hs : MeasurableSet s)
     (contour : ℝ → 𝕜)
     (hsep : ∀ t ∈ Set.Icc (0 : ℝ) 1,
       ContourSeparatesSpectrum (operatorPath A H t) s contour) :
@@ -111,6 +136,14 @@ Lean proof route for a weaker agent:
 2. Show its range is closed and its orthogonal complement is trivial, hence it is bijective onto `Ran Q`.
 3. Take the polar factor of `QP` to obtain a unitary between the ranges and extend it over complements.
 4. Verify the global intertwining equation.
+
+
+Ext-agent signature audit (GPT 5.6 High): Correct. Close orthogonal projections have
+unitarily equivalent ranges and complements; the global unitary intertwiner is stronger
+than a mere range isomorphism but standard.
+
+Preferred dependency route: Use a uniformly separating Riesz contour on `[0,1]`,
+norm-continuity of resolvents, and local equivalences of close projection ranges.
 -/
 theorem range_equiv_of_projection_norm_lt_one
     (P Q : E →L[𝕜] E)

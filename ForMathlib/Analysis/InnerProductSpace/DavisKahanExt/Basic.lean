@@ -191,6 +191,16 @@ Lean proof route for a weaker agent:
 2. For `x∈Uᗮ` and `u∈U`, use self-adjointness to rewrite `⟪Ax,u⟫=⟪x,Au⟫`.
 3. Apply `hU` and orthogonality to show the inner product vanishes for every `u`.
 4. Conclude `Ax∈Uᗮ` and package both conjuncts.
+
+
+Ext-agent signature audit (GPT 5.6 High): Correct as stated: for a bounded self-adjoint
+operator, invariance of a closed subspace implies invariance of its orthogonal
+complement. Completeness is used only for projection infrastructure, not the
+inner-product argument itself.
+
+Preferred dependency route: Prove this in the bounded projection-geometry core, using
+only `Basic` definitions and mathlib Hilbert-space projection lemmas; all finite
+versions should later specialize this result.
 -/
 theorem reduces_orthogonalComplement {A : E →L[𝕜] E}
     (hA : IsSelfAdjointOperator A) {U : Submodule 𝕜 E}
@@ -204,6 +214,14 @@ Lean proof route for a weaker agent:
 1. Rewrite `projection V - projection U = -(projection U - projection V)`.
 2. Use norm invariance under negation.
 3. Unfold `subspaceGap`.
+
+
+Ext-agent signature audit (GPT 5.6 High): Correct and definitionally independent of
+acuteness. The proof should use only norm invariance under negation.
+
+Preferred dependency route: Prove this in the bounded projection-geometry core, using
+only `Basic` definitions and mathlib Hilbert-space projection lemmas; all finite
+versions should later specialize this result.
 -/
 theorem subspaceGap_comm (U V : Submodule 𝕜 E)
     [U.HasOrthogonalProjection] [V.HasOrthogonalProjection] :
@@ -217,6 +235,14 @@ Lean proof route for a weaker agent:
 1. Expand `(I-Q)P = (P-Q)P` using projection idempotence.
 2. Apply submultiplicativity and `‖P‖≤1` for an orthogonal projection.
 3. Rewrite the two norms as `directedGap` and `subspaceGap`.
+
+
+Ext-agent signature audit (GPT 5.6 High): Correct for orthogonal projections. The key
+identity is `(I-Q)P = (P-Q)P`, so no equal-dimension or acute hypothesis is needed.
+
+Preferred dependency route: Prove this in the bounded projection-geometry core, using
+only `Basic` definitions and mathlib Hilbert-space projection lemmas; all finite
+versions should later specialize this result.
 -/
 theorem directedGap_le_subspaceGap (U V : Submodule 𝕜 E)
     [U.HasOrthogonalProjection] [V.HasOrthogonalProjection] :

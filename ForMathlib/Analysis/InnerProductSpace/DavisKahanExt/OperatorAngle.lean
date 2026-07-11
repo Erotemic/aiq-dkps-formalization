@@ -38,16 +38,24 @@ noncomputable def cosAngleOperator (U V : Submodule 𝕜 E)
     [U.HasOrthogonalProjection] [V.HasOrthogonalProjection] : E →L[𝕜] E := by
   sorry
 
+/-- Bounded tangent of the operator angle in the acute regime.
+
+The proof argument is part of the definition because `tan` is unbounded at
+`π / 2`; there is no canonical bounded operator for a non-acute pair. -/
 noncomputable def tanAngleOperator (U V : Submodule 𝕜 E)
-    [U.HasOrthogonalProjection] [V.HasOrthogonalProjection] : E →L[𝕜] E := by
+    [U.HasOrthogonalProjection] [V.HasOrthogonalProjection]
+    (hacute : IsAcute U V) : E →L[𝕜] E := by
   sorry
 
 noncomputable def sinTwoAngleOperator (U V : Submodule 𝕜 E)
     [U.HasOrthogonalProjection] [V.HasOrthogonalProjection] : E →L[𝕜] E := by
   sorry
 
+/-- Bounded tangent of twice the operator angle below the quarter-angle
+pole. -/
 noncomputable def tanTwoAngleOperator (U V : Submodule 𝕜 E)
-    [U.HasOrthogonalProjection] [V.HasOrthogonalProjection] : E →L[𝕜] E := by
+    [U.HasOrthogonalProjection] [V.HasOrthogonalProjection]
+    (hquarter : IsQuarterAcute U V) : E →L[𝕜] E := by
   sorry
 
 /-- An angular operator maps `U` into `Uᗮ` and vanishes on `Uᗮ`. -/
@@ -84,6 +92,15 @@ Lean proof route for a weaker agent:
 2. Establish positivity of both candidate square roots.
 3. Use uniqueness of the positive square root in the C*-algebra of bounded operators.
 4. Avoid any dependence on spectral projections of `A`; this is pure two-projection geometry.
+
+
+Ext-agent signature audit (GPT 5.6 High): Sound if `angleOperator` is defined by the
+canonical two-projection functional calculus on the full ambient space. This fixes the
+multiplicity convention used by all ideal statements.
+
+Preferred dependency route: Use Halmos two-projection geometry and continuous functional
+calculus for positive contractions; avoid spectral decompositions tied to compactness or
+finite dimension.
 -/
 theorem sinAngleOperator_eq_abs_projection_sub
     (U V : Submodule 𝕜 E) [U.HasOrthogonalProjection]
@@ -99,6 +116,14 @@ Lean proof route for a weaker agent:
 1. Rewrite `sinAngleOperator` using `sinAngleOperator_eq_abs_projection_sub`.
 2. Apply the C*-identity `‖|T|‖=‖T‖` for bounded operators on a Hilbert space.
 3. Unfold `subspaceGap`.
+
+
+Ext-agent signature audit (GPT 5.6 High): Correct from the absolute-value identity and
+the C*-norm law.
+
+Preferred dependency route: Use Halmos two-projection geometry and continuous functional
+calculus for positive contractions; avoid spectral decompositions tied to compactness or
+finite dimension.
 -/
 theorem norm_sinAngleOperator (U V : Submodule 𝕜 E)
     [U.HasOrthogonalProjection] [V.HasOrthogonalProjection] :
@@ -112,6 +137,14 @@ Lean proof route for a weaker agent:
 1. Use the two-projection decomposition and write both norms as suprema of the same sine-angle function.
 2. Acuteness removes unmatched `π/2` defect summands, which are the only source of asymmetry.
 3. Conclude equality by the norm formula on each reducing block.
+
+
+Ext-agent signature audit (GPT 5.6 High): Correct: `‖P-Q‖<1` excludes unmatched defect
+summands, which are precisely what can make the two directed gaps unequal.
+
+Preferred dependency route: Use Halmos two-projection geometry and continuous functional
+calculus for positive contractions; avoid spectral decompositions tied to compactness or
+finite dimension.
 -/
 theorem directedGap_eq_subspaceGap_of_acute
     (U V : Submodule 𝕜 E) [U.HasOrthogonalProjection]
@@ -138,6 +171,15 @@ Lean proof route for a weaker agent:
 2. Prove surjectivity onto `U` using the corresponding estimate for the complementary projection.
 3. Apply the bounded inverse theorem and define `X = P_{Uᗮ} ∘ (P_U|_V)⁻¹`, extended by zero on `Uᗮ`.
 4. For the reverse implication, compute the graph projection or directly bound `‖P_U-P_V‖` by the graph norm formula.
+
+
+Ext-agent signature audit (GPT 5.6 High): Correct for closed subspaces with orthogonal
+projections. The graph operator is ambient but constrained to vanish on `Uᗮ`; this
+avoids a separate bundled map `U → Uᗮ`.
+
+Preferred dependency route: Use Halmos two-projection geometry and continuous functional
+calculus for positive contractions; avoid spectral decompositions tied to compactness or
+finite dimension.
 -/
 theorem acute_iff_exists_bounded_angularOperator
     (U V : Submodule 𝕜 E) [U.HasOrthogonalProjection]
@@ -155,6 +197,15 @@ Lean proof route for a weaker agent:
 2. Identify its graph with `V` and use the graph projection formula.
 3. Compute `‖P_U-P_V‖ = ‖X‖/sqrt(1+‖X‖²)` through functional calculus.
 4. Apply `tan (arcsin (x/sqrt(1+x²))) = x` and return the full graph witness.
+
+
+Ext-agent signature audit (GPT 5.6 High): Correct only on the acute branch, which is
+present. Return of the actual graph witness prevents the earlier underdetermined
+existential norm statement.
+
+Preferred dependency route: Use Halmos two-projection geometry and continuous functional
+calculus for positive contractions; avoid spectral decompositions tied to compactness or
+finite dimension.
 -/
 theorem norm_angularOperator_eq_tan_maximalAngle
     (U V : Submodule 𝕜 E) [U.HasOrthogonalProjection]
@@ -172,6 +223,15 @@ Lean proof route for a weaker agent:
 1. Express both angle operators through the two-projection decomposition.
 2. Observe that replacing `P,Q` by `I-P,I-Q` leaves the generic angle block unchanged and swaps only the trivial summands.
 3. Finish by functional-calculus extensionality on the common reducing decomposition.
+
+
+Ext-agent signature audit (GPT 5.6 High): Correct for the full ambient angle convention
+`arcsin |P-Q|`, since complementing both projections leaves their difference unchanged
+up to sign.
+
+Preferred dependency route: Use Halmos two-projection geometry and continuous functional
+calculus for positive contractions; avoid spectral decompositions tied to compactness or
+finite dimension.
 -/
 theorem angleOperator_orthogonalComplement
     (U V : Submodule 𝕜 E) [U.HasOrthogonalProjection]
@@ -186,6 +246,15 @@ Lean proof route for a weaker agent:
 1. Use the known triangle inequality for the gap angle of three orthogonal projections.
 2. Alternatively compose the canonical direct rotations and compare their operator-norm distances from the identity.
 3. Reduce the remaining scalar inequality to monotonicity/addition bounds for `arcsin` on `[0,1]`.
+
+
+Ext-agent signature audit (GPT 5.6 High): Expected to be correct for the gap angle
+`arcsin ‖P-Q‖`, but it needs the established projection-angle metric theorem. A scalar
+`arcsin` manipulation alone is not sufficient.
+
+Preferred dependency route: Use Halmos two-projection geometry and continuous functional
+calculus for positive contractions; avoid spectral decompositions tied to compactness or
+finite dimension.
 -/
 theorem maximalAngle_triangle
     (U V W : Submodule 𝕜 E) [U.HasOrthogonalProjection]

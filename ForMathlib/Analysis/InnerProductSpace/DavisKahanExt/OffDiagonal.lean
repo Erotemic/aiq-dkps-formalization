@@ -49,13 +49,24 @@ Lean proof route for a weaker agent:
 2. Check the scalar `sqrt 2` inequality leaves a positive distance between the enclosures.
 3. Continue the Riesz projection along `A+tH` to select the correct component.
 4. Prove reduction, acuteness, and positive endpoint spectral distance in that order.
+
+
+Ext-agent signature audit (GPT 5.6 High): The nonempty block hypotheses are necessary
+for the positive spectral-distance conclusion. The `√2 d` threshold belongs to
+continuation/branch preservation, not to the local Riccati contraction theorem.
+
+Preferred dependency route: Select the continued spectral branch first, prove
+graph/Riccati control second, and isolate scalar threshold optimization from operator
+arguments.
 -/
 theorem gap_preserved_of_offDiagonal
     {A H : E →L[𝕜] E}
     (hA : IsSelfAdjointOperator A) (hH : IsSelfAdjointOperator H)
     {U : Submodule 𝕜 E} [U.HasOrthogonalProjection]
     (hU : Reduces A U) (hoff : IsOffDiagonal U H)
-    {d : ℝ} (hd : 0 < d) (hgap : InternalGap A U d)
+    {d : ℝ} (hd : 0 < d)
+    (hU_spec : (restrictedSpectrum A U).Nonempty)
+    (hUc_spec : (restrictedSpectrum A Uᗮ).Nonempty)
     (hfinite : FiniteGapConfiguration A U d)
     (hsmall : ‖H‖ < Real.sqrt 2 * d) :
     let V := continuedSpectralSubspace A H (restrictedSpectrum A U)
@@ -72,6 +83,15 @@ Lean proof route for a weaker agent:
 2. Derive the Riccati equation from reduction of `A+H` and the off-diagonal form of `H`.
 3. Apply the ordered gap to the linear Sylvester term and estimate the quadratic terms.
 4. Translate the resulting bound on the angular operator to `tanTwoAngleOperator`.
+
+
+Ext-agent signature audit (GPT 5.6 High): Correct only below the quarter-angle pole; the
+proof argument is now passed to `tanTwoAngleOperator`, so the operator is not silently
+totalized.
+
+Preferred dependency route: Select the continued spectral branch first, prove
+graph/Riccati control second, and isolate scalar threshold optimization from operator
+arguments.
 -/
 theorem tanTwoTheta_offDiagonal
     {A H : E →L[𝕜] E}
@@ -82,7 +102,7 @@ theorem tanTwoTheta_offDiagonal
     (hoff : IsOffDiagonal U H)
     {d : ℝ} (hd : 0 < d) (hgap : OrderedInternalGap A U d)
     (hquarter : IsQuarterAcute U V) :
-    ‖tanTwoAngleOperator U V‖ ≤ 2 * ‖H‖ / d := by
+    ‖tanTwoAngleOperator U V hquarter‖ ≤ 2 * ‖H‖ / d := by
   sorry
 
 /-- A priori `tan Θ` theorem in the finite-gap configuration.
@@ -105,13 +125,24 @@ Lean proof route for a weaker agent:
 2. Apply `existsUnique_angularOperator` to represent that subspace as `graphSubspace U X`.
 3. Derive the Riccati equation from graph invariance and use the finite-gap enclosure to obtain the scalar majorant for `‖X‖`.
 4. Solve the scalar inequality on the contractive branch, then rewrite the projector gap with `tan_maximalAngle_eq_norm_angularOperator`.
+
+
+Ext-agent signature audit (GPT 5.6 High): The added nonempty-spectrum hypotheses align
+this theorem with `gap_preserved_of_offDiagonal`. The endpoint is the continued branch,
+not an arbitrary reducing subspace of `A+H`.
+
+Preferred dependency route: Select the continued spectral branch first, prove
+graph/Riccati control second, and isolate scalar threshold optimization from operator
+arguments.
 -/
 theorem aPrioriTanTheta
     {A H : E →L[𝕜] E}
     (hA : IsSelfAdjointOperator A) (hH : IsSelfAdjointOperator H)
     {U : Submodule 𝕜 E} [U.HasOrthogonalProjection]
     (hU : Reduces A U) (hoff : IsOffDiagonal U H)
-    {d : ℝ} (hd : 0 < d) (hgap : InternalGap A U d)
+    {d : ℝ} (hd : 0 < d)
+    (hU_spec : (restrictedSpectrum A U).Nonempty)
+    (hUc_spec : (restrictedSpectrum A Uᗮ).Nonempty)
     (hfinite : FiniteGapConfiguration A U d)
     (hsmall : ‖H‖ < Real.sqrt 2 * d) :
     let V := continuedSpectralSubspace A H (restrictedSpectrum A U)
@@ -127,6 +158,15 @@ Lean proof route for a weaker agent:
 2. Express the effective diagonal blocks as the original blocks plus positive/negative Schur-complement corrections.
 3. Apply spectral monotonicity to show the selected components move away from the original gap.
 4. Convert the two enclosure inequalities into the stated spectral-distance comparison.
+
+
+Ext-agent signature audit (GPT 5.6 High): Plausible only in the ordered configuration;
+the explicit `OrderedInternalGap` and nonempty hypotheses are therefore essential. Prove
+oriented enclosure inequalities before converting to set distance.
+
+Preferred dependency route: Select the continued spectral branch first, prove
+graph/Riccati control second, and isolate scalar threshold optimization from operator
+arguments.
 -/
 theorem spectral_repulsion_offDiagonal
     {A H : E →L[𝕜] E}
@@ -134,6 +174,8 @@ theorem spectral_repulsion_offDiagonal
     {U : Submodule 𝕜 E} [U.HasOrthogonalProjection]
     (hU : Reduces A U) (hoff : IsOffDiagonal U H)
     {d : ℝ} (hd : 0 < d) (hordered : OrderedInternalGap A U d)
+    (hU_spec : (restrictedSpectrum A U).Nonempty)
+    (hUc_spec : (restrictedSpectrum A Uᗮ).Nonempty)
     (hfinite : FiniteGapConfiguration A U d)
     (hsmall : ‖H‖ < Real.sqrt 2 * d) :
     spectralDistance (restrictedSpectrum (A + H)

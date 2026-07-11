@@ -69,16 +69,28 @@ ambient space.
 
 Lean proof route for a weaker agent:
 
-1. Shift `a` by a scalar so its form norm is coercive and complete.
+1. Use `ha_sesq`, `ha_closed`, and `ha_lower`, then shift `a` by a scalar so its form norm is coercive and complete.
 2. Use the relative form estimate with `beta<1` to prove equivalence of the original and perturbed form norms.
 3. Deduce closedness and lower semiboundedness of `formSum a v`.
 4. Apply the first representation theorem to prove self-adjointness of the associated operator.
+
+
+Ext-agent signature audit (GPT 5.6 High): The earlier signature was false because the
+roadmap `ClosedForm` fields are propositions, not assumptions. The added
+sesquilinearity, closedness, and lower-semiboundedness hypotheses make the KLMN target
+meaningful.
+
+Preferred dependency route: Package a real form-domain Hilbert space and representation
+theorem first; use KLMN to obtain self-adjoint operators before applying
+spectral-subspace estimates.
 -/
 theorem klmn
     (a v : ClosedForm (𝕜 := 𝕜) (E := E))
+    (ha_sesq : a.sesquilinear) (hv_sesq : v.sesquilinear)
+    (ha_closed : a.closedness) (ha_lower : a.lowerSemibounded)
     {alpha beta : ℝ} (hrel : FormRelativelyBounded a v alpha beta)
     (halpha : 0 ≤ alpha) (hbeta0 : 0 ≤ beta) (hbeta : beta < 1) :
-    (formSum a v).closedness ∧
+    (formSum a v).closedness ∧ (formSum a v).lowerSemibounded ∧
       (formSum a v).associatedOperator.IsSelfAdjoint := by
   sorry
 
@@ -86,23 +98,35 @@ theorem klmn
 
 Lean proof route for a weaker agent:
 
-1. Use KLMN to obtain self-adjoint associated operators for the original and perturbed forms.
+1. Use the explicit validity hypotheses and KLMN to obtain self-adjoint associated operators for the original and perturbed forms.
 2. Translate `formPerturbationSize` into the off-diagonal form-residual estimate on the two selected spectral subspaces.
-3. Apply the form-domain Sylvester estimate in both mixed directions.
-4. Recombine the directed blocks to bound the full projector difference.
+3. Apply the general form-domain Sylvester estimate in both mixed directions.
+4. Recombine the directed blocks with the universal `π/2` constant; reserve constant one for a separate interval/exterior theorem.
+
+
+Ext-agent signature audit (GPT 5.6 High): Now carries the reference-form validity
+assumptions needed to invoke KLMN and the generic `π/2` constant forced by arbitrary
+spectral-set separation. `formPerturbationSize` still needs a concrete form-domain norm.
+
+Preferred dependency route: Package a real form-domain Hilbert space and representation
+theorem first; use KLMN to obtain self-adjoint operators before applying
+spectral-subspace estimates.
 -/
 theorem sinTheta_formPerturbation
     (a v : ClosedForm (𝕜 := 𝕜) (E := E))
+    (ha_sesq : a.sesquilinear) (hv_sesq : v.sesquilinear)
+    (ha_closed : a.closedness) (ha_lower : a.lowerSemibounded)
     {alpha beta d : ℝ} (hrel : FormRelativelyBounded a v alpha beta)
     (halpha : 0 ≤ alpha) (hbeta0 : 0 ≤ beta) (hbeta : beta < 1)
     (hd : 0 < d) (s t : Set ℝ)
+    (hs : MeasurableSet s) (ht : MeasurableSet t)
     (hsepAB : ClosedOperator.SpectralSetsSeparated a.associatedOperator
       (formSum a v).associatedOperator s tᶜ d)
     (hsepBA : ClosedOperator.SpectralSetsSeparated (formSum a v).associatedOperator
       a.associatedOperator t sᶜ d) :
     d * ‖a.associatedOperator.spectralProjection s -
       (formSum a v).associatedOperator.spectralProjection t‖ ≤
-      formPerturbationSize a v := by
+      (Real.pi / 2) * formPerturbationSize a v := by
   sorry
 
 end DavisKahanExt

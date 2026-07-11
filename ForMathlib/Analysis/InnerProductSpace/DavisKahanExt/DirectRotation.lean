@@ -45,6 +45,14 @@ Lean proof route for a weaker agent:
 2. Define the polar factor `W=S(S*S)^{-1/2}` and compute `W*W=I`.
 3. Prove surjectivity from invertibility or similarly compute `WW*=I`.
 4. Translate those identities to `IsUnitaryOperator`.
+
+
+Ext-agent signature audit (GPT 5.6 High): Correct for acute pairs using the polar factor
+of the canonical intertwiner.
+
+Preferred dependency route: Construct the polar factor of `QP + QᗮPᗮ`; prove
+intertwining before extremality, and use the Halmos decomposition only for the final
+minimization theorem.
 -/
 theorem directRotation_unitary
     (U V : Submodule 𝕜 E) [U.HasOrthogonalProjection]
@@ -59,6 +67,14 @@ Lean proof route for a weaker agent:
 1. Convert the intertwining identity into inclusion of `U.map W` in `V`.
 2. Use unitarity/surjectivity to compare orthogonal complements or apply the inverse rotation for the reverse inclusion.
 3. Conclude equality of submodules by antisymmetry.
+
+
+Ext-agent signature audit (GPT 5.6 High): Correct and should be derived from projection
+intertwining plus unitarity, not from basis choices.
+
+Preferred dependency route: Construct the polar factor of `QP + QᗮPᗮ`; prove
+intertwining before extremality, and use the Halmos decomposition only for the final
+minimization theorem.
 -/
 theorem directRotation_maps_subspace
     (U V : Submodule 𝕜 E) [U.HasOrthogonalProjection]
@@ -74,6 +90,14 @@ Lean proof route for a weaker agent:
 2. Prove the pre-polar operator `S = QP+(I-Q)(I-P)` satisfies `S P = Q S`.
 3. Show `S*S` commutes with `P`; functional calculus then gives commutation of its inverse square root.
 4. Reassemble to obtain `W P = Q W`.
+
+
+Ext-agent signature audit (GPT 5.6 High): Correct; this is the foundational
+direct-rotation theorem and should be proved before the range and square formulas.
+
+Preferred dependency route: Construct the polar factor of `QP + QᗮPᗮ`; prove
+intertwining before extremality, and use the Halmos decomposition only for the final
+minimization theorem.
 -/
 theorem directRotation_intertwines
     (U V : Submodule 𝕜 E) [U.HasOrthogonalProjection]
@@ -89,6 +113,15 @@ Lean proof route for a weaker agent:
 1. Use the polar/trigonometric formula for the direct rotation on the two-projection decomposition.
 2. Verify the scalar `2×2` identity that two equal angle rotations compose to the product of reflections.
 3. Extend the identity over the trivial reducing summands and close by operator extensionality.
+
+
+Ext-agent signature audit (GPT 5.6 High): Correct with the stated reflection order for
+the convention that the direct rotation maps `U` to `V`; verify the orientation on the
+planar model before general assembly.
+
+Preferred dependency route: Construct the polar factor of `QP + QᗮPᗮ`; prove
+intertwining before extremality, and use the Halmos decomposition only for the final
+minimization theorem.
 -/
 theorem directRotation_sq
     (U V : Submodule 𝕜 E) [U.HasOrthogonalProjection]
@@ -112,6 +145,15 @@ Lean proof route for a weaker agent:
 2. On each generic two-dimensional angle fiber, prove the shorter rotation minimizes `‖W-I‖` among unitaries sending the first line to the second.
 3. Take the essential supremum over the angle spectrum and handle common/orthogonal summands separately.
 4. Check that the stated acuteness hypothesis excludes the ambiguous `π/2` branch.
+
+
+Ext-agent signature audit (GPT 5.6 High): Correct as an operator-norm extremal statement
+for acute pairs. It must not be generalized automatically to every symmetric ideal
+gauge.
+
+Preferred dependency route: Construct the polar factor of `QP + QᗮPᗮ`; prove
+intertwining before extremality, and use the Halmos decomposition only for the final
+minimization theorem.
 -/
 theorem directRotation_minimal
     (U V : Submodule 𝕜 E) [U.HasOrthogonalProjection]

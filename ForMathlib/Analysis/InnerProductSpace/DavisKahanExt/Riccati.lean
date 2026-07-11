@@ -68,6 +68,15 @@ Lean proof route for a weaker agent:
 2. Graph invariance is equivalent to the second component being `X` of the first, which simplifies to `riccatiDefect H X=0`.
 3. Use self-adjointness of the block operator and closedness of the graph to upgrade invariance to reduction.
 4. Prove the reverse direction by the same block calculation.
+
+
+Ext-agent signature audit (GPT 5.6 High): Correct for the self-adjoint block data: graph
+invariance is equivalent to the Riccati equation, and self-adjointness upgrades
+invariance of the closed graph to reduction.
+
+Preferred dependency route: Use graph invariance for algebraic equivalence, the ordered
+Sylvester inverse for contraction estimates, and the canonical graph rotation for
+unitary block diagonalization.
 -/
 theorem graph_reduces_iff_solvesRiccati
     (H : BlockOperatorData (𝕜 := 𝕜) (E0 := E0) (E1 := E1))
@@ -76,7 +85,7 @@ theorem graph_reduces_iff_solvesRiccati
   sorry
 
 /-- Existence of a bounded solution when one diagonal spectrum lies in a gap
-of the other and the coupling is below the sharp threshold.
+of the other and the coupling satisfies a conservative contraction threshold.
 
 Preferred proof strategy:
 
@@ -99,12 +108,21 @@ Lean proof route for a weaker agent:
 2. Use the smallness threshold to prove the continued range remains acute relative to the first coordinate subspace.
 3. Represent the range as a graph and invoke `graph_reduces_iff_solvesRiccati`.
 4. Derive contractivity and the displayed norm estimate from the scalar Riccati majorant before packaging the witness.
+
+
+Ext-agent signature audit (GPT 5.6 High): The `2‖B01‖<d` condition is a conservative
+contraction threshold, not the sharp continuation threshold. The half-angle majorant is
+compatible with this local branch.
+
+Preferred dependency route: Use graph invariance for algebraic equivalence, the ordered
+Sylvester inverse for contraction estimates, and the canonical graph rotation for
+unitary block diagonalization.
 -/
 theorem exists_riccati_solution_of_gap
     (H : BlockOperatorData (𝕜 := 𝕜) (E0 := E0) (E1 := E1))
     {left right d : ℝ} (hd : 0 < d)
     (hgap : IntervalExteriorSeparated H.A0 ⊤ H.A1 ⊤ left right d)
-    (hsmall : ‖H.B01‖ < Real.sqrt 2 * d) :
+    (hsmall : 2 * ‖H.B01‖ < d) :
     ∃ X : E0 →L[𝕜] E1,
       SolvesRiccati H X ∧ ‖X‖ < 1 ∧
       ‖X‖ ≤ Real.tan (Real.arctan (2 * ‖H.B01‖ / d) / 2) := by
@@ -118,12 +136,21 @@ Lean proof route for a weaker agent:
 2. Apply the interval/exterior separation to the linear Sylvester part.
 3. Bound the quadratic term by `‖B01‖‖X‖²` and obtain the scalar quadratic inequality.
 4. Use `hXc` and `hsmall` to select the smaller root and rewrite it as the displayed half-angle tangent.
+
+
+Ext-agent signature audit (GPT 5.6 High): Correct only for the selected contractive
+branch; `hXc` is essential because the scalar quadratic inequality has a second, large
+root.
+
+Preferred dependency route: Use graph invariance for algebraic equivalence, the ordered
+Sylvester inverse for contraction estimates, and the canonical graph rotation for
+unitary block diagonalization.
 -/
 theorem norm_riccati_solution_le
     (H : BlockOperatorData (𝕜 := 𝕜) (E0 := E0) (E1 := E1))
     {left right d : ℝ} (hd : 0 < d)
     (hgap : IntervalExteriorSeparated H.A0 ⊤ H.A1 ⊤ left right d)
-    (hsmall : ‖H.B01‖ < Real.sqrt 2 * d)
+    (hsmall : 2 * ‖H.B01‖ < d)
     {X : E0 →L[𝕜] E1} (hX : SolvesRiccati H X)
     (hXc : ‖X‖ < 1) :
     ‖X‖ ≤ Real.tan (Real.arctan (2 * ‖H.B01‖ / d) / 2) := by
@@ -138,12 +165,21 @@ Lean proof route for a weaker agent:
 2. Use contractivity and the small-coupling hypothesis to retain a positive spectral/separation lower bound.
 3. Apply the ordered Sylvester estimate to force `X-Y=0`.
 4. Alternatively identify both graphs with the same continued spectral projection and use uniqueness of the graph operator.
+
+
+Ext-agent signature audit (GPT 5.6 High): Expected under the conservative small-coupling
+hypothesis. If subtraction of equations does not retain ordered separation, identify
+both graphs with the same continued spectral projection instead.
+
+Preferred dependency route: Use graph invariance for algebraic equivalence, the ordered
+Sylvester inverse for contraction estimates, and the canonical graph rotation for
+unitary block diagonalization.
 -/
 theorem unique_contractive_riccati_solution
     (H : BlockOperatorData (𝕜 := 𝕜) (E0 := E0) (E1 := E1))
     {left right d : ℝ} (hd : 0 < d)
     (hgap : IntervalExteriorSeparated H.A0 ⊤ H.A1 ⊤ left right d)
-    (hsmall : ‖H.B01‖ < Real.sqrt 2 * d)
+    (hsmall : 2 * ‖H.B01‖ < d)
     {X Y : E0 →L[𝕜] E1}
     (hX : SolvesRiccati H X) (hY : SolvesRiccati H Y)
     (hXc : ‖X‖ < 1) (hYc : ‖Y‖ < 1) :
@@ -161,16 +197,26 @@ should be completed here before attempting the unbounded analogue.
 
 Lean proof route for a weaker agent:
 
-1. Define the triangular graph transform from `X` and its inverse using `I+X*X` and `I+XX*`.
-2. Prove the two inverse identities by block multiplication.
-3. Expand `Winv ∘ blockOperator H ∘ W`; use `hX` to cancel both off-diagonal blocks.
-4. Read off the resulting diagonal blocks as `D0,D1` and package the equality with `blockDiagonalOperator`.
+1. Use `graph_reduces_iff_solvesRiccati` to show the graph and its orthogonal complement reduce the self-adjoint block operator.
+2. Construct the canonical unitary graph rotation from the coordinate subspace to `blockGraph X`; take its adjoint/inverse as `Winv`.
+3. Intertwine the two reducing decompositions and expand `Winv ∘ blockOperator H ∘ W`.
+4. Define the two diagonal restrictions `D0,D1`, prove the conjugation equality, and package unitary and inverse identities.
+
+
+Ext-agent signature audit (GPT 5.6 High): The strengthened signature now returns unitary
+inverse data as well as the conjugation equality. This matches self-adjoint
+reducing-graph geometry rather than a merely triangular similarity.
+
+Preferred dependency route: Use graph invariance for algebraic equivalence, the ordered
+Sylvester inverse for contraction estimates, and the canonical graph rotation for
+unitary block diagonalization.
 -/
 theorem blockDiagonalization_of_riccati
     (H : BlockOperatorData (𝕜 := 𝕜) (E0 := E0) (E1 := E1))
     {X : E0 →L[𝕜] E1} (hX : SolvesRiccati H X) :
     ∃ W Winv : WithLp 2 (E0 × E1) →L[𝕜] WithLp 2 (E0 × E1),
       ∃ D0 : E0 →L[𝕜] E0, ∃ D1 : E1 →L[𝕜] E1,
+      IsUnitaryOperator W ∧ IsUnitaryOperator Winv ∧
       Winv ∘L W = ContinuousLinearMap.id 𝕜 (WithLp 2 (E0 × E1)) ∧
       W ∘L Winv = ContinuousLinearMap.id 𝕜 (WithLp 2 (E0 × E1)) ∧
       Winv ∘L blockOperator H ∘L W = blockDiagonalOperator D0 D1 := by

@@ -60,6 +60,15 @@ Lean proof route for a weaker agent:
 2. Justify Bochner integrability using the separated-spectrum resolvent or semigroup bounds.
 3. Differentiate/integrate the truncated formula and pass to the limit.
 4. Invoke `sylvester_unique` to identify the canonical solution with the integral.
+
+
+Ext-agent signature audit (GPT 5.6 High): This unconditional equality is sound only
+because `solveSylvester` is intended to be defined by the displayed integral (or by a
+choice provably equal to it). It is not an existence theorem without separation.
+
+Preferred dependency route: Prove the ordered semigroup estimate first, then the general
+Fourier-multiplier estimate; derive uniqueness and ideal variants from those inverse
+bounds.
 -/
 theorem solveSylvester_eq_resolventIntegral
     (A : F →L[𝕜] F) (B : E →L[𝕜] E) (C : E →L[𝕜] F) :
@@ -74,6 +83,14 @@ Lean proof route for a weaker agent:
 2. Evaluate the Sylvester operator on truncated contour/semigroup integrals.
 3. Show the boundary terms converge to zero from spectral separation.
 4. Pass the bounded linear Sylvester operator through the integral and obtain `C`.
+
+
+Ext-agent signature audit (GPT 5.6 High): Correct under positive spectral separation.
+The implementation should make the selected solution independent of auxiliary contours.
+
+Preferred dependency route: Prove the ordered semigroup estimate first, then the general
+Fourier-multiplier estimate; derive uniqueness and ideal variants from those inverse
+bounds.
 -/
 theorem sylvester_solve
     {A : F →L[𝕜] F} {B : E →L[𝕜] E}
@@ -91,6 +108,14 @@ Lean proof route for a weaker agent:
 1. Apply the general separated-spectrum norm estimate to `X-Y` with right-hand side zero.
 2. Use linearity of `sylvesterOperator` and `hX` to prove its defect is zero.
 3. Since `d>0`, conclude `‖X-Y‖=0`, then extensionality gives `X=Y`.
+
+
+Ext-agent signature audit (GPT 5.6 High): Correct and best proved from the general
+separated-spectrum estimate, not by duplicating resolvent algebra.
+
+Preferred dependency route: Prove the ordered semigroup estimate first, then the general
+Fourier-multiplier estimate; derive uniqueness and ideal variants from those inverse
+bounds.
 -/
 theorem sylvester_unique
     {A : F →L[𝕜] F} {B : E →L[𝕜] E}
@@ -123,6 +148,15 @@ Lean proof route for a weaker agent:
 2. Represent `X` by the semigroup integral `∫₀∞ exp(-tA) C exp(tB) dt`.
 3. Bound the integrand by `exp(-dt)‖C‖` using functional calculus.
 4. Integrate, use uniqueness, and multiply by `d`.
+
+
+Ext-agent signature audit (GPT 5.6 High): The orientation is correct for `A X - X B`:
+the hypothesis says the spectrum of `A` lies at least `d` above that of `B`.
+Interval/exterior splitting should be a separate corollary.
+
+Preferred dependency route: Prove the ordered semigroup estimate first, then the general
+Fourier-multiplier estimate; derive uniqueness and ideal variants from those inverse
+bounds.
 -/
 theorem norm_sylvester_le_of_orderedSeparation
     {A : F →L[𝕜] F} {B : E →L[𝕜] E} {X C : E →L[𝕜] F}
@@ -155,6 +189,15 @@ Lean proof route for a weaker agent:
 2. Represent `X` as an integral of `exp(itA) C exp(-itB)` against that measure.
 3. Bound every unitary orbit term by `‖C‖` and integrate total variation `π/(2d)`.
 4. Use uniqueness of the Sylvester solution to identify the integral with the given `X`.
+
+
+Ext-agent signature audit (GPT 5.6 High): Correct with the universal `π/2` constant for
+arbitrary separated self-adjoint spectra. Do not accidentally claim constant one from
+absolute pairwise separation alone.
+
+Preferred dependency route: Prove the ordered semigroup estimate first, then the general
+Fourier-multiplier estimate; derive uniqueness and ideal variants from those inverse
+bounds.
 -/
 theorem norm_sylvester_le_of_generalSeparation
     {A : F →L[𝕜] F} {B : E →L[𝕜] E} {X C : E →L[𝕜] F}
@@ -173,6 +216,15 @@ Lean proof route for a weaker agent:
 2. Use the ideal bound to estimate each left/right unitary translate without changing the gauge.
 3. Integrate the scalar total variation to get `π/(2d)`.
 4. Approximate the integral by finite sums to prove the solution remains in the complete ideal, then return membership and the bound.
+
+
+Ext-agent signature audit (GPT 5.6 High): Correct for a square symmetric ideal on one
+Hilbert space. A rectangular ideal version would require a separate bimodule API and
+should not be inferred from this signature.
+
+Preferred dependency route: Prove the ordered semigroup estimate first, then the general
+Fourier-multiplier estimate; derive uniqueness and ideal variants from those inverse
+bounds.
 -/
 theorem ideal_sylvester_le
     (I : SymmetricNormIdeal (𝕜 := 𝕜) (E := E))

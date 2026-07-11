@@ -82,6 +82,30 @@ def ClosedOperator.ReducesSubspace
   (∀ x : A.domain, Uᗮ.starProjection (x : G) ∈ A.domain) ∧
   A.InvariantSubspace U ∧ A.InvariantSubspace Uᗮ
 
+
+/-- Two closed operators on the same Hilbert space are unitarily equivalent
+with explicit transport of domains and operator actions. -/
+def ClosedOperator.UnitaryEquivalent
+    {G : Type*} [NormedAddCommGroup G] [InnerProductSpace 𝕜 G] [CompleteSpace G]
+    (A B : ClosedOperator (𝕜 := 𝕜) (E := G))
+    (W Winv : G →L[𝕜] G) : Prop :=
+  IsUnitaryOperator W ∧ IsUnitaryOperator Winv ∧
+  Winv ∘L W = ContinuousLinearMap.id 𝕜 G ∧
+  W ∘L Winv = ContinuousLinearMap.id 𝕜 G ∧
+  ∃ hWdom : ∀ x : A.domain, W (x : G) ∈ B.domain,
+  ∃ hWinvdom : ∀ y : B.domain, Winv (y : G) ∈ A.domain,
+    (∀ x : A.domain,
+      B.toLinearMap ⟨W (x : G), hWdom x⟩ = W (A.toLinearMap x)) ∧
+    (∀ y : B.domain,
+      A.toLinearMap ⟨Winv (y : G), hWinvdom y⟩ = Winv (B.toLinearMap y))
+
+/-- Closed block-diagonal representative obtained from a reducing graph. -/
+noncomputable def unboundedBlockDiagonalOperator
+    (H : UnboundedBlockData (𝕜 := 𝕜) (E0 := E0) (E1 := E1))
+    (X : E0 →L[𝕜] E1) :
+    ClosedOperator (𝕜 := 𝕜) (E := WithLp 2 (E0 × E1)) := by
+  sorry
+
 /-- Reducing graph subspaces correspond to strong Riccati solutions under the
 explicit domain condition.
 
@@ -99,11 +123,21 @@ Lean proof route for a weaker agent:
 2. Expand the two block components of the unbounded operator.
 3. Equate the second component with `X` applied to the first; this is exactly the strong Riccati equation.
 4. Reverse the calculation to prove graph invariance.
+
+
+Ext-agent signature audit (GPT 5.6 High): Correctly states invariance, not reduction.
+Domain preservation must remain explicit because it is not implied by the formal
+algebraic Riccati expression.
+
+Preferred dependency route: Track domains in every block calculation. Establish graph
+invariance first, reduction second, and only then construct a domain-transporting
+unitary equivalence.
 -/
 theorem graph_invariant_iff_strongRiccati
     (H : UnboundedBlockData (𝕜 := 𝕜) (E0 := E0) (E1 := E1))
     (X : E0 →L[𝕜] E1) :
-    (unboundedBlockOperator H).InvariantSubspace (unboundedBlockGraph X) ↔
+    (PreservesRiccatiDomains H X ∧
+      (unboundedBlockOperator H).InvariantSubspace (unboundedBlockGraph X)) ↔
       StrongSolvesRiccati H X := by
   sorry
 
@@ -116,14 +150,25 @@ Lean proof route for a weaker agent:
 2. Prove it is a graph over the first coordinate and obtain a bounded contractive angular operator.
 3. Establish preservation of `dom A0` into `dom A1` from the resolvent representation and graph invariance.
 4. Expand invariance on the operator domain to obtain the strong Riccati identity.
+
+
+Ext-agent signature audit (GPT 5.6 High): A conservative local existence target. The
+reduction conclusion additionally requires the adjoint-graph/domain decomposition; this
+must be proved, not inferred from one-sided domain preservation alone.
+
+Preferred dependency route: Track domains in every block calculation. Establish graph
+invariance first, reduction second, and only then construct a domain-transporting
+unitary equivalence.
 -/
 theorem exists_strongRiccati_solution
     (H : UnboundedBlockData (𝕜 := 𝕜) (E0 := E0) (E1 := E1))
     (s0 s1 : Set ℝ) {d : ℝ} (hd : 0 < d)
     (hcover0 : H.A0.realSpectrum ⊆ s0) (hcover1 : H.A1.realSpectrum ⊆ s1)
     (hsep : ClosedOperator.SpectralSetsSeparated H.A0 H.A1 s0 s1 d)
-    (hsmall : ‖H.B01‖ < d) :
-    ∃ X : E0 →L[𝕜] E1, StrongSolvesRiccati H X ∧ ‖X‖ < 1 := by
+    (hsmall : 2 * ‖H.B01‖ < d) :
+    ∃ X : E0 →L[𝕜] E1,
+      StrongSolvesRiccati H X ∧ ‖X‖ < 1 ∧
+      (unboundedBlockOperator H).ReducesSubspace (unboundedBlockGraph X) := by
   sorry
 
 /-- Strong Riccati solution yields block diagonalization with domain control. 
@@ -134,13 +179,25 @@ Lean proof route for a weaker agent:
 2. Prove the rotation intertwines the corresponding graph projections.
 3. Use `hX` and `graph_invariant_iff_strongRiccati` to obtain invariance of the target graph.
 4. Record domain transport separately; the current conclusion packages the unitary and projection intertwining rather than claiming a vacuous unitary existence.
+
+
+Ext-agent signature audit (GPT 5.6 High): The corrected conclusion states actual unitary
+equivalence with two-way domain transport. `hred` is needed in addition to the one-sided
+strong Riccati equation.
+
+Preferred dependency route: Track domains in every block calculation. Establish graph
+invariance first, reduction second, and only then construct a domain-transporting
+unitary equivalence.
 -/
 theorem unbounded_blockDiagonalization
     (H : UnboundedBlockData (𝕜 := 𝕜) (E0 := E0) (E1 := E1))
-    {X : E0 →L[𝕜] E1} (hX : StrongSolvesRiccati H X) :
-    ∃ W : WithLp 2 (E0 × E1) →L[𝕜] WithLp 2 (E0 × E1),
-      IsUnitaryOperator W ∧
-      (unboundedBlockOperator H).InvariantSubspace (unboundedBlockGraph X) ∧
+    {X : E0 →L[𝕜] E1} (hX : StrongSolvesRiccati H X)
+    (hred : (unboundedBlockOperator H).ReducesSubspace
+      (unboundedBlockGraph X)) :
+    ∃ W Winv : WithLp 2 (E0 × E1) →L[𝕜] WithLp 2 (E0 × E1),
+      ClosedOperator.UnitaryEquivalent
+        (unboundedBlockOperator H) (unboundedBlockDiagonalOperator H X)
+        W Winv ∧
       W ∘L projection (unboundedBlockGraph 0) =
         projection (unboundedBlockGraph X) ∘L W := by
   sorry

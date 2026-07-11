@@ -40,6 +40,15 @@ Lean proof route for a weaker agent:
 1. Obtain the two inverse identities for `A-zI` and `A-wI` from `hz,hw`.
 2. Expand `Rz-Rw = Rz((A-wI)-(A-zI))Rw`.
 3. Simplify the middle difference to `(z-w)I` and reassociate compositions.
+
+
+Ext-agent signature audit (GPT 5.6 High): The sign is correct for the convention
+`(A-zI)⁻¹`. Ensure `resolventOperator` is chosen from `InResolventSet` and prove inverse
+uniqueness once.
+
+Preferred dependency route: Use Banach-algebra inverse uniqueness and Bochner contour
+integration; keep contour regularity and winding-number obligations inside
+`ContourSeparatesSpectrum`.
 -/
 theorem resolvent_identity
     (A : E →L[𝕜] E) {z w : 𝕜}
@@ -55,6 +64,14 @@ Lean proof route for a weaker agent:
 1. Use the algebraic inverse-difference formula `Y⁻¹-X⁻¹=Y⁻¹(X-Y)X⁻¹`.
 2. Instantiate `X=A-zI` and `Y=B-zI` with the inverses supplied by `hA,hB`.
 3. Simplify the scalar identity terms and reassociate compositions.
+
+
+Ext-agent signature audit (GPT 5.6 High): The order and sign are correct: `R_B-R_A =
+R_B(A-B)R_A` for the chosen resolvent convention.
+
+Preferred dependency route: Use Banach-algebra inverse uniqueness and Bochner contour
+integration; keep contour regularity and winding-number obligations inside
+`ContourSeparatesSpectrum`.
 -/
 theorem resolvent_perturbation_identity
     (A B : E →L[𝕜] E) {z : 𝕜}
@@ -71,6 +88,15 @@ Lean proof route for a weaker agent:
 2. Use `hsep` to bound `|f(lam)|≤delta⁻¹` on the spectrum.
 3. Identify the functional-calculus operator with `resolventOperator A z`.
 4. Invoke the functional-calculus norm estimate and simplify using `hdelta`.
+
+
+Ext-agent signature audit (GPT 5.6 High): Correct for self-adjoint `A`. `hsep` also
+implies membership in the resolvent set, so the implementation must connect the total
+roadmap resolvent to that unique inverse.
+
+Preferred dependency route: Use Banach-algebra inverse uniqueness and Bochner contour
+integration; keep contour regularity and winding-number obligations inside
+`ContourSeparatesSpectrum`.
 -/
 theorem norm_resolvent_le_inv_distance
     (A : E →L[𝕜] E) (hA : IsSelfAdjointOperator A)
@@ -99,10 +125,20 @@ Lean proof route for a weaker agent:
 2. Use the holomorphic contour formula to show the contour integral equals the indicator of the enclosed spectral component on `realSpectrum A`.
 3. Apply functional-calculus extensionality on the spectrum.
 4. Use `hcontour` for winding number and resolvent-set obligations.
+
+
+Ext-agent signature audit (GPT 5.6 High): The explicit measurability premise is
+required by the Borel spectral calculus. `ContourSeparatesSpectrum` must additionally
+encode a closed rectifiable contour, resolvent-set inclusion, orientation, and winding
+numbers. With those contracts, the signature is sound.
+
+Preferred dependency route: Use Banach-algebra inverse uniqueness and Bochner contour
+integration; keep contour regularity and winding-number obligations inside
+`ContourSeparatesSpectrum`.
 -/
 theorem rieszProjection_eq_spectralProjection
     (A : E →L[𝕜] E) (hA : IsSelfAdjointOperator A)
-    (s : Set ℝ) (contour : ℝ → 𝕜)
+    (s : Set ℝ) (hs : MeasurableSet s) (contour : ℝ → 𝕜)
     (hcontour : ContourSeparatesSpectrum A s contour) :
     rieszProjection A contour = spectralProjection A s := by
   sorry
@@ -115,6 +151,15 @@ Lean proof route for a weaker agent:
 2. Use the norm hypothesis to invert `I+H R_A(z)` by a Neumann series.
 3. Write down the candidate two-sided inverse and verify both compositions by associativity.
 4. Package it as an `InResolventSet` witness.
+
+
+Ext-agent signature audit (GPT 5.6 High): Correct Neumann-series criterion. The product
+order in the factorization must match the supplied norm bound, but either left or right
+factorization gives the result.
+
+Preferred dependency route: Use Banach-algebra inverse uniqueness and Bochner contour
+integration; keep contour regularity and winding-number obligations inside
+`ContourSeparatesSpectrum`.
 -/
 theorem inResolventSet_add_of_norm_lt
     (A H : E →L[𝕜] E) {z : 𝕜}
@@ -131,6 +176,15 @@ Lean proof route for a weaker agent:
 2. Show the contour integrand is jointly continuous in path parameter and contour parameter.
 3. Pass continuity through the Bochner contour integral using a uniform integrable domination.
 4. Identify the integral with `rieszProjection`.
+
+
+Ext-agent signature audit (GPT 5.6 High): Correct but deliberately global because both
+hypothesis and conclusion quantify over all real `t`. The continuation module supplies
+the more useful `[0,1]` specialization.
+
+Preferred dependency route: Use Banach-algebra inverse uniqueness and Bochner contour
+integration; keep contour regularity and winding-number obligations inside
+`ContourSeparatesSpectrum`.
 -/
 theorem continuous_rieszProjection_path
     (A H : E →L[𝕜] E) (s : Set ℝ) (contour : ℝ → 𝕜)

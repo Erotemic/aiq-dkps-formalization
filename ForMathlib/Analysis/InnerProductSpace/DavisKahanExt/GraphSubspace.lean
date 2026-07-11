@@ -58,6 +58,15 @@ Lean proof route for a weaker agent:
 1. Obtain an angular operator from `acute_iff_exists_bounded_angularOperator`.
 2. Show its range description agrees with `graphSubspace` by unfolding the latter.
 3. For uniqueness, apply `P_U` and `P_{Uᗮ}` to equal graph vectors and use injectivity of the graph parametrization.
+
+
+Ext-agent signature audit (GPT 5.6 High): Correct. Acuteness supplies both injectivity
+and surjectivity of the coordinate projection and therefore uniqueness of the bounded
+graph map.
+
+Preferred dependency route: Build on the acute graph representation and the bounded
+inverse theorem, then use functional calculus for `I + X*X` to obtain projection and
+angle formulas.
 -/
 theorem existsUnique_angularOperator
     (U V : Submodule 𝕜 E) [U.HasOrthogonalProjection]
@@ -81,6 +90,15 @@ Lean proof route for a weaker agent:
 2. Prove `J` is an isometry onto `graphSubspace U X`.
 3. Compute the orthogonal projection as `J J*` and expand its four blocks.
 4. Match the expanded expression with `graphProjectionFormula U X`.
+
+
+Ext-agent signature audit (GPT 5.6 High): Correct only with `IsAngularOperator`; without
+that hypothesis the ambient map may mix the base and complementary coordinates and the
+advertised block formula is false.
+
+Preferred dependency route: Build on the acute graph representation and the bounded
+inverse theorem, then use functional calculus for `I + X*X` to obtain projection and
+angle formulas.
 -/
 theorem projection_graphSubspace_formula
     (U : Submodule 𝕜 E) [U.HasOrthogonalProjection]
@@ -95,6 +113,15 @@ Lean proof route for a weaker agent:
 1. Use `projection_graphSubspace_formula` to compute the gap between `U` and the graph.
 2. Show the gap is `‖X‖/sqrt(1+‖X‖²)` by functional calculus and spectral mapping.
 3. Apply the scalar identity `tan(arcsin(x/sqrt(1+x²)))=x` for `x≥0`.
+
+
+Ext-agent signature audit (GPT 5.6 High): Correct because every bounded graph is acute.
+The proof must establish the angle range before applying inverse trigonometric
+identities.
+
+Preferred dependency route: Build on the acute graph representation and the bounded
+inverse theorem, then use functional calculus for `I + X*X` to obtain projection and
+angle formulas.
 -/
 theorem tan_maximalAngle_eq_norm_angularOperator
     (U : Submodule 𝕜 E) [U.HasOrthogonalProjection]
@@ -109,6 +136,14 @@ Lean proof route for a weaker agent:
 1. Rewrite the angle with `tan_maximalAngle_eq_norm_angularOperator`.
 2. Establish `0≤maximalAngle<π/2` for a graph subspace.
 3. Use strict monotonicity of `tan` and `tan(π/4)=1` to prove both implications.
+
+
+Ext-agent signature audit (GPT 5.6 High): Correct after the preceding tangent identity
+and the fact that graph angles lie in `[0,π/2)`.
+
+Preferred dependency route: Build on the acute graph representation and the bounded
+inverse theorem, then use functional calculus for `I + X*X` to obtain projection and
+angle formulas.
 -/
 theorem norm_angularOperator_lt_one_iff
     (U : Submodule 𝕜 E) [U.HasOrthogonalProjection]

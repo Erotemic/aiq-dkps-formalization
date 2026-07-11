@@ -43,11 +43,19 @@ def Extends (A B : ClosedOperator (𝕜 := 𝕜) (E := E)) : Prop :=
 def IsSymmetric (A : ClosedOperator (𝕜 := 𝕜) (E := E)) : Prop :=
   ∀ x y : A.domain, ⟪A.toLinearMap x, (y : E)⟫_𝕜 = ⟪(x : E), A.toLinearMap y⟫_𝕜
 
-/-- Self-adjointness represented as maximal symmetry. -/
+/-- Adjoint of a densely defined closed operator.  The implementation should
+be reconciled with mathlib's partial-linear-map adjoint API. -/
+noncomputable def adjoint
+    (A : ClosedOperator (𝕜 := 𝕜) (E := E)) :
+    ClosedOperator (𝕜 := 𝕜) (E := E) := by
+  sorry
+
+/-- A closed operator is self-adjoint when it equals its Hilbert-space adjoint.
+
+Maximal symmetry alone is not used here: a maximal symmetric operator can fail
+to be self-adjoint when its deficiency indices are unequal. -/
 def IsSelfAdjoint (A : ClosedOperator (𝕜 := 𝕜) (E := E)) : Prop :=
-  IsSymmetric A ∧
-    ∀ B : ClosedOperator (𝕜 := 𝕜) (E := E),
-      Extends A B → IsSymmetric B → B.domain = A.domain
+  A.adjoint = A
 
 /-- Graph norm. -/
 noncomputable def graphNorm (A : ClosedOperator (𝕜 := 𝕜) (E := E))
@@ -82,10 +90,16 @@ def SpectralSetsSeparated
   ∀ a ∈ A.realSpectrum, a ∈ s →
     ∀ b ∈ B.realSpectrum, b ∈ t → d ≤ |a - b|
 
-/-- Sum with a relatively bounded operator on the same domain. -/
+/-- Sum with a relatively bounded operator on the same domain.
+
+The relative-bound hypotheses are part of the constructor because an arbitrary
+linear perturbation on `A.domain` need not have closed graph. -/
 noncomputable def addRelative
     (A : ClosedOperator (𝕜 := 𝕜) (E := E))
-    (V : A.domain →ₗ[𝕜] E) : ClosedOperator (𝕜 := 𝕜) (E := E) := by
+    (V : A.domain →ₗ[𝕜] E) {a b : ℝ}
+    (ha : 0 ≤ a) (hb0 : 0 ≤ b)
+    (hrel : RelativelyBounded A V a b) (hb : b < 1) :
+    ClosedOperator (𝕜 := 𝕜) (E := E) := by
   sorry
 
 /-- Unbounded spectral projection. -/
@@ -101,7 +115,15 @@ Lean proof route for a weaker agent:
 1. Show the bounded sum has the same dense domain and closed graph as `A` by graph-norm equivalence.
 2. Prove symmetry using `hA` and `hV`.
 3. Apply bounded Kato--Rellich, or factor the nonreal resolvent and use a Neumann series for sufficiently large imaginary part.
-4. Translate maximal symmetry back to `ClosedOperator.IsSelfAdjoint`.
+4. Use the adjoint/resolvent characterization to prove equality with the Hilbert-space adjoint.
+
+
+Ext-agent signature audit (GPT 5.6 High): Correct Kato--Rellich bounded-perturbation
+target. It depends on the genuine adjoint equality, not maximal symmetry.
+
+Preferred dependency route: Reconcile `ClosedOperator` with a genuine partial-operator
+adjoint/resolvent API before attempting Kato--Rellich or unbounded spectral projection
+arguments.
 -/
 theorem isSelfAdjoint_addBounded
     (A : ClosedOperator (𝕜 := 𝕜) (E := E))
@@ -131,6 +153,15 @@ Lean proof route for a weaker agent:
 2. Deduce closedness and density of the perturbed operator and use `hV` for symmetry.
 3. Choose a nonreal spectral parameter with small `V(A-z)⁻¹` norm and invert by Neumann series.
 4. Use the standard resolvent criterion for self-adjointness.
+
+
+Ext-agent signature audit (GPT 5.6 High): Correct after `addRelative` was made to carry
+nonnegative relative-bound parameters and a bound below one. The symmetry hypothesis on
+`V` remains essential.
+
+Preferred dependency route: Reconcile `ClosedOperator` with a genuine partial-operator
+adjoint/resolvent API before attempting Kato--Rellich or unbounded spectral projection
+arguments.
 -/
 theorem isSelfAdjoint_of_relativelyBounded
     (A : ClosedOperator (𝕜 := 𝕜) (E := E))
@@ -139,7 +170,7 @@ theorem isSelfAdjoint_of_relativelyBounded
       ⟪V x, (y : E)⟫_𝕜 = ⟪(x : E), V y⟫_𝕜)
     {a b : ℝ} (ha : 0 ≤ a) (hb0 : 0 ≤ b)
     (hrel : RelativelyBounded A V a b) (hb : b < 1) :
-    (A.addRelative V).IsSelfAdjoint := by
+    (A.addRelative V ha hb0 hrel hb).IsSelfAdjoint := by
   sorry
 
 /-- Unbounded-operator `sin Θ` theorem with bounded difference. 
@@ -148,18 +179,28 @@ Lean proof route for a weaker agent:
 
 1. Use the unbounded spectral theorem to form the two spectral projections.
 2. Derive the weak Sylvester equation between their ranges on `dom A`; the bounded perturbation supplies the residual.
-3. Apply the unbounded separated-spectrum Sylvester estimate in both directions using `hsepAB,hsepBA`.
-4. Recombine the directed bounds to control the full projector difference.
+3. Apply the unbounded general separated-spectrum Sylvester estimate in both directions using `hsepAB,hsepBA`.
+4. Recombine the directed bounds and retain the universal `π/2` constant. Add a separate interval/exterior corollary for constant one.
+
+
+Ext-agent signature audit (GPT 5.6 High): Corrected to the generic `π/2` constant for
+arbitrary separated spectral sets. Both mixed gaps are still needed for the full
+projection difference; a later interval/exterior theorem should recover constant one.
+
+Preferred dependency route: Reconcile `ClosedOperator` with a genuine partial-operator
+adjoint/resolvent API before attempting Kato--Rellich or unbounded spectral projection
+arguments.
 -/
 theorem sinTheta_unbounded_boundedPerturbation
     (A : ClosedOperator (𝕜 := 𝕜) (E := E))
     (hA : A.IsSelfAdjoint) (V : E →L[𝕜] E)
     (hV : IsSelfAdjointOperator V) (s t : Set ℝ)
+    (hs : MeasurableSet s) (ht : MeasurableSet t)
     {d : ℝ} (hd : 0 < d)
     (hsepAB : SpectralSetsSeparated A (A.addBounded V) s tᶜ d)
     (hsepBA : SpectralSetsSeparated (A.addBounded V) A t sᶜ d) :
     d * ‖A.spectralProjection s - (A.addBounded V).spectralProjection t‖ ≤
-      ‖V‖ := by
+      (Real.pi / 2) * ‖V‖ := by
   sorry
 
 end ClosedOperator

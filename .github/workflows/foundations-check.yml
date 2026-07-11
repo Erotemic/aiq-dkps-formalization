@@ -2,6 +2,7 @@ name: Foundations capstone check
 
 on:
   push:
+  pull_request:
   workflow_dispatch:
 
 jobs:

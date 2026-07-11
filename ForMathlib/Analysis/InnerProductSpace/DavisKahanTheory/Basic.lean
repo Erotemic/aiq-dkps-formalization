@@ -468,6 +468,31 @@ theorem spectrumIn_restrict_iff (A : E →ₗ[𝕜] E)
   unfold SpectrumIn
   rw [restrictedSpectrum_restrict]
 
+/-- **A symmetric operator commutes with the projection onto a reducing
+subspace.**  For `A` symmetric and `U` an `A`-invariant subspace (so `Uᗮ` is
+invariant too), `P_U (A x) = A (P_U x)`. -/
+theorem projection_apply_comm_of_reduces {A : E →ₗ[𝕜] E} (hA : A.IsSymmetric)
+    {U : Submodule 𝕜 E} [U.HasOrthogonalProjection] (hU : Reduces A U) (x : E) :
+    projection U (A x) = A (projection U x) := by
+  have hUperp : Reduces A Uᗮ := reduces_orthogonal_of_isSymmetric hA hU
+  have hpx : U.starProjection x ∈ U := U.starProjection_apply_mem x
+  have hrest : x - U.starProjection x ∈ Uᗮ := U.sub_starProjection_mem_orthogonal x
+  have hApx : A (U.starProjection x) ∈ U := hU _ hpx
+  have hArest : A (x - U.starProjection x) ∈ Uᗮ := hUperp _ hrest
+  have hsplit : A x = A (U.starProjection x) + A (x - U.starProjection x) := by
+    rw [← map_add]; congr 1; abel
+  show U.starProjection (A x) = A (U.starProjection x)
+  rw [hsplit, map_add, U.starProjection_eq_self_iff.mpr hApx,
+    (Submodule.starProjection_apply_eq_zero_iff U).mpr hArest, add_zero]
+
+/-- The complementary projection onto `Uᗮ` also commutes with `A` when `A` is
+symmetric and `U` reduces `A`. -/
+theorem complementaryProjection_apply_comm_of_reduces {A : E →ₗ[𝕜] E}
+    (hA : A.IsSymmetric) {U : Submodule 𝕜 E} [U.HasOrthogonalProjection]
+    (hU : Reduces A U) (x : E) :
+    complementaryProjection U (A x) = A (complementaryProjection U x) :=
+  projection_apply_comm_of_reduces hA (reduces_orthogonal_of_isSymmetric hA hU) x
+
 /-- The canonical projector has the expected range.
 
 Lean proof route for a weaker agent:

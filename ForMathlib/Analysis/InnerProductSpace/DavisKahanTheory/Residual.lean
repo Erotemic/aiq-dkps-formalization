@@ -97,7 +97,9 @@ Lean proof route for a weaker agent:
 -/
 theorem isSymmetric_compression {A : E →ₗ[𝕜] E} (hA : A.IsSymmetric)
     (X : F →ₗᵢ[𝕜] E) : (compression A X).IsSymmetric := by
-  sorry
+  intro p q
+  simp only [compression, LinearMap.comp_apply]
+  rw [LinearMap.adjoint_inner_left, hA, ← LinearMap.adjoint_inner_right]
 
 /-- The Ritz residual is orthogonal to the trial subspace.
 
@@ -155,7 +157,24 @@ theorem residual_eq_perturbation_comp {A B : E →ₗ[𝕜] E}
     (X : F →ₗᵢ[𝕜] E) (M : F →ₗ[𝕜] F)
     (hBX : B ∘ₗ X.toLinearMap = X.toLinearMap ∘ₗ M) :
     residual A X M = (A - B) ∘ₗ X.toLinearMap := by
-  sorry
+  show A ∘ₗ X.toLinearMap - X.toLinearMap ∘ₗ M = (A - B) ∘ₗ X.toLinearMap
+  rw [LinearMap.sub_comp, hBX]
+
+/-- **The projected-residual (cross-block) Sylvester identity.**  For `A`
+symmetric and `U` an `A`-invariant subspace, the sine embedding
+`Y = P_{Uᗮ} X` satisfies the Sylvester equation
+`A Y - Y M = P_{Uᗮ} (A X - X M)`, i.e. its residual is the `Uᗮ`-projection of the
+ambient residual.  This is the algebraic heart of the residual `sin Θ` theorem;
+it uses only the commutation of `A` with the complementary projection. -/
+theorem sylvester_sinThetaEmbedding_eq_projectedResidual
+    {A : E →ₗ[𝕜] E} (hA : A.IsSymmetric)
+    {U : Submodule 𝕜 E} [U.HasOrthogonalProjection] (hU : Reduces A U)
+    (X : F →ₗᵢ[𝕜] E) (M : F →ₗ[𝕜] F) :
+    A ∘ₗ sinThetaEmbedding U X - sinThetaEmbedding U X ∘ₗ M =
+      complementaryProjection U ∘ₗ residual A X M := by
+  ext x
+  simp only [sinThetaEmbedding, residual, LinearMap.comp_apply, LinearMap.sub_apply, map_sub]
+  rw [complementaryProjection_apply_comm_of_reduces hA hU (X.toLinearMap x)]
 
 /-- A unitarily invariant norm of the invariant-pair residual is bounded by
 that of the ambient perturbation.

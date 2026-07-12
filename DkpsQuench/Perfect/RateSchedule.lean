@@ -31,6 +31,7 @@ namespace DkpsQuench.Perfect
 open Acharyya2025.Bridge
 open Acharyya2025.GrowingPipeline
 open Acharyya2025.GrowingResponse
+open Acharyya2025.ConfigPerturbation
 
 /-- Conservative response-mean tolerance.  The fifth power is chosen to beat
 the intentionally loose growing CMDS bound, including its final
@@ -58,26 +59,27 @@ finite net; the other half is reserved for deterministic net extension. -/
 noncomputable def safeNetTolerance (n : Nat) : Real :=
   safeResponseTolerance n / 2
 
-@[positivity] theorem safeResponseTolerance_pos (n : Nat) :
+theorem safeResponseTolerance_pos (n : Nat) :
     0 < safeResponseTolerance n := by
   unfold safeResponseTolerance
   positivity
 
-@[positivity] theorem safeFiniteReplicates_pos (n : Nat) :
+theorem safeFiniteReplicates_pos (n : Nat) :
     0 < safeFiniteReplicates n := by
   unfold safeFiniteReplicates
   positivity
 
-@[positivity] theorem safeEntropyReplicates_pos (entropyPower n : Nat) :
+theorem safeEntropyReplicates_pos (entropyPower n : Nat) :
     0 < safeEntropyReplicates entropyPower n := by
   unfold safeEntropyReplicates
   positivity
 
-@[positivity] theorem safePerspectiveRadius_pos
+theorem safePerspectiveRadius_pos
     (L : Real) (hL : 0 ≤ L) (n : Nat) :
     0 < safePerspectiveRadius L n := by
   unfold safePerspectiveRadius
-  positivity
+  have hden : 0 < 4 * (L + 1) := by linarith
+  exact div_pos (safeResponseTolerance_pos n) hden
 
 /-- The canonical perspective-net radius vanishes for every nonnegative fixed
 Lipschitz constant.
@@ -395,7 +397,7 @@ Implementation recipe (execute in this order):
 8. No new asymptotic algebra belongs in this theorem; all failures should be
    repaired in the three preceding limit lemmas.
 -/
-theorem safe_growingConfigControl
+noncomputable def safe_growingConfigControl
     (m d : Nat) (hm : 0 < m)
     (populationResponseBound perspectiveBound κ : Real)
     (hresponse : 0 ≤ populationResponseBound)

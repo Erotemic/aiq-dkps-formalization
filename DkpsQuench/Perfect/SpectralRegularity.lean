@@ -475,7 +475,7 @@ theorem empiricalCovariance_quadratic_floor_of_entrywise
     (Hnondeg : PerspectiveNondegeneracy Pf ψ κ)
     (A : DisMat d)
     (hclose : EntrywiseClose A
-      (perspectiveCovarianceMatrix Pf ψ Hnondeg.center)
+      (perspectiveCovarianceMatrix Pf ψ (perspectiveMean Pf ψ))
       (covarianceEntryTolerance d κ))
     (x : Vec d) :
     (κ / 2) * ‖x‖ ^ 2 ≤
@@ -512,7 +512,7 @@ theorem reference_centered_quadratic_floor_of_event
     {κ : Real}
     (Hnondeg : PerspectiveNondegeneracy Pf ψ κ)
     (ωref : Ωref)
-    (hω : ωref ∈ referenceCovarianceEvent Pf ψ f_ref Hnondeg.center
+    (hω : ωref ∈ referenceCovarianceEvent Pf ψ f_ref (perspectiveMean Pf ψ)
       (covarianceEntryTolerance d κ) n)
     (x : Vec d) :
     (κ / 2) * ‖x‖ ^ 2 ≤
@@ -640,7 +640,7 @@ Implementation recipe (execute in this order):
 1. Obtain `B ≥ 0` and `hB : ∀ f, ‖ψ f‖ ≤ B` from
    `exists_perspective_norm_bound_of_isCompact_range`.
 2. Define
-   `event n := referenceCovarianceEvent Pf ψ f_ref Hnondeg.center
+   `event n := referenceCovarianceEvent Pf ψ f_ref (perspectiveMean Pf ψ)
    (covarianceEntryTolerance d κ) n ∩ {ω | d ≤ n}`.
 3. Prove measurability using
    `measurableSet_referenceCovarianceEvent`, `hiid.measurable`, and the fact that
@@ -675,13 +675,13 @@ theorem exists_growingSpectralSubevents_of_compact_iid_nondegenerate
     (hrealize : PerspectiveResponseRealization ψ f_ref μbar)
     {κ : Real} (Hnondeg : PerspectiveNondegeneracy Pf ψ κ) :
     ∃ B : Real, 0 ≤ B ∧ (∀ f, ‖ψ f‖ ≤ B) ∧
-      GrowingSpectralSubevents μref hμref
+      Nonempty (GrowingSpectralSubevents μref hμref
         (fun n ωref f => responseDist (μbar n ωref f))
         (centeredAugmentedPerspectiveConfig ψ f_ref)
         (centeredAugmentedPerspectiveConfig_gram_eq
           ψ f_ref μbar hrealize)
         (κ / 2)
-        (fun n => 4 * ((n + 1 : Nat) : Real) * B ^ 2) := by
+        (fun n => 4 * ((n + 1 : Nat) : Real) * B ^ 2)) := by
   sorry
 
 end DkpsQuench.Perfect

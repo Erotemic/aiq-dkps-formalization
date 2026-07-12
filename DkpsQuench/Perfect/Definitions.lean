@@ -131,8 +131,17 @@ structure AugmentedPopulationGeometry
     ‖config n ωref f i.castSucc - config n ωref f (Fin.last n)‖ =
       ‖ψ (f_ref n ωref i) - ψ f‖
 
-/-- A nondegenerate population perspective distribution.  The chosen center is
-required to be the population mean, and every direction has second moment at
+/-- Population (Bochner) mean of the perspective embedding.  This is the
+canonical center used by the nondegeneracy certificate; it plays the role of the
+former free-floating `center` field. -/
+noncomputable def perspectiveMean
+    {d : Nat}
+    (Pf : Measure (Model Q X))
+    (ψ : Model Q X → Vec d) : Vec d :=
+  ∫ f, ψ f ∂Pf
+
+/-- A nondegenerate population perspective distribution.  The center is the
+population mean `perspectiveMean Pf ψ`, and every direction has second moment at
 least `κ`.  This is the genuine identifiability assumption that replaces the
 current stage-by-stage eigenvalue-floor hypothesis.
 
@@ -146,11 +155,11 @@ structure PerspectiveNondegeneracy
     (ψ : Model Q X → Vec d)
     (κ : Real) : Prop where
   kappa_pos : 0 < κ
-  center : Vec d
   center_is_mean : ∀ j,
-    ∫ f, (ψ f - center) j ∂Pf = 0
+    ∫ f, (ψ f - perspectiveMean Pf ψ) j ∂Pf = 0
   quadratic_floor : ∀ x : Vec d,
-    κ * ‖x‖ ^ 2 ≤ ∫ f, ((∑ j : Fin d, x j * (ψ f - center) j)) ^ 2 ∂Pf
+    κ * ‖x‖ ^ 2 ≤
+      ∫ f, ((∑ j : Fin d, x j * (ψ f - perspectiveMean Pf ψ) j)) ^ 2 ∂Pf
 
 /-- Measurable high-probability subevents certifying a uniform augmented
 response-mean bound.  This avoids requiring measurability of a universal event

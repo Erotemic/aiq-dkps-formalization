@@ -35,6 +35,7 @@ namespace DkpsQuench.Perfect
 
 open Acharyya2024
 open DkpsQuench.GrowingAcharyyaBridge
+open DkpsQuench.GrowingResponseBridge
 
 universe u v wr wy
 
@@ -68,7 +69,7 @@ Fields deliberately omitted because the scaffold derives them:
 structure FinitePerfectSubsetAssumptions
     [Fintype (Model Q X)]
     {d m p : Nat}
-    (Pf : Measure (Model Q X))
+    (Pf : Measure (Model Q X)) [IsProbabilityMeasure Pf]
     (μresp : Nat → Measure Ωresp)
     (score : Model Q X → Finset Q → Real)
     (Qstar Qsub : Finset Q)
@@ -196,7 +197,7 @@ finite nets, polynomial covering bound, entropy exponent, shrinking radius,
 and population response envelope internally. -/
 structure InfinitePerfectSubsetAssumptions
     {d m p : Nat}
-    (Pf : Measure (Model Q X))
+    (Pf : Measure (Model Q X)) [IsProbabilityMeasure Pf]
     (μresp : Nat → Measure Ωresp)
     (score : Model Q X → Finset Q → Real)
     (Qstar Qsub : Finset Q)
@@ -338,9 +339,9 @@ theorem perfectQuench_finite_allQueries
     (Qstar : Finset Q)
     (D : ∀ Qsub, FinitePerfectSubsetData (Q := Q) (X := X)
       (Ωresp := Ωresp) (d Qsub) (m Qsub) (p Qsub))
-    (hm : ∀ Qsub, Qsub ⊆ Qstar → Qsub.card < Qstar.card,
+    (hm : ∀ Qsub, Qsub ⊆ Qstar → Qsub.card < Qstar.card →
       0 < m Qsub)
-    (H : ∀ Qsub, Qsub ⊆ Qstar → Qsub.card < Qstar.card,
+    (H : ∀ Qsub, Qsub ⊆ Qstar → Qsub.card < Qstar.card →
       FinitePerfectSubsetAssumptions Pf μresp score Qstar Qsub (D Qsub)) :
     HighProbQueryEfficient (Q := Q) (X := X)
       (jointStageMeasure μref μresp)
@@ -384,9 +385,9 @@ theorem perfectQuench_infinite_allQueries
     (Qstar : Finset Q)
     (D : ∀ Qsub, InfinitePerfectSubsetData (Q := Q) (X := X)
       (Ωresp := Ωresp) (d Qsub) (m Qsub) (p Qsub))
-    (hm : ∀ Qsub, Qsub ⊆ Qstar → Qsub.card < Qstar.card,
+    (hm : ∀ Qsub, Qsub ⊆ Qstar → Qsub.card < Qstar.card →
       0 < m Qsub)
-    (H : ∀ Qsub, Qsub ⊆ Qstar → Qsub.card < Qstar.card,
+    (H : ∀ Qsub, Qsub ⊆ Qstar → Qsub.card < Qstar.card →
       InfinitePerfectSubsetAssumptions Pf μresp score Qstar Qsub (D Qsub)) :
     HighProbQueryEfficient (Q := Q) (X := X)
       (jointStageMeasure μref μresp)

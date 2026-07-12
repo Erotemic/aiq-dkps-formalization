@@ -31,6 +31,7 @@ namespace DkpsQuench.Perfect
 open Acharyya2024
 open Acharyya2025.Bridge
 open Acharyya2025.Deterministic
+open Acharyya2025.MathlibBridge
 open Acharyya2025.GrowingPipeline
 open Acharyya2025.GrowingResponse
 open DkpsQuench.GrowingAcharyyaBridge

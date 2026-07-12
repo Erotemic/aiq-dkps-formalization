@@ -123,7 +123,37 @@ Proof assembly guide:
    `highProbQQueryEfficient_tieAverage_of_responseSubevents_realization_spectralSubevents`.
 
 After those scaffold lemmas are completed, this theorem's visible assumptions
-are the intended finite-model Perfect Quench interface. -/
+are the intended finite-model Perfect Quench interface.
+
+Implementation recipe (execute in this order):
+1. Install `H.raw.probability` and construct the product-space iid reference
+   sampler with `iidReferenceSampler_lifted_prod`; use
+   `hiid.measurable` for the reference measurability argument.
+2. Obtain a finite-model population norm bound `B` from
+   `exists_populationMean_norm_bound_finite D.populationMean`.
+3. Build `Hmean := augmentedRawResponseMeanSubevents_finite` with
+   `replicates := safeFiniteReplicates`, `η := safeResponseTolerance`, and
+   variance `fun _ => D.varianceBound`; discharge its ratio with
+   `safeFinite_concentration_ratio_zero (Fintype.card (Model Q X))
+   D.varianceBound`.
+4. Derive target-augmented realization using
+   `augmentedRawPopulationMean_realization D.perspective f_ref
+   D.populationMean H.response_realization`.
+5. Obtain `Bψ` and the spectral certificate from
+   `exists_growingSpectralSubevents_of_compact_iid_nondegenerate`; compactness of
+   the finite perspective range follows from finiteness.
+6. Build `Hrate` with `safe_growingConfigControl m d hm B Bψ
+   D.covarianceFloor`; use nonnegativity of `B`, `Bψ`, and
+   `H.nondegenerate.kappa_pos`.
+7. Invoke
+   `highProbQQueryEfficient_tieAverage_of_responseSubevents_realization_spectralSubevents`
+   on the joint space, with the lifted sampler, raw augmented sample/population
+   means, `Hmean`, realization, spectral certificate, and `Hrate`.
+8. Supply score Lipschitzness, positivity, and baseline from `H`; finish by
+   `simpa [finitePerfectQuenchEstimator]`.
+9. Use named arguments for all large constructors.  This proof should only
+   assemble certificates; any failed estimate belongs in a lower module.
+-/
 theorem perfectQuench_finite_fixedSubset
     [Fintype (Model Q X)]
     {d m p : Nat} (hm : 0 < m)
@@ -225,7 +255,33 @@ response subevent step:
 
 Completing it removes the last abstract uniform response-concentration premise
 and every explicit net/envelope certificate from the arbitrary-model growing
-Quench path. -/
+Quench path.
+
+Implementation recipe (execute in this order):
+1. Lift the iid reference sampler to the joint space with
+   `iidReferenceSampler_lifted_prod`.
+2. Derive `Hreg := uniformModelResponseRegularity_of_raw_lipschitz` from
+   `H.raw` and `H.raw_lipschitz`; both sample and population constants are the
+   fixed raw-response Lipschitz constant.
+3. Construct a canonical net and card bound with
+   `exists_safeGrowingPerspectiveNet D.perspective H.compact_range
+   D.rawResponseLipschitzConstant H.raw_lipschitz.constant_nonneg`.
+4. Derive the population response norm bound from
+   `exists_populationMean_norm_bound_of_compact_lipschitz`, using the population
+   Lipschitz field of `Hreg`.
+5. Build `Hmean := augmentedRawResponseMeanSubevents_infinite`; discharge the
+   entropy ratio with `safeEntropy_concentration_ratio_zero` and the selected
+   net-card bound, and discharge the extension budget with
+   `safe_net_extension_budget` plus the net radius identity.
+6. Derive augmented response realization from `H.response_realization`.
+7. Build the spectral certificate from
+   `exists_growingSpectralSubevents_of_compact_iid_nondegenerate` and the rate
+   certificate from `safe_growingConfigControl`.
+8. Invoke the response-subevent spectral capstone and finish with
+   `simpa [infinitePerfectQuenchEstimator]`.
+9. Keep the finite net hidden inside this proof; do not add it or its entropy
+   constant to `InfinitePerfectSubsetAssumptions`.
+-/
 theorem perfectQuench_infinite_fixedSubset
     {d m p : Nat} (hm : 0 < m)
     (Pf : Measure (Model Q X)) [IsProbabilityMeasure Pf]
@@ -251,7 +307,24 @@ theorem perfectQuench_infinite_fixedSubset
 Each valid subset receives its own dimensions, data, and assumptions, while the
 reference law, response-noise law, and full score are shared.  Once
 `perfectQuench_finite_fixedSubset` is complete, this proof is only the
-quantifier lift encoded by `HighProbQueryEfficient`. -/
+quantifier lift encoded by `HighProbQueryEfficient`.
+
+Implementation recipe (execute in this order):
+1. Unfold `HighProbQueryEfficient`, `HighProbQueryEfficientBelow`, and
+   `HighProbMQueryEfficient` until the goal introduces `m0`, `hm0`, `Qsub`,
+   `hsub`, and `hcard`.
+2. Derive `Qsub.card < Qstar.card` from `hcard` and `hm0` (usually by rewriting
+   `hcard` into `hm0`).
+3. Specialize `hm Qsub hsub hlt` and `H Qsub hsub hlt`.
+4. Apply `perfectQuench_finite_fixedSubset` with dimensions
+   `d Qsub`, `m Qsub`, `p Qsub` and data `D Qsub`.
+5. Resolve the probability-instance equality between the theorem's
+   `H.raw.probability` and the supplied `hμresp` by proof irrelevance; `simpa`
+   should close it.
+6. Finish estimator lambdas by reflexivity.  No event intersection or union over
+   query subsets is required because the definition permits a subset-specific
+   eventual threshold.
+-/
 theorem perfectQuench_finite_allQueries
     [Fintype (Model Q X)]
     (d m p : Finset Q → Nat)
@@ -284,7 +357,21 @@ dimensions, perspective, raw response embedding, and raw-response Lipschitz
 constant.  The finite net, entropy exponent, regularity certificates, and norm
 envelope are derived within the fixed-subset theorem.  The proof should apply
 `perfectQuench_infinite_fixedSubset` subset-by-subset and unfold the all-budget
-predicate. -/
+predicate.
+
+Implementation recipe (execute in this order):
+1. Unfold the three high-probability query-efficiency predicates exactly as in
+   the finite all-query theorem.
+2. Introduce the budget and subset variables and derive the strict-cardinality
+   premise expected by `hm` and `H`.
+3. Apply `perfectQuench_infinite_fixedSubset` to `D Qsub` with the specialized
+   assumptions and positivity proof.
+4. Use proof irrelevance to reconcile the stagewise response probability
+   instance with `hμresp`, then `simpa` for the estimator families.
+5. Do not intersect events across all query subsets: the formal definition and
+   the literature quantifier order allow each subset its own eventual event and
+   threshold.
+-/
 theorem perfectQuench_infinite_allQueries
     (d m p : Finset Q → Nat)
     (Pf : Measure (Model Q X)) [IsProbabilityMeasure Pf]

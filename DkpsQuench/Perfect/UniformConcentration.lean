@@ -63,7 +63,24 @@ population Lipschitz regularity.
 Suggested proof route: choose a net center `g` for `f`, insert and subtract
 `Xbar g` and `μmodel g`, apply the triangle inequality, then the two Lipschitz
 bounds and the net-center error.  The stated scalar side condition is exactly
-the resulting bound. -/
+the resulting bound.
+
+Implementation recipe (execute in this order):
+1. Introduce `ω hω f`.  Obtain a center `g ∈ net.centers n` with
+   `‖ψ f - ψ g‖ ≤ net.radius n` from `net.covers n f`.
+2. Insert and subtract `Xbar n ω g` and `μmodel g`; use the three-term triangle
+   inequality to bound the target error by sample transport, net-center error,
+   and population transport.
+3. Apply `Hreg.sample_lipschitz`, `hω g hg`, and
+   `Hreg.population_lipschitz` respectively.
+4. Use nonnegativity of the Lipschitz constants and the cover-radius inequality
+   to replace both perspective distances by `net.radius n`.
+5. Normalize the scalar expression to
+   `τ n + (Lsample n + Lpopulation n) * net.radius n` and finish with
+   `hbudget n`.
+6. If norm symmetry is needed for the population term, rewrite
+   `‖ψ g - ψ f‖ = ‖ψ f - ψ g‖` using `norm_neg`/`dist_comm`.
+-/
 theorem modelNetResponseEventFor_subset_uniform
     {d m p : Nat}
     (ψ : Model Q X → Vec d)
@@ -83,7 +100,19 @@ theorem modelNetResponseEventFor_subset_uniform
 /-- Measurability of the finite-net response event.
 
 Only finite intersections are involved.  Prove measurability model-by-model
-from `hXbar`; the population response is constant on the response sample space. -/
+from `hXbar`; the population response is constant on the response sample space.
+
+Implementation recipe (execute in this order):
+1. Unfold `modelNetResponseEventFor` and express membership as
+   `∀ f ∈ net.centers n, ...`.
+2. For fixed `f`, prove measurability of
+   `ω ↦ ‖Xbar n ω f - μmodel f‖` from `hXbar n f`, constant measurability,
+   subtraction, and norm continuity.
+3. Apply `measurableSet_le` to obtain the scalar event.
+4. Apply `measurableSet_finset_all (net.centers n)` with the membership proof.
+5. Do not quantify over the full model type in the measurable event; only the
+   finite center set belongs here.
+-/
 theorem measurableSet_modelNetResponseEventFor
     {d m p : Nat}
     (ψ : Model Q X → Vec d)
@@ -101,7 +130,24 @@ theorem measurableSet_modelNetResponseEventFor
 The proof is a Chebyshev bound for each center followed by a finite union bound.
 The only growth quantity is the actual cardinality of the chosen stage net.
 This theorem intentionally does not hide that entropy term behind a vague
-uniform-concentration premise. -/
+uniform-concentration premise.
+
+Implementation recipe (execute in this order):
+1. For each stage, show the complement of the net event is contained in the
+   finite union of bad-center events
+   `{ω | τ n < ‖Xbar n ω f - μmodel f‖}`.
+2. Use the repository Chebyshev lemma with `hint n f`, `hσ2 n f`, and `hτ n` to
+   bound each bad-center probability by `ENNReal.ofReal (σ2 n / τ n^2)`.
+3. Sum over `net.centers n` with `measure_iUnion_finset_le`; simplify the sum of
+   a constant to the center cardinality times that bound.
+4. Convert the real ratio `hratio` to ENNReal convergence or use the same
+   complement-probability criterion as `GrowingResponse`.
+5. Prove event measurability with `measurableSet_modelNetResponseEventFor`; derive
+   `hXbar` from `Integrable.measurable` applied to `hint` if no separate
+   measurability premise is available.
+6. Keep the actual cardinality in the estimate; polynomial replacement belongs
+   in `RateSchedule`, not here.
+-/
 theorem highProb_modelNetResponseEventFor_of_secondMoment
     {d m p : Nat}
     (μresp : Nat → Measure Ωresp) (hμresp : ∀ n, IsProbabilityMeasure (μresp n))
@@ -126,7 +172,19 @@ regularity.
 
 Once this is complete, the arbitrary-model growing response bridge no longer
 needs uniform concentration as an external input.  Applications supply a
-shrinking net, pointwise second moments, and pathwise/population regularity. -/
+shrinking net, pointwise second moments, and pathwise/population regularity.
+
+Implementation recipe (execute in this order):
+1. Obtain high probability of the finite-net event from
+   `highProb_modelNetResponseEventFor_of_secondMoment`.
+2. Use `modelNetResponseEventFor_subset_uniform ... hbudget` stagewise.
+3. Apply the monotonicity lemma for `HighProbAtTop` under event inclusion; if no
+   named lemma exists, unfold `HighProbAtTop` and compose the measure inequality
+   `measure_mono` with the subset.
+4. The uniform event need not be measurable for this implication; only the net
+   event used to witness high probability must be measurable.
+5. Do not repeat Chebyshev or triangle-inequality calculations in this theorem.
+-/
 theorem highProb_modelUniformResponseEvent_of_net_regular
     {d m p : Nat}
     (μresp : Nat → Measure Ωresp) (hμresp : ∀ n, IsProbabilityMeasure (μresp n))
@@ -151,7 +209,17 @@ theorem highProb_modelUniformResponseEvent_of_net_regular
   sorry
 
 /-- A model-uniform response event implies every target-augmented response
-event, including randomly selected references. -/
+event, including randomly selected references.
+
+Implementation recipe (execute in this order):
+1. Introduce `ω hω f i` and unfold the two event definitions.
+2. Specialize `hω` to the single model
+   `augmentedModelAt f_ref n ω.1 f i`.
+3. Simplify the sample term to the lambda-defined augmented sample mean and the
+   population term to `augmentedRawPopulationMean`.
+4. Close with `simpa [augmentedRawPopulationMean]`; no `Fin.lastCases` split is
+   needed because the uniform model event already covers every model.
+-/
 theorem modelUniformResponseEvent_subset_augmented
     {m p : Nat}
     (f_ref : ∀ n, Ωref → Fin n → Model Q X)
@@ -166,7 +234,20 @@ theorem modelUniformResponseEvent_subset_augmented
   sorry
 
 /-- Lift a high-probability response-only event to the independent joint sample
-space. -/
+space.
+
+Implementation recipe (execute in this order):
+1. Unfold `HighProbAtTop`; fix `δ` and obtain `N` from `hE δ hδ`.
+2. For `n > N`, identify the lifted event with the rectangle
+   `Set.univ ×ˢ E n` by extensionality.
+3. Install `hμref n` and `hμresp n`; apply the product-measure rectangle formula
+   using `measurableSet_univ` and `hEmeas n`.
+4. Simplify `(μref n) univ = 1`, so the joint probability equals
+   `(μresp n) (E n)`.
+5. Finish with the lower bound supplied by `hE`.
+6. If the rectangle formula requires sigma-finiteness, obtain it from the local
+   probability instances rather than adding assumptions.
+-/
 theorem highProb_prod_mk_right
     (μref : Nat → Measure Ωref) (hμref : ∀ n, IsProbabilityMeasure (μref n))
     (μresp : Nat → Measure Ωresp) (hμresp : ∀ n, IsProbabilityMeasure (μresp n))
@@ -190,7 +271,25 @@ Quench capstone.  It should compose:
 4. product-event lifting;
 5. the augmented-event inclusion.
 
-No finite model-class assumption remains. -/
+No finite model-class assumption remains.
+
+Implementation recipe (execute in this order):
+1. Apply `integral_norm_sq_modelReplicateMean_sub_mean_le` for each model to get
+   second-moment bound `variance n / replicates n`; obtain integrability from the
+   corresponding raw-response theorem or `Hraw.memLp_two` and finite sums.
+2. Invoke `highProb_modelUniformResponseEvent_of_net_regular` with
+   `Xbar := modelReplicateMean replicates Y`, `σ2 := fun n => variance n /
+   replicates n`, and the supplied net/regularity/rate data.
+3. Prove measurability of each finite-net event from
+   `measurableSet_modelNetResponseEventFor`, using finite sums of
+   `Hraw.measurable` for `hXbar`.
+4. Lift the resulting response-only high-probability event to the joint space via
+   `highProb_prod_mk_right`.
+5. Use `modelUniformResponseEvent_subset_augmented` and `HighProbAtTop`
+   monotonicity to reach the target augmented event.
+6. Keep reference measurability out of this proof; the event depends on the
+   reference sample only after the deterministic inclusion.
+-/
 theorem highProb_augmentedRawResponseMean_infinite
     {d m p : Nat}
     (μref : Nat → Measure Ωref) (hμref : ∀ n, IsProbabilityMeasure (μref n))
@@ -225,7 +324,23 @@ concentration.
 The event stored in this certificate is the product lift of the finite-net
 response event, not the universal target event.  Its subset field performs the
 regularity extension and augmented-batch reduction.  This design is essential:
-it avoids asking Lean to prove measurability of an uncountable intersection. -/
+it avoids asking Lean to prove measurability of an uncountable intersection.
+
+Implementation recipe (execute in this order):
+1. Define `event n` to be the product lift of
+   `modelNetResponseEventFor ψ (modelReplicateMean replicates Y) μmodel net τ n`.
+2. Prove `measurable` by `MeasurableSet.preimage measurable_snd` together with
+   `measurableSet_modelNetResponseEventFor`; construct the sample-mean
+   measurability from finite sums of `Hraw.measurable`.
+3. Prove `highProb` by first applying
+   `highProb_modelNetResponseEventFor_of_secondMoment` with
+   `σ2 n = variance n / replicates n`, then `highProb_prod_mk_right`.
+4. For `subset`, first apply
+   `modelNetResponseEventFor_subset_uniform ... hbudget`, then
+   `modelUniformResponseEvent_subset_augmented`.
+5. Do not use the universal model event as `event`; its measurability is exactly
+   what this certificate is designed to avoid.
+-/
 noncomputable def augmentedRawResponseMeanSubevents_infinite
     {d m p : Nat}
     (μref : Nat → Measure Ωref) (hμref : ∀ n, IsProbabilityMeasure (μref n))

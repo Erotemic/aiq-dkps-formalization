@@ -80,6 +80,43 @@ finite-net results remain larger because they represent genuinely larger pieces
 of mathematics.  The four final proofs should be short compositions once the
 lower modules are complete.
 
+## Per-obligation proof-recipe contract
+
+Every declaration whose body is currently `sorry` has an immediately preceding
+doc comment containing the exact marker:
+
+```text
+Implementation recipe (execute in this order):
+```
+
+Each recipe must:
+
+1. identify the first definitions to unfold or the first existing theorem to
+   apply;
+2. name the intermediate equalities, event inclusions, or limit statements that
+   should be proved locally;
+3. identify the repository lemmas or Mathlib APIs to search for;
+4. state the intended final composition step;
+5. warn against the most likely false shortcut or accidental hypothesis
+   strengthening.
+
+A recipe may instruct an agent to factor out a reusable helper when Mathlib lacks
+an exact bridge, but it may not replace a proof with a new caller-visible
+assumption.  If Lean exposes that a scaffold statement is false, repair the
+statement at the lowest module where the missing premise is mathematically
+needed and update the final-capstone recipe in the same patch.
+
+Run the mechanical audit after adding, moving, or splitting any open proof:
+
+```bash
+python dev/check_perfect_proof_recipes.py
+```
+
+The checker verifies that all 61 current obligations have a local doc comment,
+the required marker, and at least three ordered proof steps.  The audit count
+must be updated together with this README whenever obligations are added or
+removed.
+
 ## Module guidance
 
 ### PopulationGeometry
@@ -175,6 +212,7 @@ introduced outside this directory.
 lake build DkpsQuench.Perfect
 lake build Acharyya2024 Acharyya2025 DkpsQuench Helm2025
 
+python dev/check_perfect_proof_recipes.py
 grep -RIn '\bsorry\b' DkpsQuench/Perfect
 grep -RIn '\baxiom\b' DkpsQuench/Perfect
 ```

@@ -150,7 +150,7 @@ structure PerspectiveNondegeneracy
   center_is_mean : ∀ j,
     ∫ f, (ψ f - center) j ∂Pf = 0
   quadratic_floor : ∀ x : Vec d,
-    κ * ‖x‖ ^ 2 ≤ ∫ f, (⟪x, ψ f - center⟫_ℝ) ^ 2 ∂Pf
+    κ * ‖x‖ ^ 2 ≤ ∫ f, ((∑ j : Fin d, x j * (ψ f - center) j)) ^ 2 ∂Pf
 
 /-- Measurable high-probability subevents certifying a uniform augmented
 response-mean bound.  This avoids requiring measurability of a universal event

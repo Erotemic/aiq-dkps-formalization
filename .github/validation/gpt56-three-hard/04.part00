@@ -1,0 +1,138 @@
+diff --git a/ForMathlib/Analysis/InnerProductSpace/DavisKahanTheory/RectangularUINorm.lean b/ForMathlib/Analysis/InnerProductSpace/DavisKahanTheory/RectangularUINorm.lean
+index d3a8dc5..a794042 100644
+--- a/ForMathlib/Analysis/InnerProductSpace/DavisKahanTheory/RectangularUINorm.lean
++++ b/ForMathlib/Analysis/InnerProductSpace/DavisKahanTheory/RectangularUINorm.lean
+@@ -797,6 +797,569 @@ private theorem apply_eq_coordinateSquareNorm
+   exact N.invariant U V _
+ 
+ 
++/-- A real-linear two-sided unitary action on rectangular maps. -/
++private noncomputable def twoSidedActionLinear
++    (U : F ≃ₗᵢ[𝕜] F) (V : E ≃ₗᵢ[𝕜] E) :
++    (E →ₗ[𝕜] F) →ₗ[ℝ] (E →ₗ[𝕜] F) where
++  toFun A := U.toLinearMap ∘ₗ A ∘ₗ V.toLinearMap
++  map_add' A B := by
++    ext x
++    simp [LinearMap.comp_apply]
++  map_smul' r A := by
++    ext x
++    change U (((r : 𝕜) • A) (V x)) = ((r : 𝕜) •
++      (U.toLinearMap ∘ₗ A ∘ₗ V.toLinearMap)) x
++    simp [LinearMap.comp_apply]
++
++/-- The real convex hull of a two-sided unitary orbit is invariant under any
++further two-sided unitary action. -/
++private theorem twoSidedAction_mem_convexHull
++    {A C : E →ₗ[𝕜] F}
++    (hA : A ∈ convexHull ℝ (twoSidedUnitaryOrbit C))
++    (U : F ≃ₗᵢ[𝕜] F) (V : E ≃ₗᵢ[𝕜] E) :
++    U.toLinearMap ∘ₗ A ∘ₗ V.toLinearMap ∈
++      convexHull ℝ (twoSidedUnitaryOrbit C) := by
++  let L := twoSidedActionLinear (𝕜 := 𝕜) U V
++  have hmem : L A ∈ L '' convexHull ℝ (twoSidedUnitaryOrbit C) :=
++    ⟨A, hA, rfl⟩
++  rw [L.image_convexHull] at hmem
++  apply convexHull_mono (𝕜 := ℝ) ?_ hmem
++  rintro Y ⟨Y0, ⟨U0, V0, rfl⟩, rfl⟩
++  refine ⟨U0.trans U, V.trans V0, ?_⟩
++  ext x
++  rfl
++
++/-- Abstract T-transform descent with values in a convex set invariant under
++coordinate transpositions and one-coordinate sign changes.
++
++This is the membership-valued analogue of
++`UnitarilyInvariantNorm.gauge_le_gauge_of_prefix_sums_le`.  It is formulated
++once here so the rectangular orbit theorem can use the same finite descent
++without invoking separation theorems or an external majorization library. -/
++private theorem mem_convex_of_prefix_sums_le
++    {n : ℕ} {K : Set (Fin n → ℝ)} (hK : Convex ℝ K)
++    (hswap : ∀ y ∈ K, ∀ j l : Fin n, y ∘ Equiv.swap j l ∈ K)
++    (hneg : ∀ y ∈ K, ∀ j : Fin n,
++      Function.update y j (-(y j)) ∈ K)
++    {z y : Fin n → ℝ} (hzanti : Antitone z)
++    (hz0 : ∀ i, 0 ≤ z i) (hy0 : ∀ i, 0 ≤ y i)
++    (hpre : ∀ m : ℕ,
++      ∑ i ∈ Finset.univ.filter (fun i : Fin n => (i : ℕ) < m), z i ≤
++        ∑ i ∈ Finset.univ.filter (fun i : Fin n => (i : ℕ) < m), y i)
++    (hyK : y ∈ K) : z ∈ K := by
++  classical
++  have update_mem : ∀ (q : Fin n → ℝ), q ∈ K → ∀ (j : Fin n) (t : ℝ),
++      |t| ≤ q j → Function.update q j t ∈ K := by
++    intro q hq j t ht
++    have hqj : 0 ≤ q j := le_trans (abs_nonneg t) ht
++    rcases hqj.eq_or_lt with hzero | hpos
++    · have ht0 : t = 0 := by
++        have : |t| ≤ 0 := by simpa [hzero] using ht
++        exact abs_eq_zero.mp (le_antisymm this (abs_nonneg t))
++      have hupd : Function.update q j t = q := by
++        funext i
++        rcases eq_or_ne i j with rfl | hij
++        · rw [Function.update_self, ht0, ← hzero]
++        · rw [Function.update_of_ne hij]
++      simpa [hupd] using hq
++    · let c1 : ℝ := (q j + t) / (2 * q j)
++      let c2 : ℝ := (q j - t) / (2 * q j)
++      obtain ⟨ht1, ht2⟩ := abs_le.mp ht
++      have hden : 0 < 2 * q j := by linarith
++      have hc1 : 0 ≤ c1 := div_nonneg (by linarith) hden.le
++      have hc2 : 0 ≤ c2 := div_nonneg (by linarith) hden.le
++      have hsum : c1 + c2 = 1 := by
++        dsimp [c1, c2]
++        field_simp
++        ring
++      have hdecomp : Function.update q j t =
++          c1 • q + c2 • Function.update q j (-(q j)) := by
++        funext i
++        simp only [Pi.add_apply, Pi.smul_apply, smul_eq_mul]
++        rcases eq_or_ne i j with rfl | hij
++        · rw [Function.update_self, Function.update_self]
++          dsimp [c1, c2]
++          field_simp
++          ring
++        · rw [Function.update_of_ne hij, Function.update_of_ne hij,
++            ← add_mul, hsum, one_mul]
++      rw [hdecomp]
++      exact hK hq (hneg q hq j) hc1 hc2 hsum
++  have mono_mem : ∀ d (q : Fin n → ℝ),
++      (Finset.univ.filter fun i => z i ≠ q i).card ≤ d →
++      q ∈ K → (∀ i, z i ≤ q i) → z ∈ K := by
++    intro d
++    induction d with
++    | zero =>
++        intro q hcard hq _
++        have hemp : (Finset.univ.filter fun i => z i ≠ q i) = ∅ :=
++          Finset.card_eq_zero.mp (Nat.le_zero.mp hcard)
++        have hzq : z = q := funext fun i => by
++          by_contra hne
++          have hi : i ∈ Finset.univ.filter fun i => z i ≠ q i :=
++            Finset.mem_filter.mpr ⟨Finset.mem_univ _, hne⟩
++          rw [hemp] at hi
++          simp at hi
++        simpa [hzq] using hq
++    | succ d ih =>
++        intro q hcard hq hzq
++        by_cases heq : z = q
++        · simpa [heq] using hq
++        · have hne : (Finset.univ.filter fun i => z i ≠ q i).Nonempty := by
++            rw [Finset.nonempty_iff_ne_empty]
++            intro hemp
++            apply heq
++            funext i
++            by_contra hneq
++            have hi : i ∈ Finset.univ.filter fun i => z i ≠ q i :=
++              Finset.mem_filter.mpr ⟨Finset.mem_univ _, hneq⟩
++            rw [hemp] at hi
++            simp at hi
++          obtain ⟨j, hj⟩ := hne
++          let q' := Function.update q j (z j)
++          have hq'K : q' ∈ K := by
++            apply update_mem q hq j (z j)
++            rw [abs_of_nonneg (hz0 j)]
++            exact hzq j
++          have hzq' : ∀ i, z i ≤ q' i := by
++            intro i
++            rcases eq_or_ne i j with rfl | hij
++            · simp [q']
++            · simp [q', hij, hzq i]
++          have hsub : (Finset.univ.filter fun i => z i ≠ q' i) ⊆

@@ -1,0 +1,129 @@
+iv.filter fun i => z i ≠ q' i) ⊆
++              (Finset.univ.filter fun i => z i ≠ q i).erase j := by
++            intro i hi
++            obtain ⟨-, hine⟩ := Finset.mem_filter.mp hi
++            have hij : i ≠ j := by
++              rintro rfl
++              exact hine (by simp [q'])
++            refine Finset.mem_erase.mpr ⟨hij,
++              Finset.mem_filter.mpr ⟨Finset.mem_univ _, ?_⟩⟩
++            simpa [q', hij] using hine
++          have hcard' : (Finset.univ.filter fun i => z i ≠ q' i).card ≤ d := by
++            have h1 := Finset.card_le_card hsub
++            have h2 := Finset.card_erase_of_mem hj
++            omega
++          exact ih q' hcard' hq'K hzq'
++  have H : ∀ d (q : Fin n → ℝ),
++      (Finset.univ.filter fun i => z i ≠ q i).card ≤ d →
++      (∀ i, 0 ≤ q i) →
++      (∀ m : ℕ,
++        ∑ i ∈ Finset.univ.filter (fun i : Fin n => (i : ℕ) < m), z i ≤
++          ∑ i ∈ Finset.univ.filter (fun i : Fin n => (i : ℕ) < m), q i) →
++      q ∈ K → z ∈ K := by
++    intro d
++    induction d with
++    | zero =>
++        intro q hcard _ _ hq
++        exact mono_mem 0 q hcard hq (fun i => by
++          have := hpre ((i : ℕ) + 1)
++          -- The zero-disagreement case already gives equality directly.
++          have hemp : (Finset.univ.filter fun k => z k ≠ q k) = ∅ :=
++            Finset.card_eq_zero.mp (Nat.le_zero.mp hcard)
++          by_contra hnot
++          have hi : i ∈ Finset.univ.filter fun k => z k ≠ q k :=
++            Finset.mem_filter.mpr ⟨Finset.mem_univ _, ne_of_gt (lt_of_not_ge hnot)⟩
++          rw [hemp] at hi
++          simp at hi)
++    | succ d ih =>
++        intro q hcard hq0 hqpre hqK
++        by_cases hall : ∀ i, z i ≤ q i
++        · exact mono_mem (d + 1) q hcard hqK hall
++        push Not at hall
++        have hSne : (Finset.univ.filter fun i : Fin n => q i < z i).Nonempty :=
++          hall.imp fun i hi => Finset.mem_filter.mpr ⟨Finset.mem_univ _, hi⟩
++        let l := (Finset.univ.filter fun i : Fin n => q i < z i).min' hSne
++        have hlS : q l < z l :=
++          (Finset.mem_filter.mp
++            ((Finset.univ.filter fun i : Fin n => q i < z i).min'_mem hSne)).2
++        have hlmin : ∀ i, i < l → z i ≤ q i := by
++          intro i hil
++          by_contra hzy
++          push Not at hzy
++          exact absurd
++            (Finset.min'_le _ i (Finset.mem_filter.mpr
++              ⟨Finset.mem_univ _, hzy⟩)) (not_le.mpr hil)
++        have hexj : ∃ j, j < l ∧ z j < q j := by
++          by_contra h
++          push Not at h
++          have heq : ∀ i, i < l → z i = q i := fun i hi =>
++            le_antisymm (hlmin i hi) (h i hi)
++          have hp := hqpre ((l : ℕ) + 1)
++          have hset : (Finset.univ.filter fun i : Fin n =>
++              (i : ℕ) < (l : ℕ) + 1) =
++              insert l (Finset.univ.filter fun i : Fin n => (i : ℕ) < (l : ℕ)) := by
++            ext i
++            simp only [Finset.mem_filter, Finset.mem_univ, true_and,
++              Finset.mem_insert]
++            constructor
++            · intro hi
++              rcases eq_or_lt_of_le (Nat.lt_succ_iff.mp hi) with heq' | hlt
++              · exact Or.inl (Fin.ext heq')
++              · exact Or.inr hlt
++            · rintro (rfl | hi)
++              · omega
++              · omega
++          have hlnot : l ∉ Finset.univ.filter
++              (fun i : Fin n => (i : ℕ) < (l : ℕ)) := by simp
++          rw [hset, Finset.sum_insert hlnot, Finset.sum_insert hlnot] at hp
++          have hsum_eq :
++              ∑ i ∈ Finset.univ.filter (fun i : Fin n => (i : ℕ) < (l : ℕ)), z i =
++                ∑ i ∈ Finset.univ.filter (fun i : Fin n => (i : ℕ) < (l : ℕ)), q i := by
++            refine Finset.sum_congr rfl fun i hi => heq i ?_
++            exact Fin.lt_def.mpr (Finset.mem_filter.mp hi).2
++          rw [hsum_eq] at hp
++          linarith
++        obtain ⟨j, hjl, hzj⟩ := hexj
++        have hjl_ne : j ≠ l := ne_of_lt hjl
++        let delta : ℝ := min (q j - z j) (z l - q l)
++        have hdeltaPos : 0 < delta := lt_min (by linarith) (by linarith)
++        have hdelta1 : delta ≤ q j - z j := min_le_left _ _
++        have hdelta2 : delta ≤ z l - q l := min_le_right _ _
++        have hdeltaLt : delta < q j - q l :=
++          lt_of_le_of_lt hdelta1 (by linarith [hzanti hjl.le])
++        have hqjl : 0 < q j - q l := by linarith
++        let c : ℝ := delta / (q j - q l)
++        have hcpos : 0 < c := div_pos hdeltaPos hqjl
++        have hclt : c < 1 := (div_lt_one hqjl).mpr hdeltaLt
++        have hcmul : c * (q j - q l) = delta :=
++          div_mul_cancel₀ delta (ne_of_gt hqjl)
++        let q' : Fin n → ℝ :=
++          Function.update (Function.update q j (q j - delta)) l (q l + delta)
++        have hq'j : q' j = q j - delta := by
++          simp [q', Function.update_of_ne hjl_ne]
++        have hq'l : q' l = q l + delta := by simp [q']
++        have hq'i : ∀ i, i ≠ j → i ≠ l → q' i = q i := by
++          intro i hij hil
++          simp [q', hij, hil]
++        have hcomb : q' = (1 - c) • q + c • (q ∘ Equiv.swap j l) := by
++          funext i
++          simp only [Pi.add_apply, Pi.smul_apply, smul_eq_mul,
++            Function.comp_apply]
++          rcases eq_or_ne i j with rfl | hij
++          · rw [hq'j, Equiv.swap_apply_left]
++            linear_combination hcmul
++          rcases eq_or_ne i l with rfl | hil
++          · rw [hq'l, Equiv.swap_apply_right]
++            linear_combination -hcmul
++          · rw [hq'i i hij hil, Equiv.swap_apply_of_ne_of_ne hij hil]
++            ring
++        have hq'0 : ∀ i, 0 ≤ q' i := by
++          intro i
++          rcases eq_or_ne i j with rfl | hij
++          · rw [hq'j]
++            linarith [hz0 j]
++          rcases eq_or_ne i l with rfl | hil
++          · rw [hq'l]
++            linarith [hq0 l]
++          · rw [hq'i i hij hil]
++            exact hq0 i
++        have hq'pre

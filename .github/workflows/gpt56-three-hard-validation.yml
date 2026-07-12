@@ -1,0 +1,48 @@
+name: GPT-5.6 three-hard-proof validation
+
+on:
+  pull_request:
+    branches: [main]
+
+jobs:
+  lean:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Apply proof patches
+        shell: bash
+        run: |
+          set -euxo pipefail
+          for p in .github/validation/gpt56-three-hard/*.patch; do
+            git apply --check "$p"
+            git apply "$p"
+          done
+          git diff --check
+      - name: Install elan
+        shell: bash
+        run: |
+          set -euxo pipefail
+          curl -sSf https://raw.githubusercontent.com/leanprover/elan/master/elan-init.sh | sh -s -- -y
+          echo "$HOME/.elan/bin" >> "$GITHUB_PATH"
+      - name: Restore Mathlib cache
+        shell: bash
+        run: |
+          set -euxo pipefail
+          lake exe cache get
+      - name: Build targeted modules
+        shell: bash
+        run: |
+          set -euxo pipefail
+          lake build \
+            ForMathlib.Analysis.InnerProductSpace.DavisKahanTheory.RectangularUINorm \
+            ForMathlib.Analysis.InnerProductSpace.DavisKahanTheory.Sylvester \
+            ForMathlib.Analysis.InnerProductSpace.DavisKahanTheory.Davis1963 \
+            ForMathlib.Analysis.InnerProductSpace.DavisKahanTheory.SinTheta \
+            ForMathlib.Analysis.InnerProductSpace.DavisKahanTheory.SingularSubspace
+      - name: Audit proof holes and formatting
+        if: always()
+        shell: bash
+        run: |
+          git diff --check
+          grep -RIn --include='*.lean' -E '\bsorry\b|\badmit\b' \
+            ForMathlib/Analysis/InnerProductSpace/DavisKahanTheory || true

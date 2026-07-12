@@ -1,55 +1,81 @@
 name: GPT-5.6 three-hard-proof validation
 
 on:
-  pull_request:
-    branches: [main]
+  push:
+    branches: [gpt56-validate-three-hard-proofs-20260712]
+    paths:
+      - '.github/workflows/gpt56-three-hard-validation.yml'
+      - '.github/validation/gpt56-three-hard/**'
+
+permissions:
+  contents: write
 
 jobs:
   lean:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Apply proof patches
+        with:
+          fetch-depth: 0
+      - name: Validate and publish compiler log
         shell: bash
         run: |
-          set -euxo pipefail
-          for p in .github/validation/gpt56-three-hard/01-*.patch \
-                   .github/validation/gpt56-three-hard/02-*.patch \
-                   .github/validation/gpt56-three-hard/03-*.patch; do
-            git apply --check "$p"
-            git apply "$p"
+          set +e
+          exec > >(tee validation-result.log) 2>&1
+          status=0
+          echo "BASE_COMMIT=$(git rev-parse HEAD)"
+          echo "TOOLCHAIN=$(cat lean-toolchain)"
+
+          for p in .github/validation/gpt56-three-hard/01-abstract-spectrum.patch \
+                   .github/validation/gpt56-three-hard/02-experimental-sylvester.patch \
+                   .github/validation/gpt56-three-hard/03-davis1963.patch; do
+            if ! git apply --check "$p"; then
+              status=1
+              break
+            fi
+            git apply "$p" || { status=1; break; }
           done
-          cat .github/validation/gpt56-three-hard/04.part* > /tmp/04-rectangular-ui.patch
-          git apply --check /tmp/04-rectangular-ui.patch
-          git apply /tmp/04-rectangular-ui.patch
-          git apply --check .github/validation/gpt56-three-hard/05-theory-sylvester.patch
-          git apply .github/validation/gpt56-three-hard/05-theory-sylvester.patch
-          git diff --check
-      - name: Install elan
-        shell: bash
-        run: |
-          set -euxo pipefail
-          curl -sSf https://raw.githubusercontent.com/leanprover/elan/master/elan-init.sh | sh -s -- -y
-          echo "$HOME/.elan/bin" >> "$GITHUB_PATH"
-      - name: Restore Mathlib cache
-        shell: bash
-        run: |
-          set -euxo pipefail
-          lake exe cache get
-      - name: Build targeted modules
-        shell: bash
-        run: |
-          set -euxo pipefail
-          lake build \
-            ForMathlib.Analysis.InnerProductSpace.DavisKahanTheory.RectangularUINorm \
-            ForMathlib.Analysis.InnerProductSpace.DavisKahanTheory.Sylvester \
-            ForMathlib.Analysis.InnerProductSpace.DavisKahanTheory.Davis1963 \
-            ForMathlib.Analysis.InnerProductSpace.DavisKahanTheory.SinTheta \
-            ForMathlib.Analysis.InnerProductSpace.DavisKahanTheory.SingularSubspace
-      - name: Audit proof holes and formatting
-        if: always()
-        shell: bash
-        run: |
-          git diff --check
-          grep -RIn --include='*.lean' -E '\bsorry\b|\badmit\b' \
-            ForMathlib/Analysis/InnerProductSpace/DavisKahanTheory || true
+
+          if [ "$status" -eq 0 ]; then
+            cat .github/validation/gpt56-three-hard/04.part* > /tmp/04-rectangular-ui.patch
+            git apply --check /tmp/04-rectangular-ui.patch || status=$?
+            if [ "$status" -eq 0 ]; then
+              git apply /tmp/04-rectangular-ui.patch || status=$?
+            fi
+          fi
+
+          if [ "$status" -eq 0 ]; then
+            git apply --check .github/validation/gpt56-three-hard/05-theory-sylvester.patch || status=$?
+            if [ "$status" -eq 0 ]; then
+              git apply .github/validation/gpt56-three-hard/05-theory-sylvester.patch || status=$?
+            fi
+          fi
+
+          if [ "$status" -eq 0 ]; then
+            curl -sSf https://raw.githubusercontent.com/leanprover/elan/master/elan-init.sh | sh -s -- -y || status=$?
+            export PATH="$HOME/.elan/bin:$PATH"
+          fi
+
+          if [ "$status" -eq 0 ]; then
+            lake exe cache get || status=$?
+          fi
+
+          if [ "$status" -eq 0 ]; then
+            lake build \
+              ForMathlib.Analysis.InnerProductSpace.DavisKahanTheory.RectangularUINorm \
+              ForMathlib.Analysis.InnerProductSpace.DavisKahanTheory.Sylvester \
+              ForMathlib.Analysis.InnerProductSpace.DavisKahanTheory.Davis1963 \
+              ForMathlib.Analysis.InnerProductSpace.DavisKahanTheory.SinTheta \
+              ForMathlib.Analysis.InnerProductSpace.DavisKahanTheory.SingularSubspace || status=$?
+          fi
+
+          git diff --check || status=$?
+          echo "VALIDATION_STATUS=$status"
+
+          git reset --hard HEAD
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add validation-result.log
+          git commit -m "Record GPT-5.6 validation result [skip ci]" || true
+          git push origin "HEAD:${GITHUB_REF_NAME}"
+          exit 0

@@ -39,8 +39,8 @@ jobs:
             git apply --check ../patches/03-davis1963.patch
             git apply ../patches/03-davis1963.patch
             cat ../patches/04.part* > /tmp/04-rectangular-ui.patch
-            git apply --check /tmp/04-rectangular-ui.patch
-            git apply /tmp/04-rectangular-ui.patch
+            git apply --recount --check /tmp/04-rectangular-ui.patch
+            git apply --recount /tmp/04-rectangular-ui.patch
             git apply --check ../patches/05-theory-sylvester.patch
             git apply ../patches/05-theory-sylvester.patch
             git diff --check

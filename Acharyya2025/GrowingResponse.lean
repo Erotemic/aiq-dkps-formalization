@@ -256,6 +256,38 @@ theorem cmdsEntrywise_of_responseMeanClose_of_norm_le
     (abs_responseDist_le_of_norm_le Xbar hXbar)
     (abs_responseDist_le_of_norm_le μ hμ)
 
+/-- Uniform response-mean closeness and a population norm bound control the
+sample-response norm on the same event.  This avoids asking downstream callers
+for a separate global bound on every random sample response. -/
+theorem norm_le_add_of_uniformResponseMeanClose
+    {n m p : Nat} {Xbar μ : Fin n → Mat m p} {η B : Real}
+    (hmean : UniformResponseMeanClose Xbar μ η)
+    (hμ : ∀ i, ‖μ i‖ ≤ B) (i : Fin n) :
+    ‖Xbar i‖ ≤ B + η := by
+  calc
+    ‖Xbar i‖ = ‖(Xbar i - μ i) + μ i‖ := by rw [sub_add_cancel]
+    _ ≤ ‖Xbar i - μ i‖ + ‖μ i‖ := norm_add_le _ _
+    _ ≤ η + B := add_le_add (hmean i) (hμ i)
+    _ = B + η := add_comm _ _
+
+/-- Population response norms and the response-mean event are enough to derive
+both sample and population dissimilarity bounds needed by the CMDS bridge.
+The resulting bound is event-local, so no all-outcomes sample norm hypothesis is
+required. -/
+theorem cmdsEntrywise_of_responseMeanClose_of_population_norm
+    {n m p : Nat} (hn : 0 < n)
+    (Xbar μ : Fin n → Mat m p) {η B : Real}
+    (hη : 0 ≤ η)
+    (hmean : UniformResponseMeanClose Xbar μ η)
+    (hμ : ∀ i, ‖μ i‖ ≤ B) :
+    EntrywiseClose
+      (classicalMDSMatrix (responseDist Xbar))
+      (classicalMDSMatrix (responseDist μ))
+      (cmdsEntrywiseRate n m (responseDistBound m (B + η)) η) := by
+  apply cmdsEntrywise_of_responseMeanClose_of_norm_le hn Xbar μ hmean
+  · exact fun i => norm_le_add_of_uniformResponseMeanClose hmean hμ i
+  · exact fun i => (hμ i).trans (le_add_of_nonneg_right hη)
+
 /-- High-probability stage-dependent response-mean concentration propagates to
 stage-dependent CMDS-entrywise concentration. -/
 theorem highProb_cmdsEntrywise_of_growing_response_mean

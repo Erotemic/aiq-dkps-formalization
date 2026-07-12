@@ -111,6 +111,10 @@ The result is assembled in layers; read them in this order:
   docstrings compare them with the paper's `Poly₃((n³/r)^{1/2−δ})` bookkeeping).
   The qualitative content — bounds that vanish in the stated regime — matches;
   the constants/exponents are not claimed to be the paper's sharp ones.
+- **Response boundedness in growing bridges.** The preferred Quench-facing
+  response theorem no longer assumes separate uniform bounds for every sample
+  and population dissimilarity. A population response-norm envelope, together
+  with the response-mean event, derives both bounds where they are needed.
 - **Finite-dimensionality** of the ambient space is assumed throughout, as the
   paper intends.
 

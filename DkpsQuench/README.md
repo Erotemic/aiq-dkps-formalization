@@ -104,6 +104,7 @@ those assumptions without deleting the simpler theorem engine.
 | Growing target-augmented CMDS theorem without finite model factorization | `highProbQQueryEfficient_tieAverage_of_growing_augmented_cmds` | `GrowingAcharyyaBridge.lean` |
 | Hypothesis-reduced growing CMDS theorem: Gram witness derives PSD/rank | `highProbQQueryEfficient_tieAverage_of_growing_augmented_cmds_of_gram` | `GrowingAcharyyaBridge.lean` |
 | Finite-model response theorem: Gram witness derives PSD/rank and finiteness derives compactness | `highProbQQueryEfficient_tieAverage_of_growing_augmented_secondMoment_of_gram` | `GrowingResponseBridge.lean` |
+| Preferred finite-model response theorem: population norm additionally derives sample/population dissimilarity bounds | `highProbQQueryEfficient_tieAverage_of_growing_augmented_secondMoment_of_gram_of_population_norm` | `GrowingResponseBridge.lean` |
 
 ## What to scrutinize: remaining assumptions and scope
 
@@ -126,10 +127,12 @@ resulting target-to-reference distances.  It therefore needs no global
 The response-level bridge now derives the measurable high-probability CMDS
 event from response means, and the finite-model second-moment theorem closes
 that concentration step by a double union bound.  The preferred finite-model
-capstone additionally derives compactness from finiteness and derives population
-PSD/rank from the supplied Gram configuration.  The remaining major statistical
-seam is uniform response concentration for infinite model classes under concrete
-regularity or entropy assumptions.
+capstone derives compactness from finiteness, derives population PSD/rank from
+the supplied Gram configuration, and derives both sample and population
+dissimilarity bounds from one population response-norm envelope on the same
+good event.  The remaining major statistical seam is uniform response
+concentration for infinite model classes under concrete regularity or entropy
+assumptions.
 
 Other explicit conditions worth reviewing are:
 
@@ -156,7 +159,7 @@ Other explicit conditions worth reviewing are:
 | [`GrowingAcharyyaBridge.lean`](GrowingAcharyyaBridge.lean) | Target-augmented `Fin (n+1)` CMDS bridge and fixed-`Q` theorem with no finite factorization of the model class; the `_of_gram` capstone derives PSD/rank from the population Gram witness. |
 | [`Theorem2.lean`](Theorem2.lean) | Earlier compatibility statements using a selected nearest neighbor and caller-supplied coverage events. |
 | [`AcharyyaBridge.lean`](AcharyyaBridge.lean) | Derives embedding concentration from the Acharyya2025 spectral/statistical chain and composes it with the new iid coverage theorem. |
-| [`GrowingResponseBridge.lean`](GrowingResponseBridge.lean) | Derives growing CMDS events from response means; the finite `_of_gram` capstone removes explicit compactness, PSD, and rank hypotheses. |
+| [`GrowingResponseBridge.lean`](GrowingResponseBridge.lean) | Derives growing CMDS events from response means; the preferred finite capstone removes explicit compactness, PSD, rank, and separate sample/population dissimilarity-bound hypotheses. |
 
 ## Build / sanity checks
 

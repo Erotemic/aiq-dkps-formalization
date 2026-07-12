@@ -123,6 +123,14 @@ models in DKPS.  The bridge file connects `Acharyya2025` aligned finite-sample
 concentration to estimated-embedding alignment events and consistency
 hypotheses used by the inference layer.
 
+## Literature/formalization discrepancy ledger
+
+[`papers/DKPS-formalized-vs-literature.tex`](papers/DKPS-formalized-vs-literature.tex)
+is the maintained audit for the four primary DKPS papers. It records repaired
+statements, surfaced assumptions, strengthened or weakened conclusions, MDS
+variant differences, and remaining composition gaps. Update it whenever a
+preferred public capstone changes its hypothesis load or scope.
+
 ## References
 
 ### Direct theorem targets

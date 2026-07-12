@@ -1,0 +1,92 @@
+name: GPT-5.6 authoritative proof validation
+
+on:
+  pull_request:
+    branches: [main]
+
+jobs:
+  lean:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check out authoritative snapshot
+        shell: bash
+        run: |
+          set -euxo pipefail
+          git clone https://github.com/AIQ-Kitware/aiq-dkps-formalization.git work
+          cd work
+          git checkout 1d0cb36
+      - name: Download and apply proof patches
+        shell: bash
+        run: |
+          set -o pipefail
+          {
+            set -eux
+            mkdir -p patches
+            base='https://raw.githubusercontent.com/Erotemic/aiq-dkps-formalization/gpt56-validate-three-hard-proofs-20260712/.github/validation/gpt56-three-hard'
+            for f in 01-abstract-spectrum.patch 02-experimental-sylvester.patch 03-davis1963.patch 05-theory-sylvester.patch 06-fix-rectangular.patch; do
+              curl -fsSL "$base/$f" -o "patches/$f"
+            done
+            for i in 00 01 02 03 04 05; do
+              curl -fsSL "$base/04.part$i" -o "patches/04.part$i"
+            done
+            sed -i '1s/^iv\.filter/+              (Finset.univ.filter/' patches/04.part01
+            cd work
+            git apply --check ../patches/01-abstract-spectrum.patch
+            git apply ../patches/01-abstract-spectrum.patch
+            git apply --check ../patches/02-experimental-sylvester.patch
+            git apply ../patches/02-experimental-sylvester.patch
+            git apply --check ../patches/03-davis1963.patch
+            git apply ../patches/03-davis1963.patch
+            cat ../patches/04.part* > /tmp/04-rectangular-ui.patch
+            git apply --recount --check /tmp/04-rectangular-ui.patch
+            git apply --recount /tmp/04-rectangular-ui.patch
+            git apply --check ../patches/06-fix-rectangular.patch
+            git apply ../patches/06-fix-rectangular.patch
+            git apply --check ../patches/05-theory-sylvester.patch
+            git apply ../patches/05-theory-sylvester.patch
+            git diff --check
+          } 2>&1 | tee patch-apply.log
+      - name: Upload patch diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: patch-diagnostics
+          path: |
+            patch-apply.log
+            patches/
+          if-no-files-found: warn
+      - name: Install elan
+        shell: bash
+        run: |
+          set -euxo pipefail
+          curl -sSf https://raw.githubusercontent.com/leanprover/elan/master/elan-init.sh | sh -s -- -y
+          echo "$HOME/.elan/bin" >> "$GITHUB_PATH"
+      - name: Restore Mathlib cache
+        working-directory: work
+        shell: bash
+        run: lake exe cache get
+      - name: Build targeted modules
+        working-directory: work
+        shell: bash
+        run: |
+          set -o pipefail
+          lake build \
+            ForMathlib.Analysis.InnerProductSpace.DavisKahanTheory.RectangularUINorm \
+            ForMathlib.Analysis.InnerProductSpace.DavisKahanTheory.Sylvester \
+            ForMathlib.Analysis.InnerProductSpace.DavisKahanTheory.Davis1963 \
+            ForMathlib.Analysis.InnerProductSpace.DavisKahanTheory.SinTheta \
+            ForMathlib.Analysis.InnerProductSpace.DavisKahanTheory.SingularSubspace \
+            2>&1 | tee ../lean-build.log
+      - name: Upload Lean diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: lean-diagnostics
+          path: lean-build.log
+          if-no-files-found: warn
+      - name: Audit formatting
+        if: always()
+        working-directory: work
+        shell: bash
+        run: git diff --check

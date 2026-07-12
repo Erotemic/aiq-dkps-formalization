@@ -346,6 +346,81 @@ whether the target follows from:
 Do not force an abstraction that does not fit its exact assumptions, but verify
 these routes before committing to coordinates.
 
+
+## 19. Normalize bundled-map goals before applying pointwise vector lemmas
+
+A theorem about vectors will not rewrite a goal whose outer syntax is still a
+bundled linear-map application.  For example, after rewriting an operator
+identity, Lean may retain
+
+```lean
+‖(S + T) x‖ ^ 2
+```
+
+rather than exposing `‖S x + T x‖ ^ 2`.  Before applying Pythagoras or another
+vector theorem, normalize only the application layer:
+
+```lean
+simp only [LinearMap.add_apply, LinearMap.comp_apply]
+```
+
+Then apply the theorem directly, preferably with `simpa [pow_two, ...] using`
+rather than asking `rw` to discover a deeply nested norm pattern.  The same
+principle applies to subtraction, scalar multiplication, and composition.
+
+For algebraic operator decompositions, move to the pointwise identity first,
+rewrite linearity explicitly (`map_sub`, `map_add`), and only then use `abel` or
+`ring`.  Algebraic tactics do not automatically know that an opaque bundled map
+preserves subtraction.
+
+## 20. Read the target after rewriting `ker_eq_bot`
+
+For linear maps, rewriting with `LinearMap.ker_eq_bot` commonly changes the
+goal into `Function.Injective f`.  The next introduction therefore produces two
+vectors and an equality, not one vector and a kernel-membership hypothesis.
+A proof written as though the old kernel goal remained will fail in a confusing
+way when an injectivity theorem is applied to the wrong target.
+
+For subspace transversality, a robust route is:
+
+1. introduce `x`, `y`, and `hxy : f x = f y`;
+2. apply the geometric hypothesis to `x - y`;
+3. express the projected-difference goal as `f (x - y) = 0` with `change`;
+4. close it by linearity and `hxy`;
+5. use injectivity of the coordinate isometry to conclude `x - y = 0`.
+
+This avoids depending on the exact statement shape chosen by the kernel API.
+
+## 21. Name adjoint and isometry inner-product bridges explicitly
+
+Rewriting `X.inner_map_map` can fail when the target displays
+`X.toLinearMap` rather than the isometry coercion `X`.  Similarly, a broad
+rewrite with an adjoint identity may hit the wrong occurrence or orientation.
+When a projection proof depends on both facts, state the scalar equalities
+separately:
+
+```lean
+have hfirst : ⟪y, X z⟫ = ⟪X.toLinearMap.adjoint y, z⟫ :=
+  (LinearMap.adjoint_inner_left X.toLinearMap z y).symm
+have hsecond : ⟪X (X.toLinearMap.adjoint y), X z⟫ =
+    ⟪X.toLinearMap.adjoint y, z⟫ :=
+  X.inner_map_map _ _
+```
+
+Do not immediately `rw` by those facts if the goal still prints
+`X.toLinearMap`: rewriting matches syntax before it performs the coercion
+normalization one might expect.  Instead, use a typed `calc`, keep the target in
+its displayed `X.toLinearMap` form, and use `change` only inside the step proved
+by `X.inner_map_map`.  This makes the coercion crossing explicit and local.
+
+The same rule applies to norms.  A Pythagorean theorem in the codomain yields a
+term such as `‖X d‖ ^ 2`, whereas the desired Frobenius summand may be
+`‖d‖ ^ 2`.  First apply Pythagoras without broad simplification, then rewrite
+that one norm with `X.norm_map` in a separate `calc` step.  Asking `simpa` to do
+both the square normalization and the isometry transport can leave universe-
+indexed norm instances syntactically different even though the values are
+mathematically equal.
+
 ## Toolchain and verification discipline
 
 The repository currently targets approximately:
@@ -384,3 +459,69 @@ After resolving a new non-obvious failure, add it here when it is a reusable
 proof-engineering rule. Use `dev/journals/` instead when the value lies in the
 specific debugging symptom and postmortem; promote only the durable rule into
 this reference.
+
+## 22. Audit every bundled-map occurrence, then verify the packaged file
+
+A coercion failure fixed in one theorem is evidence that the same syntactic
+pattern may recur earlier in the file.  In particular, lemmas stated for a
+`LinearIsometry` such as
+
+```lean
+X.inner_map_map
+X.norm_map
+```
+
+do not reliably rewrite expressions printed through `X.toLinearMap`.  After the
+first such failure, search the whole authored diff for both forms and normalize
+every theorem boundary deliberately:
+
+```lean
+change ⟪X x, X y⟫ = ⟪x, y⟫
+exact X.inner_map_map x y
+```
+
+For residual and projection identities, prefer scalar equalities assembled by
+`calc` or transitivity over a chain of broad rewrites.  For an isometric norm
+transport, first prove the Pythagorean identity wholly in the codomain and only
+then replace `‖X d‖` by `‖d‖`; do not ask one `simpa` to cross bundled coercions,
+powers, and universe-indexed norm instances simultaneously.
+
+A cumulative overlay is only trustworthy if the artifact contains the same
+file that was reviewed.  Before delivery:
+
+1. generate the patch from the clean committed baseline, not from a prior
+   staging directory;
+2. extract the ZIP and apply the patch independently to two clean copies;
+3. compare every authored file byte-for-byte with the work tree;
+4. inspect the exact formerly failing line ranges in both validation copies.
+
+This catches the particularly costly failure mode where the work tree is fixed
+but the packaged overlay still contains an older staged copy.
+
+## 23. Put command modifiers before declaration documentation
+
+Lean command modifiers such as
+
+```lean
+omit [FiniteDimensional 𝕜 E] in
+```
+
+must precede the declaration documentation as well as the declaration itself:
+
+```lean
+omit [FiniteDimensional 𝕜 E] in
+/-- Documentation for the theorem. -/
+theorem theorem_name ... := by
+  ...
+```
+
+Do not place `omit ... in` between a docstring and its theorem. A documentation
+comment is attached to the immediately following declaration command, so Lean
+will parse the intervening `omit` where it is expecting `theorem`, `lemma`, or
+another declaration and report an error such as `unexpected token 'omit';
+expected 'lemma'`.
+
+When cleaning unused-section-variable warnings, inspect the surrounding
+comments before inserting a command modifier. Prefer leaving a harmless linter
+warning over introducing an unparsed declaration header, and include the
+modified file in the narrow compiler target whenever a toolchain is available.

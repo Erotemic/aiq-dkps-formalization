@@ -473,25 +473,30 @@ theorem sinTheta_perturbation_le
     _ ≤ NU (residual B U.subtypeₗᵢ (A.restrict hU)) := hres
     _ ≤ N (B - A) := hresBound
 
-/-- **Symmetric `sin Θ` theorem.**  The full-space angle operator contains
-both one-sided sine blocks.  Consequently the sharp full-space conclusion
-requires the reverse mixed gap as well as the forward one; a single mixed gap
-controls only `sinThetaMap U V` (except in the operator norm).  This is
-Davis--Kahan Proposition 6.1.
+/-- **Symmetric sharp `sin Θ` theorem.**  The full-space angle operator
+contains both one-sided sine blocks.  For a general UI norm the constant-one
+conclusion therefore requires a forward and reverse interval/exterior gap;
+two arbitrary mixed spectral-distance gaps support only the separate
+`π/2` theory.  A single interval/exterior gap controls only
+`sinThetaMap U V` (except in the operator norm).  This is the finite
+Davis--Kahan Proposition 6.1 configuration.
 
 Lean proof route for a weaker agent:
 
-1. Apply the one-sided theorem in both directions, identify the two sine blocks of the full angle operator, and use the finite pinching/symmetric-gauge argument.
-2. For operator norm, this should specialize the supported `DavisKahan.SinTheta` module.
+1. Apply the one-sided interval/exterior theorem in both directions.
+2. Identify the two directed blocks of `P_U-P_V` in the `U ⊕ Uᗮ` to
+   `V ⊕ Vᗮ` coordinates.
+3. Prove simultaneous Ky Fan prefix bounds for their direct sum and dominate
+   the corresponding off-diagonal pinching of `B-A`; finish by Fan dominance.
 -/
 theorem sinAngleOperator_perturbation_le
     (N : UnitarilyInvariantNorm 𝕜 E)
     {A B : E →ₗ[𝕜] E} (hA : A.IsSymmetric) (hB : B.IsSymmetric)
     {U V : Submodule 𝕜 E} [U.HasOrthogonalProjection]
     [V.HasOrthogonalProjection] (hU : Reduces A U) (hV : Reduces B V)
-    {δ : ℝ} (hδ : 0 < δ)
-    (hgapUV : HybridGap A B U V δ)
-    (hgapVU : HybridGap B A V U δ) :
+    {a b c d δ : ℝ} (hδ : 0 < δ)
+    (hgapUV : IntervalExteriorGap A B U V a b δ)
+    (hgapVU : IntervalExteriorGap B A V U c d δ) :
     δ * N (sinAngleOperator U V) ≤ N (B - A) := by
   sorry
 

@@ -28,15 +28,20 @@ Literature map:
 
 /-! ## Remaining construction plan
 
-Define the three angle embeddings from the cosine and sine blocks of `X`.
-Under transversality, `tanThetaEmbedding` is the sine block composed with the
-inverse of the cosine block.  Define `sinTwoThetaEmbedding` by the polynomial
+The Galerkin/Ritz layer is complete: the adjoint of an isometric embedding
+is a left inverse, the Ritz residual is orthogonal to the trial subspace,
+vanishing is equivalent to invariance, residuals are unitary-coordinate
+covariant, and the Frobenius residual satisfies the exact Pythagorean identity
+and Ritz minimality.  The sine embedding now has its correctly directed
+principal-sine singular-value dictionary, and transversality is identified with
+injectivity of the cosine block.
+
+The remaining work in this file is to define the tangent and double-angle
+embeddings with honest totalization.  Under transversality,
+`tanThetaEmbedding` should be the sine block composed with the inverse of the
+cosine block.  Define `sinTwoThetaEmbedding` polynomially as
 `2 sinTheta cosTheta`; define `tanTwoThetaEmbedding` from the corresponding
 numerator and the invertible `cos(2 Theta)` block under quarter-turn avoidance.
-Prove their singular-value formulas in principal coordinates before applying
-rectangular UI norms.  Separately, prove Galerkin orthogonality and the residual
-Pythagorean identity; these unlock the Ritz-minimality statements without any
-spectral argument.
 -/
 
 
@@ -198,6 +203,16 @@ theorem isSymmetric_compression {A : E →ₗ[𝕜] E} (hA : A.IsSymmetric)
   simp only [compression, LinearMap.comp_apply]
   rw [LinearMap.adjoint_inner_left, hA, ← LinearMap.adjoint_inner_right]
 
+/-- The adjoint of an isometric embedding is a left inverse. -/
+@[simp] theorem adjoint_comp_linearIsometry_eq_id (X : F →ₗᵢ[𝕜] E) :
+    X.toLinearMap.adjoint ∘ₗ X.toLinearMap = LinearMap.id := by
+  ext x
+  refine ext_inner_right 𝕜 fun y => ?_
+  simp only [LinearMap.comp_apply, LinearMap.id_apply]
+  rw [LinearMap.adjoint_inner_left]
+  change ⟪X x, X y⟫_𝕜 = ⟪x, y⟫_𝕜
+  exact X.inner_map_map x y
+
 /-- The Ritz residual is orthogonal to the trial subspace.
 
 Lean proof route for a weaker agent:
@@ -209,7 +224,16 @@ Lean proof route for a weaker agent:
 theorem adjoint_comp_ritzResidual_eq_zero (A : E →ₗ[𝕜] E)
     (X : F →ₗᵢ[𝕜] E) :
     X.toLinearMap.adjoint ∘ₗ ritzResidual A X = 0 := by
-  sorry
+  ext x
+  refine ext_inner_right 𝕜 fun y => ?_
+  simp only [LinearMap.comp_apply, ritzResidual, residual, compression,
+    LinearMap.sub_apply, LinearMap.zero_apply, inner_zero_left]
+  rw [LinearMap.adjoint_inner_left, inner_sub_left]
+  change ⟪A (X x), X y⟫_𝕜 -
+      ⟪X (X.toLinearMap.adjoint (A (X x))), X y⟫_𝕜 = 0
+  apply sub_eq_zero.mpr
+  exact (LinearMap.adjoint_inner_left X.toLinearMap y (A (X x))).symm |>.trans
+    (X.inner_map_map (X.toLinearMap.adjoint (A (X x))) y).symm
 
 /-- Vanishing Ritz residual is equivalent to invariance of the represented
 subspace.
@@ -223,8 +247,28 @@ Lean proof route for a weaker agent:
 theorem ritzResidual_eq_zero_iff_reduces {A : E →ₗ[𝕜] E}
     (X : F →ₗᵢ[𝕜] E) :
     ritzResidual A X = 0 ↔ Reduces A (approximateSubspace X) := by
-  sorry
+  constructor
+  · intro hR x hx
+    rcases hx with ⟨y, rfl⟩
+    have hpoint := LinearMap.congr_fun hR y
+    change A (X y) - X (compression A X y) = 0 at hpoint
+    exact ⟨compression A X y, (sub_eq_zero.mp hpoint).symm⟩
+  · intro hred
+    ext y
+    have hmem : A (X y) ∈ approximateSubspace X :=
+      hred (X y) ⟨y, rfl⟩
+    rcases hmem with ⟨z, hz⟩
+    have hz' : A (X.toLinearMap y) = X.toLinearMap z := hz.symm
+    have hcomp : compression A X y = z := by
+      change X.toLinearMap.adjoint (A (X.toLinearMap y)) = z
+      rw [hz']
+      have hleft := LinearMap.congr_fun (adjoint_comp_linearIsometry_eq_id X) z
+      change X.toLinearMap.adjoint (X.toLinearMap z) = z at hleft
+      exact hleft
+    change A (X.toLinearMap y) - X.toLinearMap (compression A X y) = 0
+    rw [hcomp, hz', sub_self]
 
+omit [FiniteDimensional 𝕜 E] [FiniteDimensional 𝕜 F] in
 /-- Residuals transform naturally under a unitary change of approximate
 coordinates.
 
@@ -239,8 +283,10 @@ theorem residual_comp_unitary (A : E →ₗ[𝕜] E) (X : F →ₗᵢ[𝕜] E)
     residual A (X.comp V.toLinearIsometry)
         (V.symm.toLinearMap ∘ₗ M ∘ₗ V.toLinearMap) =
       residual A X M ∘ₗ V.toLinearMap := by
-  sorry
+  ext x
+  simp [residual, LinearMap.comp_apply]
 
+omit [FiniteDimensional 𝕜 E] [FiniteDimensional 𝕜 F] in
 /-- If `(X,M)` is invariant for `B`, its residual for `A` is exactly the
 perturbation applied to `X`.
 
@@ -257,6 +303,7 @@ theorem residual_eq_perturbation_comp {A B : E →ₗ[𝕜] E}
   show A ∘ₗ X.toLinearMap - X.toLinearMap ∘ₗ M = (A - B) ∘ₗ X.toLinearMap
   rw [LinearMap.sub_comp, hBX]
 
+omit [FiniteDimensional 𝕜 F] in
 /-- **The projected-residual (cross-block) Sylvester identity.**  For `A`
 symmetric and `U` an `A`-invariant subspace, the sine embedding
 `Y = P_{Uᗮ} X` satisfies the Sylvester equation
@@ -287,22 +334,26 @@ theorem opNorm_residual_le_perturbation
     (hBX : B ∘ₗ X.toLinearMap = X.toLinearMap ∘ₗ M) :
     RectangularUnitarilyInvariantNorm.opNorm (residual A X M) ≤
       ‖(A - B).toContinuousLinearMap‖ := by
-  sorry
-
-/-- The Ritz compression minimizes the Frobenius residual over all coordinate
-operators.
-
-Lean proof route for a weaker agent:
-
-1. Prove the Pythagorean identity below first and drop the nonnegative compression-error term.
-2. Rewrite the Pythagorean identity as `ritz² ≤ residual²` using nonnegativity of the compression-error square.
-3. Pass from squared norms to norms using nonnegativity.
--/
-theorem ritzResidual_frobenius_minimal (A : E →ₗ[𝕜] E)
-    (X : F →ₗᵢ[𝕜] E) (M : F →ₗ[𝕜] F) :
-    RectangularUnitarilyInvariantNorm.frobenius (ritzResidual A X) ≤
-      RectangularUnitarilyInvariantNorm.frobenius (residual A X M) := by
-  sorry
+  rw [residual_eq_perturbation_comp X M hBX,
+    RectangularUnitarilyInvariantNorm.opNorm_apply]
+  have hcomp :
+      ((A - B) ∘ₗ X.toLinearMap).toContinuousLinearMap =
+        (A - B).toContinuousLinearMap ∘L X.toLinearMap.toContinuousLinearMap := by
+    ext x
+    rfl
+  have hX : ‖X.toLinearMap.toContinuousLinearMap‖ ≤ 1 := by
+    refine X.toLinearMap.toContinuousLinearMap.opNorm_le_bound zero_le_one fun x => ?_
+    rw [one_mul]
+    exact le_of_eq (X.norm_map x)
+  rw [hcomp]
+  calc
+    ‖(A - B).toContinuousLinearMap ∘L X.toLinearMap.toContinuousLinearMap‖
+        ≤ ‖(A - B).toContinuousLinearMap‖ *
+            ‖X.toLinearMap.toContinuousLinearMap‖ :=
+      ContinuousLinearMap.opNorm_comp_le _ _
+    _ ≤ ‖(A - B).toContinuousLinearMap‖ * 1 :=
+      mul_le_mul_of_nonneg_left hX (norm_nonneg _)
+    _ = ‖(A - B).toContinuousLinearMap‖ := mul_one _
 
 /-- Orthogonal decomposition of a general residual into the Ritz residual and
 compression error.
@@ -317,23 +368,127 @@ theorem residual_frobenius_pythagoras (A : E →ₗ[𝕜] E)
     RectangularUnitarilyInvariantNorm.frobenius (residual A X M) ^ 2 =
       RectangularUnitarilyInvariantNorm.frobenius (ritzResidual A X) ^ 2 +
       RectangularUnitarilyInvariantNorm.frobenius (compression A X - M) ^ 2 := by
-  sorry
+  let b := stdOrthonormalBasis 𝕜 F
+  have hdecomp : residual A X M =
+      ritzResidual A X + X.toLinearMap ∘ₗ (compression A X - M) := by
+    ext x
+    change A (X x) - X (M x) =
+      (A (X x) - X ((compression A X) x)) +
+        X (((compression A X) x) - M x)
+    rw [map_sub]
+    abel
+  have hpoint : ∀ i, ‖residual A X M (b i)‖ ^ 2 =
+      ‖ritzResidual A X (b i)‖ ^ 2 +
+        ‖(compression A X - M) (b i)‖ ^ 2 := by
+    intro i
+    have hgal := LinearMap.congr_fun (adjoint_comp_ritzResidual_eq_zero A X) (b i)
+    change X.toLinearMap.adjoint (ritzResidual A X (b i)) = 0 at hgal
+    have horth :
+        ⟪ritzResidual A X (b i),
+            X.toLinearMap ((compression A X - M) (b i))⟫_𝕜 = 0 := by
+      rw [← LinearMap.adjoint_inner_left, hgal, inner_zero_left]
+    let d := (compression A X - M) (b i)
+    change ⟪ritzResidual A X (b i), X d⟫_𝕜 = 0 at horth
+    rw [LinearMap.congr_fun hdecomp (b i)]
+    simp only [LinearMap.add_apply, LinearMap.comp_apply]
+    change
+      ‖ritzResidual A X (b i) + X d‖ ^ 2 =
+        ‖ritzResidual A X (b i)‖ ^ 2 + ‖d‖ ^ 2
+    have hpythCodomain :
+        ‖ritzResidual A X (b i) + X d‖ *
+            ‖ritzResidual A X (b i) + X d‖ =
+          ‖ritzResidual A X (b i)‖ * ‖ritzResidual A X (b i)‖ +
+            ‖X d‖ * ‖X d‖ :=
+      norm_add_sq_eq_norm_sq_add_norm_sq_of_inner_eq_zero
+        (ritzResidual A X (b i)) (X d) horth
+    have hnorm : ‖X d‖ = ‖d‖ := X.norm_map d
+    rw [pow_two, pow_two, pow_two]
+    calc
+      ‖ritzResidual A X (b i) + X d‖ *
+          ‖ritzResidual A X (b i) + X d‖ =
+        ‖ritzResidual A X (b i)‖ * ‖ritzResidual A X (b i)‖ +
+          ‖X d‖ * ‖X d‖ := hpythCodomain
+      _ = ‖ritzResidual A X (b i)‖ * ‖ritzResidual A X (b i)‖ +
+          ‖d‖ * ‖d‖ := by rw [hnorm]
+  rw [RectangularUnitarilyInvariantNorm.frobenius_apply (residual A X M) b,
+    RectangularUnitarilyInvariantNorm.frobenius_apply (ritzResidual A X) b,
+    RectangularUnitarilyInvariantNorm.frobenius_apply (compression A X - M) b,
+    Real.sq_sqrt (by positivity), Real.sq_sqrt (by positivity),
+    Real.sq_sqrt (by positivity)]
+  rw [← Finset.sum_add_distrib]
+  exact Finset.sum_congr rfl fun i _ => hpoint i
 
-/-- The singular values of `sinThetaEmbedding` are the sines of the principal
-angles between `U` and `range X`.
+
+/-- The Ritz compression minimizes the Frobenius residual over all coordinate
+operators.
 
 Lean proof route for a weaker agent:
 
-1. Choose an orthonormal basis of the coordinate space, identify `range X`, and reduce to the canonical cross-projection singular-value theorem in `Basic.lean`.
-2. Construct a unitary equivalence from the coordinate space to `range X` using the isometric embedding.
-3. Apply `singularValues_sinThetaMap` and simplify the zero-extension/padding convention.
+1. Apply the preceding Pythagorean identity and drop the nonnegative compression-error term.
+2. Rewrite the Pythagorean identity as `ritz² ≤ residual²` using nonnegativity of the compression-error square.
+3. Pass from squared norms to norms using nonnegativity.
+-/
+theorem ritzResidual_frobenius_minimal (A : E →ₗ[𝕜] E)
+    (X : F →ₗᵢ[𝕜] E) (M : F →ₗ[𝕜] F) :
+    RectangularUnitarilyInvariantNorm.frobenius (ritzResidual A X) ≤
+      RectangularUnitarilyInvariantNorm.frobenius (residual A X M) := by
+  have hpyth := residual_frobenius_pythagoras A X M
+  have hsq :
+      RectangularUnitarilyInvariantNorm.frobenius (ritzResidual A X) ^ 2 ≤
+        RectangularUnitarilyInvariantNorm.frobenius (residual A X M) ^ 2 := by
+    rw [hpyth]
+    exact le_add_of_nonneg_right (sq_nonneg _)
+  exact le_of_sq_le_sq hsq
+    (RectangularUnitarilyInvariantNorm.frobenius.nonneg _)
+
+/-- The orthogonal projection onto the range of an isometric embedding is
+`X X⋆`. -/
+theorem projection_approximateSubspace_eq_comp_adjoint (X : F →ₗᵢ[𝕜] E) :
+    projection (approximateSubspace X) =
+      X.toLinearMap ∘ₗ X.toLinearMap.adjoint := by
+  ext y
+  change (approximateSubspace X).starProjection y =
+    X.toLinearMap (X.toLinearMap.adjoint y)
+  apply Submodule.eq_starProjection_of_mem_of_inner_eq_zero
+  · change X.toLinearMap (X.toLinearMap.adjoint y) ∈
+      LinearMap.range X.toLinearMap
+    exact ⟨X.toLinearMap.adjoint y, rfl⟩
+  · intro w hw
+    change w ∈ LinearMap.range X.toLinearMap at hw
+    rcases hw with ⟨z, rfl⟩
+    rw [inner_sub_left]
+    apply sub_eq_zero.mpr
+    change ⟪y, X z⟫_𝕜 =
+      ⟪X (X.toLinearMap.adjoint y), X z⟫_𝕜
+    exact (LinearMap.adjoint_inner_left X.toLinearMap z y).symm |>.trans
+      (X.inner_map_map (X.toLinearMap.adjoint y) z).symm
+
+/-- The singular values of `sinThetaEmbedding U X = P_{Uᗮ}X` are the
+principal sines directed from `range X` toward `U`.
+
+The proof identifies the projection onto `range X` with `X X⋆`, precomposes by
+`X⋆`, and uses coisometry padding to show that the ambient cross projection has
+exactly the same singular-value sequence as the rectangular embedding map.
 -/
 theorem singularValues_sinThetaEmbedding (U : Submodule 𝕜 E)
     [U.HasOrthogonalProjection] (X : F →ₗᵢ[𝕜] E) :
     (sinThetaEmbedding U X).singularValues =
-      principalSines U (approximateSubspace X) := by
-  sorry
+      principalSines (approximateSubspace X) U := by
+  have hmap :
+      sinThetaEmbedding U X ∘ₗ X.toLinearMap.adjoint =
+        sinThetaMap (approximateSubspace X) U := by
+    rw [sinThetaEmbedding, sinThetaMap,
+      projection_approximateSubspace_eq_comp_adjoint X]
+    simp only [LinearMap.comp_assoc]
+  calc
+    (sinThetaEmbedding U X).singularValues =
+        (sinThetaEmbedding U X ∘ₗ X.toLinearMap.adjoint).singularValues :=
+      (singularValues_comp_adjoint_linearIsometry X (sinThetaEmbedding U X)).symm
+    _ = (sinThetaMap (approximateSubspace X) U).singularValues := by rw [hmap]
+    _ = principalSines (approximateSubspace X) U :=
+      singularValues_sinThetaMap (approximateSubspace X) U
 
+omit [FiniteDimensional 𝕜 E] [FiniteDimensional 𝕜 F] in
 /-- The tangent map is finite exactly when the represented subspace is
 transverse to `U`.
 
@@ -349,7 +504,26 @@ theorem tanThetaEmbedding_defined_iff (U : Submodule 𝕜 E)
     [U.HasOrthogonalProjection] (X : F →ₗᵢ[𝕜] E) :
     IsTransverse (approximateSubspace X) U ↔
       LinearMap.ker (cosThetaEmbedding U X) = ⊥ := by
-  sorry
+  constructor
+  · intro htrans
+    rw [LinearMap.ker_eq_bot]
+    intro x y hxy
+    have hproj : U.starProjection (X (x - y)) = 0 := by
+      change cosThetaEmbedding U X (x - y) = 0
+      rw [map_sub, hxy, sub_self]
+    have hXzero : X (x - y) = 0 :=
+      htrans (X (x - y)) ⟨x - y, rfl⟩ hproj
+    have hxyzero : x - y = 0 := by
+      apply X.injective
+      simpa using hXzero
+    exact sub_eq_zero.mp hxyzero
+  · intro hker x hx hproj
+    rcases hx with ⟨y, rfl⟩
+    have hyker : y ∈ LinearMap.ker (cosThetaEmbedding U X) := by
+      simpa [cosThetaEmbedding, projection, LinearMap.comp_apply] using hproj
+    rw [hker] at hyker
+    have hy : y = 0 := by simpa using hyker
+    rw [hy, map_zero]
 
 end DavisKahanTheory
 end ForMathlib

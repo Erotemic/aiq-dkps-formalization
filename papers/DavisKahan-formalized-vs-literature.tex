@@ -708,10 +708,45 @@ ambient perturbation, spectral-subspace, Frobenius, and Ky Fan interfaces.
 
 The full-space operator $|P_U-P_V|$ is intentionally not conflated with this
 directed map.  For a general UI norm it contains both directed sine blocks.
-Its sharp theorem therefore remains a separate coupled-block result requiring
-the forward and reverse mixed gaps; it cannot be obtained merely by applying
-the directed estimate twice and using the triangle inequality.  The open Lean
-declaration is \texttt{sinAngleOperator\_perturbation\_le}.
+Its sharp constant-one theorem is a separate coupled-block result requiring
+forward and reverse \emph{interval/exterior} gaps; two arbitrary mixed
+spectral-distance gaps belong instead to the universal $\pi/2$ theory.  It
+cannot be obtained merely by applying the directed estimate twice and using
+the triangle inequality.  The open Lean declaration
+\texttt{sinAngleOperator\_perturbation\_le} has been corrected to expose the
+two interval/exterior hypotheses explicitly; its coupled Ky Fan/pinching proof
+remains open.
+
+\paragraph{Ritz/Galerkin residual algebra and angle-coordinate transport.}
+The coordinate-free numerical-analysis layer is now substantially complete.
+For an isometric embedding $X:F\to E$, the formalization proves
+$X^*X=I$, Galerkin orthogonality $X^*R_{\mathrm{Ritz}}=0$, and the exact
+criterion that the Ritz residual vanishes precisely when $\operatorname{ran}X$
+is $A$-invariant.  Residuals are equivariant under unitary changes of trial
+coordinates, and an invariant-pair residual obeys the operator-norm contraction
+\[
+  \|AX-XM\| \le \|A-B\|
+  \qquad\text{when }BX=XM.
+\]
+
+For the rectangular Frobenius norm the residual splits orthogonally:
+\[
+  \|AX-XM\|_F^2
+  = \|AX-X(X^*AX)\|_F^2 + \|X^*AX-M\|_F^2.
+\]
+Consequently the Ritz compression minimizes the Frobenius residual over all
+coordinate operators.  The projection onto $\operatorname{ran}X$ is also
+identified as $XX^*$, which yields the full singular-value dictionary
+\[
+  \sigma(P_{U^\perp}X)
+  = \sin\Theta(\operatorname{ran}X,U).
+\]
+The argument order is directed: the represented subspace is the first argument
+of \texttt{principalSines}; the previous provisional statement had these
+arguments reversed and was corrected.  Finally, transversality of
+$\operatorname{ran}X$ to $U$ is characterized exactly by injectivity of the
+cosine-coordinate map.  These results are implemented in
+\texttt{DavisKahanTheory/Residual.lean}.
 
 \paragraph{The square perturbation $\sin\Theta$ theorem, every unitarily invariant norm.}
 With the square Fan-dominance library in hand, the Davis--Kahan~(1970)
@@ -880,12 +915,14 @@ The remaining work is ordered by mathematical dependency:
   Finish the basis-independent spectral-subspace and canonical angle-operator
   layer, especially pole-safe tangent and double-angle operators, unequal
   ranks, and the remaining projector/singular-value dictionaries.
-\item \emph{Symmetric full-space sine and Ritz residual algebra.}
+\item \emph{Symmetric full-space sine.}
   The sharp directed $\sin\Theta$ family is complete in residual,
   perturbation, canonical spectral-subspace, Frobenius, and Ky Fan forms for
-  both interval/exterior and ordered separation.  The remaining single-angle
-  capstones are the coupled full-space $|P_U-P_V|$ theorem under two mixed gaps,
-  Ritz/Galerkin orthogonality, and Frobenius residual minimality.
+  both interval/exterior and ordered separation.  Ritz/Galerkin orthogonality,
+  residual unitary covariance, the Frobenius Pythagorean identity and
+  minimality, and the sine-embedding singular-value dictionary are now closed.
+  The remaining sharp single-angle capstone is the coupled full-space
+  $|P_U-P_V|$ theorem under forward and reverse interval/exterior gaps.
 \item \emph{The remaining Sylvester extension.}
   Prove the independent arbitrary-disjoint-spectrum theorem with constant
   $\pi/2$.  The sharp ordered and interval/exterior constant-one estimates are
@@ -1111,6 +1148,22 @@ Canonical/Frobenius/Ky Fan directed $\sin\Theta$ wrappers
     \texttt{frobenius\_sinTheta\_le},
     \texttt{kyFan\_sinTheta\_le}
     (\texttt{DavisKahanTheory/SinTheta.lean}) \\
+Ritz/Galerkin orthogonality and invariance criterion
+  & \texttt{adjoint\_comp\_linearIsometry\_eq\_id},
+    \texttt{adjoint\_comp\_ritzResidual\_eq\_zero},
+    \texttt{ritzResidual\_eq\_zero\_iff\_reduces}
+    (\texttt{DavisKahanTheory/Residual.lean}) \\
+Residual covariance, perturbation contraction, and Frobenius optimality
+  & \texttt{residual\_comp\_unitary},
+    \texttt{opNorm\_residual\_le\_perturbation},
+    \texttt{residual\_frobenius\_pythagoras},
+    \texttt{ritzResidual\_frobenius\_minimal}
+    (\texttt{DavisKahanTheory/Residual.lean}) \\
+Trial-subspace projection, sine singular values, and transversality
+  & \texttt{projection\_approximateSubspace\_eq\_comp\_adjoint},
+    \texttt{singularValues\_sinThetaEmbedding},
+    \texttt{tanThetaEmbedding\_defined\_iff}
+    (\texttt{DavisKahanTheory/Residual.lean}) \\
 Norm-free Davis--Kahan setup (shared with the op-norm proof)
   & \texttt{exists\_isSymmetric\_comp\_sub\_comp\_eq}
     (\texttt{SinThetaOpNorm.lean}) \\

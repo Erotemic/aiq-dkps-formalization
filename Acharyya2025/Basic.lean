@@ -24,3 +24,4 @@ import Acharyya2025.MatrixPerturbation
 import Acharyya2025.AlignedPipeline
 import Acharyya2025.SpectralMeasurability
 import Acharyya2025.RateChain
+import Acharyya2025.GrowingPipeline

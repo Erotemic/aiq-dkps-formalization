@@ -181,25 +181,59 @@ theorem highProb_referenceHits
     (hiid : IIDReferenceSampler Pf μ f_ref)
     (s : Set (Model Q X)) (hs : MeasurableSet s) (hs_pos : 0 < Pf s) :
     HighProbAtTop μ hμ (fun n => referenceHits f_ref s n) := by
-  have hq_lt : 1 - Pf s < (1 : ENNReal) :=
-    ENNReal.sub_lt_self ENNReal.one_ne_top hs_pos
-  have hpow : Tendsto (fun n : ℕ => (1 - Pf s) ^ n) atTop (nhds 0) :=
-    tendsto_pow_atTop_nhds_zero_of_lt_one (by positivity) hq_lt
+  let qE : ENNReal := 1 - Pf s
+  have hqE_lt : qE < (1 : ENNReal) := by
+    dsimp [qE]
+    exact ENNReal.sub_lt_self ENNReal.one_ne_top one_ne_zero (ne_of_gt hs_pos)
+  have hqE_ne_top : qE ≠ ⊤ :=
+    ne_of_lt (hqE_lt.trans ENNReal.one_lt_top)
+  let q : NNReal := qE.toNNReal
+  have hq_coe : (q : ENNReal) = qE := by
+    dsimp [q]
+    exact ENNReal.coe_toNNReal hqE_ne_top
+  have hq_lt : q < (1 : NNReal) := by
+    apply ENNReal.coe_lt_coe.mp
+    simpa only [ENNReal.coe_one, hq_coe] using hqE_lt
+  have hpow : Tendsto (fun n : ℕ => q ^ n) atTop (nhds (0 : NNReal)) :=
+    tendsto_pow_atTop_nhds_zero_of_lt_one (show 0 ≤ q from bot_le) hq_lt
   intro δ hδ
-  have hevent : ∀ᶠ n in atTop, (1 - Pf s) ^ n < δ :=
-    (tendsto_order.1 hpow).2 δ hδ
+  let εE : ENNReal := min δ 1
+  have hεE_pos : 0 < εE := by
+    dsimp [εE]
+    exact lt_min hδ (by simp)
+  have hεE_ne_top : εE ≠ ⊤ := by
+    apply ne_of_lt
+    exact (min_le_right δ 1).trans_lt ENNReal.one_lt_top
+  let ε : NNReal := εE.toNNReal
+  have hε_coe : (ε : ENNReal) = εE := by
+    dsimp [ε]
+    exact ENNReal.coe_toNNReal hεE_ne_top
+  have hε_pos : 0 < ε := by
+    apply ENNReal.coe_pos.mp
+    simpa only [hε_coe] using hεE_pos
+  have hevent : ∀ᶠ n in atTop, q ^ n < ε :=
+    (tendsto_order.1 hpow).2 ε hε_pos
   obtain ⟨N, hN⟩ := eventually_atTop.1 hevent
   refine ⟨N, ?_⟩
   intro n hn
   have hmiss_lt : μ n (referenceMisses f_ref s n) < δ := by
     rw [measure_referenceMisses_eq_pow Pf μ f_ref hiid s hs n]
-    exact hN n (Nat.le_of_lt hn)
+    have hq_pow_lt_ε : qE ^ n < εE := by
+      rw [← hq_coe, ← hε_coe]
+      simpa only [ENNReal.coe_pow] using
+        (ENNReal.coe_lt_coe.2 (hN n (Nat.le_of_lt hn)))
+    exact hq_pow_lt_ε.trans_le (min_le_left δ 1)
   have hhit_eq : μ n (referenceHits f_ref s n) =
       1 - μ n (referenceMisses f_ref s n) := by
-    have hcomp := measure_compl
-      (measurableSet_referenceMisses hiid.measurable hs n)
-    rw [referenceMisses_compl f_ref s n] at hcomp
-    simpa using hcomp
+    calc
+      μ n (referenceHits f_ref s n) =
+          μ n ((referenceMisses f_ref s n)ᶜ) := by
+        rw [referenceMisses_compl f_ref s n]
+      _ = μ n Set.univ - μ n (referenceMisses f_ref s n) :=
+        @measure_compl Ω _ (μ n) (referenceMisses f_ref s n)
+          (measurableSet_referenceMisses hiid.measurable hs n)
+          (measure_ne_top (μ n) (referenceMisses f_ref s n))
+      _ = 1 - μ n (referenceMisses f_ref s n) := by simp
   rw [hhit_eq]
   exact tsub_le_tsub_left (le_of_lt hmiss_lt) 1
 
@@ -276,7 +310,7 @@ theorem finiteNetHitEvent_subset_coverage
   calc
     ‖ψ (f_ref n ω i) - ψ f‖
         ≤ ‖ψ (f_ref n ω i) - ψ g‖ + ‖ψ g - ψ f‖ := by
-          simpa using norm_sub_le
+          simpa [norm_sub_rev] using norm_sub_le
             (ψ (f_ref n ω i) - ψ g) (ψ f - ψ g)
     _ ≤ ρ + ρ := (add_lt_add hig hgf).le
     _ = 2 * ρ := by ring

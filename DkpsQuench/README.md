@@ -55,20 +55,27 @@ theorem some_name
 
 ## Where to start
 
-Open **[`Theorem2.lean`](Theorem2.lean)** — the paper-facing file. Read:
+Open **[`QueryEfficiency.lean`](QueryEfficiency.lean)** for the strongest
+paper-shaped theorem layer. Read:
 
-1. `yNN_paper`, `yQ`, `yFull` — the estimator `ŷ_NN`, the subset baseline
-   `ŷ_Q`, and the target `y`.
-2. **`highProb_queryEfficient_nn`** — this is your **Theorem 2**: with high
-   probability, `MSE(ŷ_NN) ≤ MSE(ŷ_Q)` (the nearest-neighbor estimator is
-   query-efficient relative to the subset baseline).
-3. `highProb_mse_nn_le` — the supporting half (Part 1): `MSE(ŷ_NN) ≤ ε` with
-   high probability.
+1. `yNNTieAverage_paper` — the literal estimator that averages the full scores
+   of every tied estimated nearest neighbor.
+2. `highProbQQueryEfficient_tieAverage_of_compact_iid_fullSupport` — the
+   fixed-subset theorem with an eventual high-probability risk comparison and
+   coverage derived from compactness, full support, and iid reference sampling.
+3. `highProbMQueryEfficient_tieAverage_of_certificates` and
+   `highProbQueryEfficient_tieAverage_of_certificates` — the size-`m` and
+   complete all-proper-subsets theorem shapes, explicitly restricted to
+   `Qsub ⊆ Qstar`.
+4. In [`AcharyyaBridge.lean`](AcharyyaBridge.lean),
+   `highProbQQueryEfficient_tieAverage_of_second_moment_canonical_topEigenvalue_iid`
+   additionally derives the embedding-concentration event from the
+   Acharyya2025 second-moment and spectral chain.
 
-The concentration event your Theorem 2 inherits from the DKPS estimation
-theory is *assumed* in `Theorem2.lean`; it is *discharged* from the
-Acharyya2025 spectral chain in [`AcharyyaBridge.lean`](AcharyyaBridge.lean) —
-see the bridge row of the crosswalk.
+[`Theorem2.lean`](Theorem2.lean) retains the earlier selected-neighbor theorem
+and abstract coverage assumptions for compatibility.  The newer
+`QueryEfficiency.lean` and [`Coverage.lean`](Coverage.lean) layers supersede
+those assumptions without deleting the simpler theorem engine.
 
 ---
 
@@ -76,58 +83,75 @@ see the bridge row of the crosswalk.
 
 | Paper object | Lean declaration | File |
 |---|---|---|
-| Nearest-neighbor estimator `ŷ_NN` | `yNN_paper` | `Theorem2.lean` |
+| Literal tie-averaged nearest-neighbor estimator `ŷ_NN` | `yNNTieAverage_paper` | `QueryEfficiency.lean` |
+| Selected-neighbor compatibility estimator | `yNN_paper` | `Theorem2.lean` |
 | Subset baseline `ŷ_Q`; target `y` | `yQ`; `yFull` | `Theorem2.lean` |
 | Mean-squared error `MSE(·)` | `MSE` | `Basic.lean` |
-| **Theorem 2, Part 1** — `MSE(ŷ_NN) ≤ ε` w.h.p. | `highProb_mse_nn_le` | `Theorem2.lean` |
-| **Theorem 2, Part 2** — `ŷ_NN` query-efficient vs `ŷ_Q` | `highProb_queryEfficient_nn` | `Theorem2.lean` |
+| Eventual fixed-`Q` query efficiency | `HighProbQQueryEfficient` | `Basic.lean` |
+| Eventual size-`m` query efficiency | `HighProbMQueryEfficient` | `Basic.lean` |
+| Eventual query efficiency below an arbitrary budget | `HighProbQueryEfficientBelow` | `Basic.lean` |
+| Complete eventual query efficiency for every proper subset of `Qstar` | `HighProbQueryEfficient` | `Basic.lean` |
+| Tie-averaged MSE convergence from concentration and coverage subevents | `highProb_mse_tieAverage_of_subevents` | `QueryEfficiency.lean` |
+| Fixed-`Q` theorem with compact/full-support/iid coverage | `highProbQQueryEfficient_tieAverage_of_compact_iid_fullSupport` | `QueryEfficiency.lean` |
+| Size-`m` and all-budget capstones | `highProbMQueryEfficient_tieAverage_of_certificates`; `highProbQueryEfficientBelow_tieAverage_of_certificates` | `QueryEfficiency.lean` |
+| Positive mass in every perspective ball | `PerspectiveFullSupport` | `Coverage.lean` |
+| Finite iid joint law of reference samples | `IIDReferenceSampler` | `Coverage.lean` |
+| Compactness/full support/iid imply uniform coverage | `coverageSubevents_of_compact_iid_fullSupport`; `highProb_uniformCoverage_of_compact_iid_fullSupport` | `Coverage.lean` |
 | Assumption 1 (Lipschitz score) | `LipschitzScore` | `Basic.lean` |
-| Assumption 2 (reference-model coverage) | the `h_cover` hypothesis | `Theorem2.lean` |
-| "Query-efficient" predicates | `QQueryEfficient`, `mQueryEfficient` | `Basic.lean` |
-| Abstract engine (arbitrary embedding estimator) | `highProb_mse_le_of_concentration`, `highProb_queryEfficient_of_concentration` | `Internal.lean` |
-| Theorem 2 with the concentration event **derived** from the spectral chain | `queryEfficient_nn_of_aligned_spectral`, `queryEfficient_nn_of_response_mean`, `queryEfficient_nn_of_second_moment` | `AcharyyaBridge.lean` |
+| Abstract selected-neighbor engine | `highProb_mse_le_of_concentration`; `highProb_queryEfficient_of_concentration` | `Internal.lean` |
+| Second moments through canonical CMDS to literal eventual Quench theorem | `highProbQQueryEfficient_tieAverage_of_second_moment_canonical_topEigenvalue_iid` | `AcharyyaBridge.lean` |
+| Distance-only radial Quench engine | `highProbQQueryEfficient_radialTieAverage_of_compact_iid_fullSupport` | `Radial.lean` |
+| Growing target-augmented CMDS theorem without finite model factorization | `highProbQQueryEfficient_tieAverage_of_growing_augmented_cmds` | `GrowingAcharyyaBridge.lean` |
 
-The three `Theorem2.lean` headline theorems each also have a
-`*_of_subevent` variant that takes a *measurable* high-probability sub-event
-instead of the raw embedding-error event; these are what the bridge consumes,
-and are equivalent when the sub-event is the event itself.
+## What to scrutinize: remaining assumptions and scope
 
----
+The strongest fixed-population theorem now derives both formerly abstract
+probabilistic inputs:
 
-## What to scrutinize: assumptions beyond the paper
+- embedding concentration is obtained from the Acharyya2025 second-moment,
+  CMDS, and aligned-spectral chain;
+- uniform reference coverage is obtained from a compact perspective image,
+  positive mass in every positive-radius perspective ball, and the finite iid
+  joint law of each reference sample.
 
-The Lean is faithful to Theorem 2 but, being fully formal, makes a few things
-explicit that the paper leaves implicit. Each is flagged in-line; the notable
-ones:
+The fixed-population second-moment theorem still factors the model class through
+one finite configuration, but this is no longer a limitation of the strongest
+Quench theorem shape.  `GrowingAcharyyaBridge.lean` adjoins each target to the
+stage-`n` reference sample, applies CMDS on `Fin (n+1)`, and controls only the
+resulting target-to-reference distances.  It therefore needs no global
+`indexOf : Model → Fin N` and no globally aligned estimated coordinate map.
 
-- **Measurability hypotheses** (`h_conc_meas`, `h_cover_meas`, the `E`/`hE_meas`
-  sub-event machinery). The paper does not discuss measurability of its
-  high-probability events; Lean requires it to take probabilities. In the
-  bridge this is reduced to one *trivially-true* primitive (`Measurable Dhat`:
-  the sample dissimilarity matrix is measurable in the sample) — the measurable
-  high-probability sub-event is the CMDS-entrywise event itself, which is
-  directly Borel and deterministically contained in the embedding-error event.
-- **The concentration event is assumed, not derived, in `Theorem2.lean`.** The
-  rate `c n → 0` (the DKPS estimation content) enters as a hypothesis
-  `h_conc`. It is genuinely derived only in `AcharyyaBridge.lean`, from the
-  Acharyya2025 spectral chain.
-- **Abstractness.** The engine theorems in `Internal.lean` hold for an
-  *arbitrary* embedding estimator `ψHat`; the paper has a specific one. This is
-  a generalization, not a weakening.
-- **`hm : Qsub.card < Qstar.card`** (the paper's `m < M`) is recorded in Part 2
-  for fidelity but is *not used* by the formal argument — only `MSE(ŷ_Q) > 0`
-  drives the conclusion. This is noted at the hypothesis.
+The remaining major statistical seam is now precise: derive the measurable
+high-probability **uniform entrywise CMDS event** for these random
+reference-plus-target batches from concrete iid response arrays under the joint
+model-count/response-budget schedule.  `GrowingConfigControl` records exactly
+the three deterministic quantities that must vanish in that calculation.
 
----
+Other explicit conditions worth reviewing are:
+
+- `PerspectiveFullSupport` states the exact positive-ball-mass condition used
+  by the finite-net proof.  It replaces the paper prose about positive mass on
+  compact subsets, which is not the right measure-theoretic formulation.
+- `IIDReferenceSampler` packages iid sampling through the finite joint-product
+  law needed by the proof.  This is an interface theorem assumption, not an
+  assumption that coverage itself already holds.
+- The size-`m` and all-budget capstones take a `QuerySubsetCertificate` for each
+  relevant `Qsub ⊆ Qstar`.  Thus the quantifier shape is complete, while uniform
+  derivation of every subset's spectral/Lipschitz certificate remains a
+  separate application-level task.
 
 ## File guide
 
 | File | Contents |
 |---|---|
-| [`Basic.lean`](Basic.lean) | Core definitions: model/perspective types, the NN estimator, `MSE`/`Risk`, the query-efficiency predicates, `LipschitzScore` (Assumption 1), the `HighProbAtTop` "with high probability" encoding. |
-| [`Internal.lean`](Internal.lean) | Machinery: high-probability event helpers, the per-model error-analysis steps, and the abstract concentration→MSE engine theorems. |
-| [`Theorem2.lean`](Theorem2.lean) | **Start here.** The paper-facing statements of Theorem 2 (Parts 1 & 2) for the nearest-neighbor estimator `ŷ_NN`. |
-| [`AcharyyaBridge.lean`](AcharyyaBridge.lean) | Discharges the concentration hypothesis from the Acharyya2025 spectral/statistical chain, yielding Theorem 2 from genuine statistical inputs. |
+| [`Basic.lean`](Basic.lean) | Core model, risk, selected- and tie-aware NN definitions; deterministic and high-probability query-efficiency predicates. |
+| [`Internal.lean`](Internal.lean) | High-probability event algebra, selected/tie-averaged deterministic error bounds, MSE integration, and the abstract theorem engine. |
+| [`Coverage.lean`](Coverage.lean) | Finite perspective nets, full support, iid reference sampling, geometric miss probabilities, and measurable uniform-coverage subevents. |
+| [`QueryEfficiency.lean`](QueryEfficiency.lean) | Strongest coordinate-based fixed-`Q`, size-`m`, and all-strict-budget capstones for the literal tie-averaged estimator. |
+| [`Radial.lean`](Radial.lean) | Distance-only tie-averaged NN engine; avoids requiring a global estimated perspective map. |
+| [`GrowingAcharyyaBridge.lean`](GrowingAcharyyaBridge.lean) | Target-augmented `Fin (n+1)` CMDS bridge and fixed-`Q` theorem with no finite factorization of the model class. |
+| [`Theorem2.lean`](Theorem2.lean) | Earlier compatibility statements using a selected nearest neighbor and caller-supplied coverage events. |
+| [`AcharyyaBridge.lean`](AcharyyaBridge.lean) | Derives embedding concentration from the Acharyya2025 spectral/statistical chain and composes it with the new iid coverage theorem. |
 
 ## Build / sanity checks
 

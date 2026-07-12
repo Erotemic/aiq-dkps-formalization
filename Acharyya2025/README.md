@@ -127,9 +127,12 @@ proved and true as written. The full chain is formally connected:
 > (`alignedSpectralConfig`, explicit `configBound`) → Quench's uniform
 > embedding-error hypothesis and Helm's alignment consistency,
 
-with the explicit end-to-end rate composed in `RateChain.lean`. Four legacy
-scaffold statements that were false as written were retired (kept as prose
-records pointing at their proved replacements; originals in git history). See
+with the explicit fixed-dimension end-to-end rate composed in `RateChain.lean`.
+`GrowingPipeline.lean` additionally removes coordinate alignment from
+nearest-neighbor consumers by proving pairwise-distance control directly and
+packages the extra rate obligations that appear when the matrix dimension grows.
+Four legacy scaffold statements that were false as written were retired (kept
+as prose records pointing at their proved replacements; originals in git history). See
 [`../planning/acharyya-plan.md`](../planning/acharyya-plan.md) for the
 work-package history.
 
@@ -145,6 +148,7 @@ user-observed model labels.
 | [`Bridge.lean`](Bridge.lean) | Theorem-1 event chain: response-mean → Frobenius → entrywise → CMDS-entrywise closeness predicates and propagation. |
 | [`ConfigPerturbation.lean`](ConfigPerturbation.lean) | **The bridge theorem** `exists_isometry_configError_spectralConfig_le` + explicit `configBound` — deterministic core of Theorem 2. |
 | [`AlignedPipeline.lean`](AlignedPipeline.lean) | `alignedSpectralConfig` (choice-based aligned estimator) + the high-probability aligned-`ConfigError` theorems (entrywise and response-mean versions). |
+| [`GrowingPipeline.lean`](GrowingPipeline.lean) | Choice-free pairwise-distance perturbation, target-augmented growing-dimension foundations, and `GrowingConfigControl` for joint model/response schedules. |
 | [`RateChain.lean`](RateChain.lean) | The explicit end-to-end rate: HP lemma, `configBound` continuity at 0, `endToEndRate` and its vanishing (Corollary 2). |
 | [`MatrixPerturbation.lean`](MatrixPerturbation.lean) | Matrix-world capstone: entrywise `η` ⇒ aligned `ConfigError ≤ configBound`, with rank transport for trailing eigenvalues. |
 | [`Weyl.lean`](Weyl.lean) | Discrete Courant–Fischer + Weyl's eigenvalue perturbation inequality. |

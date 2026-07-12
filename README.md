@@ -107,10 +107,14 @@ quantitative polar alignment, and an explicit end-to-end rate chain.
 
 ### `DkpsQuench`
 
-Formalizes the conditional query-efficiency theorem layer for benchmark-score
-prediction from cached model responses.  The bridge file connects the
-finite-configuration concentration result from `Acharyya2025` to the uniform
-embedding-error hypotheses used by the query-efficiency argument.
+Formalizes query-efficient benchmark-score prediction from cached model
+responses.  The theorem layer uses the literal tie-averaged nearest-neighbor
+estimator, states eventual fixed-`Q`, size-`m`, and all-strict-budget
+conclusions, and derives uniform reference coverage from compactness, full
+support, and iid sampling.  A fixed-population theorem connects directly to the
+`Acharyya2025` second-moment chain.  The newer target-augmented theorem runs CMDS
+on `Fin (n+1)` at stage `n`, controls only target-to-reference distances, and
+removes the global finite factorization of the model class.
 
 ### `Helm2025`
 

@@ -130,7 +130,7 @@ theorem highProb_mse_tieAverage_of_subevents
   intro ω hω
   have hnpos : n > 0 := by omega
   have hc_lt : |c n| < cmax := by
-    exact hN n (by omega)
+    simpa [Real.dist_eq] using hN n (by omega)
   have hc_le : c n ≤ cmax :=
     (le_abs_self (c n)).trans (le_of_lt hc_lt)
   apply mse_le_of_pointwise_sq_error_le Pf y

@@ -13,10 +13,17 @@ jobs:
         shell: bash
         run: |
           set -euxo pipefail
-          for p in .github/validation/gpt56-three-hard/*.patch; do
+          for p in .github/validation/gpt56-three-hard/01-*.patch \
+                   .github/validation/gpt56-three-hard/02-*.patch \
+                   .github/validation/gpt56-three-hard/03-*.patch; do
             git apply --check "$p"
             git apply "$p"
           done
+          cat .github/validation/gpt56-three-hard/04.part* > /tmp/04-rectangular-ui.patch
+          git apply --check /tmp/04-rectangular-ui.patch
+          git apply /tmp/04-rectangular-ui.patch
+          git apply --check .github/validation/gpt56-three-hard/05-theory-sylvester.patch
+          git apply .github/validation/gpt56-three-hard/05-theory-sylvester.patch
           git diff --check
       - name: Install elan
         shell: bash

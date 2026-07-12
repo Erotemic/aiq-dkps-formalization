@@ -1,0 +1,446 @@
+% Living discrepancy ledger for the four primary DKPS theorem targets.
+% Update this file whenever a public theorem changes its assumptions,
+% conclusion, estimator, asymptotic regime, or relationship to the source paper.
+
+\documentclass[11pt]{article}
+
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage{microtype}
+\usepackage[margin=1.0in]{geometry}
+\usepackage{amsmath,amssymb,mathtools}
+\usepackage{booktabs,longtable,array}
+\usepackage[colorlinks=true,linkcolor=black,urlcolor=blue,citecolor=blue]{hyperref}
+
+\newcommand{\Lean}{\textsc{Lean}}
+\newcommand{\DKPS}{\textsc{DKPS}}
+\newcommand{\whp}{\text{with high probability}}
+\newcommand{\norm}[1]{\left\lVert #1\right\rVert}
+\newcommand{\code}[1]{\texttt{#1}}
+\setlength{\tabcolsep}{4pt}
+\setlength{\emergencystretch}{2em}
+
+\title{The Four Main DKPS Papers:\\Differences Between the Literature and the Lean Formalization}
+\author{Jonathan Crall \and GPT-5.6 Thinking}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+This is a living audit of the four primary paper targets in the
+\DKPS{} formalization repository.  Its purpose is not to restate every theorem,
+but to record every material difference between the published mathematical
+presentation and the theorem that is actually proved in \Lean.  Differences are
+classified as repaired statements, surfaced assumptions, strengthened or
+weakened conclusions, modelling choices, and still-open composition gaps.  The
+source of truth remains the theorem signatures and proofs; this document is the
+human-readable discrepancy ledger that should change with them.
+\end{abstract}
+
+\section{Scope and maintenance rule}
+
+The four direct targets are:
+\begin{enumerate}
+\item Acharyya, Trosset, Priebe, and Helm (2024), consistent estimation of
+      generative-model representations in the data kernel perspective space;
+\item Acharyya, Agterberg, Park, and Priebe (2025), concentration bounds for
+      response-based vector embeddings;
+\item Helm, Acharyya, Park, Duderstadt, and Priebe (2025), statistical inference
+      on black-box generative models in DKPS;
+\item Helm, Johnson, and Priebe (2026), query-efficient model evaluation using
+      cached responses (Quench).
+\end{enumerate}
+
+A row belongs in this document when any of the following changes:
+\begin{itemize}
+\item an assumption present in \Lean{} is absent or only implicit in the paper;
+\item a paper statement is false or underspecified without a repair;
+\item the formalization proves a stronger or weaker conclusion;
+\item the formalization uses a different estimator or MDS variant;
+\item a probability, measurability, compactness, or selection issue is made
+      explicit;
+\item a formal theorem covers only a special case of the paper, or extends it.
+\end{itemize}
+
+Compatibility theorems may retain older, heavier interfaces.  The preferred
+public capstone is the theorem with the smallest honest hypothesis load.  A
+proof refactor that merely shortens an argument does not change this ledger; a
+refactor that removes a caller-visible condition does.
+
+\section{Acharyya et al. (2024): asymptotic DKPS and raw-stress MDS}
+
+\begin{longtable}{>{\raggedright\arraybackslash}p{0.18\textwidth}
+                  >{\raggedright\arraybackslash}p{0.25\textwidth}
+                  >{\raggedright\arraybackslash}p{0.36\textwidth}
+                  >{\raggedright\arraybackslash}p{0.13\textwidth}}
+\toprule
+Topic & Literature & Formalization & Classification \\
+\midrule
+\endhead
+Choice of population minimizer & The fixed-configuration theorem is phrased
+up to affine ambiguity, with a subsequence selecting a compatible limit. & The
+unconditional theorem is set-valued: estimated minimizers approach the set of
+population pair-distance profiles.  A literal fixed-configuration theorem
+requires the explicit predicate \code{UniquePairProfile}. & Repaired statement
+\\
+\addlinespace
+Subsequence versus full sequence & The paper uses subsequences and a diagonal
+argument. & Once uniqueness of the pair-distance profile is assumed, the
+formalization obtains full-sequence convergence; the diagonal argument is no
+longer needed. & Stronger conclusion under explicit uniqueness \\
+\addlinespace
+Measurable selection & A measurable choice of MDS minimizer is left implicit. &
+The proof uses a deterministic modulus of continuity and event inclusion, so no
+measurable selector is required. & Assumption removed \\
+\addlinespace
+Configuration error & Informal statements identify configurations only up to
+affine transformation. & \code{ConfigError} is direct coordinate error and is
+therefore stronger than affine-quotiented closeness.  The repaired consistency
+layer primarily compares pairwise-distance profiles where that is the invariant
+quantity. & Modelling distinction \\
+\addlinespace
+Moment assumptions & The sampling discussion is iid. & The variance algebra is
+proved under pairwise independence, which is sufficient.  Measurability,
+integrability, and \(L^2\) hypotheses are explicit. & Generalization plus
+surfaced technical assumptions \\
+\addlinespace
+Distribution-over-model conclusion & The paper also discusses an
+\(L^p\)-over-model-distribution form. & That form is not yet formalized in the
+2024 library. & Scope gap \\
+\bottomrule
+\end{longtable}
+
+The important repair is conceptual: nonuniqueness of raw-stress MDS is treated
+as a property of the theorem, not hidden inside a choice function.  The
+formalization's strongest unconditional result is therefore about the minimizer
+set or its invariant pair-distance profile.  A fixed representative is available
+only after a uniqueness condition makes it mathematically meaningful.
+
+
+\paragraph{Role in the Perfect Quench scaffold.}
+The new raw-response track reuses the 2024 matrix-valued sample-mean
+second-moment theorem rather than postulating response means.  It adds an
+independent product probability space for reference and response randomness,
+then lifts the existing replicate-average calculation through random reference
+selection.  This is composition work beyond the paper, not a change to the
+2024 consistency theorem itself.
+
+\section{Acharyya et al. (2025): finite-sample response embeddings}
+
+\begin{longtable}{>{\raggedright\arraybackslash}p{0.18\textwidth}
+                  >{\raggedright\arraybackslash}p{0.25\textwidth}
+                  >{\raggedright\arraybackslash}p{0.36\textwidth}
+                  >{\raggedright\arraybackslash}p{0.13\textwidth}}
+\toprule
+Topic & Literature & Formalization & Classification \\
+\midrule
+\endhead
+Population spectral assumptions & Rank \(d\), positive spectrum, and upper
+spectral control are stated at paper level. & Positive semidefiniteness, rank,
+and eigenvalue floor/cap are represented as exact matrix predicates.  In the
+preferred Quench-facing capstones, a population Gram witness now derives
+positive semidefiniteness and rank automatically. & Surfaced and partially
+discharged \\
+\addlinespace
+Smallness regime & The paper packages the regime through asymptotic growth such
+as sufficiently many responses relative to the model count. & The finite
+spectral theorem exposes the exact entrywise, eigengap, and polar-factor
+smallness inequalities consumed by the proof.  \code{GrowingConfigControl}
+packages their eventual validity for varying matrix size. & Quantifiers made
+explicit \\
+\addlinespace
+Alignment choice & The paper chooses an optimal orthogonal alignment
+classically. & The formalization separates the existential alignment predicate
+from a noncomputable selected alignment, so probability arguments do not depend
+on measurability of a data-dependent choice. & Selection issue resolved \\
+\addlinespace
+Rates & The paper presents sharper asymptotic bookkeeping. &
+\code{cmdsEntrywiseRate}, \code{configBound}, and the composed end-to-end rate
+are valid but intentionally loose.  No claim of optimal constants or exponents
+is made. & Weaker quantitative sharpness \\
+\addlinespace
+Growing target-augmented CMDS & The paper's theorem is presented for a fixed
+finite model collection. & The formalization additionally supports a growing
+\(n+1\) batch containing the \(n\) sampled references and the current target,
+and proves pairwise-distance control without a globally aligned coordinate
+map. & Extension beyond paper \\
+\addlinespace
+Response boundedness & Bounded dissimilarities are used in the concentration
+pipeline. & The preferred response bridge needs only a population response-norm
+envelope.  On the response-mean event, the random sample norm and both sample
+and population dissimilarity bounds are derived internally. & Hypotheses
+reduced \\
+\addlinespace
+Davis--Kahan implementation & The paper invokes spectral perturbation theory. &
+The production proof currently uses a proved bespoke cross-energy and polar
+factor chain.  Newer general Davis--Kahan results are intentionally deferred
+unless they remove a caller-visible condition, such as the polar smallness
+hypothesis. & Deliberate implementation choice \\
+\bottomrule
+\end{longtable}
+
+The main remaining paper-facing burden is the uniform lower spectral bound.  It
+is a genuine identifiability condition for the spectral estimator rather than a
+proof-engineering artifact.  The upper spectral envelope and the eventual rate
+certificate are also still supplied uniformly over stages and targets.
+
+
+\paragraph{Role in the Perfect Quench scaffold.}
+The completion program replaces stagewise global spectral assumptions by a
+high-probability certificate derived from a population covariance floor and iid
+reference sampling.  It also supplies an explicit conservative response
+schedule.  These changes reduce the assumptions of the Quench composition; the
+proved 2025 concentration statements remain intact until the new event-level
+spectral bridge is completed.
+
+\section{Helm et al. (2025): statistical inference transfer}
+
+\begin{longtable}{>{\raggedright\arraybackslash}p{0.18\textwidth}
+                  >{\raggedright\arraybackslash}p{0.25\textwidth}
+                  >{\raggedright\arraybackslash}p{0.36\textwidth}
+                  >{\raggedright\arraybackslash}p{0.13\textwidth}}
+\toprule
+Topic & Literature & Formalization & Classification \\
+\midrule
+\endhead
+Continuity assumptions & Assumptions A2 and A4 are pointwise in the perturbed
+coordinate. & The proved transfer theorem packages observations as
+embedding--label pairs and uses joint continuity of the learning rule and loss.
+Both the paper-shaped predicates and the stronger predicates used by the proof
+are exposed. & Stronger sufficient assumptions \\
+\addlinespace
+Compactness assumption A3 & The paper states closedness, boundedness, and
+completeness of the image. & The main proof uses a uniform compact-range
+condition, equivalent in finite-dimensional Euclidean space; a literal
+paper-shaped predicate is also retained. & Equivalent finite-dimensional
+encoding \\
+\addlinespace
+Measurability & Mostly implicit. & Measurability of estimated embeddings is
+explicit because risks and expectations are taken. & Surfaced technical
+assumption \\
+\addlinespace
+Maximum and budgets & Equation (3) uses a finite maximum and two asymptotic
+budgets. & The formalization uses a finite supremum and one abstract budget
+index, which may encode a joint schedule. & Representation change \\
+\addlinespace
+MDS estimator used by the bridge & The argument cites the eigengap-free
+asymptotic raw-stress consistency result from the 2024 paper. & The current
+end-to-end bridge realizes the practical estimator as classical spectral MDS
+and therefore requires a uniform lower population eigenvalue bound.  This
+assumption is not stated in the Helm paper. & Material surfaced discrepancy \\
+\bottomrule
+\end{longtable}
+
+The last row is the most important discrepancy in this paper.  There are two
+honest ways to close it: connect Helm directly to the raw-stress consistency
+route used in the paper, or amend the spectral-estimator theorem with the
+necessary eigenvalue-stability condition.  The current formalization takes the
+second route and states the condition explicitly.
+
+
+\paragraph{Role in the Perfect Quench scaffold.}
+No new inference-transfer theorem is required for the fixed-subset Quench
+result.  The reusable contribution from this paper track is its discipline
+around continuity, compactness, and measurable event composition.  The ledger
+therefore records no artificial Helm-specific dependency; future reuse should
+be added only when it removes a Quench-facing hypothesis.
+
+\section{Helm, Johnson, and Priebe (2026): Quench}
+
+\begin{longtable}{>{\raggedright\arraybackslash}p{0.18\textwidth}
+                  >{\raggedright\arraybackslash}p{0.25\textwidth}
+                  >{\raggedright\arraybackslash}p{0.36\textwidth}
+                  >{\raggedright\arraybackslash}p{0.13\textwidth}}
+\toprule
+Topic & Literature & Formalization & Classification \\
+\midrule
+\endhead
+Nearest-neighbor ties & The estimator is described as averaging cached scores
+of nearest references. & The preferred theorem uses the literal tie-averaged
+estimator.  An older selected-neighbor compatibility theorem is retained but is
+not the strongest paper-facing result. & Faithfulness repair \\
+\addlinespace
+Coverage assumption & The paper describes positive probability on relevant
+compact regions. & \code{PerspectiveFullSupport} requires positive mass in
+every positive-radius ball centered on the perspective range, exactly what the
+finite-net iid coverage proof consumes. & Measure-theoretic repair \\
+\addlinespace
+Reference sampling & Iid sampling is described informally. &
+\code{IIDReferenceSampler} records the finite joint-product law needed for the
+miss-probability calculation.  Coverage is then proved rather than assumed. &
+Surfaced probabilistic interface \\
+\addlinespace
+Finite factorization of the model class & Early formal capstones represented all
+models in one fixed finite configuration. & The strongest theorem adjoins the
+current target to the growing reference sample and runs CMDS on
+\(\operatorname{Fin}(n+1)\).  No global model-to-finite-index map or globally
+aligned estimated perspective is required. & Assumption removed \\
+\addlinespace
+Population CMDS validity & The paper treats the population embedding as given. &
+A supplied population Gram witness now derives positive semidefiniteness and
+rank at most \(d\); callers no longer prove those consequences separately. &
+Hypotheses reduced \\
+\addlinespace
+Dissimilarity boundedness & Bounded sample and population dissimilarities were
+previously separate bridge assumptions. & The preferred finite-model capstone
+requires one population response-norm envelope.  Sample boundedness is derived
+only on the high-probability response-mean event, where it is actually needed. &
+Hypotheses reduced \\
+\addlinespace
+Compactness for finite model classes & Previously explicit. & Finiteness of the
+model class derives compactness of the perspective range. & Assumption removed
+\\
+\addlinespace
+Uniform response concentration & The paper's broad model-class presentation
+suggests uniform control. & The complete second-moment derivation currently
+uses a finite target class and a double union bound.  For an infinite class,
+uniform concentration remains an explicit input. & Major remaining scope gap
+\\
+\addlinespace
+All query subsets & The paper's efficiency claim ranges over query budgets. &
+The coordinate-level library has fixed-subset, size-\(m\), and all-proper-subset
+capstones through per-subset certificates.  The strongest growing response
+bridge currently closes one fixed subset at a time; a uniform family of
+spectral and Lipschitz certificates is still application-level input. &
+Composition gap \\
+\bottomrule
+\end{longtable}
+
+\section{Perfect Quench completion scaffold}
+
+The repository now contains an executable proof scaffold under
+\code{DkpsQuench/Perfect}.  Its 61 open proof bodies are split so the count
+reflects the amount of mathematical work rather than hiding the program in one
+final declaration.
+
+\begin{longtable}{>{\raggedright\arraybackslash}p{0.22\textwidth}
+                  >{\raggedright\arraybackslash}p{0.10\textwidth}
+                  >{\raggedright\arraybackslash}p{0.30\textwidth}
+                  >{\raggedright\arraybackslash}p{0.29\textwidth}}
+\toprule
+Track & Open proofs & New mathematical content & Hypotheses removed from the current bridge \\
+\midrule
+\endhead
+Population geometry & 4 & Centering, exact Euclidean double centering, and the
+augmented radial identity. & Separate configuration, Gram, radial, PSD, and rank
+inputs collapse to one response-distance realization. \\
+\addlinespace
+Spectral regularity & 15 & Coordinate mean/product weak laws, covariance algebra,
+scalar-event measurability, fixed-dimensional
+covariance weak law, entrywise-to-quadratic transfer, reference scatter, target
+augmentation, and a trace ceiling. & Global floor and ceiling assumptions over
+every reference outcome are replaced by one population covariance
+nondegeneracy condition and a measurable high-probability event. \\
+\addlinespace
+Raw responses & 9 & Independent product probability space, concrete replicate
+averages, second moments after random model selection, and a finite-class union
+bound. & Abstract response means, manual moment events, and per-index
+measurability obligations. \\
+\addlinespace
+Compactness and regularity & 8 & Finite and compact response envelopes,
+pathwise-raw to sample/population Lipschitz bridges, and polynomial Euclidean
+covering numbers. & Explicit population bounds, selected finite nets, entropy
+exponents, covering constants, and separately supplied regularity certificates.
+\\
+\addlinespace
+Infinite-class concentration & 8 & Finite stage nets, measurable finite
+subevents, entropy union bounds, and deterministic Lipschitz extension. & The
+finite-model restriction or an assumed uniform concentration event. \\
+\addlinespace
+Explicit schedules & 10 & Conservative polynomial tolerance, canonical
+shrinking-net radius, entropy-aware replicate budgets, and all limit
+calculations exposed. & Caller-selected nets, entry rates, smallness
+inequalities, polar bookkeeping, and the full
+\code{GrowingConfigControl} certificate. \\
+\addlinespace
+Spectral composition & 3 & Intersection of response and spectral subevents with
+the existing proved pairwise CMDS perturbation theorem. & Global spectral facts
+inside the response bridge. \\
+\addlinespace
+Final composition & 4 & Finite and compact-infinite fixed-subset capstones plus
+the two all-proper-subset lifts. & All intermediate certificates from the public
+Perfect Quench interface. \\
+\bottomrule
+\end{longtable}
+
+The four final theorem statements already expose the intended endpoint.  The
+finite theorem assumes raw iid response replicates, exact population
+response-distance realization, a population covariance floor, full support,
+and score Lipschitzness.  The compact infinite-model theorem adds only compact
+perspective range and one pathwise raw-response Lipschitz condition; polynomial
+nets, entropy growth, replicate-mean/population-mean regularity, and response
+norm envelopes are derived internally.  The all-query theorems
+allow each proper query subset to carry its own perspective and response model
+while sharing the reference and response probability spaces.
+
+The production cross-energy and polar-factor proof is deliberately retained.
+General Davis--Kahan results should replace it only if they eliminate or weaken
+a caller-visible assumption, especially the polar smallness condition.  A
+constant improvement or shorter proof alone is not part of this completion
+program.
+
+\section{Current hypothesis-reduction frontier}
+
+The scaffold defines the remaining frontier precisely:
+\begin{enumerate}
+\item complete the exact population double-centering identities;
+\item derive high-probability spectral floor and ceiling events from compact iid
+      references and population covariance nondegeneracy;
+\item connect raw iid response arrays to the augmented response event on an
+      independent product probability space;
+\item derive population response envelopes, raw-to-mean regularity, and
+      polynomial finite nets from finiteness or compactness;
+\item derive infinite-class uniform concentration from those finite nets;
+\item discharge the conservative polynomial schedule and event-level spectral
+      composition;
+\item assemble the finite, compact-infinite, and all-query capstones.
+\end{enumerate}
+
+No cleaner-only spectral refactor is on this list.  Once these declarations are
+proved, remaining work should be rate sharpening or assumption comparison, not
+construction of another theorem layer.
+
+\section{Audit checklist for future edits}
+
+For every new preferred capstone, record:
+\begin{enumerate}
+\item the exact paper theorem or algorithm step it represents;
+\item each assumption not written in the source paper;
+\item each paper assumption discharged internally by a preceding theorem;
+\item whether the estimator is raw-stress MDS, classical MDS, or another
+      explicitly named variant;
+\item whether the conclusion is fixed-target, uniform over targets, fixed-query,
+      or uniform over query subsets;
+\item whether rates are qualitative, explicit but loose, or quantitatively
+      matched to the paper;
+\item any finite-dimensional, finite-model, measurability, separability, or
+      compactness restriction.
+\end{enumerate}
+
+\begin{thebibliography}{9}
+\bibitem{acharyya2024}
+A. Acharyya, M. W. Trosset, C. E. Priebe, and H. S. Helm.
+\newblock Consistent estimation of generative model representations in the data
+kernel perspective space.
+\newblock arXiv:2409.17308, 2024.
+
+\bibitem{acharyya2025}
+A. Acharyya, J. Agterberg, Y. Park, and C. E. Priebe.
+\newblock Concentration bounds on response-based vector embeddings of black-box
+generative models.
+\newblock arXiv:2511.08307, 2025.
+
+\bibitem{helm2025}
+H. S. Helm, A. Acharyya, Y. Park, B. Duderstadt, and C. E. Priebe.
+\newblock Statistical inference on black-box generative models in the data
+kernel perspective space.
+\newblock Findings of ACL, 2025.
+
+\bibitem{quench2026}
+H. Helm, B. Johnson, and C. E. Priebe.
+\newblock Query-efficient model evaluation using cached responses.
+\newblock arXiv:2605.07096, 2026.
+\end{thebibliography}
+
+\end{document}

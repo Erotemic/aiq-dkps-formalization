@@ -33,6 +33,7 @@ high-probability event propagation, and consistency transfer.
 ├── Acharyya2025/          # CMDS, Weyl/Davis-Kahan, Gram rigidity/polar factor, aligned finite-sample rates
 ├── DkpsQuench.lean        # root module for the cached-response query-efficiency layer
 ├── DkpsQuench/            # theorem statements plus bridge from Acharyya2025 concentration
+│   └── Perfect/           # executable scaffold for the remaining hypothesis-minimal Quench theorem
 ├── Helm2025.lean          # root module for the statistical-inference transfer layer
 ├── Helm2025/              # population/estimated DKPS transfer theorem statements and bridge
 ├── Challenge/             # comparator challenges (MathlibCandidate / MathlibPending) + manifest
@@ -115,6 +116,15 @@ support, and iid sampling.  A fixed-population theorem connects directly to the
 `Acharyya2025` second-moment chain.  The newer target-augmented theorem runs CMDS
 on `Fin (n+1)` at stage `n`, controls only target-to-reference distances, and
 removes the global finite factorization of the model class.
+
+`DkpsQuench/Perfect/` is the executable completion scaffold for the
+hypothesis-minimal theorem.  It contains 61 deliberately isolated open proofs:
+population double-centering, high-probability spectral regularity, raw iid
+response averages, compactness and response-regularity bridges, finite-net
+uniform concentration, conservative schedules, event-level spectral
+composition, and finite/infinite all-query capstones.  Its
+README gives the dependency graph and weaker-agent proof instructions.  The
+proved production path remains available while those obligations are filled.
 
 ### `Helm2025`
 

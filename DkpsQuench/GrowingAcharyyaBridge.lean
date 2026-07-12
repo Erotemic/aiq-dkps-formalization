@@ -143,6 +143,17 @@ This theorem removes the old global `indexOf : Model → Fin N` assumption.  The
 remaining statistical seam is the high-probability uniform entrywise event for
 the random target-augmented matrices; it is now isolated in exactly the form a
 future joint response-array theorem must prove.
+
+The completion scaffold in `DkpsQuench.Perfect` records how every heavier input
+of this compatibility theorem is dispatched.  `PopulationGeometry` constructs
+`z`, `hzGram`, and `hzRadial` from one response-distance realization;
+`SpectralRegularity` replaces global `hfloor` and `hceiling` by a measurable
+high-probability covariance event; `RawResponses`, `Compactness`, and
+`UniformConcentration` construct `E` without exposing finite nets or response
+envelopes; and `RateSchedule` constructs `entryRate` and `Hrate`.  The
+proved bespoke pairwise-distance argument below remains the production engine
+until a newer Davis--Kahan result removes a visible premise rather than merely
+shortening the proof.
 -/
 theorem highProbQQueryEfficient_tieAverage_of_growing_augmented_cmds
     (Pf : Measure (Model Q X)) [IsProbabilityMeasure Pf]

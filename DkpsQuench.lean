@@ -8,3 +8,5 @@ import DkpsQuench.Radial
 import DkpsQuench.GrowingAcharyyaBridge
 
 import DkpsQuench.GrowingResponseBridge
+
+import DkpsQuench.Perfect

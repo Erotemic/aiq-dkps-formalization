@@ -589,7 +589,20 @@ Compared with the preceding compatibility theorem, this version removes the
 caller-supplied dissimilarity envelope and both separate dissimilarity-bound
 proofs.  A single population response-norm envelope is propagated through the
 high-probability response-mean event.  Finiteness still supplies compactness,
-and the Gram witness still supplies positive semidefiniteness and rank. -/
+and the Gram witness still supplies positive semidefiniteness and rank.
+
+This remains a proved compatibility capstone.  The completion scaffold in
+`DkpsQuench.Perfect` shows how its remaining inputs disappear from the final
+interface: raw iid replicate assumptions construct `Xbar`, its moments, and
+measurability; exact population response-distance realization constructs the
+configuration and both geometry identities; population covariance
+nondegeneracy supplies spectral regularity on a high-probability event;
+`Compactness` derives population response envelopes, regularity certificates,
+and polynomial finite nets; and the conservative schedule supplies `η`,
+`ceiling`, and `Hrate`.  The finite and
+compact-infinite final capstones then lift the fixed-subset result to every
+proper query subset.
+-/
 theorem highProbQQueryEfficient_tieAverage_of_growing_augmented_secondMoment_of_gram_of_population_norm
     [Fintype (Model Q X)]
     (Pf : Measure (Model Q X)) [IsProbabilityMeasure Pf]

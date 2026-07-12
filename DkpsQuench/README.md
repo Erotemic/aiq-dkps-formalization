@@ -105,6 +105,7 @@ those assumptions without deleting the simpler theorem engine.
 | Hypothesis-reduced growing CMDS theorem: Gram witness derives PSD/rank | `highProbQQueryEfficient_tieAverage_of_growing_augmented_cmds_of_gram` | `GrowingAcharyyaBridge.lean` |
 | Finite-model response theorem: Gram witness derives PSD/rank and finiteness derives compactness | `highProbQQueryEfficient_tieAverage_of_growing_augmented_secondMoment_of_gram` | `GrowingResponseBridge.lean` |
 | Preferred finite-model response theorem: population norm additionally derives sample/population dissimilarity bounds | `highProbQQueryEfficient_tieAverage_of_growing_augmented_secondMoment_of_gram_of_population_norm` | `GrowingResponseBridge.lean` |
+| Complete Perfect Quench proof scaffold: raw responses, derived geometry/spectral events/rates, finite and compact-infinite capstones | `perfectQuench_finite_fixedSubset`; `perfectQuench_infinite_fixedSubset`; all-query lifts | `Perfect/` |
 
 ## What to scrutinize: remaining assumptions and scope
 
@@ -130,9 +131,18 @@ that concentration step by a double union bound.  The preferred finite-model
 capstone derives compactness from finiteness, derives population PSD/rank from
 the supplied Gram configuration, and derives both sample and population
 dissimilarity bounds from one population response-norm envelope on the same
-good event.  The remaining major statistical seam is uniform response
-concentration for infinite model classes under concrete regularity or entropy
-assumptions.
+good event.
+
+`Perfect/` now states the complete remaining theorem program.  It derives the
+population configuration and radial witness from one response-distance
+realization, replaces globally quantified spectral bounds by high-probability
+covariance regularity, constructs response means from raw iid replicates on an
+independent product space, derives response envelopes and polynomial finite
+nets from compactness and raw-response Lipschitzness, derives infinite-class
+uniform concentration, supplies conservative explicit schedules, and
+lifts the resulting fixed-subset theorem over every proper query subset.  These
+files deliberately contain open proof bodies; the production theorem path
+outside `Perfect/` remains proved and unchanged.
 
 Other explicit conditions worth reviewing are:
 
@@ -160,13 +170,18 @@ Other explicit conditions worth reviewing are:
 | [`Theorem2.lean`](Theorem2.lean) | Earlier compatibility statements using a selected nearest neighbor and caller-supplied coverage events. |
 | [`AcharyyaBridge.lean`](AcharyyaBridge.lean) | Derives embedding concentration from the Acharyya2025 spectral/statistical chain and composes it with the new iid coverage theorem. |
 | [`GrowingResponseBridge.lean`](GrowingResponseBridge.lean) | Derives growing CMDS events from response means; the preferred finite capstone removes explicit compactness, PSD, rank, and separate sample/population dissimilarity-bound hypotheses. |
+| [`Perfect/`](Perfect/README.md) | Executable completion scaffold with 61 open proofs across population geometry, spectral regularity, raw responses, compactness/boundedness, infinite-class concentration, schedules, spectral composition, and final all-query capstones. |
 
 ## Build / sanity checks
 
 ```bash
-lake build DkpsQuench          # type-checks every statement and proof
-grep -RIn '\bsorry\b' DkpsQuench   # expect: no matches
-grep -RIn '\baxiom\b' DkpsQuench   # expect: no matches
+lake build DkpsQuench
+
+# Production modules should remain complete; the Perfect directory is the
+# explicit completion scaffold and currently has the documented open proofs.
+grep -RIn '\bsorry\b' DkpsQuench --exclude-dir=Perfect
+grep -RIn '\baxiom\b' DkpsQuench
+grep -RIn '\bsorry\b' DkpsQuench/Perfect
 ```
 
 ### Growing response-level bridge

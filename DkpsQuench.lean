@@ -6,3 +6,5 @@ import DkpsQuench.QueryEfficiency
 import DkpsQuench.AcharyyaBridge
 import DkpsQuench.Radial
 import DkpsQuench.GrowingAcharyyaBridge
+
+import DkpsQuench.GrowingResponseBridge

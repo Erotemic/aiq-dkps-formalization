@@ -176,3 +176,19 @@ lake build Acharyya2025
 grep -RIn '\baxiom\b' Acharyya2025     # expect: no matches
 grep -RIn '\bsorry\b' Acharyya2025     # expect: no matches
 ```
+
+### Growing response concentration
+
+`GrowingResponse.lean` extends the response-level concentration chain to
+stage-dependent finite populations.  It provides:
+
+- sample means constructed from concrete replicate arrays;
+- the matrix-valued iid second-moment bound for those averages;
+- Chebyshev and union bounds with a varying population size;
+- a finite-target double union bound;
+- response-mean to CMDS-entrywise propagation when the matrix dimension varies.
+
+This is the response-level input used by the growing target-augmented Quench
+bridge.  For infinite target classes, uniform target concentration remains an
+explicit statistical condition rather than being inferred from pointwise
+second moments.

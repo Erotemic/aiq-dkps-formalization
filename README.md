@@ -182,3 +182,12 @@ hypotheses used by the inference layer.
 - Yuxin Chen, Yuejie Chi, Jianqing Fan, and Cong Ma. *Spectral Methods for Data
   Science: A Statistical Perspective*. Foundations and Trends in Machine
   Learning, 14(5):566-806, 2021.
+
+## Growing response-level Quench chain
+
+The growing target-augmented Quench path now has a response-level front end.
+Stage-dependent response means propagate to stage-dependent CMDS entrywise
+control, and a finite-target second-moment corollary closes the full chain from
+response errors to eventual query efficiency.  Infinite target classes still
+require a genuine uniform response concentration theorem; this is no longer
+conflated with the spectral or nearest-neighbor parts of the development.

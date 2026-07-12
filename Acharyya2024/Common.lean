@@ -86,7 +86,7 @@ def ConvergesInProbabilityZero {Ω α : Type} [MeasurableSpace Ω] [PseudoMetric
 /-- A family of events `Eₙ` that holds with high probability as `n → ∞`: for
 every `δ > 0`, eventually `P(Eₙ) ≥ 1 - δ`. (Here `P` may itself vary with `n`,
 modeling the paper's `r`- or `n`-indexed sampling distributions.) -/
-def HighProbAtTop {Ω : Type} [MeasurableSpace Ω]
+def HighProbAtTop {Ω : Type*} [MeasurableSpace Ω]
     (P : Nat → Measure Ω) (E : Nat → Set Ω) : Prop :=
   ∀ δ : ENNReal, 0 < δ → ∃ N : Nat, ∀ n > N, P n (E n) ≥ 1 - δ
 
@@ -103,7 +103,7 @@ High-probability events are monotone under pointwise event inclusion.
 
 Formalized by Codex 5.5 High, per user-observed model label.
 -/
-theorem HighProbAtTop.mono {Ω : Type} [MeasurableSpace Ω]
+theorem HighProbAtTop.mono {Ω : Type*} [MeasurableSpace Ω]
     {P : Nat → Measure Ω} {E F : Nat → Set Ω}
     (hE : HighProbAtTop P E)       -- `E` holds with high probability
     (h_subset : ∀ n, E n ⊆ F n) :  -- and `E` implies the larger event `F`
@@ -119,7 +119,7 @@ all sufficiently large indices.  This is the natural asymptotic variant of
 `HighProbAtTop.mono`; finitely many exceptional indices do not affect a
 high-probability-at-top statement.
 -/
-theorem HighProbAtTop.mono_eventually {Ω : Type} [MeasurableSpace Ω]
+theorem HighProbAtTop.mono_eventually {Ω : Type*} [MeasurableSpace Ω]
     {P : Nat → Measure Ω} {E F : Nat → Set Ω}
     (hE : HighProbAtTop P E)
     (h_subset : ∀ᶠ n in atTop, E n ⊆ F n) :

@@ -160,3 +160,16 @@ lake build DkpsQuench          # type-checks every statement and proof
 grep -RIn '\bsorry\b' DkpsQuench   # expect: no matches
 grep -RIn '\baxiom\b' DkpsQuench   # expect: no matches
 ```
+
+### Growing response-level bridge
+
+`GrowingResponseBridge.lean` lowers the remaining statistical interface of the
+target-augmented theorem from CMDS entries to response means.  Its main theorem
+constructs the sample and population dissimilarity matrices directly from
+augmented response-mean batches and derives the CMDS event deterministically.
+
+For finite model classes, the second-moment capstone additionally derives the
+uniform target-wise response event by a double union bound.  The remaining
+infinite-class task is therefore sharply isolated: replace that finite-target
+union bound by a uniform concentration argument for the application model
+class, such as a metric-entropy or stochastic-equicontinuity theorem.

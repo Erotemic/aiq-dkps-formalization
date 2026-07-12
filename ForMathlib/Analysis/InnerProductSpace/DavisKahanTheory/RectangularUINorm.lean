@@ -312,6 +312,104 @@ private theorem exists_unitary_factorization_of_singularValues_eq
     LinearIsometryEquiv.coe_toLinearEquiv, LinearEquiv.coe_coe,
     LinearIsometryEquiv.apply_symm_apply] using (hU (K.symm x)).symm
 
+/-- A rectangular unitarily invariant norm depends only on the complete
+singular-value sequence. -/
+theorem apply_eq_of_singularValues_eq {A B : E →ₗ[𝕜] F}
+    (hσ : A.singularValues = B.singularValues) : N A = N B := by
+  obtain ⟨U, V, hfac⟩ :=
+    exists_unitary_factorization_of_singularValues_eq hσ
+  rw [hfac]
+  exact N.invariant U V B
+
+/-- Pull a rectangular UI norm back along an isometric embedding of the
+codomain.  The transported norm measures `A : E → H` by measuring
+`ι ∘ A : E → F`. -/
+noncomputable def codomainIsometryTransport
+    {H : Type*} [NormedAddCommGroup H] [InnerProductSpace 𝕜 H]
+    [FiniteDimensional 𝕜 H]
+    (N : RectangularUnitarilyInvariantNorm 𝕜 E F)
+    (ι : H →ₗᵢ[𝕜] F) :
+    RectangularUnitarilyInvariantNorm 𝕜 E H where
+  toFun A := N (ι.toLinearMap ∘ₗ A)
+  add_le' A B := by
+    have hmap : ι.toLinearMap ∘ₗ (A + B) =
+        (ι.toLinearMap ∘ₗ A) + (ι.toLinearMap ∘ₗ B) := by
+      ext x
+      simp
+    rw [hmap]
+    exact N.add_le _ _
+  smul' a A := by
+    have hmap : ι.toLinearMap ∘ₗ (a • A) =
+        a • (ι.toLinearMap ∘ₗ A) := by
+      ext x
+      simp
+    rw [hmap]
+    exact N.smul_eq _ _
+  invariant' U V A := by
+    apply N.apply_eq_of_singularValues_eq
+    calc
+      (ι.toLinearMap ∘ₗ (U.toLinearMap ∘ₗ A ∘ₗ V.toLinearMap)).singularValues =
+          (U.toLinearMap ∘ₗ A ∘ₗ V.toLinearMap).singularValues :=
+        singularValues_linearIsometry_comp ι _
+      _ = A.singularValues := by
+        rw [singularValues_unitary_comp, singularValues_comp_unitary]
+      _ = (ι.toLinearMap ∘ₗ A).singularValues :=
+        (singularValues_linearIsometry_comp ι A).symm
+
+@[simp] theorem codomainIsometryTransport_apply
+    {H : Type*} [NormedAddCommGroup H] [InnerProductSpace 𝕜 H]
+    [FiniteDimensional 𝕜 H]
+    (N : RectangularUnitarilyInvariantNorm 𝕜 E F)
+    (ι : H →ₗᵢ[𝕜] F) (A : E →ₗ[𝕜] H) :
+    N.codomainIsometryTransport ι A = N (ι.toLinearMap ∘ₗ A) :=
+  rfl
+
+/-- Pull a rectangular UI norm back along the adjoint of an isometric
+embedding of the domain.  The transported norm measures `A : H → F` by the
+zero-padded map `A ∘ ι⋆ : E → F`. -/
+noncomputable def domainIsometryTransport
+    {H : Type*} [NormedAddCommGroup H] [InnerProductSpace 𝕜 H]
+    [FiniteDimensional 𝕜 H]
+    (N : RectangularUnitarilyInvariantNorm 𝕜 E F)
+    (ι : H →ₗᵢ[𝕜] E) :
+    RectangularUnitarilyInvariantNorm 𝕜 H F where
+  toFun A := N (A ∘ₗ LinearMap.adjoint ι.toLinearMap)
+  add_le' A B := by
+    have hmap : (A + B) ∘ₗ LinearMap.adjoint ι.toLinearMap =
+        (A ∘ₗ LinearMap.adjoint ι.toLinearMap) +
+          (B ∘ₗ LinearMap.adjoint ι.toLinearMap) := by
+      ext x
+      simp
+    rw [hmap]
+    exact N.add_le _ _
+  smul' a A := by
+    have hmap : (a • A) ∘ₗ LinearMap.adjoint ι.toLinearMap =
+        a • (A ∘ₗ LinearMap.adjoint ι.toLinearMap) := by
+      ext x
+      simp
+    rw [hmap]
+    exact N.smul_eq _ _
+  invariant' U V A := by
+    apply N.apply_eq_of_singularValues_eq
+    calc
+      ((U.toLinearMap ∘ₗ A ∘ₗ V.toLinearMap) ∘ₗ
+          LinearMap.adjoint ι.toLinearMap).singularValues =
+          (U.toLinearMap ∘ₗ A ∘ₗ V.toLinearMap).singularValues :=
+        singularValues_comp_adjoint_linearIsometry ι _
+      _ = A.singularValues := by
+        rw [singularValues_unitary_comp, singularValues_comp_unitary]
+      _ = (A ∘ₗ LinearMap.adjoint ι.toLinearMap).singularValues :=
+        (singularValues_comp_adjoint_linearIsometry ι A).symm
+
+@[simp] theorem domainIsometryTransport_apply
+    {H : Type*} [NormedAddCommGroup H] [InnerProductSpace 𝕜 H]
+    [FiniteDimensional 𝕜 H]
+    (N : RectangularUnitarilyInvariantNorm 𝕜 E F)
+    (ι : H →ₗᵢ[𝕜] E) (A : H →ₗ[𝕜] F) :
+    N.domainIsometryTransport ι A =
+      N (A ∘ₗ LinearMap.adjoint ι.toLinearMap) :=
+  rfl
+
 /-- Extend a unitary action on an isometrically embedded coordinate space to
 an ambient unitary. -/
 private theorem exists_ambient_unitary_intertwining

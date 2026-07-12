@@ -28,13 +28,13 @@ spectral sets; it must not be used silently in the classic constant-one API.
 
 /-! ## Remaining construction plan
 
-The Sylvester map itself is now explicit.  Next diagonalize the two symmetric
-endpoint operators, identify its matrix entries with multiplication by
-`lambda_i-mu_j`, and use spectral separation to prove injectivity and construct
-the inverse.  Prove the interval/exterior constant-one estimate through the
-ordered divided-difference multiplier.  Treat arbitrary separated spectra in a
-separate theorem with the `pi/2` constant and then derive residual results by
-applying the rectangular norm ideal property.
+The Sylvester map and its finite inverse are explicit.  The sharp
+interval/exterior estimate is proved below for every rectangular unitarily
+invariant norm by a dimension-free polar-absorption argument.  The remaining
+analytic extension in this file is the independent `pi/2` theorem for arbitrary
+disjoint spectral sets.  The next downstream step is to apply the sharp theorem
+to residual and perturbation `sin Theta` maps using the rectangular norm
+transport API.
 -/
 
 
@@ -71,32 +71,22 @@ induction/expansion.  Introduce named helpers for “eigenvalue belongs to the
 restricted spectrum” and “separation implies denominator nonzero” so the main
 proof is not dominated by set-membership coercions.
 
-### C. Ordered form bounds: generalize the existing absorption proof
+### C. Ordered form bounds
 
-Do not diagonalize for `uiNorm_sylvester_le_of_form_bounds`.  The file
-`SylvesterBound.lean` already proves an abstract seminorm absorption theorem
-for square continuous maps.  Extract or copy that theorem with three spaces:
-
-* left endomorphism on `F`;
-* right endomorphism on `E`;
-* rectangular unknown `E →L[𝕜] F`.
-
-Its assumptions are exactly additivity, absolute homogeneity, and left/right
-ideal inequalities.  Instantiate those with the rectangular UI norm after
-converting finite linear maps to continuous linear maps.  The same midpoint
-shift proves the separated form with constant one.  This route is both shorter
-and more robust than an eigenvalue Schur-multiplier proof.
+Completed through the rectangular abstract absorption theorem in
+`SylvesterBound.lean`.  Its raw assumptions are subadditivity, absolute
+homogeneity, and the two operator-ideal inequalities, so it applies directly
+to every rectangular UI norm after finite maps are converted to continuous
+maps.
 
 ### D. Interval/exterior gap
 
-First construct the lower and upper spectral subspaces of `A` relative to
-`a-δ` and `b+δ`.  Decompose the codomain into these reducing blocks and write
-`X = Xlo + Xhi` by postcomposition with the two projections.  Each block
-satisfies an ordered Sylvester equation, so apply the constant-one theorem to
-both.  To recombine without losing a factor two, prove the pinching/Ky-Fan
-lemma for orthogonal codomain blocks before proving this theorem.  The natural
-root theorem is `kyFan_sylvester_le_of_intervalGap`; derive the arbitrary
-`N` result from rectangular Fan dominance rather than proving it separately.
+Completed by a stronger route than the originally planned block splitting.
+Shift to the midpoint, replace the exterior operator by its absolute value,
+and absorb the polar unitary into the unknown.  The new dimension-free
+rectangular polar-absorption theorem then gives the sharp constant-one bound
+for every UI norm at once.  The Ky Fan prefix-sum theorem is a direct
+specialization rather than the root proof.
 
 ### E. Arbitrary disjoint spectra
 
@@ -647,10 +637,13 @@ theorem uiNorm_sylvester_le_of_orderedGap
 /-- Sharp constant-one interval/exterior Sylvester estimate in every
 rectangular UI norm.
 
-Lean proof route for a weaker agent:
-
-1. Split the exterior spectrum into the lower and upper ordered pieces, solve on the corresponding spectral blocks, establish Ky Fan domination with constant one, and combine by pinching.
-2. The operator-norm skeleton may reuse the supported `DavisKahan.SinTheta` module and the experimental general Sylvester layer.
+The proof follows the dimension-free polar-absorption route used for the
+operator norm.  Shift the interval to its midpoint, replace the exterior
+operator by its absolute value, and absorb the polar unitary into the unknown
+and right-hand side.  The abstract rectangular seminorm theorem in
+`SylvesterBound` applies because every rectangular UI norm is subadditive,
+absolutely homogeneous, and satisfies both operator-ideal inequalities.
+Unitary invariance identifies the rotated norms with the original ones.
 -/
 theorem uiNorm_sylvester_le_of_intervalGap
     (N : RectangularUnitarilyInvariantNorm 𝕜 E F)
@@ -659,16 +652,143 @@ theorem uiNorm_sylvester_le_of_intervalGap
     {a b δ : ℝ} (hδ : 0 < δ) (hgap : IntervalSylvesterGap A B a b δ)
     (hEq : A ∘ₗ X - X ∘ₗ B = C) :
     δ * N X ≤ N C := by
-  sorry
+  rcases subsingleton_or_nontrivial E with _ | _
+  · have hX0 : X = 0 := by
+      ext x
+      have hx : x = 0 := Subsingleton.elim _ _
+      subst x
+      simp
+    rw [hX0, N.apply_zero, mul_zero]
+    exact N.nonneg C
+  rcases subsingleton_or_nontrivial F with _ | _
+  · have hX0 : X = 0 := by
+      ext x
+      exact Subsingleton.elim _ _
+    rw [hX0, N.apply_zero, mul_zero]
+    exact N.nonneg C
+  letI : NeZero (Module.finrank 𝕜 E) :=
+    ⟨Nat.ne_of_gt Module.finrank_pos⟩
+  letI : NeZero (Module.finrank 𝕜 F) :=
+    ⟨Nat.ne_of_gt Module.finrank_pos⟩
+  let j₀ : Fin (Module.finrank 𝕜 E) := ⟨0, Module.finrank_pos⟩
+  have hj₀ := hgap.1 (eigenvalue_mem_restrictedSpectrum_top hB j₀)
+  have hab : a ≤ b := hj₀.1.trans hj₀.2
+  let m : ℝ := (a + b) / 2
+  let r : ℝ := (b - a) / 2
+  let S : F →ₗ[𝕜] F := A - (m : 𝕜) • LinearMap.id
+  let T : E →ₗ[𝕜] E := B - (m : 𝕜) • LinearMap.id
+  let H : F →ₗ[𝕜] F := ForMathlib.abs S
+  let U : F ≃ₗᵢ[𝕜] F := polarUnitary S
+  let Z : E →ₗ[𝕜] F := U.symm.toLinearMap ∘ₗ X
+  let Y : E →ₗ[𝕜] F := U.symm.toLinearMap ∘ₗ C
+  have hr : 0 ≤ r := by simp only [r]; linarith
+  have hTnorm : ‖T.toContinuousLinearMap‖ ≤ r := by
+    simpa [T, m, r] using opNorm_shift_le_of_spectrumIn_Icc hB hab hgap.1
+  have hSlower : ∀ y, (r + δ) * ‖y‖ ≤ ‖S y‖ := by
+    simpa [S, m, r] using
+      norm_shift_lower_of_spectrumOutside hA hab hδ hgap.2
+  have hHsym : H.IsSymmetric := (ForMathlib.isPositive_abs S).isSymmetric
+  have hHeig : ∀ i : Fin (Module.finrank 𝕜 F),
+      r + δ ≤ hHsym.eigenvalues rfl i := by
+    intro i
+    have hi : (r + δ) * ‖hHsym.eigenvectorBasis rfl i‖ ≤
+        ‖H (hHsym.eigenvectorBasis rfl i)‖ := by
+      change (r + δ) * ‖hHsym.eigenvectorBasis rfl i‖ ≤
+        ‖ForMathlib.abs S (hHsym.eigenvectorBasis rfl i)‖
+      rw [ForMathlib.norm_abs_apply]
+      exact hSlower (hHsym.eigenvectorBasis rfl i)
+    have hnonneg := (ForMathlib.isPositive_abs S).nonneg_eigenvalues rfl i
+    rw [hHsym.apply_eigenvectorBasis rfl i, norm_smul, RCLike.norm_ofReal,
+      abs_of_nonneg hnonneg,
+      (hHsym.eigenvectorBasis rfl).orthonormal.norm_eq_one, mul_one, mul_one] at hi
+    exact hi
+  have hHform : ∀ y, (r + δ) * ‖y‖ ^ 2 ≤ RCLike.re ⟪H y, y⟫_𝕜 :=
+    le_re_inner_of_le_eigenvalues hHsym hHeig
+  have hShift : S ∘ₗ X - X ∘ₗ T = C := by
+    ext x
+    have hx := LinearMap.congr_fun hEq x
+    simp only [S, T, LinearMap.comp_apply, LinearMap.sub_apply,
+      LinearMap.smul_apply, LinearMap.id_apply, map_sub, map_smul]
+    simp only [LinearMap.comp_apply, LinearMap.sub_apply] at hx
+    rw [← hx]
+    module
+  have hPolar : H ∘ₗ X - Z ∘ₗ T = Y := by
+    ext x
+    have hx := LinearMap.congr_fun hShift x
+    have hx' : U.symm (S (X x)) - U.symm (X (T x)) = U.symm (C x) := by
+      calc
+        U.symm (S (X x)) - U.symm (X (T x)) =
+            U.symm (S (X x) - X (T x)) := (map_sub U.symm _ _).symm
+        _ = U.symm (C x) := congrArg U.symm hx
+    have hSX : U.symm (S (X x)) = H (X x) := by
+      have hp := LinearMap.congr_fun (polar_decomposition_unitary S) (X x)
+      change S (X x) = U (H (X x)) at hp
+      rw [hp, U.symm_apply_apply]
+    change H (X x) - U.symm (X (T x)) = U.symm (C x)
+    rwa [← hSX]
+  have hZnorm : N Z = N X := by
+    change N (U.symm.toLinearMap ∘ₗ X) = N X
+    have h := N.invariant U.symm (LinearIsometryEquiv.refl 𝕜 E) X
+    have hcomp : U.symm.toLinearMap ∘ₗ X ∘ₗ
+        (LinearIsometryEquiv.refl 𝕜 E).toLinearMap =
+        U.symm.toLinearMap ∘ₗ X := by
+      ext x
+      rfl
+    rwa [hcomp] at h
+  have hYnorm : N Y = N C := by
+    change N (U.symm.toLinearMap ∘ₗ C) = N C
+    have h := N.invariant U.symm (LinearIsometryEquiv.refl 𝕜 E) C
+    have hcomp : U.symm.toLinearMap ∘ₗ C ∘ₗ
+        (LinearIsometryEquiv.refl 𝕜 E).toLinearMap =
+        U.symm.toLinearMap ∘ₗ C := by
+      ext x
+      rfl
+    rwa [hcomp] at h
+  let H' : F →L[𝕜] F := H.toContinuousLinearMap
+  let T' : E →L[𝕜] E := T.toContinuousLinearMap
+  let X' : E →L[𝕜] F := X.toContinuousLinearMap
+  let Z' : E →L[𝕜] F := Z.toContinuousLinearMap
+  let Y' : E →L[𝕜] F := Y.toContinuousLinearMap
+  let N' : (E →L[𝕜] F) → ℝ := fun Q => N Q.toLinearMap
+  have hadd : ∀ f g : E →L[𝕜] F, N' (f + g) ≤ N' f + N' g := by
+    intro f g
+    simp only [N', ContinuousLinearMap.toLinearMap_add]
+    exact N.add_le _ _
+  have hsmul : ∀ (q : 𝕜) (f : E →L[𝕜] F), N' (q • f) = ‖q‖ * N' f := by
+    intro q f
+    simp only [N', ContinuousLinearMap.toLinearMap_smul]
+    exact N.smul_eq _ _
+  have hidealL : ∀ D : F →L[𝕜] F, ∀ Q : E →L[𝕜] F,
+      N' (D ∘L Q) ≤ ‖D‖ * N' Q := by
+    intro D Q
+    change N (D.toLinearMap ∘ₗ Q.toLinearMap) ≤ ‖D‖ * N Q.toLinearMap
+    have h := N.comp_le_opNorm_mul D.toLinearMap Q.toLinearMap
+    have hD : D.toLinearMap.toContinuousLinearMap = D := by ext x; rfl
+    rwa [hD] at h
+  have hidealR : ∀ Q : E →L[𝕜] F, ∀ D : E →L[𝕜] E,
+      N' (Q ∘L D) ≤ N' Q * ‖D‖ := by
+    intro Q D
+    change N (Q.toLinearMap ∘ₗ D.toLinearMap) ≤ N Q.toLinearMap * ‖D‖
+    have h := N.comp_le_mul_opNorm Q.toLinearMap D.toLinearMap
+    have hD : D.toLinearMap.toContinuousLinearMap = D := by ext x; rfl
+    rwa [hD] at h
+  have hPolar' : H' ∘L X' - Z' ∘L T' = Y' := by
+    ext x
+    simpa [H', T', X', Z', Y', ContinuousLinearMap.comp_apply] using
+      LinearMap.congr_fun hPolar x
+  have hZX' : N' Z' = N' X' := by
+    simpa [N', X', Z'] using hZnorm
+  have hbound := ContinuousLinearMap.gap_mul_le_of_comp_sub_comp_eq_rectangular
+    hadd hsmul hidealL hidealR (fun x y => hHsym x y) hr hδ hHform
+    hTnorm hZX' hPolar'
+  have hbound' : δ * N X ≤ N Y := by
+    simpa [N', X', Y'] using hbound
+  rwa [hYnorm] at hbound'
 
-/-- Singular-value/Ky Fan form from which Fan dominance yields the preceding
-UI-norm theorem.
-
-Lean proof route for a weaker agent:
-
-1. Diagonalize `A` and `B`, express the solution as a Schur multiplier with denominators at least `δ`, and apply the finite singular-value/majorization lemma used in Davis--Kahan Section 5.
-2. Prove prefix-sum domination for the singular values of the Schur multiplier solution.
-3. Rewrite the prefixes as `rectangularKyFanSum` and preserve the factor `δ` by nonnegative scalar arithmetic.
+/-- Ky Fan specialization of the sharp interval/exterior Sylvester
+estimate.  The hard work is already contained in
+`uiNorm_sylvester_le_of_intervalGap`; evaluating the concrete Ky Fan norm gives
+this singular-value prefix-sum form directly.
 -/
 theorem kyFan_sylvester_le_of_intervalGap
     {A : F →ₗ[𝕜] F} {B : E →ₗ[𝕜] E} {X C : E →ₗ[𝕜] F}
@@ -677,7 +797,9 @@ theorem kyFan_sylvester_le_of_intervalGap
     (hEq : A ∘ₗ X - X ∘ₗ B = C) (k : ℕ) :
     δ * RectangularUnitarilyInvariantNorm.rectangularKyFanSum k X ≤
       RectangularUnitarilyInvariantNorm.rectangularKyFanSum k C := by
-  sorry
+  have h := uiNorm_sylvester_le_of_intervalGap
+    (RectangularUnitarilyInvariantNorm.kyFan k) hA hB hδ hgap hEq
+  simpa only [RectangularUnitarilyInvariantNorm.kyFan_apply] using h
 
 /-- Ordered positivity/coercivity form used by the existing integral-free
 proof.

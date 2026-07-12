@@ -41,7 +41,7 @@ and how it relates to Davis (1963/1970) and Yu--Wang--Samworth (2015)}
 
 % NOTE: if you are a different model making a substantial addition and are not
 % yet credited, add yourself to the author list above.
-\author{Claude Opus 4.8 \and Jonathan Crall \and Claude Fable 5}
+\author{Claude Opus 4.8 \and Jonathan Crall \and Claude Fable 5 \and GPT-5.6 Thinking}
 
 \date{\today}
 
@@ -67,11 +67,14 @@ Sylvester bound and the dimension-free operator-norm $\sin\Theta$ theorem it
 powers, a canonical principal-angle API with a certified dictionary, and ---
 a large part of the Part~III programme at the subspace level: the
 $\sin\Theta$ and $\sin2\Theta$ perturbation theorems in every unitarily
-invariant norm (built on a Ky Fan / Fan-dominance mini-library, with the
-Frobenius norm as a first-class instance), and sharp operator-norm endpoints
-for $\tan\Theta$ and $\tan2\Theta$.  The original 1970 paper states all
-four headline families for arbitrary unitarily invariant norms and supplies
-both residual and perturbation forms.  The closing section therefore records
+invariant norm, a rectangular Ky Fan / Fan-dominance library with concrete
+operator, Frobenius, Ky Fan, and nuclear norms, and sharp operator-norm
+endpoints for $\tan\Theta$ and $\tan2\Theta$.  The newest analytic layer proves
+a dimension-free polar-absorption Sylvester estimate for arbitrary rectangular
+ideal seminorms and derives the sharp constant-one interval/exterior bound
+$\delta N(X)\le N(C)$ for every rectangular unitarily invariant norm.  The
+original 1970 paper states all four headline families for arbitrary unitarily
+invariant norms and supplies both residual and perturbation forms.  The closing section therefore records
 the remaining canonical-angle, rectangular-residual, tangent-norm,
 spectral-selection, direct-rotation, generalized, and sharpness layers now
 represented by the theorem scaffold under
@@ -231,9 +234,12 @@ arbitrary unitarily invariant norms, with residual as well as perturbation
 forms.  The theorem scaffold added under
 \texttt{ForMathlib/Analysis/InnerProductSpace/DavisKahanTheory/} records that
 larger target, including the coordinate-free geometry and spectral-selection
-lemmas implicit in the paper.  The purpose of this note is to explain exactly
-which part has been proved and how the remaining declarations relate to the
-literature.
+lemmas implicit in the paper.  Its rectangular norm layer, zero-extension
+calculus, Fan-dominance theorem, concrete Ky Fan/Frobenius/nuclear norms, and
+sharp interval/exterior Sylvester engine are now proved; the main downstream
+frontier is to feed that engine into the canonical residual and perturbation
+angle maps.  The purpose of this note is to explain exactly which part has been
+proved and how the remaining declarations relate to the literature.
 
 
 
@@ -616,15 +622,79 @@ of itself at the cost of one triangle inequality, one homogeneity, and one
 swap invariance.  Star invariance $N(A^{*})=N(A)$ comes free from the gauge
 representation.
 
-\paragraph{The part-III $\sin\Theta$ theorem, every unitarily invariant norm.}
-With the Fan-dominance library in hand, the Davis--Kahan~(1970) part-III
-$\sin\Theta$ theorem is now formalized at full generality:
+\paragraph{Rectangular UI norms and the sharp interval/exterior Sylvester engine.}
+The square theory has now been extended to maps between distinct finite
+Hilbert spaces.  A \texttt{RectangularUnitarilyInvariantNorm} is invariant
+under independent unitary changes of basis in its domain and codomain.  The
+formalization proves rectangular Fan dominance, both operator-ideal
+inequalities, preservation of the complete singular-value sequence under
+square zero extension, and concrete operator, Frobenius, Ky Fan, and nuclear
+norm instances.  It also provides transport along an isometric codomain
+embedding and along the adjoint of an isometric domain embedding, the exact
+operations needed to compare ambient residuals with restricted cross-block
+maps.
+
+The analytic payoff is the following sharp theorem.  Let
+$A:F\to F$ and $B:E\to E$ be self-adjoint, let $X,C:E\to F$, and suppose
+$AX-XB=C$.  If the spectrum of $B$ lies in $[a,b]$ while the spectrum of $A$
+lies outside $(a-\delta,b+\delta)$, then for every rectangular unitarily
+invariant norm $N$,
+\[
+  \delta\,N(X)\;\le\;N(C).
+\]
+This is \texttt{uiNorm\_sylvester\_le\_of\_intervalGap}; its Ky Fan prefix
+form is \texttt{kyFan\_sylvester\_le\_of\_intervalGap}.  The proof is stronger
+than a finite block-matrix argument: after shifting to the midpoint, it replaces
+the exterior operator by its absolute value and absorbs the polar unitary into
+$X$.  A new theorem in \texttt{SylvesterBound.lean} then applies to any
+rectangular seminorm satisfying subadditivity, absolute homogeneity, and the
+two ideal inequalities.  This absorption theorem itself is dimension-free;
+finite-dimensional spectral theory enters only when the interval/exterior
+hypothesis is converted into the required form and norm bounds.
+
+This result matches the constant-one interval/exterior Sylvester core used in
+the arbitrary-unitarily-invariant-norm statements of Davis--Kahan Part~III.
+The separate arbitrary-disjoint-spectrum estimate with constant $\pi/2$
+remains open.
+
+\paragraph{The rectangular residual $\sin\Theta$ theorem, every UI norm.}
+The canonical residual interface is now connected to that Sylvester engine.
+Let $X:F\to E$ be an isometric embedding, let $M:F\to F$ be self-adjoint,
+let $U$ reduce the self-adjoint ambient operator $A$, and set
+$R=AX-XM$.  If $\sigma(M)\subseteq[a,b]$ and the spectrum of $A$ carried by
+$U^{\perp}$ lies outside $(a-\delta,b+\delta)$, then every rectangular
+unitarily invariant norm satisfies
+\[
+  \delta\,N(P_{U^{\perp}}X) \;\le\; N(R).
+\]
+This is \texttt{sinTheta\_residual\_le}.  The ordered half-line version is
+\texttt{sinTheta\_residual\_le\_of\_orderedGap}.  The proof restricts $A$ to
+$U^{\perp}$, transports $N$ along the isometric subtype embedding, applies
+the sharp rectangular Sylvester theorem, and contracts the projected residual
+with the operator-ideal inequality.  Thus the theorem is genuinely
+rectangular: it does not pad the residual into an ambient square map or lose a
+dimension factor.
+
+This closes the sharp interval/exterior and ordered residual forms native to
+Davis--Kahan Part~III.  The next downstream step is to package the square
+perturbation wrappers and the canonical spectral-subspace corollaries through
+domain-isometry transport.  The general residual statement with the
+$\pi/2$ constant remains tied to the still-open arbitrary-disjoint-spectrum
+Sylvester theorem.
+
+\paragraph{The square perturbation $\sin\Theta$ theorem, every unitarily invariant norm.}
+With the square Fan-dominance library in hand, the Davis--Kahan~(1970)
+projection perturbation bound is formalized for every unitarily invariant norm
+on ambient endomorphisms:
 \[
   N\bigl(\widehat Q\,P\bigr)\;\le\;N(S-T)\,/\,g
-  \qquad\text{for every unitarily invariant norm } N,
+  \qquad\text{for every square unitarily invariant norm } N,
 \]
 under exactly the operator-norm theorem's hypotheses ($P,\widehat Q$ the
-projections onto the separated invariant subspaces).  The engine is an
+projections onto the separated invariant subspaces).  This is the square
+ambient perturbation form; the literature's restricted residual form naturally
+uses rectangular maps and is the downstream target of the new rectangular
+Sylvester theorem above.  The engine is an
 \emph{abstract} Sylvester bound: the same integral-free absorption identity
 $(\norm{A}+\norm{B})X = Y + (\norm{A}\cdot1-A)X + X(\norm{B}\cdot1-B)$, but
 now applied under any operator seminorm $N$ carrying the ideal property
@@ -754,49 +824,55 @@ $\tau\mapsto4\tau(1-\tau)$ on $[0,\tfrac12]$ finishes.
 \section{What remains, ranked by dependency}\label{sec:remains}
 
 The proved files already serve the repository's present Frobenius and
-operator-norm consumers.  They should nevertheless not be described as the
-entire Davis--Kahan Part~III theory.  The 1970 paper treats
-$\sin\Theta$, $\tan\Theta$, $\sin2\Theta$, and $\tan2\Theta$ as four
-independent sharp estimates for arbitrary unitarily invariant norms, and it
-uses compatible rectangular norms and residual equations as part of the
-native statement surface.
+operator-norm consumers.  The rectangular UI-norm infrastructure and the sharp
+constant-one interval/exterior Sylvester estimate now also cover the analytic
+core needed by the literature's residual formulations.  They should
+nevertheless not be described as the entire Davis--Kahan Part~III theory.  The
+1970 paper treats $\sin\Theta$, $\tan\Theta$, $\sin2\Theta$, and
+$\tan2\Theta$ as four independent sharp estimates for arbitrary unitarily
+invariant norms, with compatible rectangular norms, residual equations, and
+spectral-selection arguments as part of the native statement surface.
 
-The source-level roadmap is now the scaffold rooted at
-\texttt{ForMathlib.Analysis.InnerProductSpace.DavisKahanTheory}.  Its new
-modules are intentionally admitted with \texttt{sorry}; they state the target
-API close to the form expected after completion and cite the associated TeX
-proof distillations.  Model provenance for this scaffold and its accompanying
-1970 proof distillation is \textbf{GPT 5.6 High}.
+The source-level roadmap is the scaffold rooted at
+\texttt{ForMathlib.Analysis.InnerProductSpace.DavisKahanTheory}.  It now mixes
+proved infrastructure and capstone theorems with explicitly open declarations;
+its module headers and theorem documentation record the intended dependency
+order and cite the associated TeX proof distillations.  Model provenance for
+the scaffold and its accompanying 1970 proof distillation is
+\textbf{GPT 5.6 High}; the present rectangular-Sylvester update was prepared by
+\textbf{GPT-5.6 Thinking}.
 
 The remaining work is ordered by mathematical dependency:
 
 \begin{enumerate}
 \item \emph{Canonical spectral and angle geometry.}
-  Make spectral subspaces basis-independent; define principal-angle sine,
-  cosine, tangent, and double-angle operators on submodules; handle unequal
-  ranks and prove the projector/singular-value dictionaries.
-\item \emph{Rectangular unitarily invariant norms and residual algebra.}
-  Generalize the square-map norm API to maps between distinct finite Hilbert
-  spaces, prove the ideal and zero-extension laws, and expose Ritz compression,
-  Galerkin orthogonality, and residual-minimization identities.
-\item \emph{The Sylvester engines.}
-  Prove the sharp ordered and interval/exterior estimates for every compatible
-  unitarily invariant norm, plus the separate $\pi/2$ general-separation
-  extension.
+  Finish the basis-independent spectral-subspace and canonical angle-operator
+  layer, especially pole-safe tangent and double-angle operators, unequal
+  ranks, and the remaining projector/singular-value dictionaries.
+\item \emph{Perturbation wrappers and Ritz residual algebra.}
+  The sharp rectangular residual $\sin\Theta$ theorem is now complete for
+  arbitrary UI norms in both interval/exterior and ordered forms.  Next use
+  domain-isometry transport to close the square perturbation and canonical
+  spectral-subspace wrappers, then finish Ritz/Galerkin orthogonality,
+  Frobenius residual minimality, and the remaining concrete-norm corollaries.
+\item \emph{The remaining Sylvester extension.}
+  Prove the independent arbitrary-disjoint-spectrum theorem with constant
+  $\pi/2$.  The sharp ordered and interval/exterior constant-one estimates are
+  now complete.
 \item \emph{Complete the four-theorem square.}
   Supply residual and perturbation forms of all four angle theorems in every
-  unitarily invariant norm, together with operator, Frobenius, Ky Fan, nuclear,
-  and Schatten corollaries.  The largest unclosed pieces are the all-norm
-  tangent families and the residual double-angle families.
+  unitarily invariant norm.  The largest unclosed pieces are the all-norm
+  tangent families, the residual double-angle families, and general Schatten
+  $p$ instances.
 \item \emph{Spectral selection and repulsion.}
   Formalize the Section~8 branch-selection theorem, the compression/repulsion
   inequalities, and the continuation argument selecting the acute perturbed
   spectral subspace.
 \item \emph{Direct rotation, generalized forms, and sharpness.}
   Complete the canonical direct-rotation formulas and qualified extremal
-  properties; the nonorthonormal and unequal-dimensional theorems; Davis's
-  1963 total-rotation theory; and the two-dimensional equality models proving
-  optimality of the constants.
+  properties; the nonorthonormal and unequal-dimensional theorems; the
+  remaining generalized forms; and the two-dimensional equality models
+  proving optimality of the constants.
 \item \emph{Derived interfaces.}
   Finish the Yu--Wang--Samworth/statistical wrappers, singular-subspace and
   Hermitian-dilation forms, and matrix-facing formulations.
@@ -973,6 +1049,28 @@ Operator-ideal property $N(CX)\le\norm{C}N(X)$ (both factors)
 Abstract Sylvester bound (coercive / separated), any ideal seminorm
   & \texttt{le\_div\_of\_comp\_add\_comp\_eq},
     \texttt{le\_div\_of\_comp\_sub\_comp\_eq} (\texttt{SylvesterBound.lean}) \\
+Rectangular polar-absorption Sylvester bound, any ideal seminorm
+  & \texttt{gap\_mul\_le\_of\_comp\_sub\_comp\_eq\_rectangular},
+    \texttt{le\_div\_of\_comp\_add\_comp\_eq\_rectangular},
+    \texttt{le\_div\_of\_comp\_sub\_comp\_eq\_rectangular}
+    (\texttt{SylvesterBound.lean}) \\
+Rectangular UI norms: Fan dominance, ideal laws, zero extension
+  & \texttt{apply\_le\_of\_kyFanSum\_le},
+    \texttt{comp\_le\_opNorm\_mul}, \texttt{comp\_le\_mul\_opNorm},
+    \texttt{singularValues\_zeroExtension}
+    (\texttt{DavisKahanTheory/RectangularUINorm.lean}) \\
+Rectangular UI transport; concrete Frobenius/Ky Fan/nuclear norms
+  & \texttt{codomainIsometryTransport}, \texttt{domainIsometryTransport},
+    \texttt{frobenius}, \texttt{kyFan}, \texttt{nuclear}
+    (\texttt{DavisKahanTheory/RectangularUINorm.lean}) \\
+Sharp interval/exterior Sylvester bound, every rectangular UI norm / Ky Fan
+  & \texttt{uiNorm\_sylvester\_le\_of\_intervalGap},
+    \texttt{kyFan\_sylvester\_le\_of\_intervalGap}
+    (\texttt{DavisKahanTheory/Sylvester.lean}) \\
+Rectangular residual $\sin\Theta$, interval/exterior and ordered
+  & \texttt{sinTheta\_residual\_le},
+    \texttt{sinTheta\_residual\_le\_of\_orderedGap}
+    (\texttt{DavisKahanTheory/SinTheta.lean}) \\
 Norm-free Davis--Kahan setup (shared with the op-norm proof)
   & \texttt{exists\_isSymmetric\_comp\_sub\_comp\_eq}
     (\texttt{SinThetaOpNorm.lean}) \\

@@ -173,6 +173,8 @@ theorem sinTheta_residual_le_of_orderedGap
 
 /-- General disjoint-spectrum residual form.  The `π/2` loss is the
 Bhatia--Davis--McIntosh extension, not the sharp interval/exterior theorem.
+The restriction and projection proof below is complete; the only open input is
+`kyFan_sylvester_le_of_spectralDistance` in the Sylvester layer.
 
 Lean proof route for a weaker agent:
 
@@ -188,7 +190,59 @@ theorem sinTheta_residual_le_of_spectralDistance
     {δ : ℝ} (hδ : 0 < δ)
     (hgap : SpectraSeparated M ⊤ A Uᗮ δ) :
     δ * N (sinThetaEmbedding U X) ≤ (Real.pi / 2) * N (residual A X M) := by
-  sorry
+  have hUperp : Reduces A Uᗮ := reduces_orthogonal_of_isSymmetric hA hU
+  let AU : Uᗮ →ₗ[𝕜] Uᗮ := A.restrict hUperp
+  let Y : F →ₗ[𝕜] Uᗮ :=
+    Uᗮ.orthogonalProjectionOnto.toLinearMap ∘ₗ X.toLinearMap
+  let C : F →ₗ[𝕜] Uᗮ :=
+    Uᗮ.orthogonalProjectionOnto.toLinearMap ∘ₗ residual A X M
+  let NU : RectangularUnitarilyInvariantNorm 𝕜 F Uᗮ :=
+    N.codomainIsometryTransport Uᗮ.subtypeₗᵢ
+  have hAU : AU.IsSymmetric := isSymmetric_restrict hA hUperp
+  have hgap' : SpectraSeparated AU ⊤ M ⊤ δ := by
+    intro lam μ hlam hμ
+    have hlam' : lam ∈ restrictedSpectrum A Uᗮ := by
+      rw [← restrictedSpectrum_restrict A hUperp]
+      exact hlam
+    have hsep := hgap μ lam hμ hlam'
+    simpa [abs_sub_comm] using hsep
+  have hEq : AU ∘ₗ Y - Y ∘ₗ M = C := by
+    ext x
+    have hx := LinearMap.congr_fun
+      (sylvester_sinThetaEmbedding_eq_projectedResidual hA hU X M) x
+    simpa [AU, Y, C, sinThetaEmbedding, complementaryProjection, projection,
+      LinearMap.comp_apply] using hx
+  have hY : NU Y = N (sinThetaEmbedding U X) := by
+    change N (Uᗮ.subtypeₗᵢ.toLinearMap ∘ₗ Y) = N (sinThetaEmbedding U X)
+    congr 1
+  have hC : NU C =
+      N (complementaryProjection U ∘ₗ residual A X M) := by
+    change N (Uᗮ.subtypeₗᵢ.toLinearMap ∘ₗ C) =
+      N (complementaryProjection U ∘ₗ residual A X M)
+    congr 1
+  have hproj : ‖(complementaryProjection U).toContinuousLinearMap‖ ≤ 1 := by
+    refine (complementaryProjection U).toContinuousLinearMap.opNorm_le_bound
+      zero_le_one fun x => ?_
+    change ‖Uᗮ.starProjection x‖ ≤ 1 * ‖x‖
+    simpa using Uᗮ.norm_starProjection_apply_le x
+  have hC_le : NU C ≤ N (residual A X M) := by
+    rw [hC]
+    calc
+      N (complementaryProjection U ∘ₗ residual A X M)
+          ≤ ‖(complementaryProjection U).toContinuousLinearMap‖ *
+              N (residual A X M) :=
+        N.comp_le_opNorm_mul _ _
+      _ ≤ 1 * N (residual A X M) :=
+        mul_le_mul_of_nonneg_right hproj (N.nonneg _)
+      _ = N (residual A X M) := one_mul _
+  have hSylvester :=
+    uiNorm_sylvester_le_of_spectralDistance NU hAU hM hδ hgap' hEq
+  rw [hY] at hSylvester
+  calc
+    δ * N (sinThetaEmbedding U X)
+        ≤ (Real.pi / 2) * NU C := hSylvester
+    _ ≤ (Real.pi / 2) * N (residual A X M) :=
+      mul_le_mul_of_nonneg_left hC_le (by positivity)
 
 /-! ## Operator-norm one-sided (directed) form
 
@@ -720,7 +774,9 @@ theorem kyFan_sinTheta_le
     RectangularUnitarilyInvariantNorm.rectangularKyFanSum,
     kyFanSum_eq_sum_fin] using h
 
-/-- General two-sided spectral separation with the `π/2` constant.
+/-- General two-sided spectral separation with the `π/2` constant.  The
+ambient transport proof is complete; the only open analytic input is the Ky Fan
+separated reciprocal-multiplier theorem in `Sylvester.lean`.
 
 Lean proof route for a weaker agent:
 
@@ -735,7 +791,34 @@ theorem sinTheta_perturbation_le_of_spectralDistance
     {δ : ℝ} (hδ : 0 < δ)
     (hgap : SpectraSeparated A U B Vᗮ δ) :
     δ * N (sinThetaMap U V) ≤ (Real.pi / 2) * N (B - A) := by
-  sorry
+  let NU : RectangularUnitarilyInvariantNorm 𝕜 U E :=
+    N.toRectangular.domainIsometryTransport U.subtypeₗᵢ
+  have hM : (A.restrict hU).IsSymmetric := isSymmetric_restrict hA hU
+  have hgap' : SpectraSeparated (A.restrict hU) ⊤ B Vᗮ δ := by
+    intro lam μ hlam hμ
+    apply hgap lam μ
+    · rw [← restrictedSpectrum_restrict A hU]
+      exact hlam
+    · exact hμ
+  have hres :
+      δ * NU (sinThetaEmbedding V U.subtypeₗᵢ) ≤
+        (Real.pi / 2) * NU (residual B U.subtypeₗᵢ (A.restrict hU)) :=
+    sinTheta_residual_le_of_spectralDistance
+      (A := B) (U := V) (M := A.restrict hU) NU hB hV
+      U.subtypeₗᵢ hM hδ hgap'
+  have hsin :
+      NU (sinThetaEmbedding V U.subtypeₗᵢ) = N (sinThetaMap U V) :=
+    domainTransport_sinThetaEmbedding_apply N U V
+  have hresBound :
+      NU (residual B U.subtypeₗᵢ (A.restrict hU)) ≤ N (B - A) :=
+    domainTransport_residual_le (B := B) N hU
+  calc
+    δ * N (sinThetaMap U V) =
+        δ * NU (sinThetaEmbedding V U.subtypeₗᵢ) := by rw [hsin]
+    _ ≤ (Real.pi / 2) *
+        NU (residual B U.subtypeₗᵢ (A.restrict hU)) := hres
+    _ ≤ (Real.pi / 2) * N (B - A) :=
+      mul_le_mul_of_nonneg_left hresBound (by positivity)
 
 end DavisKahanTheory
 end ForMathlib

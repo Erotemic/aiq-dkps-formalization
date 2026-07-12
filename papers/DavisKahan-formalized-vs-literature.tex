@@ -654,8 +654,19 @@ hypothesis is converted into the required form and norm bounds.
 
 This result matches the constant-one interval/exterior Sylvester core used in
 the arbitrary-unitarily-invariant-norm statements of Davis--Kahan Part~III.
-The separate arbitrary-disjoint-spectrum estimate with constant $\pi/2$
-remains open.
+The separate arbitrary-disjoint-spectrum estimate with constant $\pi/2$ is
+now fully scaffolded, but its analytic root remains open.  In canonical
+eigenbases the formalization defines the reciprocal kernel
+$(\alpha_i-\beta_j)^{-1}$, proves that positive spectral separation makes every
+denominator nonzero, and derives the exact coefficient equation
+$(\alpha_i-\beta_j)X_{ij}=C_{ij}$.  The one remaining proof obligation is the
+simultaneous Ky Fan prefix estimate
+\texttt{kyFan\_sylvester\_le\_of\_}\allowbreak\texttt{spectralDistance}, i.e. the finite
+Bhatia--Davis--McIntosh separated reciprocal-multiplier theorem.  From that
+single declaration, rectangular Fan dominance now proves
+\texttt{uiNorm\_sylvester\_le\_of\_}\allowbreak\texttt{spectralDistance} for every rectangular UI
+norm.  Thus the API and all algebraic transports are fixed without pretending
+that the Fourier/Schur-multiplier estimate itself has been formalized.
 
 \paragraph{The rectangular residual $\sin\Theta$ theorem, every UI norm.}
 The canonical residual interface is now connected to that Sylvester engine.
@@ -676,9 +687,13 @@ rectangular: it does not pad the residual into an ambient square map or lose a
 dimension factor.
 
 This closes the sharp interval/exterior and ordered residual forms native to
-Davis--Kahan Part~III.  The general residual statement with the $\pi/2$
-constant remains tied to the still-open arbitrary-disjoint-spectrum Sylvester
-theorem.
+Davis--Kahan Part~III.  The general residual declaration with the $\pi/2$
+constant is now proved as a restriction/projection consequence of the general
+Sylvester declaration: it restricts $A$ to $U^{\perp}$, reverses the
+absolute-gap orientation, and contracts the projected residual.  Its only
+unfinished mathematics is therefore inherited from the single Ky Fan
+reciprocal-multiplier root above, rather than from an independent residual
+proof.
 
 \paragraph{Sharp square perturbation wrappers and concrete norms.}
 The rectangular residual result is now transported back to ambient square
@@ -697,6 +712,13 @@ for every square unitarily invariant norm under both the interval/exterior and
 ordered gap hypotheses.  The Lean declarations are
 \texttt{sinTheta\_perturbation\_le} and
 \texttt{sinTheta\_perturbation\_le\_of\_orderedGap}.
+
+The arbitrary-disjoint-spectrum perturbation declaration
+\texttt{sinTheta\_perturbation\_le\_of\_}\allowbreak\texttt{spectralDistance} is now wired through
+the same domain-isometry transport and residual contraction, retaining the
+universal $\pi/2$ factor.  As with the residual form, this transport proof is
+closed but the theorem family remains conditional on the one open Ky Fan
+multiplier proof in the Sylvester layer.
 
 The canonical spectral-subspace wrapper
 \texttt{sinTheta\_spectralSubspace\_le} is therefore closed as well, and
@@ -924,9 +946,14 @@ The remaining work is ordered by mathematical dependency:
   The remaining sharp single-angle capstone is the coupled full-space
   $|P_U-P_V|$ theorem under forward and reverse interval/exterior gaps.
 \item \emph{The remaining Sylvester extension.}
-  Prove the independent arbitrary-disjoint-spectrum theorem with constant
-  $\pi/2$.  The sharp ordered and interval/exterior constant-one estimates are
-  now complete.
+  Prove the single analytic root
+  \texttt{kyFan\_sylvester\_le\_of\_}\allowbreak\texttt{spectralDistance}: the finite
+  Bhatia--Davis--McIntosh reciprocal-multiplier estimate simultaneously for all
+  Ky Fan prefixes.  The reciprocal eigenbasis kernel, denominator and
+  coefficient lemmas, Fan-dominance lift to every rectangular UI norm, and the
+  residual and perturbation $\pi/2$ transports are now scaffolded and proved
+  around that root.  The sharp ordered and interval/exterior constant-one
+  estimates remain complete and independent.
 \item \emph{Complete the four-theorem square.}
   Supply residual and perturbation forms of all four angle theorems in every
   unitarily invariant norm.  The largest unclosed pieces are the all-norm
@@ -1135,9 +1162,20 @@ Sharp interval/exterior Sylvester bound, every rectangular UI norm / Ky Fan
   & \texttt{uiNorm\_sylvester\_le\_of\_intervalGap},
     \texttt{kyFan\_sylvester\_le\_of\_intervalGap}
     (\texttt{DavisKahanTheory/Sylvester.lean}) \\
+Arbitrary-separated Sylvester $\pi/2$ scaffold / analytic root
+  & \texttt{sylvesterReciprocalKernel},
+    \texttt{sylvester\_eigenvalue\_sub\_ne\_zero},
+    \texttt{sylvester\_eigenbasis\_coefficient\_equation},
+    \texttt{kyFan\_sylvester\_le\_of\_}\allowbreak\texttt{spectralDistance},
+    \texttt{uiNorm\_sylvester\_le\_of\_}\allowbreak\texttt{spectralDistance}
+    (\texttt{DavisKahanTheory/Sylvester.lean}) \\
 Rectangular residual $\sin\Theta$, interval/exterior and ordered
   & \texttt{sinTheta\_residual\_le},
     \texttt{sinTheta\_residual\_le\_of\_orderedGap}
+    (\texttt{DavisKahanTheory/SinTheta.lean}) \\
+Arbitrary-separated directed $\sin\Theta$, residual and perturbation
+  & \texttt{sinTheta\_residual\_le\_of\_}\allowbreak\texttt{spectralDistance},
+    \texttt{sinTheta\_perturbation\_le\_of\_}\allowbreak\texttt{spectralDistance}
     (\texttt{DavisKahanTheory/SinTheta.lean}) \\
 Sharp directed perturbation $\sin\Theta$, interval/exterior and ordered
   & \texttt{sinTheta\_perturbation\_le},

@@ -525,3 +525,65 @@ When cleaning unused-section-variable warnings, inspect the surrounding
 comments before inserting a command modifier. Prefer leaving a harmless linter
 warning over introducing an unparsed declaration header, and include the
 modified file in the narrow compiler target whenever a toolchain is available.
+
+## 24. Put the `sorry` at the weakest analytic seam, then close every transport layer
+
+When a theorem family has one genuinely hard analytic ingredient and several
+formal transport steps, do not leave a `sorry` in every public theorem. Isolate
+the hard statement at the weakest reusable level and prove the rest from it.
+
+For the arbitrary-disjoint-spectrum Davis--Kahan branch, the correct root is
+the simultaneous Ky Fan prefix estimate for the separated reciprocal
+Sylvester multiplier:
+
+```lean
+kyFan_sylvester_le_of_spectralDistance
+```
+
+This is weaker and more reusable than postulating the theorem for an arbitrary
+unitarily invariant norm. Rectangular Fan dominance then proves
+
+```lean
+uiNorm_sylvester_le_of_spectralDistance
+```
+
+and the residual and perturbation `sin Θ` theorems should be ordinary transport
+proofs. This factoring has several benefits:
+
+1. the remaining mathematics is visible in one declaration;
+2. a future Fourier, contour, or Schur-multiplier implementation can replace
+   that declaration without changing downstream APIs;
+3. the existing Fan-dominance theorem is exercised rather than duplicated;
+4. documentation can state precisely which part is scaffolded and which part
+   is formally proved.
+
+Before opening the analytic proof, complete and name the deterministic
+coordinate facts:
+
+```lean
+sylvesterReciprocalKernel
+sylvester_eigenvalue_sub_ne_zero
+sylvester_eigenbasis_coefficient_equation
+```
+
+Then prove all downstream scale, projection, restriction, and isometry
+transports immediately. A scaffold is most useful when it reduces the future
+agent's task to one theorem, not when it merely creates a longer list of
+independent `sorry`s.
+
+For positive scalar scaling under Fan dominance, compare the scaled operators
+rather than manipulating the abstract norm inequality directly:
+
+```lean
+N ((δ : 𝕜) • X) ≤ N (((Real.pi / 2 : ℝ) : 𝕜) • C)
+```
+
+Prove every Ky Fan prefix inequality for those scaled maps, apply
+`apply_le_of_kyFanSum_le`, and only then rewrite abstract homogeneity. This keeps
+nonnegativity and absolute-value normalization local and avoids division in the
+main proof.
+
+Finally, keep status documents honest. A downstream theorem whose proof uses an
+upstream declaration containing `sorry` is structurally wired but not a closed
+formalization. Name the exact analytic root in the literature comparison and in
+handoff documents until its `sorry` is removed.

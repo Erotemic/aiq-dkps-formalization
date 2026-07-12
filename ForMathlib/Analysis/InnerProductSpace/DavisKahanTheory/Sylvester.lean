@@ -20,9 +20,11 @@ Literature map:
 * The ordered/coercive special case already proved in
   `ForMathlib/Analysis/InnerProductSpace/SylvesterBound.lean`.
 
-The interval/exterior theorem has sharp constant one.  The final theorem in
-this file records the separate `π/2`-constant extension for arbitrary disjoint
-spectral sets; it must not be used silently in the classic constant-one API.
+The interval/exterior theorem has sharp constant one.  The final section
+scaffolds the separate `π/2`-constant extension for arbitrary disjoint spectral
+sets, isolates its one remaining Ky Fan multiplier theorem, and proves the
+Fan-dominance lift to every rectangular UI norm.  It must not be used silently
+in the classic constant-one API.
 -/
 
 
@@ -32,9 +34,9 @@ The Sylvester map and its finite inverse are explicit.  The sharp
 interval/exterior estimate is proved below for every rectangular unitarily
 invariant norm by a dimension-free polar-absorption argument.  The remaining
 analytic extension in this file is the independent `pi/2` theorem for arbitrary
-disjoint spectral sets.  The next downstream step is to apply the sharp theorem
-to residual and perturbation `sin Theta` maps using the rectangular norm
-transport API.
+disjoint spectral sets.  Its complete dependency scaffold now isolates the
+Ky Fan multiplier estimate as the sole analytic root; Fan dominance and the
+residual/perturbation transports are downstream consequences.
 -/
 
 
@@ -90,16 +92,24 @@ specialization rather than the root proof.
 
 ### E. Arbitrary disjoint spectra
 
-Keep `uiNorm_sylvester_le_of_spectralDistance` independent.  The absorption
-argument does not prove the `π/2` theorem.  Preferred finite route:
+The full dependency scaffold is now present and remains independent of the
+constant-one absorption theorem:
 
-1. diagonalize both endpoints;
-2. represent the inverse as the Schur multiplier
-   `m i j = 1 / (α i - β j)`;
-3. prove the Bhatia--Davis--McIntosh multiplier bound on every Ky Fan norm;
-4. invoke rectangular Fan dominance.
+1. `sylvesterReciprocalKernel` records the reciprocal eigenvalue-difference
+   symbol in the canonical eigenbases;
+2. `sylvester_eigenvalue_sub_ne_zero` discharges every denominator from
+   positive spectral separation;
+3. `sylvester_eigenbasis_coefficient_equation` identifies the coordinate
+   Sylvester equation `(αᵢ-βⱼ)Xᵢⱼ=Cᵢⱼ`;
+4. `kyFan_sylvester_le_of_spectralDistance` is the single remaining analytic
+   root: prove the Bhatia--Davis--McIntosh multiplier estimate for every prefix;
+5. `uiNorm_sylvester_le_of_spectralDistance` is then a proved rectangular Fan
+   dominance lift;
+6. the residual and perturbation `sin Θ` wrappers are proved downstream.
 
-Do not let this theorem block the interval/exterior Davis--Kahan chain.
+The remaining proof should therefore concentrate only on the finite separated
+reciprocal multiplier.  Do not re-open the transport or Fan-dominance layers,
+and do not derive this theorem from the constant-one interval/exterior route.
 
 ### F. Coercion discipline
 
@@ -819,15 +829,123 @@ theorem uiNorm_sylvester_le_of_form_bounds
     δ * N X ≤ N C := by
   exact uiNorm_sylvester_le_of_form_bounds_aux N hA hB hδ hAform hBform hEq
 
-/-- General disjoint-spectrum extension with the Bhatia--Davis--McIntosh
-constant `π/2`.  This is beyond the sharp interval/exterior classic theorem
-but belongs in the complete finite-dimensional roadmap.
+/-! ## Arbitrary disjoint spectra: the `π/2` scaffold
 
-Lean proof route for a weaker agent:
-
-1. Prefer specialization of the experimental symmetric-ideal Sylvester theorem once the experimental ideal signature is corrected
-2. alternatively formalize the finite Bhatia--Davis--McIntosh multiplier and finish by Fan dominance.
+The Bhatia--Davis--McIntosh extension is deliberately factored at the weakest
+analytic seam.  The finite spectral-coordinate algebra is explicit below, the
+single remaining hard theorem is the simultaneous Ky Fan prefix estimate, and
+rectangular Fan dominance then lifts that estimate to every UI norm.  Keeping
+this seam at the Ky Fan level prevents the downstream residual and perturbation
+APIs from depending on a particular Fourier, Schur-multiplier, or contour
+implementation.
 -/
+
+/-- Reciprocal spectral multiplier in the canonical eigenbases of `A` and `B`.
+The gap hypothesis is not built into the definition; it is supplied when the
+kernel is used, so the object remains a simple coordinate function. -/
+noncomputable def sylvesterReciprocalKernel
+    {A : F →ₗ[𝕜] F} {B : E →ₗ[𝕜] E}
+    (hA : A.IsSymmetric) (hB : B.IsSymmetric) :
+    Fin (Module.finrank 𝕜 F) → Fin (Module.finrank 𝕜 E) → 𝕜 :=
+  fun i j =>
+    ((hA.eigenvalues rfl i : 𝕜) - (hB.eigenvalues rfl j : 𝕜))⁻¹
+
+/-- Positive spectral separation makes every denominator of the reciprocal
+kernel nonzero.  This is the scalar fact used both by the coordinate solution
+formula and by the multiplier estimate. -/
+theorem sylvester_eigenvalue_sub_ne_zero
+    {A : F →ₗ[𝕜] F} {B : E →ₗ[𝕜] E}
+    (hA : A.IsSymmetric) (hB : B.IsSymmetric)
+    {δ : ℝ} (hδ : 0 < δ) (hgap : SpectraSeparated A ⊤ B ⊤ δ)
+    (i : Fin (Module.finrank 𝕜 F)) (j : Fin (Module.finrank 𝕜 E)) :
+    (hA.eigenvalues rfl i : 𝕜) - (hB.eigenvalues rfl j : 𝕜) ≠ 0 := by
+  let α : ℝ := hA.eigenvalues rfl i
+  let β : ℝ := hB.eigenvalues rfl j
+  have hα : α ∈ restrictedSpectrum A ⊤ :=
+    eigenvalue_mem_restrictedSpectrum_top hA i
+  have hβ : β ∈ restrictedSpectrum B ⊤ :=
+    eigenvalue_mem_restrictedSpectrum_top hB j
+  have habs : 0 < |α - β| := lt_of_lt_of_le hδ (hgap α β hα hβ)
+  have hαβ : α ≠ β := sub_ne_zero.mp (abs_pos.mp habs)
+  exact sub_ne_zero.mpr fun h => hαβ (RCLike.ofReal_injective h)
+
+/-- Entrywise spectral-coordinate form of the Sylvester equation.  It exposes
+exactly the scalar equation to which the reciprocal kernel is applied:
+`(αᵢ-βⱼ) Xᵢⱼ = Cᵢⱼ`. -/
+theorem sylvester_eigenbasis_coefficient_equation
+    {A : F →ₗ[𝕜] F} {B : E →ₗ[𝕜] E} {X C : E →ₗ[𝕜] F}
+    (hA : A.IsSymmetric) (hB : B.IsSymmetric)
+    (hEq : A ∘ₗ X - X ∘ₗ B = C)
+    (i : Fin (Module.finrank 𝕜 F)) (j : Fin (Module.finrank 𝕜 E)) :
+    ((hA.eigenvalues rfl i : 𝕜) - (hB.eigenvalues rfl j : 𝕜)) *
+        ⟪X (hB.eigenvectorBasis rfl j), hA.eigenvectorBasis rfl i⟫_𝕜 =
+      ⟪C (hB.eigenvectorBasis rfl j), hA.eigenvectorBasis rfl i⟫_𝕜 := by
+  have hpoint := LinearMap.congr_fun hEq (hB.eigenvectorBasis rfl j)
+  change A (X (hB.eigenvectorBasis rfl j)) -
+      X (B (hB.eigenvectorBasis rfl j)) =
+        C (hB.eigenvectorBasis rfl j) at hpoint
+  have hinner :
+      ⟪X (hB.eigenvectorBasis rfl j),
+          A (hA.eigenvectorBasis rfl i)⟫_𝕜 -
+        ⟪X (B (hB.eigenvectorBasis rfl j)),
+          hA.eigenvectorBasis rfl i⟫_𝕜 =
+        ⟪C (hB.eigenvectorBasis rfl j),
+          hA.eigenvectorBasis rfl i⟫_𝕜 := by
+    calc
+      _ = ⟪A (X (hB.eigenvectorBasis rfl j)),
+          hA.eigenvectorBasis rfl i⟫_𝕜 -
+          ⟪X (B (hB.eigenvectorBasis rfl j)),
+            hA.eigenvectorBasis rfl i⟫_𝕜 := by
+        rw [← hA (X (hB.eigenvectorBasis rfl j))
+          (hA.eigenvectorBasis rfl i)]
+      _ = ⟪A (X (hB.eigenvectorBasis rfl j)) -
+          X (B (hB.eigenvectorBasis rfl j)),
+            hA.eigenvectorBasis rfl i⟫_𝕜 := by
+        rw [inner_sub_left]
+      _ = _ := congrArg
+        (fun z : F => ⟪z, hA.eigenvectorBasis rfl i⟫_𝕜) hpoint
+  simpa only [hA.apply_eigenvectorBasis rfl i,
+    hB.apply_eigenvectorBasis rfl j, map_smul, inner_smul_left,
+    inner_smul_right, RCLike.conj_ofReal, sub_mul] using hinner
+
+/-- Nonnegative real scaling of a rectangular Ky Fan prefix sum. -/
+private theorem rectangularKyFanSum_real_smul
+    (k : ℕ) (A : E →ₗ[𝕜] F) {r : ℝ} (hr : 0 ≤ r) :
+    RectangularUnitarilyInvariantNorm.rectangularKyFanSum k
+        (((r : 𝕜)) • A) =
+      r * RectangularUnitarilyInvariantNorm.rectangularKyFanSum k A := by
+  unfold RectangularUnitarilyInvariantNorm.rectangularKyFanSum
+  rw [Finset.mul_sum]
+  exact Finset.sum_congr rfl fun i _ => singularValues_real_smul A hr i
+
+/-- **The single analytic root of the finite `π/2` front.**  Under arbitrary
+positive separation of two self-adjoint spectra, every Ky Fan prefix of a
+Sylvester solution is bounded by the corresponding prefix of the defect with
+the universal Bhatia--Davis--McIntosh constant `π/2`.
+
+The intended proof is coordinate finite-dimensional:
+
+1. use `sylvester_eigenbasis_coefficient_equation` to identify `X` with the
+   Schur multiplier whose symbol is `sylvesterReciprocalKernel hA hB`;
+2. prove the reciprocal separated-set multiplier estimate simultaneously for
+   every Ky Fan prefix, preferably by the finite Fourier/measure construction;
+3. transport the coordinate estimate back through the two eigenbases.
+
+All other theorems in this section are proved from this declaration.  A future
+proof should therefore replace this one `sorry` without changing the public
+Sylvester or `sin Θ` APIs. -/
+theorem kyFan_sylvester_le_of_spectralDistance
+    {A : F →ₗ[𝕜] F} {B : E →ₗ[𝕜] E} {X C : E →ₗ[𝕜] F}
+    (hA : A.IsSymmetric) (hB : B.IsSymmetric)
+    {δ : ℝ} (hδ : 0 < δ) (hgap : SpectraSeparated A ⊤ B ⊤ δ)
+    (hEq : A ∘ₗ X - X ∘ₗ B = C) (k : ℕ) :
+    δ * RectangularUnitarilyInvariantNorm.rectangularKyFanSum k X ≤
+      (Real.pi / 2) *
+        RectangularUnitarilyInvariantNorm.rectangularKyFanSum k C := by
+  sorry
+
+/-- General disjoint-spectrum extension with the Bhatia--Davis--McIntosh
+constant `π/2`, lifted from the Ky Fan root by rectangular Fan dominance. -/
 theorem uiNorm_sylvester_le_of_spectralDistance
     (N : RectangularUnitarilyInvariantNorm 𝕜 E F)
     {A : F →ₗ[𝕜] F} {B : E →ₗ[𝕜] E} {X C : E →ₗ[𝕜] F}
@@ -835,7 +953,25 @@ theorem uiNorm_sylvester_le_of_spectralDistance
     (hgap : SpectraSeparated A ⊤ B ⊤ δ)
     (hEq : A ∘ₗ X - X ∘ₗ B = C) :
     δ * N X ≤ (Real.pi / 2) * N C := by
-  sorry
+  let p : ℝ := Real.pi / 2
+  have hδ0 : 0 ≤ δ := le_of_lt hδ
+  have hp0 : 0 ≤ p := by
+    dsimp [p]
+    positivity
+  have hscaled : N (((δ : 𝕜)) • X) ≤ N (((p : 𝕜)) • C) := by
+    apply N.apply_le_of_kyFanSum_le
+    intro k
+    rw [rectangularKyFanSum_real_smul k X hδ0,
+      rectangularKyFanSum_real_smul k C hp0]
+    simpa [p] using
+      kyFan_sylvester_le_of_spectralDistance hA hB hδ hgap hEq k
+  calc
+    δ * N X = N (((δ : 𝕜)) • X) := by
+      rw [N.smul_eq, RCLike.norm_ofReal, abs_of_pos hδ]
+    _ ≤ N (((p : 𝕜)) • C) := hscaled
+    _ = p * N C := by
+      rw [N.smul_eq, RCLike.norm_ofReal, abs_of_nonneg hp0]
+    _ = (Real.pi / 2) * N C := by rfl
 
 end DavisKahanTheory
 end ForMathlib

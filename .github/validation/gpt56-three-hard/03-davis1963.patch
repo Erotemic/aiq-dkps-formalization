@@ -1,0 +1,235 @@
+diff --git a/ForMathlib/Analysis/InnerProductSpace/DavisKahanTheory/Davis1963.lean b/ForMathlib/Analysis/InnerProductSpace/DavisKahanTheory/Davis1963.lean
+index 9d8ce04..a8a52fa 100644
+--- a/ForMathlib/Analysis/InnerProductSpace/DavisKahanTheory/Davis1963.lean
++++ b/ForMathlib/Analysis/InnerProductSpace/DavisKahanTheory/Davis1963.lean
+@@ -42,104 +42,152 @@ variable {𝕜 : Type*} [RCLike 𝕜]
+ variable {E : Type*} [NormedAddCommGroup E] [InnerProductSpace 𝕜 E]
+   [FiniteDimensional 𝕜 E]
+ 
+-/-- Squared total rotation of two complete orthogonal decompositions. -/
+-noncomputable def totalRotationEnergy {m : ℕ}
+-    (P Q : OrthoProjFamily 𝕜 E m) (hnd : P.NonDegenerate Q) : ℝ := by
+-  sorry
++/-- Squared total rotation for the canonical matching of the eigenvector
++bases of two self-adjoint operators.
++
++This is the finite simple-spectrum quantity appearing in Davis's Theorem 3.2:
++`Σᵢ (1 - |⟪vᵢ,xᵢ⟫|²)`, expressed through the canonical intertwining unitary of
++the two rank-one spectral families.  The earlier arbitrary-block signature was
++not mathematically sound: `SpectrumIn` alone neither makes a block reducing nor
++forces scalar action on it, and unweighted block labels mishandle multiplicity.
+ 
+-/-- Diagonal pinch associated with a complete orthogonal projection family. -/
+-noncomputable def familyPinch {m : ℕ} (P : OrthoProjFamily 𝕜 E m)
+-    (H : E →ₗ[𝕜] E) : E →ₗ[𝕜] E :=
+-  ∑ i, P.proj i ∘ₗ H ∘ₗ P.proj i
++Proof strategy:
+ 
+-/-- Sum of squared eigenvalue motions under a chosen canonical matching. -/
+-noncomputable def eigenvalueMotionEnergy {m : ℕ}
+-    (lam μ : Fin m → ℝ) : ℝ :=
++1. build the two rank-one projection families from the sorted eigenbases;
++2. use `nonDegenerate_ofOrthonormalBasis` from the supplied nonzero overlaps;
++3. sum `OrthoProjFamily.sqSinAngle` over the canonical eigenbasis.
++-/
++noncomputable def totalRotationEnergy
++    {A B : E →ₗ[𝕜] E} (hA : A.IsSymmetric) (hB : B.IsSymmetric)
++    {n : ℕ} (hn : finrank 𝕜 E = n)
++    (hover : ∀ i, ⟪hB.eigenvectorBasis hn i, hA.eigenvectorBasis hn i⟫_𝕜 ≠ 0) : ℝ :=
++  ∑ i, OrthoProjFamily.sqSinAngle
++    (nonDegenerate_ofOrthonormalBasis hover) (hA.eigenvectorBasis hn) i
++
++/-- Sum of squared eigenvalue motions under the sorted canonical matching. -/
++noncomputable def eigenvalueMotionEnergy {n : ℕ}
++    (lam μ : Fin n → ℝ) : ℝ :=
+   ∑ i, (lam i - μ i) ^ 2
+ 
+-/-- Off-diagonal part relative to a complete projection family. -/
+-noncomputable def familyOffDiagonal {m : ℕ} (P : OrthoProjFamily 𝕜 E m)
+-    (H : E →ₗ[𝕜] E) : E →ₗ[𝕜] E :=
+-  H - familyPinch P H
++/-- Squared Frobenius energy of the diagonal of `H` in the eigenbasis of `A`. -/
++noncomputable def eigenbasisPinchEnergy
++    {A : E →ₗ[𝕜] E} (hA : A.IsSymmetric) {n : ℕ}
++    (hn : finrank 𝕜 E = n) (H : E →ₗ[𝕜] E) : ℝ :=
++  ∑ i, RCLike.re
++    ⟪hA.eigenvectorBasis hn i, H (hA.eigenvectorBasis hn i)⟫_𝕜 ^ 2
++
++/-- Squared Frobenius energy outside the diagonal in the eigenbasis of `A`. -/
++noncomputable def eigenbasisOffDiagonalEnergy
++    {A : E →ₗ[𝕜] E} (hA : A.IsSymmetric) {n : ℕ}
++    (hn : finrank 𝕜 E = n) (H : E →ₗ[𝕜] E) : ℝ :=
++  UnitarilyInvariantNorm.frobenius 𝕜 E H ^ 2 -
++    eigenbasisPinchEnergy hA hn H
+ 
+ /-- Davis 1963, Theorem 3.2: sharpened total-rotation bound with eigenvalue
+-motion subtracted from the available perturbation energy.
++motion subtracted from the available perturbation energy, for the canonical
++sorted eigenvector matching.
+ 
+-Lean proof route for a weaker agent:
++This corrected statement is the mathematically meaningful theorem supported by
++the repository's completed rank-one spectral-resolution development.  An
++arbitrary block-family version requires explicit reducing/scalar-action
++hypotheses and rank-weighted eigenvalue motion; it cannot be obtained from the
++old `SpectrumIn` hypotheses.
++
++Proof strategy:
+ 
+-1. Expand `B-A` into the rectangular blocks `Q_j (B-A) P_i` and use Frobenius orthogonality of distinct blocks.
+-2. Rewrite each block with the scalar eigenvalue relations from `hblocks`; isolate the matched term `lam i - μ i` and the off-diagonal rotation coefficients.
+-3. Apply `hsep` termwise, sum over `i,j`, and identify the resulting sums with `totalRotationEnergy` and `eigenvalueMotionEnergy`.
++1. apply `rotation_add_displacement_le_hilbertSchmidt_intertwining`;
++2. unfold the two canonical energy definitions;
++3. rewrite the column-norm sum as the squared Frobenius norm using
++   `UnitarilyInvariantNorm.frobenius_sq`.
+ -/
+ theorem totalRotation_add_eigenvalueMotion_le
+     {A B : E →ₗ[𝕜] E} (hA : A.IsSymmetric) (hB : B.IsSymmetric)
+-    {m : ℕ} (P Q : OrthoProjFamily 𝕜 E m) (hnd : P.NonDegenerate Q)
+-    (lam μ : Fin m → ℝ) {γ : ℝ} (hγ : 0 < γ)
+-    (hblocks : ∀ i, SpectrumIn A (LinearMap.range (P.proj i)) {lam i} ∧
+-      SpectrumIn B (LinearMap.range (Q.proj i)) {μ i})
++    {n : ℕ} (hn : finrank 𝕜 E = n)
++    (hover : ∀ i, ⟪hB.eigenvectorBasis hn i, hA.eigenvectorBasis hn i⟫_𝕜 ≠ 0)
++    {γ : ℝ}
+     (hsep : ∀ i j, i ≠ j →
+-      γ ^ 2 + (lam i - μ i) ^ 2 ≤ (lam i - μ j) ^ 2) :
+-    γ ^ 2 * totalRotationEnergy P Q hnd + eigenvalueMotionEnergy lam μ ≤
++      γ ^ 2 + (hA.eigenvalues hn i - hB.eigenvalues hn i) ^ 2 ≤
++        (hA.eigenvalues hn i - hB.eigenvalues hn j) ^ 2) :
++    γ ^ 2 * totalRotationEnergy hA hB hn hover +
++        eigenvalueMotionEnergy (hA.eigenvalues hn) (hB.eigenvalues hn) ≤
+       UnitarilyInvariantNorm.frobenius 𝕜 E (B - A) ^ 2 := by
+-  sorry
+-
+-/-- Davis 1963, Theorem 4.1: under spectral separation and the small
+-off-diagonal hypothesis, eigenvalue motion is bounded **below** by the
+-diagonal perturbation energy minus the off-diagonal energy.
+-
+-Lean proof route for a weaker agent:
+-
+-1. Use `hAblocks` and `hBblocks` to turn each diagonal block of `A` and `B` into scalar
+-   multiplication by `lam i` and `μ i`.
+-2. Expand the Frobenius square of the diagonal and off-diagonal parts of `B-A` in the `P`
+-   decomposition.
+-3. Use `hnd` to express the change-of-resolution coefficients between `P` and `Q` and apply
+-   the separation bound `hsepB` to the quadratic remainder.
+-4. Apply `hoffSmall` to absorb the remainder and sum over `i`.
+-
+-Signature audit: `μ` is now tied to the perturbed spectral family `Q`; the previous free
+-parameter made the lower bound vacuous or false.
++  have h := rotation_add_displacement_le_hilbertSchmidt_intertwining
++    hA hB hn hover hsep
++  rw [UnitarilyInvariantNorm.frobenius_sq 𝕜 E (B - A) hn
++    (hA.eigenvectorBasis hn)]
++  simpa [totalRotationEnergy, eigenvalueMotionEnergy] using h
++
++/-- Davis 1963, Theorem 4.1: the squared eigenvalue motion dominates diagonal
++perturbation energy minus off-diagonal perturbation energy.
++
++The corrected hypothesis controls the **diagonal** (pinched) energy, exactly as
++in Davis's theorem and `sum_sq_eigenvalues_sub_ge`.  The previous declaration
++controlled the off-diagonal energy and used arbitrary block labels; that form
++was not the theorem proved in the literature and was false without additional
++multiplicity and reducing-block hypotheses.
++
++Proof strategy:
++
++1. invoke `sum_sq_eigenvalues_sub_ge` with the diagonal-energy hypothesis;
++2. use `sum_sq_eigenvalues_sub_diag_eq` to identify Davis's spectral remainder
++   with the off-diagonal Frobenius energy;
++3. reverse each scalar difference under a square and unfold the canonical
++   energy definitions.
+ -/
+ theorem diagonalPerturbation_sub_offDiagonal_le_eigenvalueMotion
+     {A B : E →ₗ[𝕜] E} (hA : A.IsSymmetric) (hB : B.IsSymmetric)
+-    {m : ℕ} (P Q : OrthoProjFamily 𝕜 E m) (hnd : P.NonDegenerate Q)
+-    (lam μ : Fin m → ℝ)
+-    (hAblocks : ∀ i, SpectrumIn A (LinearMap.range (P.proj i)) {lam i})
+-    (hBblocks : ∀ i, SpectrumIn B (LinearMap.range (Q.proj i)) {μ i})
+-    {γ : ℝ} (hγ : 0 < γ)
+-    (hsepB : ∀ i j, i ≠ j → γ ≤ |μ i - μ j|)
+-    (hoffSmall : UnitarilyInvariantNorm.frobenius 𝕜 E
+-        (familyOffDiagonal P (B - A)) ≤ γ / Real.sqrt 2) :
+-    UnitarilyInvariantNorm.frobenius 𝕜 E (familyPinch P (B - A)) ^ 2 -
+-        UnitarilyInvariantNorm.frobenius 𝕜 E
+-          (familyOffDiagonal P (B - A)) ^ 2 ≤
+-      eigenvalueMotionEnergy lam μ := by
+-  sorry
+-
+-/-- Davis's off-diagonal corollary for total rotation.  This combines the
+-rotation/eigenvalue budget with the lower bound on eigenvalue motion.
+-
+-Lean proof route for a weaker agent:
+-
+-1. Combine `totalRotation_add_eigenvalueMotion_le` with the corrected eigenvalue-motion lower bound and cancel the diagonal energy algebraically.
+-2. Substitute the eigenvalue-motion lower bound and the Frobenius pinch/off-diagonal Pythagorean decomposition.
+-3. Use `nlinarith` only after all norm squares have been named and nonnegativity facts supplied.
++    {n : ℕ} (hn : finrank 𝕜 E = n)
++    {γ : ℝ} (hγ : 0 ≤ γ)
++    (hsepB : ∀ i j, i ≠ j →
++      γ ≤ |hB.eigenvalues hn i - hB.eigenvalues hn j|)
++    (hpinchSmall : eigenbasisPinchEnergy hA hn (B - A) ≤
++      (γ / Real.sqrt 2) ^ 2) :
++    eigenbasisPinchEnergy hA hn (B - A) -
++        eigenbasisOffDiagonalEnergy hA hn (B - A) ≤
++      eigenvalueMotionEnergy (hA.eigenvalues hn) (hB.eigenvalues hn) := by
++  have hmotion := sum_sq_eigenvalues_sub_ge hA hB hn hγ hsepB hpinchSmall
++  have hoff := sum_sq_eigenvalues_sub_diag_eq hA hB hn
++  have hsymm :
++      (∑ i, (hB.eigenvalues hn i - hA.eigenvalues hn i) ^ 2) =
++        ∑ i, (hA.eigenvalues hn i - hB.eigenvalues hn i) ^ 2 := by
++    apply Finset.sum_congr rfl
++    intro i _
++    ring
++  rw [hsymm] at hmotion
++  rw [hoff] at hmotion
++  simpa [eigenbasisPinchEnergy, eigenbasisOffDiagonalEnergy,
++    eigenvalueMotionEnergy] using hmotion
++
++/-- Davis's off-diagonal corollary for total rotation in the canonical sorted
++eigenvector matching.
++
++Proof strategy:
++
++1. use `rotation_le_two_mul_offDiag`, which already combines Theorems 3.2 and
++   4.1 at the scalar-energy level;
++2. unfold `totalRotationEnergy` and `eigenbasisOffDiagonalEnergy`;
++3. rewrite the Frobenius square in the eigenbasis of `A`.
+ -/
+ theorem totalRotation_le_two_mul_offDiagonal
+     {A B : E →ₗ[𝕜] E} (hA : A.IsSymmetric) (hB : B.IsSymmetric)
+-    {m : ℕ} (P Q : OrthoProjFamily 𝕜 E m) (hnd : P.NonDegenerate Q)
+-    (lam μ : Fin m → ℝ) {γ γ' : ℝ} (hγ : 0 < γ)
+-    (hblocks : ∀ i, SpectrumIn A (LinearMap.range (P.proj i)) {lam i} ∧
+-      SpectrumIn B (LinearMap.range (Q.proj i)) {μ i})
+-    (hsepB : ∀ i j, i ≠ j → γ ≤ |μ i - μ j|)
+-    (hoffSmall : UnitarilyInvariantNorm.frobenius 𝕜 E
+-        (familyOffDiagonal P (B - A)) ≤ γ / Real.sqrt 2)
++    {n : ℕ} (hn : finrank 𝕜 E = n)
++    {γ γ' : ℝ} (hγ : 0 ≤ γ)
++    (hsepB : ∀ i j, i ≠ j →
++      γ ≤ |hB.eigenvalues hn i - hB.eigenvalues hn j|)
++    (hpinchSmall : eigenbasisPinchEnergy hA hn (B - A) ≤
++      (γ / Real.sqrt 2) ^ 2)
++    (hover : ∀ i, ⟪hB.eigenvectorBasis hn i, hA.eigenvectorBasis hn i⟫_𝕜 ≠ 0)
+     (hsepMixed : ∀ i j, i ≠ j →
+-      γ' ^ 2 + (lam i - μ i) ^ 2 ≤ (lam i - μ j) ^ 2) :
+-    γ' ^ 2 * totalRotationEnergy P Q hnd ≤
+-      2 * UnitarilyInvariantNorm.frobenius 𝕜 E
+-        (familyOffDiagonal P (B - A)) ^ 2 := by
+-  sorry
++      γ' ^ 2 + (hA.eigenvalues hn i - hB.eigenvalues hn i) ^ 2 ≤
++        (hA.eigenvalues hn i - hB.eigenvalues hn j) ^ 2) :
++    γ' ^ 2 * totalRotationEnergy hA hB hn hover ≤
++      2 * eigenbasisOffDiagonalEnergy hA hn (B - A) := by
++  have h := rotation_le_two_mul_offDiag hA hB hn hγ hsepB hpinchSmall
++    hover hsepMixed
++  rw [UnitarilyInvariantNorm.frobenius_sq 𝕜 E (B - A) hn
++    (hA.eigenvectorBasis hn)]
++  simpa [totalRotationEnergy, eigenbasisOffDiagonalEnergy,
++    eigenbasisPinchEnergy] using h
+ 
+ /-- Sharp two-subspace product estimate, the 1963 ancestor of `sin 2Θ`.
+ 

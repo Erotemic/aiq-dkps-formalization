@@ -226,6 +226,52 @@ Lean proof route for a weaker agent:
 theorem add_le (A B : E →ₗ[𝕜] F) : N (A + B) ≤ N A + N B :=
   N.add_le' A B
 
+/-- A rectangular UI seminorm of a finite sum is bounded by the sum of the
+individual seminorms.
+
+Proof strategy:
+
+1. induct on the finite index set;
+2. use `apply_zero` in the empty case;
+3. use `add_le` for the inserted term and the induction hypothesis for the
+   remaining sum.
+
+This is the finite replacement for the integral triangle inequality in the
+unitary-orbit proof of the `π/2` Sylvester theorem. -/
+theorem sum_le {ι : Type*} (s : Finset ι) (A : ι → E →ₗ[𝕜] F) :
+    N (∑ i ∈ s, A i) ≤ ∑ i ∈ s, N (A i) := by
+  classical
+  induction s using Finset.induction_on with
+  | empty => simp
+  | @insert a s ha ih =>
+      rw [Finset.sum_insert ha, Finset.sum_insert ha]
+      exact (N.add_le _ _).trans (add_le_add_right ih _)
+
+/-- A finite two-sided unitary-orbit certificate for bounding `X` by `C`.
+
+A certificate of mass `mass` writes `X` as a finite linear combination of maps
+`Uᵢ ∘ C ∘ Vᵢ`, where each `Uᵢ` and `Vᵢ` is unitary and the sum of coefficient
+norms is at most `mass`.
+
+Proof strategy for uses of this definition:
+
+1. apply finite-sum subadditivity to the represented map;
+2. use absolute homogeneity on each coefficient;
+3. erase the two unitary factors by invariance;
+4. bound the resulting coefficient sum by `mass`.
+
+For the arbitrary-spectrum `π/2` theorem, the difficult analytic task is exactly
+to construct such a certificate for `((δ : 𝕜) • X)` from the Sylvester defect
+`C` with mass `π / 2`. -/
+def HasFiniteUnitaryOrbitCertificate
+    (mass : ℝ) (X C : E →ₗ[𝕜] F) : Prop :=
+  ∃ n : ℕ, ∃ a : Fin n → 𝕜,
+    ∃ U : Fin n → F ≃ₗᵢ[𝕜] F,
+      ∃ V : Fin n → E ≃ₗᵢ[𝕜] E,
+        X = ∑ i, a i •
+          ((U i).toLinearMap ∘ₗ C ∘ₗ (V i).toLinearMap) ∧
+        ∑ i, ‖a i‖ ≤ mass
+
 /--
 Lean proof route for a weaker agent:
 
@@ -252,6 +298,44 @@ theorem invariant (U : F ≃ₗᵢ[𝕜] F) (V : E ≃ₗᵢ[𝕜] E)
     (A : E →ₗ[𝕜] F) :
     N (U.toLinearMap ∘ₗ A ∘ₗ V.toLinearMap) = N A :=
   N.invariant' U V A
+
+/-- Every rectangular UI seminorm is bounded by the mass of a finite two-sided
+unitary-orbit certificate.
+
+Proof strategy:
+
+1. destruct the certificate into coefficients and left/right unitary factors;
+2. rewrite `X` by the certified finite sum;
+3. invoke `sum_le`, then `smul_eq` and `invariant` term by term;
+4. factor out `N C` and use its nonnegativity to apply the mass bound.
+
+This theorem deliberately contains all norm-theoretic content needed by the
+`π/2` front. The remaining hard theorem may therefore focus solely on
+constructing the orbit certificate. -/
+theorem apply_le_of_finiteUnitaryOrbitCertificate
+    {mass : ℝ} {X C : E →ₗ[𝕜] F}
+    (hcert : HasFiniteUnitaryOrbitCertificate mass X C) :
+    N X ≤ mass * N C := by
+  classical
+  rcases hcert with ⟨n, a, U, V, hX, hmass⟩
+  rw [hX]
+  calc
+    N (∑ i, a i •
+        ((U i).toLinearMap ∘ₗ C ∘ₗ (V i).toLinearMap)) ≤
+        ∑ i, N (a i •
+          ((U i).toLinearMap ∘ₗ C ∘ₗ (V i).toLinearMap)) :=
+      N.sum_le (Finset.univ : Finset (Fin n))
+        (fun i => a i •
+          ((U i).toLinearMap ∘ₗ C ∘ₗ (V i).toLinearMap))
+    _ = ∑ i, ‖a i‖ * N C := by
+      apply Finset.sum_congr rfl
+      intro i _
+      rw [N.smul_eq, N.invariant (U i) (V i) C]
+    _ = (∑ i, ‖a i‖) * N C := by
+      rw [Finset.sum_mul]
+    _ ≤ mass * N C :=
+      mul_le_mul_of_nonneg_right hmass (N.nonneg C)
+
 
 /-- Equal singular-value data determines a rectangular map up to left and right
 unitary factors.  The right unitary aligns the two Gram eigenbases; Gram
@@ -945,6 +1029,23 @@ Lean proof route for a weaker agent:
 theorem kyFan_apply (k : ℕ) (A : E →ₗ[𝕜] F) :
     kyFan k A = rectangularKyFanSum k A :=
   rfl
+
+/-- A finite two-sided unitary-orbit certificate bounds every rectangular
+Ky Fan prefix by the same certificate mass.
+
+Proof strategy:
+
+1. instantiate `apply_le_of_finiteUnitaryOrbitCertificate` with `kyFan k`;
+2. use the definitional evaluation of `kyFan` as `rectangularKyFanSum`;
+3. leave the certificate construction entirely outside the Ky Fan layer.
+
+This is the exact bridge used by the arbitrary-spectrum Sylvester theorem. -/
+theorem rectangularKyFanSum_le_of_finiteUnitaryOrbitCertificate
+    {mass : ℝ} {X C : E →ₗ[𝕜] F} (k : ℕ)
+    (hcert : HasFiniteUnitaryOrbitCertificate mass X C) :
+    rectangularKyFanSum k X ≤ mass * rectangularKyFanSum k C := by
+  change kyFan k X ≤ mass * kyFan k C
+  exact (kyFan k).apply_le_of_finiteUnitaryOrbitCertificate hcert
 
 /-- The nuclear norm is the full domain-length singular-value sum; singular
 values past the rank are zero automatically. -/

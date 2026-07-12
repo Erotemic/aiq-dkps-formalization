@@ -22,9 +22,9 @@ Literature map:
 
 The interval/exterior theorem has sharp constant one.  The final section
 scaffolds the separate `π/2`-constant extension for arbitrary disjoint spectral
-sets, isolates its one remaining Ky Fan multiplier theorem, and proves the
-Fan-dominance lift to every rectangular UI norm.  It must not be used silently
-in the classic constant-one API.
+sets, isolates its one remaining finite unitary-orbit certificate theorem,
+and proves the Ky Fan and Fan-dominance lifts from that certificate.  It must
+not be used silently in the classic constant-one API.
 -/
 
 
@@ -34,9 +34,9 @@ The Sylvester map and its finite inverse are explicit.  The sharp
 interval/exterior estimate is proved below for every rectangular unitarily
 invariant norm by a dimension-free polar-absorption argument.  The remaining
 analytic extension in this file is the independent `pi/2` theorem for arbitrary
-disjoint spectral sets.  Its complete dependency scaffold now isolates the
-Ky Fan multiplier estimate as the sole analytic root; Fan dominance and the
-residual/perturbation transports are downstream consequences.
+disjoint spectral sets.  Its complete dependency scaffold now isolates an
+exact finite unitary-orbit certificate as the sole analytic root; Ky Fan,
+Fan-dominance, and residual/perturbation transports are downstream consequences.
 -/
 
 
@@ -101,15 +101,18 @@ constant-one absorption theorem:
    positive spectral separation;
 3. `sylvester_eigenbasis_coefficient_equation` identifies the coordinate
    Sylvester equation `(αᵢ-βⱼ)Xᵢⱼ=Cᵢⱼ`;
-4. `kyFan_sylvester_le_of_spectralDistance` is the single remaining analytic
-   root: prove the Bhatia--Davis--McIntosh multiplier estimate for every prefix;
-5. `uiNorm_sylvester_le_of_spectralDistance` is then a proved rectangular Fan
-   dominance lift;
+4. `sylvester_hasFiniteUnitaryOrbitCertificate_of_spectralDistance` is the
+   single remaining analytic root: construct the sharp-mass finite orbit
+   certificate from the Bhatia--Davis--McIntosh Fourier representation;
+5. `kyFan_sylvester_le_of_spectralDistance` and
+   `uiNorm_sylvester_le_of_spectralDistance` are then proved finite-sum and Fan
+   dominance consequences;
 6. the residual and perturbation `sin Θ` wrappers are proved downstream.
 
-The remaining proof should therefore concentrate only on the finite separated
-reciprocal multiplier.  Do not re-open the transport or Fan-dominance layers,
-and do not derive this theorem from the constant-one interval/exterior route.
+The remaining proof should therefore concentrate only on constructing the
+finite separated reciprocal orbit certificate.  Do not re-open the Ky Fan,
+transport, or Fan-dominance layers, and do not derive this theorem from the
+constant-one interval/exterior route.
 
 ### F. Coercion discipline
 
@@ -918,22 +921,56 @@ private theorem rectangularKyFanSum_real_smul
   rw [Finset.mul_sum]
   exact Finset.sum_congr rfl fun i _ => singularValues_real_smul A hr i
 
-/-- **The single analytic root of the finite `π/2` front.**  Under arbitrary
-positive separation of two self-adjoint spectra, every Ky Fan prefix of a
-Sylvester solution is bounded by the corresponding prefix of the defect with
-the universal Bhatia--Davis--McIntosh constant `π/2`.
+/-- **Constructive analytic root of the finite `π/2` front.**  A separated
+self-adjoint Sylvester equation admits a finite two-sided unitary-orbit
+certificate of mass at most `π / 2` for the scaled solution `δ • X` relative
+to the defect `C`.
 
-The intended proof is coordinate finite-dimensional:
+Proof strategy:
 
-1. use `sylvester_eigenbasis_coefficient_equation` to identify `X` with the
-   Schur multiplier whose symbol is `sylvesterReciprocalKernel hA hB`;
-2. prove the reciprocal separated-set multiplier estimate simultaneously for
-   every Ky Fan prefix, preferably by the finite Fourier/measure construction;
-3. transport the coordinate estimate back through the two eigenbases.
+1. diagonalize `A` and `B` and use
+   `sylvester_eigenbasis_coefficient_equation` to identify the scaled solution
+   with the separated reciprocal Schur multiplier
+   `δ / (αᵢ - βⱼ)` applied to `C`;
+2. prove the scalar Bhatia--Davis--McIntosh representation of that multiplier
+   as a signed Fourier average of the two-sided unitary orbit
+   `exp(i t A) ∘ C ∘ exp(-i t B)`, with total variation at most `π / 2`;
+3. absorb the phase of the signed measure into one unitary factor, normalize
+   the variation measure, and view the multiplier as a barycenter of the
+   phase-augmented unitary orbit;
+4. because the operator space is finite-dimensional, apply the finite
+   Carathéodory theorem to replace the barycenter by an exact finite convex
+   combination, yielding the certificate below;
+5. for `𝕜 = ℝ`, either carry out the Fourier construction after
+   complexification and descend through conjugation symmetry, or use the
+   equivalent real `2 × 2` rotation representation before applying
+   Carathéodory.
 
-All other theorems in this section are proved from this declaration.  A future
-proof should therefore replace this one `sorry` without changing the public
-Sylvester or `sin Θ` APIs. -/
+The statement intentionally exposes only the finite certificate, not the
+choice of Fourier kernel or measure convention.  Once this theorem is proved,
+all Ky Fan and arbitrary-UI-norm estimates are purely algebraic consequences.
+-/
+theorem sylvester_hasFiniteUnitaryOrbitCertificate_of_spectralDistance
+    {A : F →ₗ[𝕜] F} {B : E →ₗ[𝕜] E} {X C : E →ₗ[𝕜] F}
+    (hA : A.IsSymmetric) (hB : B.IsSymmetric)
+    {δ : ℝ} (hδ : 0 < δ) (hgap : SpectraSeparated A ⊤ B ⊤ δ)
+    (hEq : A ∘ₗ X - X ∘ₗ B = C) :
+    RectangularUnitarilyInvariantNorm.HasFiniteUnitaryOrbitCertificate
+      (Real.pi / 2) (((δ : 𝕜)) • X) C := by
+  sorry
+
+/-- Every Ky Fan prefix satisfies the arbitrary-disjoint-spectrum Sylvester
+bound once the finite unitary-orbit certificate has been constructed.
+
+Proof strategy:
+
+1. obtain the mass-`π/2` certificate for `δ • X` from
+   `sylvester_hasFiniteUnitaryOrbitCertificate_of_spectralDistance`;
+2. apply the generic Ky Fan certificate bound from `RectangularUINorm`;
+3. rewrite the Ky Fan sum of `δ • X` using positive real homogeneity.
+
+No Fourier, spectral-coordinate, or integration argument remains in this
+proof; all such work is isolated in the certificate theorem above. -/
 theorem kyFan_sylvester_le_of_spectralDistance
     {A : F →ₗ[𝕜] F} {B : E →ₗ[𝕜] E} {X C : E →ₗ[𝕜] F}
     (hA : A.IsSymmetric) (hB : B.IsSymmetric)
@@ -942,10 +979,30 @@ theorem kyFan_sylvester_le_of_spectralDistance
     δ * RectangularUnitarilyInvariantNorm.rectangularKyFanSum k X ≤
       (Real.pi / 2) *
         RectangularUnitarilyInvariantNorm.rectangularKyFanSum k C := by
-  sorry
+  have hcert :=
+    sylvester_hasFiniteUnitaryOrbitCertificate_of_spectralDistance
+      hA hB hδ hgap hEq
+  calc
+    δ * RectangularUnitarilyInvariantNorm.rectangularKyFanSum k X =
+        RectangularUnitarilyInvariantNorm.rectangularKyFanSum k
+          (((δ : 𝕜)) • X) :=
+      (rectangularKyFanSum_real_smul k X (le_of_lt hδ)).symm
+    _ ≤ (Real.pi / 2) *
+        RectangularUnitarilyInvariantNorm.rectangularKyFanSum k C :=
+      RectangularUnitarilyInvariantNorm.rectangularKyFanSum_le_of_finiteUnitaryOrbitCertificate
+        k hcert
 
 /-- General disjoint-spectrum extension with the Bhatia--Davis--McIntosh
-constant `π/2`, lifted from the Ky Fan root by rectangular Fan dominance. -/
+constant `π/2`, lifted from the finite orbit certificate through Ky Fan
+prefixes and rectangular Fan dominance.
+
+Proof strategy:
+
+1. compare the positively scaled maps `δ • X` and `(π / 2) • C`;
+2. use the already proved Ky Fan theorem for every prefix;
+3. apply rectangular Fan dominance;
+4. rewrite absolute homogeneity only after the prefix comparison is complete.
+-/
 theorem uiNorm_sylvester_le_of_spectralDistance
     (N : RectangularUnitarilyInvariantNorm 𝕜 E F)
     {A : F →ₗ[𝕜] F} {B : E →ₗ[𝕜] E} {X C : E →ₗ[𝕜] F}

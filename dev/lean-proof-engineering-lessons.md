@@ -532,29 +532,38 @@ When a theorem family has one genuinely hard analytic ingredient and several
 formal transport steps, do not leave a `sorry` in every public theorem. Isolate
 the hard statement at the weakest reusable level and prove the rest from it.
 
-For the arbitrary-disjoint-spectrum Davis--Kahan branch, the correct root is
-the simultaneous Ky Fan prefix estimate for the separated reciprocal
-Sylvester multiplier:
+For the arbitrary-disjoint-spectrum Davis--Kahan branch, first isolate the
+simultaneous Ky Fan prefix estimate rather than postulating an arbitrary
+unitarily invariant norm theorem.  Then push the root one step lower whenever
+a common constructive certificate exists.  The final root is now:
+
+```lean
+sylvester_hasFiniteUnitaryOrbitCertificate_of_spectralDistance
+```
+
+It constructs an exact finite unitary-orbit representation for `δ • X` with
+coefficient mass at most `π / 2`.  The Ky Fan theorem
 
 ```lean
 kyFan_sylvester_le_of_spectralDistance
 ```
 
-This is weaker and more reusable than postulating the theorem for an arbitrary
-unitarily invariant norm. Rectangular Fan dominance then proves
+is a proved finite-sum consequence, rectangular Fan dominance proves
 
 ```lean
 uiNorm_sylvester_le_of_spectralDistance
 ```
 
-and the residual and perturbation `sin Θ` theorems should be ordinary transport
+and the residual and perturbation `sin Θ` theorems remain ordinary transport
 proofs. This factoring has several benefits:
 
-1. the remaining mathematics is visible in one declaration;
+1. the remaining mathematics is visible in one constructive declaration;
 2. a future Fourier, contour, or Schur-multiplier implementation can replace
    that declaration without changing downstream APIs;
-3. the existing Fan-dominance theorem is exercised rather than duplicated;
-4. documentation can state precisely which part is scaffolded and which part
+3. Ky Fan subadditivity and the existing Fan-dominance theorem are exercised
+   rather than duplicated;
+4. the certificate simultaneously supports every rectangular UI seminorm;
+5. documentation can state precisely which part is scaffolded and which part
    is formally proved.
 
 Before opening the analytic proof, complete and name the deterministic
@@ -587,3 +596,106 @@ Finally, keep status documents honest. A downstream theorem whose proof uses an
 upstream declaration containing `sorry` is structurally wired but not a closed
 formalization. Name the exact analytic root in the literature comparison and in
 handoff documents until its `sorry` is removed.
+
+## 25. Reduce integral norm estimates to exact finite orbit certificates
+
+For finite-dimensional unitarily invariant norm arguments, an integral
+representation is often not the best public theorem boundary.  Instead, isolate
+an exact finite certificate:
+
+```lean
+X = ∑ i, a i • (U i ∘ C ∘ V i)
+∑ i, ‖a i‖ ≤ mass
+```
+
+with unitary `U i` and `V i`.  Subadditivity, absolute homogeneity, and unitary
+invariance then prove every UI-norm estimate by a short reusable theorem.  This
+has three advantages:
+
+1. the analytic proof no longer needs to know about Ky Fan norms or Fan
+   dominance;
+2. the norm layer no longer needs Bochner integration or measure theory;
+3. the same certificate proves all rectangular UI seminorm bounds at once.
+
+For the arbitrary-spectrum `π/2` Sylvester theorem, the intended analytic route
+is:
+
+1. represent `δ / s` on `|s| ≥ δ` by a Fourier measure of total variation at
+   most `π / 2`;
+2. integrate the two-sided unitary orbit of the defect;
+3. absorb the phase of the measure into one unitary factor;
+4. normalize the variation measure to obtain a barycenter;
+5. use finite-dimensional Carathéodory to replace the barycenter by an exact
+   finite convex combination.
+
+This moves the sole `sorry` to the constructive certificate theorem while the
+Ky Fan and arbitrary-UI-norm theorems become proved algebraic corollaries.
+
+## 26. Every new analytic seam needs an executable proof-strategy comment
+
+When adding a definition or theorem to a difficult formalization front, the
+comment must do more than paraphrase the statement.  Include:
+
+1. the mathematical construction or identity;
+2. the intended Lean decomposition into named helper theorems;
+3. the downstream theorem unlocked by the seam;
+4. exceptional cases such as zero mass, zero-dimensional spaces, or real versus
+   complex scalars.
+
+For open theorems, the comment should be detailed enough that a weaker agent can
+continue without reconstructing the literature argument.  For proved helper
+theorems, state why the chosen theorem boundary avoids fragile coercions,
+unnecessary integration APIs, or duplicated norm-specific reasoning.
+
+Treat these comments as part of the formalization interface.  Whenever the
+proof architecture changes, update the comments, the dedicated roadmap, and
+the formalization-versus-literature document in the same overlay.
+
+## 27. Treat parser failures as possible causes of later missing-declaration errors
+
+A malformed notation occurrence can prevent Lean from registering the entire
+following declaration.  Errors such as
+
+```text
+Invalid field `sum_le`: the environment does not contain ...sum_le
+```
+
+may therefore be cascading errors rather than independent API failures.  Fix
+the first parser error and rebuild before replacing downstream field notation.
+
+For finite-set sums in this codebase, use the supported binder spelling
+
+```lean
+∑ i ∈ s, f i
+```
+
+rather than the unsupported `∑ i in s, f i` form.  When introducing a helper
+that will immediately be used by dot notation, inspect the exact source around
+both the declaration and its first call so a parse failure is not mistaken for
+a missing theorem.
+
+## 28. Prefer typed `calc` chains for homogeneity bridges
+
+When a certificate theorem controls a scaled map such as `((δ : 𝕜) • X)`, do
+not rewrite a previously inferred inequality in place and hope coercion
+normalization produces the desired scalar form.  State the bridge explicitly:
+
+```lean
+calc
+  δ * K X = K (((δ : 𝕜)) • X) := (K_real_smul ...).symm
+  _ ≤ mass * K C := certificate_bound ...
+```
+
+This keeps the real scalar, its `𝕜` coercion, and the map being scaled visible
+in the expected types.  It also prevents semireducible unfolding from changing
+the theorem shape while rewriting a local hypothesis.
+
+Long namespace-qualified theorem names should remain syntactically contiguous.
+Do not place a line break immediately after the namespace dot:
+
+```lean
+Namespace.theorem_name args
+```
+
+rather than `Namespace.` followed by the identifier on the next line.  A parser
+error at that point can obscure the actual proof obligation that follows.

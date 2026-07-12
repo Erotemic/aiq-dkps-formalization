@@ -699,3 +699,131 @@ Namespace.theorem_name args
 
 rather than `Namespace.` followed by the identifier on the next line.  A parser
 error at that point can obscure the actual proof obligation that follows.
+
+## 29. Separate barycentric analysis from finite certificate extraction
+
+When an analytic argument produces an operator-valued average of a unitary
+orbit, do not force measure theory, compactness, and `Fin n` bookkeeping into
+one theorem.  Use three explicit layers:
+
+```lean
+Y ∈ convexHull ℝ (twoSidedUnitaryOrbit C)
+X = ((m : 𝕜)) • Y
+0 ≤ m ≤ mass
+```
+
+then
+
+```lean
+HasFiniteUnitaryOrbitCertificate mass X C
+```
+
+then the norm inequality.  The middle implication is finite algebra and should
+be proved once with `mem_convexHull_iff_exists_fintype`.
+
+A robust Lean implementation is:
+
+1. extract a finite type `ι`, nonnegative weights `w : ι → ℝ`, orbit points
+   `z : ι → E →ₗ[𝕜] F`, and the exact identity `Σ wᵢ • zᵢ = Y`;
+2. use `choose` only after changing orbit membership into the explicit nested
+   existential for left and right `LinearIsometryEquiv`s;
+3. convert the restricted real action to coerced `𝕜` coefficients by
+   unfolding the `Module.compHom` action; when the real action was introduced
+   exactly through `algebraMap ℝ 𝕜`, this equality is definitional;
+4. use coefficients `((m * w i : ℝ) : 𝕜)` so their norms simplify through
+   `RCLike.norm_ofReal` and nonnegativity;
+5. compute the coefficient mass as `m * Σ wᵢ = m` and apply `m ≤ mass`;
+6. reindex an arbitrary `Fintype` by `Fin (Fintype.card ι)` only in a dedicated
+   boundary lemma, using `Equiv.sum_comp` for both operator and mass sums.
+
+This boundary is stronger than requiring the analytic theorem to construct a
+certificate directly.  It allows the remaining Fourier proof to choose its
+natural total variation `m`, rather than artificially padding the mass to
+exactly `π / 2`, and it isolates the zero-mass case before normalization.
+
+Do not call closed-convex-hull membership sufficient when the downstream API
+requires an exact finite sum.  In finite dimensions, prove compactness or
+closedness of the orbit convex hull, move the integral limit into the actual
+convex hull, and only then invoke the finite extraction theorem.
+
+## 30. Install restriction-of-scalars modules before stating real convex-hull goals
+
+A type can be a module over `𝕜` without Lean automatically installing the
+restricted `ℝ`-module structure needed by `convexHull ℝ`.  This matters for
+spaces such as
+
+```lean
+E →ₗ[𝕜] F
+```
+
+when `𝕜` is only assumed to be `RCLike`.  If a theorem statement contains
+
+```lean
+Y ∈ convexHull ℝ s
+```
+
+Lean must synthesize `Module ℝ (E →ₗ[𝕜] F)` while elaborating the declaration
+header, before the proof begins.  A `letI` inside the proof is therefore too
+late.
+
+Install a file-local restriction-of-scalars instance before the declaration:
+
+```lean
+local instance : Module ℝ (E →ₗ[𝕜] F) :=
+  Module.compHom (E →ₗ[𝕜] F) (algebraMap ℝ 𝕜)
+```
+
+This composes the existing `𝕜` action with `algebraMap ℝ 𝕜`.  Do not add an
+`IsScalarTower ℝ 𝕜 (E →ₗ[𝕜] F)` instance merely to convert notation: that is a
+stronger compatibility obligation and may not synthesize for the chosen local
+action.  At the finite sum where convex weights become `𝕜` coefficients,
+prove the scalar identity by extensionality and discharge it pointwise in the
+codomain.
+
+Keep these instances local.  Exporting a second global module structure on a
+widely used map type risks instance diamonds and changes elaboration far beyond
+the convex-geometric proof.  Also audit every file that repeats the real
+convex-hull theorem statement: imported local instances do not propagate to
+importers.
+
+### Restriction of scalars does not automatically justify a scalar tower
+
+When a theorem needs `convexHull ℝ` on a type that is naturally a `𝕜`-module,
+it is enough to install a local real module with
+`Module.compHom _ (algebraMap ℝ 𝕜)`.  Do **not** also assert
+`IsScalarTower ℝ 𝕜 M` unless the mixed scalar actions have actually been
+proved compatible; the convex-hull API does not need that stronger instance.
+
+At the finite-sum boundary, exploit the way the local action was defined.  For
+an `RCLike` scalar, coercion from `ℝ` is definitionally the algebra map, so the
+bundled-map scalar equality closes after exposing that definition:
+
+```lean
+have real_smul_map_eq (r : ℝ) (T : E →ₗ[𝕜] F) :
+    r • T = ((r : 𝕜)) • T := by
+  change (algebraMap ℝ 𝕜 r) • T = ((r : 𝕜)) • T
+  rfl
+
+have h' : ∑ i, (((w i : ℝ) : 𝕜)) • z i = Y := by
+  calc
+    ∑ i, (((w i : ℝ) : 𝕜)) • z i = ∑ i, w i • z i := by
+      apply Finset.sum_congr rfl
+      intro i _
+      exact (real_smul_map_eq (w i) (z i)).symm
+    _ = Y := h
+```
+
+Do not descend pointwise to the codomain unless necessary: doing so asks Lean
+for `Module ℝ F` and usually also `IsScalarTower ℝ 𝕜 F`, neither of which is
+required for the map-level convex-hull argument.  Prefer the definitional
+identity supplied by the exact restriction-of-scalars construction.
+
+Finally, generic finite-certificate lemmas often do not use finite
+dimensionality even when they live in a section that assumes it.  Put
+
+```lean
+omit [FiniteDimensional 𝕜 E] [FiniteDimensional 𝕜 F] in
+```
+
+before the docstring and declaration so the public signature records the true
+level of generality and the unused-section-variable linter stays quiet.

@@ -7,6 +7,7 @@ import ForMathlib.Analysis.InnerProductSpace.DavisKahanTheory.Basic
 import ForMathlib.Analysis.InnerProductSpace.KyFan
 import ForMathlib.Analysis.InnerProductSpace.GramMatrix
 import Mathlib.Analysis.InnerProductSpace.ProdL2
+import Mathlib.Analysis.Convex.Caratheodory
 
 /-!
 # Rectangular unitarily invariant norms
@@ -247,6 +248,28 @@ theorem sum_le {ι : Type*} (s : Finset ι) (A : ι → E →ₗ[𝕜] F) :
       rw [Finset.sum_insert ha, Finset.sum_insert ha]
       exact (N.add_le _ _).trans (add_le_add_right ih _)
 
+/-- The two-sided unitary orbit of a rectangular map.
+
+A point of `twoSidedUnitaryOrbit C` has the form `U ∘ C ∘ V` with unitary
+left and right factors.  The phase of a complex Fourier coefficient is intended
+to be absorbed into `U`, so the convex hull of this set is the correct
+barycentric target for the arbitrary-spectrum `π/2` proof.
+
+Proof strategy for later uses:
+
+1. unfold membership to recover the two unitary factors;
+2. use `RectangularUnitarilyInvariantNorm.invariant` to erase them in norm
+   estimates;
+3. use `mem_convexHull_iff_exists_fintype` to turn convex-hull membership into
+   an exact finite convex combination.
+
+The definition is field-uniform: over `ℝ`, the only scalar phases absorbed into
+the orbit are the real unitary signs, while a complex proof must descend to a
+real orbit before invoking this API. -/
+def twoSidedUnitaryOrbit (C : E →ₗ[𝕜] F) : Set (E →ₗ[𝕜] F) :=
+  {Y | ∃ (U : F ≃ₗᵢ[𝕜] F) (V : E ≃ₗᵢ[𝕜] E),
+    Y = U.toLinearMap ∘ₗ C ∘ₗ V.toLinearMap}
+
 /-- A finite two-sided unitary-orbit certificate for bounding `X` by `C`.
 
 A certificate of mass `mass` writes `X` as a finite linear combination of maps
@@ -271,6 +294,138 @@ def HasFiniteUnitaryOrbitCertificate
         X = ∑ i, a i •
           ((U i).toLinearMap ∘ₗ C ∘ₗ (V i).toLinearMap) ∧
         ∑ i, ‖a i‖ ≤ mass
+
+omit [FiniteDimensional 𝕜 E] [FiniteDimensional 𝕜 F] in
+/-- Reindex a finite certificate candidate from an arbitrary finite type by `Fin n`.
+
+Proof strategy:
+
+1. use `(Fintype.equivFin ι).symm` to enumerate the original finite type;
+2. transport the exact operator sum with `Equiv.sum_comp`;
+3. transport the coefficient-mass sum by the same equivalence;
+4. package the reindexed data in `HasFiniteUnitaryOrbitCertificate`.
+
+This lemma keeps all `Fin n` bookkeeping out of the convex-geometric proof.
+It is purely finite algebra and has no analytic or field-specific content. -/
+theorem hasFiniteUnitaryOrbitCertificate_of_fintype
+    {ι : Type*} [Fintype ι] {mass : ℝ} {X C : E →ₗ[𝕜] F}
+    (a : ι → 𝕜) (U : ι → F ≃ₗᵢ[𝕜] F) (V : ι → E ≃ₗᵢ[𝕜] E)
+    (hX : X = ∑ i, a i •
+      ((U i).toLinearMap ∘ₗ C ∘ₗ (V i).toLinearMap))
+    (hmass : ∑ i, ‖a i‖ ≤ mass) :
+    HasFiniteUnitaryOrbitCertificate mass X C := by
+  classical
+  let e : Fin (Fintype.card ι) ≃ ι := (Fintype.equivFin ι).symm
+  refine ⟨Fintype.card ι, fun j => a (e j), fun j => U (e j),
+    fun j => V (e j), ?_, ?_⟩
+  · calc
+      X = ∑ i, a i •
+          ((U i).toLinearMap ∘ₗ C ∘ₗ (V i).toLinearMap) := hX
+      _ = ∑ j, a (e j) •
+          ((U (e j)).toLinearMap ∘ₗ C ∘ₗ (V (e j)).toLinearMap) :=
+        (e.sum_comp (fun i => a i •
+          ((U i).toLinearMap ∘ₗ C ∘ₗ (V i).toLinearMap))).symm
+  · calc
+      ∑ j, ‖a (e j)‖ = ∑ i, ‖a i‖ :=
+        e.sum_comp (fun i => ‖a i‖)
+      _ ≤ mass := hmass
+
+/-- Restrict scalars on the rectangular-map space from `𝕜` to `ℝ` for the
+real convex-hull argument.
+
+Proof strategy:
+
+1. reuse the existing `𝕜`-module structure on `E →ₗ[𝕜] F`;
+2. compose its scalar action with `algebraMap ℝ 𝕜` via `Module.compHom`;
+3. keep the instance local so the convex-geometric API does not install a
+   competing global scalar action on linear maps.
+
+At the one boundary where real convex weights become `𝕜` coefficients,
+unfold this exact `Module.compHom` action.  Since the `RCLike` coercion from
+`ℝ` is the same algebra map, the bundled-map scalar equality is definitional;
+no scalar-tower or codomain real-module instance is required. -/
+local instance realModuleLinearMap : Module ℝ (E →ₗ[𝕜] F) :=
+  Module.compHom (E →ₗ[𝕜] F) (algebraMap ℝ 𝕜)
+
+/-- Convert an exact convex-hull barycentric representation into a finite
+unitary-orbit certificate.
+
+Suppose `Y` lies in the real convex hull of the two-sided unitary orbit of `C`,
+and `X = m • Y` for a nonnegative real mass `m ≤ mass`.  Then `X` has a finite
+unitary-orbit certificate of mass `mass`.
+
+Proof strategy:
+
+1. apply `mem_convexHull_iff_exists_fintype` to write `Y` as an exact finite
+   convex combination `Σ wᵢ zᵢ`, with `wᵢ ≥ 0` and `Σ wᵢ = 1`;
+2. unfold `twoSidedUnitaryOrbit` and choose unitary factors for every `zᵢ`;
+3. use coefficients `((m * wᵢ : ℝ) : 𝕜)` and distribute the scalar `m` across
+   the finite sum;
+4. unfold the file-local `Module.compHom` action to identify a real scalar
+   on the bundled map with the corresponding coerced `𝕜` scalar definitionally;
+5. compute the coefficient mass exactly as `m * Σ wᵢ = m`, then use
+   `m ≤ mass`;
+6. invoke `hasFiniteUnitaryOrbitCertificate_of_fintype` for the final `Fin n`
+   reindexing.
+
+This theorem discharges the entire exact finite-dimensional convex-combination
+stage of the `π/2` proof.  The remaining analytic theorem only has to produce a
+bounded-mass barycentric orbit representation.  The argument is valid over
+both `ℝ` and `ℂ`; any complexification/descent issue must already have been
+resolved before establishing the real convex-hull hypothesis. -/
+theorem hasFiniteUnitaryOrbitCertificate_of_smul_mem_convexHull
+    {m mass : ℝ} (hm : 0 ≤ m) (hmass : m ≤ mass)
+    {X Y C : E →ₗ[𝕜] F}
+    (hY : Y ∈ convexHull ℝ (twoSidedUnitaryOrbit C))
+    (hX : X = ((m : 𝕜)) • Y) :
+    HasFiniteUnitaryOrbitCertificate mass X C := by
+  classical
+  rcases (mem_convexHull_iff_exists_fintype.mp hY) with
+    ⟨ι, instι, w, z, hw, hwsum, hz, hzsum⟩
+  letI : Fintype ι := instι
+  have hz' : ∀ i, ∃ (U : F ≃ₗᵢ[𝕜] F) (V : E ≃ₗᵢ[𝕜] E),
+      z i = U.toLinearMap ∘ₗ C ∘ₗ V.toLinearMap := by
+    intro i
+    exact hz i
+  choose U V hUV using hz'
+  refine hasFiniteUnitaryOrbitCertificate_of_fintype
+    (a := fun i => (((m * w i : ℝ) : 𝕜))) U V ?_ ?_
+  · have real_smul_linearMap_eq (r : ℝ) (T : E →ₗ[𝕜] F) :
+        r • T = ((r : 𝕜)) • T := by
+      -- The local real module was defined by `Module.compHom` along
+      -- `algebraMap ℝ 𝕜`, and the `RCLike` coercion is that algebra map.
+      -- Hence the two bundled-map scalar actions are definitionally equal;
+      -- no real module or scalar-tower instance on the codomain is needed.
+      change (algebraMap ℝ 𝕜 r) • T = ((r : 𝕜)) • T
+      rfl
+    have hzsum' : ∑ i, (((w i : ℝ) : 𝕜)) • z i = Y := by
+      calc
+        ∑ i, (((w i : ℝ) : 𝕜)) • z i = ∑ i, w i • z i := by
+          apply Finset.sum_congr rfl
+          intro i _
+          exact (real_smul_linearMap_eq (w i) (z i)).symm
+        _ = Y := hzsum
+    calc
+      X = ((m : 𝕜)) • Y := hX
+      _ = ((m : 𝕜)) • ∑ i, (((w i : ℝ) : 𝕜)) • z i := by rw [hzsum']
+      _ = ∑ i, (((m * w i : ℝ) : 𝕜)) • z i := by
+        rw [Finset.smul_sum]
+        apply Finset.sum_congr rfl
+        intro i _
+        rw [smul_smul, RCLike.ofReal_mul]
+      _ = ∑ i, (((m * w i : ℝ) : 𝕜)) •
+          ((U i).toLinearMap ∘ₗ C ∘ₗ (V i).toLinearMap) := by
+        apply Finset.sum_congr rfl
+        intro i _
+        rw [hUV i]
+  · calc
+      ∑ i, ‖(((m * w i : ℝ) : 𝕜))‖ = ∑ i, m * w i := by
+        apply Finset.sum_congr rfl
+        intro i _
+        rw [RCLike.norm_ofReal, abs_of_nonneg (mul_nonneg hm (hw i))]
+      _ = m * ∑ i, w i := by rw [Finset.mul_sum]
+      _ = m := by rw [hwsum, mul_one]
+      _ ≤ mass := hmass
 
 /--
 Lean proof route for a weaker agent:

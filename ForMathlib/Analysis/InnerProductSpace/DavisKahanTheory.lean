@@ -25,7 +25,7 @@ import ForMathlib.Analysis.InnerProductSpace.DavisKahanTheory.SingularSubspace
 Umbrella import for the literature-indexed roadmap under
 `ForMathlib.Analysis.InnerProductSpace.DavisKahanTheory`.
 
-The declarations intentionally contain `sorry`. Their proof architecture is
+The declarations are intentionally left unproved. Their proof architecture is
 recorded in
 `ForMathlib/prose/Davis-Kahan-1970-part-III-core-arguments.tex` and
 `ForMathlib/prose/Davis-1963-core-arguments.tex`.

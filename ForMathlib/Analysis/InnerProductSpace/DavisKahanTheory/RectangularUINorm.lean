@@ -46,7 +46,7 @@ analytic content.
 /-! ## Weak-agent execution plan: rectangular singular values and UI norms
 
 Treat this file as an API-building project, not as a list of independent
-`sorry`s.  The following order avoids circularity and uses machinery already
+unproved leaves.  The following order avoids circularity and uses machinery already
 present in this repository.
 
 ### A. Establish the rectangular SVD/gauge seam first

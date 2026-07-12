@@ -30,6 +30,7 @@ jobs:
             for i in 00 01 02 03 04 05; do
               curl -fsSL "$base/04.part$i" -o "patches/04.part$i"
             done
+            sed -i '1s/^iv\.filter/+              (Finset.univ.filter/' patches/04.part01
             cd work
             git apply --check ../patches/01-abstract-spectrum.patch
             git apply ../patches/01-abstract-spectrum.patch

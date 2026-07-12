@@ -378,6 +378,64 @@ theorem opNorm_spectralSubspace_sub_le_two {A B : E →ₗ[𝕜] E}
 
 /-! ## Perturbation form -/
 
+/-- The adjoint of the canonical isometric inclusion of a subspace is its
+orthogonal projection onto that subspace.  This is the finite-dimensional
+bridge used by `domainIsometryTransport` in the perturbation wrappers below. -/
+private theorem adjoint_subtype_eq_orthogonalProjectionOnto
+    (U : Submodule 𝕜 E) [U.HasOrthogonalProjection] :
+    LinearMap.adjoint U.subtypeₗᵢ.toLinearMap =
+      U.orthogonalProjectionOnto.toLinearMap := by
+  rw [eq_comm]
+  apply (LinearMap.eq_adjoint_iff
+    U.orthogonalProjectionOnto.toLinearMap U.subtype).2
+  intro x y
+  change ⟪U.starProjection x, (y : E)⟫_𝕜 = ⟪x, (y : E)⟫_𝕜
+  rw [U.inner_starProjection_left_eq_right,
+    U.starProjection_eq_self_iff.mpr y.2]
+
+/-- Transporting the rectangular sine embedding on `U` back to the ambient
+square space gives the one-sided sine cross projection `P_{Vᗮ} P_U`. -/
+private theorem domainTransport_sinThetaEmbedding_apply
+    (N : UnitarilyInvariantNorm 𝕜 E)
+    (U V : Submodule 𝕜 E) [U.HasOrthogonalProjection]
+    [V.HasOrthogonalProjection] :
+    (N.toRectangular.domainIsometryTransport U.subtypeₗᵢ)
+        (sinThetaEmbedding V U.subtypeₗᵢ) = N (sinThetaMap U V) := by
+  change N ((sinThetaEmbedding V U.subtypeₗᵢ) ∘ₗ
+      LinearMap.adjoint U.subtypeₗᵢ.toLinearMap) = N (sinThetaMap U V)
+  rw [adjoint_subtype_eq_orthogonalProjectionOnto]
+  congr 1
+
+/-- The transported residual of the reducing inclusion is bounded by the
+ambient perturbation norm. -/
+private theorem domainTransport_residual_le
+    (N : UnitarilyInvariantNorm 𝕜 E)
+    {A B : E →ₗ[𝕜] E} {U : Submodule 𝕜 E}
+    [U.HasOrthogonalProjection] (hU : Reduces A U) :
+    (N.toRectangular.domainIsometryTransport U.subtypeₗᵢ)
+        (residual B U.subtypeₗᵢ (A.restrict hU)) ≤ N (B - A) := by
+  have hres : residual B U.subtypeₗᵢ (A.restrict hU) =
+      (B - A) ∘ₗ U.subtype := by
+    ext x
+    change B (x : E) - A (x : E) = (B - A) (x : E)
+    rfl
+  change N ((residual B U.subtypeₗᵢ (A.restrict hU)) ∘ₗ
+      LinearMap.adjoint U.subtypeₗᵢ.toLinearMap) ≤ N (B - A)
+  rw [hres, adjoint_subtype_eq_orthogonalProjectionOnto]
+  have hcomp : ((B - A) ∘ₗ U.subtype) ∘ₗ
+      U.orthogonalProjectionOnto.toLinearMap =
+      (B - A) ∘ₗ projection U := by
+    ext x
+    rfl
+  rw [hcomp]
+  calc
+    N ((B - A) ∘ₗ projection U) ≤ N (B - A) * 1 :=
+      N.apply_comp_le' zero_le_one fun x => by
+        change ‖U.starProjection x‖ ≤ 1 * ‖x‖
+        simpa using U.norm_starProjection_apply_le x
+    _ = N (B - A) := mul_one _
+
+
 /-- **Davis--Kahan `sin Θ`, perturbation form, every square UI norm.**
 
 Lean proof route for a weaker agent:
@@ -393,7 +451,27 @@ theorem sinTheta_perturbation_le
     {a b δ : ℝ} (hδ : 0 < δ)
     (hgap : IntervalExteriorGap A B U V a b δ) :
     δ * N (sinThetaMap U V) ≤ N (B - A) := by
-  sorry
+  let NU : RectangularUnitarilyInvariantNorm 𝕜 U E :=
+    N.toRectangular.domainIsometryTransport U.subtypeₗᵢ
+  have hM : (A.restrict hU).IsSymmetric := isSymmetric_restrict hA hU
+  have hMspec : SpectrumIn (A.restrict hU) ⊤ (Set.Icc a b) :=
+    (spectrumIn_restrict_iff A hU (Set.Icc a b)).2 hgap.1
+  have hres :
+      δ * NU (sinThetaEmbedding V U.subtypeₗᵢ) ≤
+        NU (residual B U.subtypeₗᵢ (A.restrict hU)) :=
+    sinTheta_residual_le (A := B) (U := V) (M := A.restrict hU)
+      NU hB hV U.subtypeₗᵢ hM hδ hMspec hgap.2
+  have hsin :
+      NU (sinThetaEmbedding V U.subtypeₗᵢ) = N (sinThetaMap U V) :=
+    domainTransport_sinThetaEmbedding_apply N U V
+  have hresBound :
+      NU (residual B U.subtypeₗᵢ (A.restrict hU)) ≤ N (B - A) :=
+    domainTransport_residual_le (B := B) N hU
+  calc
+    δ * N (sinThetaMap U V) =
+        δ * NU (sinThetaEmbedding V U.subtypeₗᵢ) := by rw [hsin]
+    _ ≤ NU (residual B U.subtypeₗᵢ (A.restrict hU)) := hres
+    _ ≤ N (B - A) := hresBound
 
 /-- **Symmetric `sin Θ` theorem.**  The full-space angle operator contains
 both one-sided sine blocks.  Consequently the sharp full-space conclusion
@@ -432,7 +510,32 @@ theorem sinTheta_perturbation_le_of_orderedGap
     {δ : ℝ} (hδ : 0 < δ)
     (hgap : OrderedGap A U B Vᗮ δ) :
     δ * N (sinThetaMap U V) ≤ N (B - A) := by
-  sorry
+  let NU : RectangularUnitarilyInvariantNorm 𝕜 U E :=
+    N.toRectangular.domainIsometryTransport U.subtypeₗᵢ
+  have hM : (A.restrict hU).IsSymmetric := isSymmetric_restrict hA hU
+  have hgap' : OrderedGap (A.restrict hU) ⊤ B Vᗮ δ := by
+    intro lam μ hlam hμ
+    apply hgap lam μ
+    · rw [← restrictedSpectrum_restrict A hU]
+      exact hlam
+    · exact hμ
+  have hres :
+      δ * NU (sinThetaEmbedding V U.subtypeₗᵢ) ≤
+        NU (residual B U.subtypeₗᵢ (A.restrict hU)) :=
+    sinTheta_residual_le_of_orderedGap
+      (A := B) (U := V) (M := A.restrict hU) NU hB hV
+      U.subtypeₗᵢ hM hδ hgap'
+  have hsin :
+      NU (sinThetaEmbedding V U.subtypeₗᵢ) = N (sinThetaMap U V) :=
+    domainTransport_sinThetaEmbedding_apply N U V
+  have hresBound :
+      NU (residual B U.subtypeₗᵢ (A.restrict hU)) ≤ N (B - A) :=
+    domainTransport_residual_le (B := B) N hU
+  calc
+    δ * N (sinThetaMap U V) =
+        δ * NU (sinThetaEmbedding V U.subtypeₗᵢ) := by rw [hsin]
+    _ ≤ NU (residual B U.subtypeₗᵢ (A.restrict hU)) := hres
+    _ ≤ N (B - A) := hresBound
 
 /-- Canonical spectral-projector statement with no eigenbasis in the API.
 
@@ -603,7 +706,14 @@ theorem kyFan_sinTheta_le
     {a b δ : ℝ} (hδ : 0 < δ)
     (hgap : IntervalExteriorGap A B U V a b δ) (k : ℕ) :
     δ * kyFanSum k (sinThetaMap U V) ≤ kyFanSum k (B - A) := by
-  sorry
+  let NK : UnitarilyInvariantNorm 𝕜 E :=
+    (RectangularUnitarilyInvariantNorm.kyFan
+      (𝕜 := 𝕜) (E := E) (F := E) k).toSquare
+  have h := sinTheta_perturbation_le NK hA hB hU hV hδ hgap
+  simpa [NK, RectangularUnitarilyInvariantNorm.toSquare,
+    RectangularUnitarilyInvariantNorm.kyFan_apply,
+    RectangularUnitarilyInvariantNorm.rectangularKyFanSum,
+    kyFanSum_eq_sum_fin] using h
 
 /-- General two-sided spectral separation with the `π/2` constant.
 

@@ -676,11 +676,42 @@ rectangular: it does not pad the residual into an ambient square map or lose a
 dimension factor.
 
 This closes the sharp interval/exterior and ordered residual forms native to
-Davis--Kahan Part~III.  The next downstream step is to package the square
-perturbation wrappers and the canonical spectral-subspace corollaries through
-domain-isometry transport.  The general residual statement with the
-$\pi/2$ constant remains tied to the still-open arbitrary-disjoint-spectrum
-Sylvester theorem.
+Davis--Kahan Part~III.  The general residual statement with the $\pi/2$
+constant remains tied to the still-open arbitrary-disjoint-spectrum Sylvester
+theorem.
+
+\paragraph{Sharp square perturbation wrappers and concrete norms.}
+The rectangular residual result is now transported back to ambient square
+operators.  For a reducing subspace $U$ of $A$, the canonical inclusion
+$U\hookrightarrow E$ is used as the approximate isometry and
+$A|_U$ as its coordinate operator.  The adjoint of the inclusion is the
+orthogonal projection onto $U$, so domain-isometry transport identifies the
+rectangular sine embedding exactly with the directed cross projection
+$P_{V^\perp}P_U$.  The transported residual is
+$(B-A)P_U$, and the right ideal inequality contracts the final projection.
+This proves
+\[
+  \delta\,N(P_{V^\perp}P_U) \le N(B-A)
+\]
+for every square unitarily invariant norm under both the interval/exterior and
+ordered gap hypotheses.  The Lean declarations are
+\texttt{sinTheta\_perturbation\_le} and
+\texttt{sinTheta\_perturbation\_le\_of\_orderedGap}.
+
+The canonical spectral-subspace wrapper
+\texttt{sinTheta\_spectralSubspace\_le} is therefore closed as well, and
+the concrete Frobenius and simultaneous Ky Fan prefix forms are
+\texttt{frobenius\_sinTheta\_le} and
+\texttt{kyFan\_sinTheta\_le}.  Thus the sharp \emph{directed} finite-dimensional
+$\sin\Theta$ family is complete from rectangular residual form through
+ambient perturbation, spectral-subspace, Frobenius, and Ky Fan interfaces.
+
+The full-space operator $|P_U-P_V|$ is intentionally not conflated with this
+directed map.  For a general UI norm it contains both directed sine blocks.
+Its sharp theorem therefore remains a separate coupled-block result requiring
+the forward and reverse mixed gaps; it cannot be obtained merely by applying
+the directed estimate twice and using the triangle inequality.  The open Lean
+declaration is \texttt{sinAngleOperator\_perturbation\_le}.
 
 \paragraph{The square perturbation $\sin\Theta$ theorem, every unitarily invariant norm.}
 With the square Fan-dominance library in hand, the Davis--Kahan~(1970)
@@ -849,12 +880,12 @@ The remaining work is ordered by mathematical dependency:
   Finish the basis-independent spectral-subspace and canonical angle-operator
   layer, especially pole-safe tangent and double-angle operators, unequal
   ranks, and the remaining projector/singular-value dictionaries.
-\item \emph{Perturbation wrappers and Ritz residual algebra.}
-  The sharp rectangular residual $\sin\Theta$ theorem is now complete for
-  arbitrary UI norms in both interval/exterior and ordered forms.  Next use
-  domain-isometry transport to close the square perturbation and canonical
-  spectral-subspace wrappers, then finish Ritz/Galerkin orthogonality,
-  Frobenius residual minimality, and the remaining concrete-norm corollaries.
+\item \emph{Symmetric full-space sine and Ritz residual algebra.}
+  The sharp directed $\sin\Theta$ family is complete in residual,
+  perturbation, canonical spectral-subspace, Frobenius, and Ky Fan forms for
+  both interval/exterior and ordered separation.  The remaining single-angle
+  capstones are the coupled full-space $|P_U-P_V|$ theorem under two mixed gaps,
+  Ritz/Galerkin orthogonality, and Frobenius residual minimality.
 \item \emph{The remaining Sylvester extension.}
   Prove the independent arbitrary-disjoint-spectrum theorem with constant
   $\pi/2$.  The sharp ordered and interval/exterior constant-one estimates are
@@ -1070,6 +1101,15 @@ Sharp interval/exterior Sylvester bound, every rectangular UI norm / Ky Fan
 Rectangular residual $\sin\Theta$, interval/exterior and ordered
   & \texttt{sinTheta\_residual\_le},
     \texttt{sinTheta\_residual\_le\_of\_orderedGap}
+    (\texttt{DavisKahanTheory/SinTheta.lean}) \\
+Sharp directed perturbation $\sin\Theta$, interval/exterior and ordered
+  & \texttt{sinTheta\_perturbation\_le},
+    \texttt{sinTheta\_perturbation\_le\_of\_orderedGap}
+    (\texttt{DavisKahanTheory/SinTheta.lean}) \\
+Canonical/Frobenius/Ky Fan directed $\sin\Theta$ wrappers
+  & \texttt{sinTheta\_spectralSubspace\_le},
+    \texttt{frobenius\_sinTheta\_le},
+    \texttt{kyFan\_sinTheta\_le}
     (\texttt{DavisKahanTheory/SinTheta.lean}) \\
 Norm-free Davis--Kahan setup (shared with the op-norm proof)
   & \texttt{exists\_isSymmetric\_comp\_sub\_comp\_eq}

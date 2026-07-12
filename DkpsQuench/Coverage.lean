@@ -74,6 +74,14 @@ theorem perspectiveTotallyBounded_of_isCompact_range
   refine ⟨g, hgmem, ?_⟩
   simpa [dist_eq_norm, norm_sub_rev] using (Metric.mem_ball.mp hball)
 
+/-- A perspective map on a finite model class has compact range
+automatically.  Finite-model Quench capstones therefore need not request
+compactness as a separate hypothesis. -/
+theorem isCompact_range_of_fintype
+    [Fintype (Model Q X)] (ψ : Model Q X → Vec d) :
+    IsCompact (Set.range ψ) :=
+  (Set.finite_range ψ).isCompact
+
 /-- A perspective map that factors through a finite configuration has compact
 range automatically. -/
 theorem isCompact_range_of_finite_factor

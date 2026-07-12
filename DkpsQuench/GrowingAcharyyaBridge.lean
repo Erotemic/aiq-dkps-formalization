@@ -10,6 +10,7 @@ in `Acharyya2025.GrowingPipeline` controls those distances directly.
 -/
 
 import Acharyya2025.GrowingPipeline
+import Acharyya2025.GramRealization
 import DkpsQuench.Radial
 import Acharyya2025.SpectralMeasurability
 
@@ -96,6 +97,36 @@ noncomputable def yNNTieAverage_augmentedCMDS
   radialTieAverageNN
     (augmentedSpectralRadialDistance (d := d) Dhat hsym)
     f_ref (yFull score Qstar) n ω f
+
+
+/-- A population Gram realization already implies positive semidefiniteness of
+its classical-MDS matrix.  This is exposed separately so higher-level Quench
+capstones do not ask callers to restate a consequence of their Gram witness. -/
+noncomputable def populationPosSemidefOfGram
+    (D : ∀ n, Ω → Model Q X → DisMat (n + 1))
+    (z : ∀ n, Ω → Model Q X → Config (n + 1) d)
+    (hzGram : ∀ n ω f i j,
+      (∑ k, z n ω f i k * z n ω f j k) =
+        classicalMDSMatrix (D n ω f) i j)
+    (n : Nat) (ω : Ω) (f : Model Q X) :
+    (disMatToMatrix (classicalMDSMatrix (D n ω f))).PosSemidef :=
+  (Acharyya2025.GramRealization.posSemidef_and_rank_le_of_config_gram_eq
+    (disMatToMatrix (classicalMDSMatrix (D n ω f)))
+    (z n ω f) (hzGram n ω f)).1
+
+/-- A population Gram realization in dimension `d` automatically bounds the
+rank of its classical-MDS matrix by `d`. -/
+theorem populationRankLeOfGram
+    (D : ∀ n, Ω → Model Q X → DisMat (n + 1))
+    (z : ∀ n, Ω → Model Q X → Config (n + 1) d)
+    (hzGram : ∀ n ω f i j,
+      (∑ k, z n ω f i k * z n ω f j k) =
+        classicalMDSMatrix (D n ω f) i j)
+    (n : Nat) (ω : Ω) (f : Model Q X) :
+    (disMatToMatrix (classicalMDSMatrix (D n ω f))).rank ≤ d :=
+  (Acharyya2025.GramRealization.posSemidef_and_rank_le_of_config_gram_eq
+    (disMatToMatrix (classicalMDSMatrix (D n ω f)))
+    (z n ω f) (hzGram n ω f)).2
 
 /--
 **Growing target-augmented Quench capstone.**
@@ -198,6 +229,10 @@ theorem highProbQQueryEfficient_tieAverage_of_growing_augmented_cmds
     intro n ω hω f i
     rcases hω with ⟨hentryEvent, hdim, hsmall, hpolar, hbound⟩
     have hentry := hEsub n hentryEvent f
+    -- This low-level step deliberately retains the proved bespoke
+    -- cross-energy/polar argument.  The newer sharp projector theory should
+    -- replace it only when that replacement removes a caller-side condition
+    -- such as polar smallness; a cleanup-only refactor is deferred.
     have hpair :=
       abs_pairwiseDistance_spectralConfig_sub_le_two_configBound
         hdim
@@ -225,5 +260,65 @@ theorem highProbQQueryEfficient_tieAverage_of_growing_augmented_cmds
     f_ref hiid score Qstar Qsub γ hlip hγ
     radialRate hradialRateZero hradialRateNonneg
     Eg hEgMeas hEgSub hEg hbase
+
+
+/-- Hypothesis-reduced growing CMDS capstone.
+
+The population configuration witness and its Gram identity imply both positive
+semidefiniteness and the rank bound.  This theorem therefore removes the
+redundant explicit `hB` and `hrank` arguments from the public interface while
+reusing the established spectral proof unchanged. -/
+theorem highProbQQueryEfficient_tieAverage_of_growing_augmented_cmds_of_gram
+    (Pf : Measure (Model Q X)) [IsProbabilityMeasure Pf]
+    (μ : Nat → Measure Ω) (hμ : ∀ n, IsProbabilityMeasure (μ n))
+    (ψ : Model Q X → Vec d) (hψmeas : Measurable ψ)
+    (hcompact : IsCompact (Set.range ψ))
+    (hfull : PerspectiveFullSupport Pf ψ)
+    (f_ref : ∀ n, Ω → Fin n → Model Q X)
+    (hiid : IIDReferenceSampler Pf μ f_ref)
+    (Dhat D : ∀ n, Ω → Model Q X → DisMat (n + 1))
+    (hsym : ∀ n ω f,
+      (disMatToMatrix (classicalMDSMatrix (Dhat n ω f))).IsHermitian)
+    (z : ∀ n, Ω → Model Q X → Config (n + 1) d)
+    (hzGram : ∀ n ω f i j,
+      (∑ k, z n ω f i k * z n ω f j k) =
+        classicalMDSMatrix (D n ω f) i j)
+    (hzRadial : ∀ n ω f (i : Fin n),
+      ‖z n ω f i.castSucc - z n ω f (Fin.last n)‖ =
+        ‖ψ (f_ref n ω i) - ψ f‖)
+    {α : Real} (hα : 0 < α)
+    (ceiling entryRate : Nat → Real)
+    (hfloor : ∀ n ω f (i : Fin (n + 1)), (i : Nat) < d →
+      α ≤ sortedEigenvalues
+        (populationPosSemidefOfGram D z hzGram n ω f).isHermitian i)
+    (hceiling : ∀ n ω f (i : Fin (n + 1)),
+      sortedEigenvalues
+        (populationPosSemidefOfGram D z hzGram n ω f).isHermitian i ≤ ceiling n)
+    (Hrate : GrowingConfigControl (fun n => n + 1) d α ceiling entryRate)
+    (E : Nat → Set Ω)
+    (hEmeas : ∀ n, MeasurableSet (E n))
+    (hEsub : ∀ n, E n ⊆ {ω | ∀ f,
+      Acharyya2025.Bridge.EntrywiseClose
+        (classicalMDSMatrix (Dhat n ω f))
+        (classicalMDSMatrix (D n ω f)) (entryRate n)})
+    (hE : HighProbAtTop μ hμ E)
+    (score : Model Q X → Finset Q → Real)
+    (Qstar Qsub : Finset Q)
+    (γ : Real)
+    (hlip : ∀ f f',
+      |score f Qstar - score f' Qstar| ≤ γ * ‖ψ f - ψ f'‖)
+    (hγ : 0 < γ)
+    (hbase : 0 < MSE Pf (yFull score Qstar) (yQ score Qsub)) :
+    HighProbQQueryEfficient (Q := Q) (X := X) μ hμ Pf sqLoss
+      (yFull score Qstar)
+      (fun n ω f => yNNTieAverage_augmentedCMDS (d := d)
+        Dhat hsym f_ref score Qstar n ω f)
+      (fun _ _ f => yQ score Qsub f) := by
+  exact highProbQQueryEfficient_tieAverage_of_growing_augmented_cmds
+    Pf μ hμ ψ hψmeas hcompact hfull f_ref hiid Dhat D hsym
+    (populationPosSemidefOfGram D z hzGram)
+    (populationRankLeOfGram D z hzGram)
+    hα ceiling entryRate hfloor hceiling z hzGram hzRadial Hrate
+    E hEmeas hEsub hE score Qstar Qsub γ hlip hγ hbase
 
 end DkpsQuench.GrowingAcharyyaBridge

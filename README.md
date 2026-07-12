@@ -188,6 +188,8 @@ hypotheses used by the inference layer.
 The growing target-augmented Quench path now has a response-level front end.
 Stage-dependent response means propagate to stage-dependent CMDS entrywise
 control, and a finite-target second-moment corollary closes the full chain from
-response errors to eventual query efficiency.  Infinite target classes still
-require a genuine uniform response concentration theorem; this is no longer
-conflated with the spectral or nearest-neighbor parts of the development.
+response errors to eventual query efficiency.  Hypothesis-reduced capstones now
+derive population PSD/rank from the Gram witness, and finite target classes
+derive compactness automatically.  Infinite target classes still require a
+genuine uniform response concentration theorem; this is no longer conflated
+with the spectral or nearest-neighbor parts of the development.

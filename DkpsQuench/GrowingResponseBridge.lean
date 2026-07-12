@@ -246,4 +246,183 @@ theorem highProbQQueryEfficient_tieAverage_of_growing_augmented_secondMoment
     hfloor hceiling z hzGram hzRadial Hrate
     score Qstar Qsub γ hlip hγ hbase
 
+
+/-- Positive semidefiniteness of the population response CMDS matrix, derived
+from an explicit population Gram configuration. -/
+noncomputable def augmentedPopulationPosSemidefOfGram
+    {m p : Nat}
+    (μbar : ∀ n, Ω → Model Q X → Fin (n + 1) → Acharyya2024.Mat m p)
+    (z : ∀ n, Ω → Model Q X → Config (n + 1) d)
+    (hzGram : ∀ n ω f i j,
+      (∑ k, z n ω f i k * z n ω f j k) =
+        classicalMDSMatrix (responseDist (μbar n ω f)) i j)
+    (n : Nat) (ω : Ω) (f : Model Q X) :
+    (disMatToMatrix
+      (classicalMDSMatrix (responseDist (μbar n ω f)))).PosSemidef := by
+  simpa [augmentedPopulationResponseDist] using
+    (populationPosSemidefOfGram
+      (augmentedPopulationResponseDist μbar) z hzGram n ω f)
+
+/-- Rank at most `d` of the population response CMDS matrix, derived from the
+same population Gram configuration. -/
+theorem augmentedPopulationRankLeOfGram
+    {m p : Nat}
+    (μbar : ∀ n, Ω → Model Q X → Fin (n + 1) → Acharyya2024.Mat m p)
+    (z : ∀ n, Ω → Model Q X → Config (n + 1) d)
+    (hzGram : ∀ n ω f i j,
+      (∑ k, z n ω f i k * z n ω f j k) =
+        classicalMDSMatrix (responseDist (μbar n ω f)) i j)
+    (n : Nat) (ω : Ω) (f : Model Q X) :
+    (disMatToMatrix
+      (classicalMDSMatrix (responseDist (μbar n ω f)))).rank ≤ d := by
+  simpa [augmentedPopulationResponseDist] using
+    (populationRankLeOfGram
+      (augmentedPopulationResponseDist μbar) z hzGram n ω f)
+
+/-- Hypothesis-reduced response-mean Quench capstone.
+
+The population Gram witness discharges positive semidefiniteness and the rank
+bound internally.  The theorem otherwise preserves the established response
+concentration and spectral pipeline. -/
+theorem highProbQQueryEfficient_tieAverage_of_growing_augmented_response_mean_of_gram
+    (Pf : Measure (Model Q X)) [IsProbabilityMeasure Pf]
+    (μΩ : Nat → Measure Ω) (hμΩ : ∀ n, IsProbabilityMeasure (μΩ n))
+    (ψ : Model Q X → Vec d) (hψmeas : Measurable ψ)
+    (hcompact : IsCompact (Set.range ψ))
+    (hfull : PerspectiveFullSupport Pf ψ)
+    (f_ref : ∀ n, Ω → Fin n → Model Q X)
+    (hiid : IIDReferenceSampler Pf μΩ f_ref)
+    {m p : Nat}
+    (Xbar μbar : ∀ n, Ω → Model Q X → Fin (n + 1) → Acharyya2024.Mat m p)
+    (η R : Nat → Real)
+    (hmeanMeas : ∀ n,
+      MeasurableSet (augmentedUniformResponseMeanEvent Xbar μbar η n))
+    (hmean : HighProbAtTop μΩ hμΩ
+      (augmentedUniformResponseMeanEvent Xbar μbar η))
+    (hsampleBound : ∀ n ω f i j,
+      |responseDist (Xbar n ω f) i j| ≤ R n)
+    (hpopulationBound : ∀ n ω f i j,
+      |responseDist (μbar n ω f) i j| ≤ R n)
+    (z : ∀ n, Ω → Model Q X → Config (n + 1) d)
+    (hzGram : ∀ n ω f i j,
+      (∑ k, z n ω f i k * z n ω f j k) =
+        classicalMDSMatrix (responseDist (μbar n ω f)) i j)
+    (hzRadial : ∀ n ω f (i : Fin n),
+      ‖z n ω f i.castSucc - z n ω f (Fin.last n)‖ =
+        ‖ψ (f_ref n ω i) - ψ f‖)
+    {α : Real} (hα : 0 < α)
+    (ceiling : Nat → Real)
+    (hfloor : ∀ n ω f (i : Fin (n + 1)), (i : Nat) < d →
+      α ≤ sortedEigenvalues
+        (augmentedPopulationPosSemidefOfGram μbar z hzGram n ω f).isHermitian i)
+    (hceiling : ∀ n ω f (i : Fin (n + 1)),
+      sortedEigenvalues
+        (augmentedPopulationPosSemidefOfGram μbar z hzGram n ω f).isHermitian i ≤
+          ceiling n)
+    (Hrate : GrowingConfigControl (fun n => n + 1) d α ceiling
+      (fun n => cmdsEntrywiseRate (n + 1) m (R n) (η n)))
+    (score : Model Q X → Finset Q → Real)
+    (Qstar Qsub : Finset Q)
+    (γ : Real)
+    (hlip : ∀ f f',
+      |score f Qstar - score f' Qstar| ≤ γ * ‖ψ f - ψ f'‖)
+    (hγ : 0 < γ)
+    (hbase : 0 < MSE Pf (yFull score Qstar) (yQ score Qsub)) :
+    HighProbQQueryEfficient (Q := Q) (X := X) μΩ hμΩ Pf sqLoss
+      (yFull score Qstar)
+      (fun n ω f => yNNTieAverage_augmentedCMDS (d := d)
+        (augmentedSampleResponseDist Xbar)
+        (fun n ω f =>
+          Acharyya2025.AlignedPipeline.isHermitian_disMatToMatrix_classicalMDSMatrix_responseDist
+            (Xbar n ω f))
+        f_ref score Qstar n ω f)
+      (fun _ _ f => yQ score Qsub f) := by
+  exact highProbQQueryEfficient_tieAverage_of_growing_augmented_response_mean
+    Pf μΩ hμΩ ψ hψmeas hcompact hfull f_ref hiid
+    Xbar μbar η R hmeanMeas hmean hsampleBound hpopulationBound
+    (augmentedPopulationPosSemidefOfGram μbar z hzGram)
+    (augmentedPopulationRankLeOfGram μbar z hzGram)
+    hα ceiling hfloor hceiling z hzGram hzRadial Hrate
+    score Qstar Qsub γ hlip hγ hbase
+
+/-- Finite-model second-moment capstone with redundant geometric hypotheses
+removed.
+
+Finiteness makes the perspective range compact, while the population Gram
+witness supplies positive semidefiniteness and rank at most `d`.  Callers only
+provide the genuine population geometry, spectral floor/cap, response moments,
+and coverage law. -/
+theorem highProbQQueryEfficient_tieAverage_of_growing_augmented_secondMoment_of_gram
+    [Fintype (Model Q X)]
+    (Pf : Measure (Model Q X)) [IsProbabilityMeasure Pf]
+    (μΩ : Nat → Measure Ω) (hμΩ : ∀ n, IsProbabilityMeasure (μΩ n))
+    (ψ : Model Q X → Vec d) (hψmeas : Measurable ψ)
+    (hfull : PerspectiveFullSupport Pf ψ)
+    (f_ref : ∀ n, Ω → Fin n → Model Q X)
+    (hiid : IIDReferenceSampler Pf μΩ f_ref)
+    {m p : Nat}
+    (Xbar μbar : ∀ n, Ω → Model Q X → Fin (n + 1) → Acharyya2024.Mat m p)
+    (σ2 η R : Nat → Real)
+    (hint : ∀ n f (i : Fin (n + 1)),
+      Integrable (fun ω =>
+        ‖Xbar n ω f i - μbar n ω f i‖ ^ 2) (μΩ n))
+    (hσ2 : ∀ n f (i : Fin (n + 1)),
+      ∫ ω, ‖Xbar n ω f i - μbar n ω f i‖ ^ 2 ∂(μΩ n) ≤ σ2 n)
+    (hηPos : ∀ n, 0 < η n)
+    (hratio : Tendsto
+      (fun n =>
+        (Fintype.card (Model Q X) : Real) * ((n + 1 : Nat) : Real) *
+          σ2 n / (η n) ^ 2)
+      atTop (𝓝 0))
+    (hXmeas : ∀ n f i, Measurable fun ω => Xbar n ω f i)
+    (hμmeas : ∀ n f i, Measurable fun ω => μbar n ω f i)
+    (hsampleBound : ∀ n ω f i j,
+      |responseDist (Xbar n ω f) i j| ≤ R n)
+    (hpopulationBound : ∀ n ω f i j,
+      |responseDist (μbar n ω f) i j| ≤ R n)
+    (z : ∀ n, Ω → Model Q X → Config (n + 1) d)
+    (hzGram : ∀ n ω f i j,
+      (∑ k, z n ω f i k * z n ω f j k) =
+        classicalMDSMatrix (responseDist (μbar n ω f)) i j)
+    (hzRadial : ∀ n ω f (i : Fin n),
+      ‖z n ω f i.castSucc - z n ω f (Fin.last n)‖ =
+        ‖ψ (f_ref n ω i) - ψ f‖)
+    {α : Real} (hα : 0 < α)
+    (ceiling : Nat → Real)
+    (hfloor : ∀ n ω f (i : Fin (n + 1)), (i : Nat) < d →
+      α ≤ sortedEigenvalues
+        (augmentedPopulationPosSemidefOfGram μbar z hzGram n ω f).isHermitian i)
+    (hceiling : ∀ n ω f (i : Fin (n + 1)),
+      sortedEigenvalues
+        (augmentedPopulationPosSemidefOfGram μbar z hzGram n ω f).isHermitian i ≤
+          ceiling n)
+    (Hrate : GrowingConfigControl (fun n => n + 1) d α ceiling
+      (fun n => cmdsEntrywiseRate (n + 1) m (R n) (η n)))
+    (score : Model Q X → Finset Q → Real)
+    (Qstar Qsub : Finset Q)
+    (γ : Real)
+    (hlip : ∀ f f',
+      |score f Qstar - score f' Qstar| ≤ γ * ‖ψ f - ψ f'‖)
+    (hγ : 0 < γ)
+    (hbase : 0 < MSE Pf (yFull score Qstar) (yQ score Qsub)) :
+    HighProbQQueryEfficient (Q := Q) (X := X) μΩ hμΩ Pf sqLoss
+      (yFull score Qstar)
+      (fun n ω f => yNNTieAverage_augmentedCMDS (d := d)
+        (augmentedSampleResponseDist Xbar)
+        (fun n ω f =>
+          Acharyya2025.AlignedPipeline.isHermitian_disMatToMatrix_classicalMDSMatrix_responseDist
+            (Xbar n ω f))
+        f_ref score Qstar n ω f)
+      (fun _ _ f => yQ score Qsub f) := by
+  have hcompact : IsCompact (Set.range ψ) :=
+    isCompact_range_of_fintype ψ
+  exact highProbQQueryEfficient_tieAverage_of_growing_augmented_secondMoment
+    Pf μΩ hμΩ ψ hψmeas hcompact hfull f_ref hiid
+    Xbar μbar σ2 η R hint hσ2 hηPos hratio hXmeas hμmeas
+    hsampleBound hpopulationBound
+    (augmentedPopulationPosSemidefOfGram μbar z hzGram)
+    (augmentedPopulationRankLeOfGram μbar z hzGram)
+    hα ceiling hfloor hceiling z hzGram hzRadial Hrate
+    score Qstar Qsub γ hlip hγ hbase
+
 end DkpsQuench.GrowingResponseBridge

@@ -102,6 +102,8 @@ those assumptions without deleting the simpler theorem engine.
 | Second moments through canonical CMDS to literal eventual Quench theorem | `highProbQQueryEfficient_tieAverage_of_second_moment_canonical_topEigenvalue_iid` | `AcharyyaBridge.lean` |
 | Distance-only radial Quench engine | `highProbQQueryEfficient_radialTieAverage_of_compact_iid_fullSupport` | `Radial.lean` |
 | Growing target-augmented CMDS theorem without finite model factorization | `highProbQQueryEfficient_tieAverage_of_growing_augmented_cmds` | `GrowingAcharyyaBridge.lean` |
+| Hypothesis-reduced growing CMDS theorem: Gram witness derives PSD/rank | `highProbQQueryEfficient_tieAverage_of_growing_augmented_cmds_of_gram` | `GrowingAcharyyaBridge.lean` |
+| Finite-model response theorem: Gram witness derives PSD/rank and finiteness derives compactness | `highProbQQueryEfficient_tieAverage_of_growing_augmented_secondMoment_of_gram` | `GrowingResponseBridge.lean` |
 
 ## What to scrutinize: remaining assumptions and scope
 
@@ -121,11 +123,13 @@ stage-`n` reference sample, applies CMDS on `Fin (n+1)`, and controls only the
 resulting target-to-reference distances.  It therefore needs no global
 `indexOf : Model → Fin N` and no globally aligned estimated coordinate map.
 
-The remaining major statistical seam is now precise: derive the measurable
-high-probability **uniform entrywise CMDS event** for these random
-reference-plus-target batches from concrete iid response arrays under the joint
-model-count/response-budget schedule.  `GrowingConfigControl` records exactly
-the three deterministic quantities that must vanish in that calculation.
+The response-level bridge now derives the measurable high-probability CMDS
+event from response means, and the finite-model second-moment theorem closes
+that concentration step by a double union bound.  The preferred finite-model
+capstone additionally derives compactness from finiteness and derives population
+PSD/rank from the supplied Gram configuration.  The remaining major statistical
+seam is uniform response concentration for infinite model classes under concrete
+regularity or entropy assumptions.
 
 Other explicit conditions worth reviewing are:
 
@@ -149,9 +153,10 @@ Other explicit conditions worth reviewing are:
 | [`Coverage.lean`](Coverage.lean) | Finite perspective nets, full support, iid reference sampling, geometric miss probabilities, and measurable uniform-coverage subevents. |
 | [`QueryEfficiency.lean`](QueryEfficiency.lean) | Strongest coordinate-based fixed-`Q`, size-`m`, and all-strict-budget capstones for the literal tie-averaged estimator. |
 | [`Radial.lean`](Radial.lean) | Distance-only tie-averaged NN engine; avoids requiring a global estimated perspective map. |
-| [`GrowingAcharyyaBridge.lean`](GrowingAcharyyaBridge.lean) | Target-augmented `Fin (n+1)` CMDS bridge and fixed-`Q` theorem with no finite factorization of the model class. |
+| [`GrowingAcharyyaBridge.lean`](GrowingAcharyyaBridge.lean) | Target-augmented `Fin (n+1)` CMDS bridge and fixed-`Q` theorem with no finite factorization of the model class; the `_of_gram` capstone derives PSD/rank from the population Gram witness. |
 | [`Theorem2.lean`](Theorem2.lean) | Earlier compatibility statements using a selected nearest neighbor and caller-supplied coverage events. |
 | [`AcharyyaBridge.lean`](AcharyyaBridge.lean) | Derives embedding concentration from the Acharyya2025 spectral/statistical chain and composes it with the new iid coverage theorem. |
+| [`GrowingResponseBridge.lean`](GrowingResponseBridge.lean) | Derives growing CMDS events from response means; the finite `_of_gram` capstone removes explicit compactness, PSD, and rank hypotheses. |
 
 ## Build / sanity checks
 
@@ -173,3 +178,11 @@ uniform target-wise response event by a double union bound.  The remaining
 infinite-class task is therefore sharply isolated: replace that finite-target
 union bound by a uniform concentration argument for the application model
 class, such as a metric-entropy or stochastic-equicontinuity theorem.
+
+### Hypothesis-reduction policy
+
+The current low-level spectral proof retains its proved cross-energy and polar
+factor route.  The newer sharp Davis--Kahan projector theory will be integrated
+only when it removes or weakens a caller-visible condition, such as the polar
+smallness requirement.  Refactoring solely for a cleaner internal proof is
+deliberately deferred.

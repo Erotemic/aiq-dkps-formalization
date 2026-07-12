@@ -1,0 +1,31 @@
++  have hpre : ∀ m : ℕ,
++      ∑ i ∈ Finset.univ.filter (fun i : Fin d => (i : ℕ) < m), z i ≤
++        ∑ i ∈ Finset.univ.filter (fun i : Fin d => (i : ℕ) < m), y i := by
++    intro m
++    rcases le_or_gt m d with hm | hm
++    · rw [sum_filter_lt_eq_sum_fin hm (fun k => A.singularValues k),
++        sum_filter_lt_eq_sum_fin hm (fun k => B.singularValues k)]
++      exact h m
++    · have huniv : (Finset.univ.filter
++          fun i : Fin d => (i : ℕ) < m) = Finset.univ :=
++        Finset.filter_true_of_mem fun i _ => lt_trans i.isLt hm
++      rw [huniv]
++      exact h d
++  have hzK : z ∈ K :=
++    mem_convex_of_prefix_sums_le hKconv hswap hneg hzanti hz0 hy0 hpre hyK
++  have hsigmaA : A.singularValues = (L z).singularValues := by
++    symm
++    change (coordinateLift ιE ιF (singularValueDiagonal d A)).singularValues =
++      A.singularValues
++    rw [singularValues_coordinateLift,
++      singularValues_singularValueDiagonal A hrankA]
++  obtain ⟨U, V, hfac⟩ :=
++    exists_unitary_factorization_of_singularValues_eq hsigmaA
++  change L z ∈ convexHull ℝ (twoSidedUnitaryOrbit B) at hzK
++  rw [hfac]
++  exact twoSidedAction_mem_convexHull hzK U V
++
++
+ /-- Fan dominance in rectangular form.
+ 
+ Lean proof route for a weaker agent:

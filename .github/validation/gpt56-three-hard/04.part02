@@ -1,0 +1,119 @@
+ : ∀ m : ℕ,
++            ∑ i ∈ Finset.univ.filter (fun i : Fin n => (i : ℕ) < m), z i ≤
++              ∑ i ∈ Finset.univ.filter (fun i : Fin n => (i : ℕ) < m), q' i := by
++          intro m
++          rcases le_or_gt m (j : ℕ) with hmj | hmj
++          · have hcong : ∀ i ∈ Finset.univ.filter
++                (fun i : Fin n => (i : ℕ) < m), q' i = q i := by
++              intro i hi
++              have hivm := (Finset.mem_filter.mp hi).2
++              have hij : i ≠ j := fun h => by subst h; omega
++              have hil : i ≠ l := fun h => by subst h; omega
++              exact hq'i i hij hil
++            rw [Finset.sum_congr rfl hcong]
++            exact hqpre m
++          rcases le_or_gt m (l : ℕ) with hml | hml
++          · have hcong : ∀ i ∈ Finset.univ.filter
++                (fun i : Fin n => (i : ℕ) < m),
++                q' i = Function.update q j (q j - delta) i := by
++              intro i hi
++              have hivm := (Finset.mem_filter.mp hi).2
++              have hil : i ≠ l := fun h => by subst h; omega
++              simp [q', hil]
++            have hjmem : j ∈ Finset.univ.filter
++                (fun i : Fin n => (i : ℕ) < m) :=
++              Finset.mem_filter.mpr ⟨Finset.mem_univ _, hmj⟩
++            rw [Finset.sum_congr rfl hcong,
++              Finset.sum_update_of_mem hjmem]
++            have hterm : q j - z j ≤
++                ∑ i ∈ Finset.univ.filter
++                  (fun i : Fin n => (i : ℕ) < m), (q i - z i) := by
++              refine Finset.single_le_sum (f := fun i => q i - z i) ?_ hjmem
++              intro i hi
++              have hivm := (Finset.mem_filter.mp hi).2
++              have hil : i < l := Fin.lt_def.mpr (by omega)
++              linarith [hlmin i hil]
++            rw [Finset.sum_sub_distrib] at hterm
++            linarith [hqpre m, hdelta1]
++          · have hjmem : j ∈ Finset.univ.filter
++                (fun i : Fin n => (i : ℕ) < m) :=
++              Finset.mem_filter.mpr ⟨Finset.mem_univ _, by omega⟩
++            have hlmem : l ∈ Finset.univ.filter
++                (fun i : Fin n => (i : ℕ) < m) :=
++              Finset.mem_filter.mpr ⟨Finset.mem_univ _, hml⟩
++            have hjmem' : j ∈ (Finset.univ.filter
++                (fun i : Fin n => (i : ℕ) < m)) \ {l} :=
++              Finset.mem_sdiff.mpr ⟨hjmem, by simp [hjl_ne]⟩
++            have heqsum : ∑ i ∈ Finset.univ.filter
++                  (fun i : Fin n => (i : ℕ) < m), q' i =
++                ∑ i ∈ Finset.univ.filter
++                  (fun i : Fin n => (i : ℕ) < m), q i := by
++              have h1 : ∑ i ∈ Finset.univ.filter
++                    (fun i : Fin n => (i : ℕ) < m), q' i =
++                  (q l + delta) + ∑ i ∈ (Finset.univ.filter
++                    (fun i : Fin n => (i : ℕ) < m)) \ {l},
++                    Function.update q j (q j - delta) i := by
++                unfold q'
++                exact Finset.sum_update_of_mem hlmem _ _
++              have h2 : ∑ i ∈ (Finset.univ.filter
++                    (fun i : Fin n => (i : ℕ) < m)) \ {l},
++                    Function.update q j (q j - delta) i =
++                  (q j - delta) + ∑ i ∈ ((Finset.univ.filter
++                    (fun i : Fin n => (i : ℕ) < m)) \ {l}) \ {j}, q i :=
++                Finset.sum_update_of_mem hjmem' _ _
++              have h3 : ∑ i ∈ Finset.univ.filter
++                    (fun i : Fin n => (i : ℕ) < m), q i =
++                  q l + ∑ i ∈ (Finset.univ.filter
++                    (fun i : Fin n => (i : ℕ) < m)) \ {l}, q i := by
++                rw [← Finset.erase_eq]
++                exact (Finset.add_sum_erase _ q hlmem).symm
++              have h4 : ∑ i ∈ (Finset.univ.filter
++                    (fun i : Fin n => (i : ℕ) < m)) \ {l}, q i =
++                  q j + ∑ i ∈ ((Finset.univ.filter
++                    (fun i : Fin n => (i : ℕ) < m)) \ {l}) \ {j}, q i := by
++                rw [← Finset.erase_eq, ← Finset.erase_eq]
++                exact (Finset.add_sum_erase _ q (by rwa [Finset.erase_eq])).symm
++              rw [h1, h2, h3, h4]
++              ring
++            rw [heqsum]
++            exact hqpre m
++        have hsub : (Finset.univ.filter fun i => z i ≠ q' i) ⊆
++            Finset.univ.filter fun i => z i ≠ q i := by
++          intro i hi
++          obtain ⟨-, hine⟩ := Finset.mem_filter.mp hi
++          refine Finset.mem_filter.mpr ⟨Finset.mem_univ _, fun heq => ?_⟩
++          have hij : i ≠ j := by
++            rintro rfl
++            exact absurd heq hzj.ne
++          have hil : i ≠ l := by
++            rintro rfl
++            exact absurd heq hlS.ne'
++          exact hine (by rw [hq'i i hij hil]; exact heq)
++        have hwitness : ∃ w ∈ Finset.univ.filter (fun i => z i ≠ q i),
++            w ∉ Finset.univ.filter (fun i => z i ≠ q' i) := by
++          rcases min_choice (q j - z j) (z l - q l) with hmin | hmin
++          · refine ⟨j, Finset.mem_filter.mpr ⟨Finset.mem_univ _, hzj.ne⟩, ?_⟩
++            have hj' : q' j = z j := by
++              rw [hq'j]
++              dsimp [delta]
++              rw [hmin]
++              ring
++            simp [hj']
++          · refine ⟨l, Finset.mem_filter.mpr ⟨Finset.mem_univ _, hlS.ne'⟩, ?_⟩
++            have hl' : q' l = z l := by
++              rw [hq'l]
++              dsimp [delta]
++              rw [hmin]
++              ring
++            simp [hl']
++        have hcard' : (Finset.univ.filter fun i => z i ≠ q' i).card ≤ d := by
++          have hlt := Finset.card_lt_card
++            ((Finset.ssubset_iff_of_subset hsub).mpr hwitness)
++          omega
++        have hq'K : q' ∈ K := by
++          rw [hcomb]
++          exact hK hqK (hswap q hqK j l) (by linarith) hcpos.le (by linarith)
++        exact ih q' hcard' hq'0 hq'pre hq'K
++  exact H _ y le_rfl hy0 hpre hyK
++
++/-- Lift a square coordinate operator to a rectangular map after arbi

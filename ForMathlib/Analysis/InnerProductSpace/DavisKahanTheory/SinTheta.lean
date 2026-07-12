@@ -75,7 +75,6 @@ theorem sinTheta_residual_le
     exact (spectrumIn_restrict_iff A hUperp _).2 hAspec
   have hEq : AU ∘ₗ Y - Y ∘ₗ M = C := by
     ext x
-    apply Subtype.ext
     have hx := LinearMap.congr_fun
       (sylvester_sinThetaEmbedding_eq_projectedResidual hA hU X M) x
     simpa [AU, Y, C, sinThetaEmbedding, complementaryProjection, projection,
@@ -83,15 +82,11 @@ theorem sinTheta_residual_le
   have hY : NU Y = N (sinThetaEmbedding U X) := by
     change N (Uᗮ.subtypeₗᵢ.toLinearMap ∘ₗ Y) = N (sinThetaEmbedding U X)
     congr 1
-    ext x
-    rfl
   have hC : NU C =
       N (complementaryProjection U ∘ₗ residual A X M) := by
     change N (Uᗮ.subtypeₗᵢ.toLinearMap ∘ₗ C) =
       N (complementaryProjection U ∘ₗ residual A X M)
     congr 1
-    ext x
-    rfl
   have hproj : ‖(complementaryProjection U).toContinuousLinearMap‖ ≤ 1 := by
     refine (complementaryProjection U).toContinuousLinearMap.opNorm_le_bound
       zero_le_one fun x => ?_
@@ -144,7 +139,6 @@ theorem sinTheta_residual_le_of_orderedGap
     exact hμ
   have hEq : AU ∘ₗ Y - Y ∘ₗ M = C := by
     ext x
-    apply Subtype.ext
     have hx := LinearMap.congr_fun
       (sylvester_sinThetaEmbedding_eq_projectedResidual hA hU X M) x
     simpa [AU, Y, C, sinThetaEmbedding, complementaryProjection, projection,
@@ -152,15 +146,11 @@ theorem sinTheta_residual_le_of_orderedGap
   have hY : NU Y = N (sinThetaEmbedding U X) := by
     change N (Uᗮ.subtypeₗᵢ.toLinearMap ∘ₗ Y) = N (sinThetaEmbedding U X)
     congr 1
-    ext x
-    rfl
   have hC : NU C =
       N (complementaryProjection U ∘ₗ residual A X M) := by
     change N (Uᗮ.subtypeₗᵢ.toLinearMap ∘ₗ C) =
       N (complementaryProjection U ∘ₗ residual A X M)
     congr 1
-    ext x
-    rfl
   have hproj : ‖(complementaryProjection U).toContinuousLinearMap‖ ≤ 1 := by
     refine (complementaryProjection U).toContinuousLinearMap.opNorm_le_bound
       zero_le_one fun x => ?_

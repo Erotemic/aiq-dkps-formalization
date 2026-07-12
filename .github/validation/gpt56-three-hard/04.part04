@@ -1,0 +1,80 @@
++  have hKconv : Convex ℝ K :=
++    (convex_convexHull ℝ (twoSidedUnitaryOrbit B)).linear_preimage L
++  have hswap : ∀ q ∈ K, ∀ j l : Fin d,
++      q ∘ Equiv.swap j l ∈ K := by
++    intro q hq j l
++    let P := (EuclideanSpace.basisFun (Fin d) 𝕜).equiv
++      (EuclideanSpace.basisFun (Fin d) 𝕜) (Equiv.swap j l)
++    have hdiag : diagOp (EuclideanSpace.basisFun (Fin d) 𝕜)
++          (q ∘ Equiv.swap j l) =
++        P.symm.toLinearMap ∘ₗ
++          diagOp (EuclideanSpace.basisFun (Fin d) 𝕜) q ∘ₗ
++            P.toLinearMap := by
++      refine (EuclideanSpace.basisFun (Fin d) 𝕜).toBasis.ext fun i => ?_
++      simp [P, LinearMap.comp_apply, diagOp_apply_basis]
++    obtain ⟨UF, VE, hfac⟩ := coordinateLift_unitary_factorization
++      ιE ιF P.symm P
++      (diagOp (EuclideanSpace.basisFun (Fin d) 𝕜) q)
++    change L (q ∘ Equiv.swap j l) ∈
++      convexHull ℝ (twoSidedUnitaryOrbit B)
++    change L q ∈ convexHull ℝ (twoSidedUnitaryOrbit B) at hq
++    change coordinateLift ιE ιF
++      (diagOp (EuclideanSpace.basisFun (Fin d) 𝕜)
++        (q ∘ Equiv.swap j l)) ∈ _
++    rw [hdiag, hfac]
++    exact twoSidedAction_mem_convexHull hq UF VE
++  have hneg : ∀ q ∈ K, ∀ j : Fin d,
++      Function.update q j (-(q j)) ∈ K := by
++    intro q hq j
++    let R := ((𝕜 ∙ (EuclideanSpace.basisFun (Fin d) 𝕜) j)ᗮ).reflection
++    have hdiag : diagOp (EuclideanSpace.basisFun (Fin d) 𝕜)
++          (Function.update q j (-(q j))) =
++        diagOp (EuclideanSpace.basisFun (Fin d) 𝕜) q ∘ₗ R.toLinearMap := by
++      refine (EuclideanSpace.basisFun (Fin d) 𝕜).toBasis.ext fun i => ?_
++      simp only [OrthonormalBasis.coe_toBasis, LinearMap.comp_apply,
++        LinearIsometryEquiv.coe_toLinearEquiv, LinearEquiv.coe_coe]
++      rcases eq_or_ne i j with rfl | hij
++      · rw [Submodule.reflection_orthogonalComplement_singleton_eq_neg,
++          map_neg, diagOp_apply_basis, diagOp_apply_basis,
++          Function.update_self, RCLike.ofReal_neg, neg_smul]
++      · have hmem : (EuclideanSpace.basisFun (Fin d) 𝕜) i ∈
++            (𝕜 ∙ (EuclideanSpace.basisFun (Fin d) 𝕜) j)ᗮ :=
++          Submodule.mem_orthogonal_singleton_iff_inner_right.mpr
++            ((EuclideanSpace.basisFun (Fin d) 𝕜).orthonormal.2 (Ne.symm hij))
++        rw [Submodule.reflection_mem_subspace_eq_self hmem,
++          diagOp_apply_basis, diagOp_apply_basis, Function.update_of_ne hij]
++    obtain ⟨UF, VE, hfac⟩ := coordinateLift_unitary_factorization
++      ιE ιF (LinearIsometryEquiv.refl 𝕜 _) R
++      (diagOp (EuclideanSpace.basisFun (Fin d) 𝕜) q)
++    change L (Function.update q j (-(q j))) ∈
++      convexHull ℝ (twoSidedUnitaryOrbit B)
++    change L q ∈ convexHull ℝ (twoSidedUnitaryOrbit B) at hq
++    change coordinateLift ιE ιF
++      (diagOp (EuclideanSpace.basisFun (Fin d) 𝕜)
++        (Function.update q j (-(q j)))) ∈ _
++    rw [hdiag, hfac]
++    exact twoSidedAction_mem_convexHull hq UF VE
++  have hrankA : finrank 𝕜 A.range ≤ d := by
++    apply le_min
++    · have hnull := A.finrank_range_add_finrank_ker
++      omega
++    · exact Submodule.finrank_le _
++  have hrankB : finrank 𝕜 B.range ≤ d := by
++    apply le_min
++    · have hnull := B.finrank_range_add_finrank_ker
++      omega
++    · exact Submodule.finrank_le _
++  have hLy : L y ∈ twoSidedUnitaryOrbit B := by
++    have hsigma : (L y).singularValues = B.singularValues := by
++      change (coordinateLift ιE ιF (singularValueDiagonal d B)).singularValues =
++        B.singularValues
++      rw [singularValues_coordinateLift,
++        singularValues_singularValueDiagonal B hrankB]
++    obtain ⟨U, V, hfac⟩ :=
++      exists_unitary_factorization_of_singularValues_eq hsigma
++    exact ⟨U, V, hfac⟩
++  have hyK : y ∈ K := subset_convexHull ℝ _ hLy
++  have hzanti : Antitone z := fun i j hij =>
++    A.singularValues_antitone (Fin.le_def.mp hij)
++  have hz0 : ∀ i, 0 ≤ z i := fun i => A.singularValues_nonneg _
++  have hy0 : ∀ i, 0 ≤ y i := fun i => B.singularValues_nonneg _
